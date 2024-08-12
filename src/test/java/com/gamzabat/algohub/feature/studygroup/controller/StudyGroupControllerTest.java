@@ -35,11 +35,10 @@ import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.image.service.ImageService;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
-import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.studygroup.dto.CheckSolvedProblemResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.CreateGroupRequest;
 import com.gamzabat.algohub.feature.studygroup.dto.EditGroupRequest;
-import com.gamzabat.algohub.feature.studygroup.dto.GetGroupMemberResponse;
+import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupListsResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupResponse;
 import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundGroupException;
 import com.gamzabat.algohub.feature.studygroup.exception.GroupMemberValidationException;
@@ -75,6 +74,7 @@ class StudyGroupControllerTest {
 	private UserRepository userRepository;
 
 	private User user;
+	private final Long userId = 0L;
 	private final String token = "token";
 	private final Long groupId = 1L;
 	private final String code = "invitationCode";
@@ -182,36 +182,54 @@ class StudyGroupControllerTest {
 		verify(studyGroupService,times(1)).joinGroupWithCode(user,code);
 	}
 
-//	@Test
-//	@DisplayName("그룹 목록 조회 성공")
-//	void getStudyGroupList() throws Exception {
-//		// given
-//		List<GetStudyGroupResponse> response = new ArrayList<>();
-//		for (int i=0; i<30; i++){
-//			response.add(new GetStudyGroupResponse(
-//				(long)i,"name"+i, "groupImage"+1,
-//				LocalDate.now(),LocalDate.now().plusDays(i),
-//				"introduction"+1,"nickname",true
-//			));
-//		}
-//		when(studyGroupService.getStudyGroupList(user)).thenReturn(response);
-//		// when, then
-//		mockMvc.perform(get("/api/group/list")
-//				.header("Authorization",token)
-//				.contentType(MediaType.APPLICATION_JSON))
-//			.andExpect(status().isOk())
-//			.andExpect(content().json(objectMapper.writeValueAsString(response)));
-//
-//		verify(studyGroupService,times(1)).getStudyGroupList(any(User.class));
-//	}
+	@Test
+	@DisplayName("그룹 목록 조회 성공")
+	void getStudyGroupList() throws Exception {
+		// given
+		List<GetStudyGroupResponse> done = new ArrayList<>();
+		List<GetStudyGroupResponse> inProgress = new ArrayList<>();
+		List<GetStudyGroupResponse> queued = new ArrayList<>();
+
+		for (int i=0; i<10; i++){
+			done.add(new GetStudyGroupResponse(
+				(long)i,"name"+i, "groupImage"+1,
+				LocalDate.now(),LocalDate.now().plusDays(i),
+				"introduction"+1,"nickname",true
+			));
+		}
+		for (int i=0; i<10; i++){
+			inProgress.add(new GetStudyGroupResponse(
+				(long)i,"name"+i, "groupImage"+1,
+				LocalDate.now(),LocalDate.now().plusDays(i),
+				"introduction"+1,"nickname",true
+			));
+		}
+		for (int i=0; i<10; i++){
+			queued.add(new GetStudyGroupResponse(
+				(long)i,"name"+i, "groupImage"+1,
+				LocalDate.now(),LocalDate.now().plusDays(i),
+				"introduction"+1,"nickname",true
+			));
+		}
+		GetStudyGroupListsResponse response = new GetStudyGroupListsResponse(done, inProgress, queued);
+		when(studyGroupService.getStudyGroupList(user)).thenReturn(response);
+		// when, then
+		mockMvc.perform(get("/api/group/list")
+				.header("Authorization",token)
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk())
+			.andExpect(content().json(objectMapper.writeValueAsString(response)));
+
+		verify(studyGroupService,times(1)).getStudyGroupList(any(User.class));
+	}
 
 	@Test
 	@DisplayName("그룹 탈퇴 성공")
-	void deleteGroup() throws Exception {
+	void leaveGroup() throws Exception {
 		// given
 		doNothing().when(studyGroupService).deleteGroup(user,groupId);
 		// when, then
-		mockMvc.perform(delete("/api/group")
+		mockMvc.perform(delete("/api/group/leave")
 				.header("Authorization",token)
 				.param("groupId",String.valueOf(groupId))
 				.contentType(MediaType.APPLICATION_JSON))
@@ -223,11 +241,11 @@ class StudyGroupControllerTest {
 
 	@Test
 	@DisplayName("그룹 탈퇴 실패 : 존재하지 않는 그룹")
-	void deleteGroupFailed_1() throws Exception {
+	void leaveGroupFailed_1() throws Exception {
 		// given
 		doThrow(new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다.")).when(studyGroupService).deleteGroup(user,groupId);
 		// when, then
-		mockMvc.perform(delete("/api/group")
+		mockMvc.perform(delete("/api/group/leave")
 				.header("Authorization",token)
 				.param("groupId",String.valueOf(groupId))
 				.contentType(MediaType.APPLICATION_JSON))
@@ -239,11 +257,11 @@ class StudyGroupControllerTest {
 
 	@Test
 	@DisplayName("그룹 탈퇴 실패 : 이미 참여 안한 그룹")
-	void deleteGroupFailed_2() throws Exception {
+	void leaveGroupFailed_2() throws Exception {
 		// given
 		doThrow(new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(), "이미 참여하지 않은 그룹 입니다.")).when(studyGroupService).deleteGroup(user,groupId);
 		// when, then
-		mockMvc.perform(delete("/api/group")
+		mockMvc.perform(delete("/api/group/leave")
 				.header("Authorization",token)
 				.param("groupId",String.valueOf(groupId))
 				.contentType(MediaType.APPLICATION_JSON))
@@ -251,6 +269,22 @@ class StudyGroupControllerTest {
 			.andExpect(jsonPath("$.error").value("이미 참여하지 않은 그룹 입니다."));
 
 		verify(studyGroupService,times(1)).deleteGroup(any(User.class),anyLong());
+	}
+
+	@Test
+	@DisplayName("그룹 멤버 삭제 성공")
+	void deleteUser() throws Exception {
+		// given
+		doNothing().when(studyGroupService).deleteMember(any(User.class),anyLong(),anyLong());
+		// when, then
+		mockMvc.perform(delete("/api/group/delete")
+			.header("Authorization",token)
+			.param("userId",String.valueOf(userId))
+			.param("groupId",String.valueOf(groupId))
+			.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk())
+			.andExpect(content().string("OK"));
+		verify(studyGroupService,times(1)).deleteMember(user,userId,groupId);
 	}
 
 	@Test
@@ -349,26 +383,26 @@ class StudyGroupControllerTest {
 		verify(studyGroupService,times(1)).editGroup(any(User.class),any(EditGroupRequest.class),any(MultipartFile.class));
 	}
 
-//	@Test
-//	@DisplayName("그룹 회원 목록 조회 성공")
-//	void getGroupInfo() throws Exception {
-//		// given
-//		List<GetGroupMemberResponse> response = new ArrayList<>(30);
-//		for(int i=0; i<30; i++){
-//			response.add(new GetGroupMemberResponse(
-//				"name"+i,"profileImage"+i,(long)i
-//			));
-//		}
-//		when(studyGroupService.groupInfo(user,groupId)).thenReturn(response);
-//		// when, then
-//		mockMvc.perform(get("/api/group/member-list")
-//				.header("Authorization",token)
-//				.param("groupId",String.valueOf(groupId)))
-//			.andExpect(status().isOk())
-//			.andExpect(content().json(objectMapper.writeValueAsString(response)));
-//
-//		verify(studyGroupService,times(1)).groupInfo(any(User.class),anyLong());
-//	}
+	// @Test
+	// @DisplayName("그룹 회원 목록 조회 성공")
+	// void getGroupInfo() throws Exception {
+	// 	// given
+	// 	List<GetGroupMemberResponse> response = new ArrayList<>(30);
+	// 	for(int i=0; i<30; i++){
+	// 		response.add(new GetGroupMemberResponse(
+	// 			"name"+i,"profileImage"+i,(long)i
+	// 		));
+	// 	}
+	// 	when(studyGroupService.groupInfo(user,groupId)).thenReturn(response);
+	// 	// when, then
+	// 	mockMvc.perform(get("/api/group/member-list")
+	// 			.header("Authorization",token)
+	// 			.param("groupId",String.valueOf(groupId)))
+	// 		.andExpect(status().isOk())
+	// 		.andExpect(content().json(objectMapper.writeValueAsString(response)));
+	//
+	// 	verify(studyGroupService,times(1)).groupInfo(any(User.class),anyLong());
+	// }
 
 	@Test
 	@DisplayName("그룹 회원 목록 조회 실패 : 존재하지 않는 그룹")

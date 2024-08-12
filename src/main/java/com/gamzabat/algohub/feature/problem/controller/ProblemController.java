@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.gamzabat.algohub.feature.problem.dto.CreateProblemRequest;
 import com.gamzabat.algohub.feature.problem.dto.EditProblemRequest;
+import com.gamzabat.algohub.feature.problem.dto.GetProblemListsResponse;
 import com.gamzabat.algohub.feature.problem.service.ProblemService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -59,12 +60,12 @@ public class ProblemController {
 
 	@GetMapping
 	@Operation(summary = "문제 조회 API", description = "특정 그룹에 대한 문제를 모두 조회하는 API")
-	public ResponseEntity<Page<GetProblemResponse>> getProblemList(@AuthedUser User user,
-																   @RequestParam Long groupId,
-																   @RequestParam(defaultValue = "0") int page,
-																   @RequestParam(defaultValue = "20") int size) {
-		Pageable pageable = PageRequest.of(page,size);
-		Page<GetProblemResponse> response = problemService.getProblemList(user, groupId, pageable);
+	public ResponseEntity<GetProblemListsResponse> getProblemList(@AuthedUser User user,
+																  @RequestParam Long groupId,
+																  @RequestParam(defaultValue = "0") int page,
+																  @RequestParam(defaultValue = "20") int size) {
+		Pageable pageable = PageRequest.of(page, size);
+		GetProblemListsResponse response = problemService.getProblemList(user, groupId, pageable);
 		return ResponseEntity.ok().body(response);
 	}
 

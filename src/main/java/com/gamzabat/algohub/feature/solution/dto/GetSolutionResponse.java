@@ -1,7 +1,6 @@
 package com.gamzabat.algohub.feature.solution.dto;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import com.gamzabat.algohub.feature.solution.domain.Solution;
 
@@ -11,7 +10,7 @@ import lombok.Builder;
 public record GetSolutionResponse(Long solutionId,
 								  String nickname,
 								  String profileImage,
-								  LocalDateTime solvedDateTime,
+								  String solvedDateTime,
 								  String content,
 								  boolean isCorrect,
 								  Integer memoryUsage,
@@ -20,11 +19,14 @@ public record GetSolutionResponse(Long solutionId,
 								  Integer codeLength,
 								  Long commentCount) {
 	public static GetSolutionResponse toDTO(Solution solution, Long commentCount){
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+		String solvedDateTime = solution.getSolvedDateTime().format(formatter);
+
 		return GetSolutionResponse.builder()
 			.solutionId(solution.getId())
 			.nickname(solution.getUser().getNickname())
 			.profileImage(solution.getUser().getProfileImage())
-			.solvedDateTime(solution.getSolvedDateTime())
+			.solvedDateTime(solvedDateTime)
 			.content(solution.getContent())
 			.isCorrect(solution.isCorrect())
 			.memoryUsage(solution.getMemoryUsage())

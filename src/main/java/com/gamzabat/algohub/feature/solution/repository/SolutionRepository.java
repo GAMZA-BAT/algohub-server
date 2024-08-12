@@ -39,8 +39,9 @@ public interface SolutionRepository extends JpaRepository<Solution,Long> {
 			"JOIN p.studyGroup g " +
 			"WHERE s.isCorrect = true AND g = :group " +
 			"GROUP BY u.id, u.nickname, u.profileImage " +
-			"ORDER BY COUNT(DISTINCT s.problem.id) DESC, MIN(s.solvedDateTime) ASC")
+			"ORDER BY COUNT(DISTINCT s.problem.id) DESC, MAX(s.solvedDateTime) ASC")
 	List<GetRankingResponse> findTopUsersByGroup(@Param("group") StudyGroup group);
+
 
 	boolean existsByUserAndProblemAndIsCorrect(User user, Problem problem, boolean isCorrect);
 }

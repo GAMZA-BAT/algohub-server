@@ -180,7 +180,13 @@ public class StudyGroupService {
 
 				Long correctSolution = solutionRepository.countDistinctCorrectSolutionsByUserAndGroup(groupMember.getUser(),id);
 				Long problems = problemRepository.countProblemsByGroupId(id);
-				String achivement = getPercentage(correctSolution,problems) + "%";
+				String achivement;
+				if (correctSolution == 0) {
+					achivement = "0%";
+				}
+				else {
+					achivement = getPercentage(correctSolution,problems) + "%";
+				}
 
 				Boolean isOwner = group.getOwner().getId().equals(groupMember.getId());
 				String profileImage = groupMember.getUser().getProfileImage();
@@ -193,8 +199,13 @@ public class StudyGroupService {
 
 			Long correctSolution = solutionRepository.countDistinctCorrectSolutionsByUserAndGroup(group.getOwner(),id);
 			Long problems = problemRepository.countProblemsByGroupId(id);
-			String achivement = getPercentage(correctSolution,problems) + "%";
-
+			String achivement;
+			if (correctSolution == 0) {
+				achivement = "0%";
+			}
+			else {
+				achivement = getPercentage(correctSolution,problems) + "%";
+			}
 			String profileImage = group.getOwner().getProfileImage();
 			Long userId = group.getOwner().getId();
 			responseList.add(new GetGroupMemberResponse(nickname, joinDate, achivement, true,profileImage,userId));

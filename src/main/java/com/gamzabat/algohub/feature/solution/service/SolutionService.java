@@ -75,9 +75,9 @@ public class SolutionService {
 				.orElseThrow(() -> new CannotFoundSolutionException("존재하지 않는 풀이 입니다."));
 
 		StudyGroup group = solution.getProblem().getStudyGroup();
-		Boolean isExist = groupMemberRepository.existsByUserAndStudyGroup(user,group);
 
-		if (isExist) {
+		if (groupMemberRepository.existsByUserAndStudyGroup(user,group)
+			|| group.getOwner().getId().equals(user.getId())) {
 			long commentCount = commentRepository.countCommentsBySolutionId(solution.getId());
 			return GetSolutionResponse.toDTO(solution,commentCount);
 		}
@@ -96,7 +96,6 @@ public class SolutionService {
 				.orElseThrow(() -> new UserValidationException("존재하지 않는 유저 입니다."));
 
 		Iterator<Problem> iterator = problems.iterator();
-
 		while (iterator.hasNext()) {
 			Problem problem = iterator.next();
 			StudyGroup studyGroup = problem.getStudyGroup(); // problem에 딸린 그룹 고유id 로 studyGroup 가져오기
@@ -105,7 +104,7 @@ public class SolutionService {
 			LocalDate now = LocalDate.now();
 
 
-			if (studyGroup.getOwner() != user || groupMemberRepository.existsByUserAndStudyGroup(user, studyGroup)
+			if ((studyGroup.getOwner() != user && !groupMemberRepository.existsByUserAndStudyGroup(user, studyGroup))
 			||endDate == null || now.isAfter(endDate)) {
 				iterator.remove();
 				continue;
@@ -119,7 +118,7 @@ public class SolutionService {
 					.language(request.codeType())
 					.codeLength(request.codeLength())
 					.isCorrect(request.result().equals("맞았습니다!!"))
-					.solvedDate(LocalDate.now())
+					.solvedDateTime(LocalDateTime.now())
 					.build()
 			);
 		}

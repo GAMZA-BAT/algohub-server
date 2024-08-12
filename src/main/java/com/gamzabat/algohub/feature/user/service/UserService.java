@@ -2,10 +2,14 @@ package com.gamzabat.algohub.feature.user.service;
 
 
 import com.gamzabat.algohub.common.jwt.dto.JwtDTO;
+import com.gamzabat.algohub.common.redis.RedisService;
+import com.gamzabat.algohub.exception.JwtRequestException;
 import com.gamzabat.algohub.feature.user.dto.*;
 import com.gamzabat.algohub.feature.user.exception.UncorrectedPasswordException;
 import com.gamzabat.algohub.feature.image.service.ImageService;
 
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -24,6 +28,8 @@ import com.gamzabat.algohub.feature.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.Duration;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -33,6 +39,7 @@ public class UserService {
 	private final ImageService imageService;
 	private final TokenProvider tokenProvider;
 	private final AuthenticationManagerBuilder authManager;
+	private final RedisService redisService;
 
 	@Transactional
 	public void register(RegisterRequest request, MultipartFile profileImage) {
@@ -103,5 +110,16 @@ public class UserService {
 			throw new UncorrectedPasswordException("비밀번호가 틀렸습니다.");
 		}
 		userRepository.delete(user);
+	}
+
+	@Transactional
+	public void logout(HttpServletRequest request) {
+		String accessToken = tokenProvider.resolveToken(request);
+		if (accessToken == null)
+			throw new JwtRequestException(HttpStatus.BAD_REQUEST.value(),"BAD_REQUEST","토큰이 비어있습니다.");
+
+		long tokenExpiration = tokenProvider.getTokenExpiration();
+		redisService.setValues(accessToken,"logout", Duration.ofMillis(tokenExpiration));
+		log.info("success to logout");
 	}
 }

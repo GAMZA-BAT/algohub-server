@@ -77,84 +77,84 @@ class SolutionServiceTest {
 		groupField.set(group,30L);
 	}
 
-//	@Test
-//	@DisplayName("풀이 목록 조회 성공 (주인)")
-//	void getSolutionList() {
-//		// given
-//		Pageable pageable = PageRequest.of(0,20);
-//		List<Solution> list = new ArrayList<>();
-//		for(int i=0; i<30; i++) {
-//			list.add(Solution.builder()
-//				.problem(problem)
-//					.content("content"+i)
-//					.user(user)
-//					.memoryUsage(i)
-//					.executionTime(i)
-//					.isCorrect(true)
-//					.language("Java"+i)
-//					.codeLength(i)
-//				.build());
-//		}
-//		Page<Solution> solutionPage = new PageImpl<>(list.subList(0,20), pageable, list.size());
-//
-//		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(group));
-//		when(problemRepository.findById(10L)).thenReturn(Optional.ofNullable(problem));
-//		when(solutionRepository.findAllByProblem(eq(problem), any(Pageable.class))).thenReturn(solutionPage);
-//		// when
-//		Page<GetSolutionResponse> result = solutionService.getSolutionList(user,10L,pageable);
-//		// then
-//		assertThat(result.getContent().size()).isEqualTo(20);
-//		assertThat(result.getTotalElements()).isEqualTo(30);
-//		for(int i=0; i<result.getContent().size(); i++){
-//			assertThat(result.getContent().get(i).content()).isEqualTo("content"+i);
-//			assertThat(result.getContent().get(i).memoryUsage()).isEqualTo(i);
-//			assertThat(result.getContent().get(i).executionTime()).isEqualTo(i);
-//			assertThat(result.getContent().get(i).nickname()).isEqualTo("nickname");
-//			assertThat(result.getContent().get(i).profileImage()).isEqualTo("profileImage");
-//			assertThat(result.getContent().get(i).language()).isEqualTo("Java"+i);
-//			assertThat(result.getContent().get(i).codeLength()).isEqualTo(i);
-//		}
-//	}
+	// @Test
+	// @DisplayName("풀이 목록 조회 성공 (주인)")
+	// void getSolutionList() {
+	// 	// given
+	// 	Pageable pageable = PageRequest.of(0,20);
+	// 	List<Solution> list = new ArrayList<>();
+	// 	for(int i=0; i<30; i++) {
+	// 		list.add(Solution.builder()
+	// 			.problem(problem)
+	// 				.content("content"+i)
+	// 				.user(user)
+	// 				.memoryUsage(i)
+	// 				.executionTime(i)
+	// 				.isCorrect(true)
+	// 				.language("Java"+i)
+	// 				.codeLength(i)
+	// 			.build());
+	// 	}
+	// 	Page<Solution> solutionPage = new PageImpl<>(list.subList(0,20), pageable, list.size());
+	//
+	// 	when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(group));
+	// 	when(problemRepository.findById(10L)).thenReturn(Optional.ofNullable(problem));
+	// 	// when(solutionRepository.findAllByProblem(eq(problem), any(Pageable.class))).thenReturn(solutionPage);
+	// 	// when
+	// 	Page<GetSolutionResponse> result = solutionService.getSolutionList(user,10L,pageable);
+	// 	// then
+	// 	assertThat(result.getContent().size()).isEqualTo(20);
+	// 	assertThat(result.getTotalElements()).isEqualTo(30);
+	// 	for(int i=0; i<result.getContent().size(); i++){
+	// 		assertThat(result.getContent().get(i).content()).isEqualTo("content"+i);
+	// 		assertThat(result.getContent().get(i).memoryUsage()).isEqualTo(i);
+	// 		assertThat(result.getContent().get(i).executionTime()).isEqualTo(i);
+	// 		assertThat(result.getContent().get(i).nickname()).isEqualTo("nickname");
+	// 		assertThat(result.getContent().get(i).profileImage()).isEqualTo("profileImage");
+	// 		assertThat(result.getContent().get(i).language()).isEqualTo("Java"+i);
+	// 		assertThat(result.getContent().get(i).codeLength()).isEqualTo(i);
+	// 	}
+	// }
 
-//	@Test
-//	@DisplayName("풀이 목록 조회 성공 (멤버)")
-//	void getSolutionList_2() {
-//		// given
-//		Pageable pageable = PageRequest.of(0,20);
-//		List<Solution> list = new ArrayList<>();
-//		for(int i=0; i<30; i++) {
-//			list.add(Solution.builder()
-//				.problem(problem)
-//				.content("content"+i)
-//				.user(user)
-//				.memoryUsage(i)
-//				.executionTime(i)
-//				.isCorrect(true)
-//				.language("Java"+i)
-//				.codeLength(i)
-//				.build());
-//		}
-//		Page<Solution> solutionPage = new PageImpl<>(list.subList(0,20), pageable, list.size());
-//
-//		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(group));
-//		when(problemRepository.findById(10L)).thenReturn(Optional.ofNullable(problem));
-//		when(solutionRepository.findAllByProblem(eq(problem), any(Pageable.class))).thenReturn(solutionPage);
-//		when(groupMemberRepository.existsByUserAndStudyGroup(user2,group)).thenReturn(true);
-//		// when
-//		Page<GetSolutionResponse> result = solutionService.getSolutionList(user2,10L,pageable);
-//		// then
-//		assertThat(result.getContent().size()).isEqualTo(20);
-//		assertThat(result.getTotalElements()).isEqualTo(30);
-//		for(int i=0; i<result.getContent().size(); i++){
-//			assertThat(result.getContent().get(i).content()).isEqualTo("content"+i);
-//			assertThat(result.getContent().get(i).memoryUsage()).isEqualTo(i);
-//			assertThat(result.getContent().get(i).executionTime()).isEqualTo(i);
-//			assertThat(result.getContent().get(i).nickname()).isEqualTo("nickname");
-//			assertThat(result.getContent().get(i).profileImage()).isEqualTo("profileImage");
-//			assertThat(result.getContent().get(i).language()).isEqualTo("Java"+i);
-//			assertThat(result.getContent().get(i).codeLength()).isEqualTo(i);
-//		}
-//	}
+	// @Test
+	// @DisplayName("풀이 목록 조회 성공 (멤버)")
+	// void getSolutionList_2() {
+	// 	// given
+	// 	Pageable pageable = PageRequest.of(0,20);
+	// 	List<Solution> list = new ArrayList<>();
+	// 	for(int i=0; i<30; i++) {
+	// 		list.add(Solution.builder()
+	// 			.problem(problem)
+	// 			.content("content"+i)
+	// 			.user(user)
+	// 			.memoryUsage(i)
+	// 			.executionTime(i)
+	// 			.isCorrect(true)
+	// 			.language("Java"+i)
+	// 			.codeLength(i)
+	// 			.build());
+	// 	}
+	// 	Page<Solution> solutionPage = new PageImpl<>(list.subList(0,20), pageable, list.size());
+	//
+	// 	when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(group));
+	// 	when(problemRepository.findById(10L)).thenReturn(Optional.ofNullable(problem));
+	// 	// when(solutionRepository.findAllByProblem(eq(problem), any(Pageable.class))).thenReturn(solutionPage);
+	// 	when(groupMemberRepository.existsByUserAndStudyGroup(user2,group)).thenReturn(true);
+	// 	// when
+	// 	Page<GetSolutionResponse> result = solutionService.getSolutionList(user2,10L,pageable);
+	// 	// then
+	// 	assertThat(result.getContent().size()).isEqualTo(20);
+	// 	assertThat(result.getTotalElements()).isEqualTo(30);
+	// 	for(int i=0; i<result.getContent().size(); i++){
+	// 		assertThat(result.getContent().get(i).content()).isEqualTo("content"+i);
+	// 		assertThat(result.getContent().get(i).memoryUsage()).isEqualTo(i);
+	// 		assertThat(result.getContent().get(i).executionTime()).isEqualTo(i);
+	// 		assertThat(result.getContent().get(i).nickname()).isEqualTo("nickname");
+	// 		assertThat(result.getContent().get(i).profileImage()).isEqualTo("profileImage");
+	// 		assertThat(result.getContent().get(i).language()).isEqualTo("Java"+i);
+	// 		assertThat(result.getContent().get(i).codeLength()).isEqualTo(i);
+	// 	}
+	// }
 
 	@Test
 	@DisplayName("풀이 목록 조회 실패 : 존재하지 않는 그룹")

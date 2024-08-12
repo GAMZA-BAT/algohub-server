@@ -8,7 +8,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.amazonaws.util.StringUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gamzabat.algohub.exception.ErrorResponse;
 import com.gamzabat.algohub.exception.JwtRequestException;
@@ -38,7 +37,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
 			return;
 		}
 		try{
-			String token = resolveToken(request);
+			String token = tokenProvider.resolveToken(request);
 			if (token != null && tokenProvider.validateToken(token)) {
 				Authentication authentication = tokenProvider.getAuthentication(token);
 				SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -47,13 +46,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
 		} catch (JwtRequestException e) {
 			sendErrorResponse(response,e);
 		}
-	}
-
-	private String resolveToken(HttpServletRequest request){
-		String token = request.getHeader("Authorization");
-		if (StringUtils.hasValue(token) && token.startsWith("Bearer"))
-			return token.substring(7);
-		return null;
 	}
 
 	private void sendErrorResponse(HttpServletResponse response, JwtRequestException e) throws IOException {

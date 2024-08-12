@@ -35,6 +35,7 @@ import com.gamzabat.algohub.exception.ProblemValidationException;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.feature.problem.dto.CreateProblemRequest;
 import com.gamzabat.algohub.feature.problem.dto.EditProblemRequest;
+import com.gamzabat.algohub.feature.problem.dto.GetProblemListsResponse;
 import com.gamzabat.algohub.feature.problem.dto.GetProblemResponse;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.problem.service.ProblemService;
@@ -186,7 +187,13 @@ class ProblemControllerTest {
 	void getProblemList() throws Exception {
 		// given
 		Pageable pageable = PageRequest.of(0,20);
-		Page<GetProblemResponse> response = new PageImpl<>(new ArrayList<>(30));
+		GetProblemListsResponse response = new GetProblemListsResponse(
+			new ArrayList<GetProblemResponse>(),
+			new ArrayList<GetProblemResponse>(),
+			0,
+			20,
+			10
+		);
 		when(problemService.getProblemList(any(User.class),anyLong(),any(Pageable.class))).thenReturn(response);
 		// when, then
 		mockMvc.perform(get("/api/problem")

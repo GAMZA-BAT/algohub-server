@@ -1,7 +1,5 @@
 package com.gamzabat.algohub.feature.solution.controller;
 
-import java.util.List;
-
 import com.gamzabat.algohub.common.annotation.AuthedUser;
 import com.gamzabat.algohub.exception.RequestException;
 import com.gamzabat.algohub.feature.solution.dto.CreateSolutionRequest;
@@ -35,7 +33,7 @@ public class SolutionController {
 	private final SolutionService solutionService;
 
 	@GetMapping("/solutions")
-	@Operation(summary = "풀이 조회 API", description = "특정 문제에 대한 풀이를 모두 조회하는 API")
+	@Operation(summary = "풀이 목록 조회 API", description = "특정 문제에 대한 풀이를 모두 조회하는 API")
 	public ResponseEntity<Page<GetSolutionResponse>> getSolutionList(@AuthedUser User user,
 																	 @RequestParam Long problemId,
 																	 @RequestParam(defaultValue = "0") int page,
@@ -48,7 +46,7 @@ public class SolutionController {
 	}
 
 	@GetMapping("/solution")
-	@Operation(summary = "풀이 조회 API", description = "특정 풀이 하나를 조회하는 API")
+	@Operation(summary = "풀이 하나 조회 API", description = "특정 풀이 하나를 조회하는 API")
 	public ResponseEntity<GetSolutionResponse> getSolution(@AuthedUser User user,
 														   @RequestParam Long solutionId)
 	{

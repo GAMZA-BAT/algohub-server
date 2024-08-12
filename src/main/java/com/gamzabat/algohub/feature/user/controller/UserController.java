@@ -3,6 +3,7 @@ package com.gamzabat.algohub.feature.user.controller;
 import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.dto.*;
 import com.gamzabat.algohub.feature.user.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
@@ -72,9 +73,14 @@ public class UserController {
 
 	}
 
-	@GetMapping(value = "/test")
-	@Operation(summary = "테스트 API")
-	public ResponseEntity<Object> test(@AuthedUser User user){
-		return ResponseEntity.ok().body(user.getEmail());
+	@DeleteMapping("/logout")
+	@Operation(summary = "로그아웃 API")
+	public ResponseEntity<Object> logout(HttpServletRequest request){
+		userService.logout(request);
+		return ResponseEntity.ok().body("OK");
 	}
 }
+
+// 파일이 변경됐어요~!~!
+// pr
+// issue

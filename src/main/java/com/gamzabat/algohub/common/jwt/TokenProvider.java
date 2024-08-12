@@ -6,6 +6,10 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.stream.Collectors;
 
+import com.amazonaws.util.StringUtils;
+import com.gamzabat.algohub.common.redis.RedisService;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -31,14 +35,17 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
+@Getter
 public class TokenProvider {
 	private final Key key;
 	@Value("${jwt_expiration_time}")
 	private long tokenExpiration;
+	private final RedisService redisService;
 
-	public TokenProvider(@Value("${jwt_secret_key}") String secretKey) {
+	public TokenProvider(@Value("${jwt_secret_key}") String secretKey, RedisService redisService) {
 		byte[] keyBytes = Decoders.BASE64URL.decode(secretKey);
 		this.key = Keys.hmacShaKeyFor(keyBytes);
+		this.redisService = redisService;
 	}
 
 	public JwtDTO generateToken(Authentication authentication){
@@ -77,6 +84,8 @@ public class TokenProvider {
 
 	public boolean validateToken(String token) {
 		try{
+			if (logout(token))
+				throw new JwtRequestException(HttpStatus.UNAUTHORIZED.value(),"UNAUTHORIZED","로그아웃 되었습니다.");
 			Jwts.parserBuilder()
 				.setSigningKey(key)
 				.build().parseClaimsJws(token);
@@ -104,5 +113,16 @@ public class TokenProvider {
 		String token = authToken.replace("Bearer","").trim();
 		Jws<Claims> claimsJws = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
 		return claimsJws.getBody().getSubject();
+	}
+
+	public String resolveToken(HttpServletRequest request){
+		String token = request.getHeader("Authorization");
+		if (StringUtils.hasValue(token) && token.startsWith("Bearer"))
+			return token.substring(7);
+		return null;
+	}
+
+	private boolean logout(String token) {
+		return redisService.getValues(token).equals("logout");
 	}
 }

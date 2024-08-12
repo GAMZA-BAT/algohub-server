@@ -9,6 +9,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import com.gamzabat.algohub.feature.notification.domain.Notification;
+import com.gamzabat.algohub.feature.notification.repository.NotificationRepository;
+import com.gamzabat.algohub.feature.notification.service.NotificationService;
+import com.gamzabat.algohub.feature.problem.dto.GetProblemListsResponse;
 import com.gamzabat.algohub.feature.problem.dto.GetProblemResponse;
 import com.gamzabat.algohub.feature.problem.service.ProblemService;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,6 +48,8 @@ class ProblemServiceTest {
 	@InjectMocks
 	private ProblemService problemService;
 	@Mock
+	private NotificationService notificationService;
+	@Mock
 	private ProblemRepository problemRepository;
 	@Mock
 	private StudyGroupRepository groupRepository;
@@ -51,6 +57,8 @@ class ProblemServiceTest {
 	private GroupMemberRepository groupMemberRepository;
 	@Mock
 	private SolutionRepository solutionRepository;
+	@Mock
+	private NotificationRepository notificationRepository;
 
 	private User user;
 	private User user2;
@@ -82,29 +90,30 @@ class ProblemServiceTest {
 		problemId.set(problem,20L);
 	}
 
-	@Test
-	@DisplayName("문제 생성 성공")
-	void createProblem() {
-		// given
-		CreateProblemRequest request = CreateProblemRequest.builder()
-			.groupId(10L)
-			.link("https://www.acmicpc.net/problem/1000")
-			.startDate(LocalDate.now().minusDays(7))
-			.endDate(LocalDate.now())
-			.build();
-		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
-		// when
-		problemService.createProblem(user, request);
-		// then
-		verify(problemRepository, times(1)).save(problemCaptor.capture());
-		Problem result = problemCaptor.getValue();
-		assertThat(result.getStudyGroup()).isEqualTo(group);
-		assertThat(result.getLink()).isEqualTo("https://www.acmicpc.net/problem/1000");
-		assertThat(result.getNumber()).isEqualTo(1000);
-		assertThat(result.getTitle()).isEqualTo("A+B");
-		assertThat(result.getLevel()).isEqualTo(1);
-		assertThat(result.getStartDate()).isEqualTo(LocalDate.now().minusDays(7));
-		assertThat(result.getEndDate()).isEqualTo(LocalDate.now());
+	 @Test
+	 @DisplayName("문제 생성 성공")
+	 void createProblem() {
+	 	// given
+	 	CreateProblemRequest request = CreateProblemRequest.builder()
+	 		.groupId(10L)
+	 		.link("https://www.acmicpc.net/problem/1000")
+	 		.startDate(LocalDate.now().minusDays(7))
+	 		.endDate(LocalDate.now())
+	 		.build();
+	 	when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+	 	// when
+	 	problemService.createProblem(user, request);
+	 	// then
+	 	verify(problemRepository, times(1)).save(problemCaptor.capture());
+	 	Problem result = problemCaptor.getValue();
+	 	assertThat(result.getStudyGroup()).isEqualTo(group);
+	 	assertThat(result.getLink()).isEqualTo("https://www.acmicpc.net/problem/1000");
+	 	assertThat(result.getNumber()).isEqualTo(1000);
+	 	assertThat(result.getTitle()).isEqualTo("A+B");
+	 	assertThat(result.getLevel()).isEqualTo(1);
+	 	assertThat(result.getStartDate()).isEqualTo(LocalDate.now().minusDays(7));
+	 	assertThat(result.getEndDate()).isEqualTo(LocalDate.now());
+		 verify(notificationService, times(1)).sendList(any(),any(),any(),any());
 	}
 
 	@Test
@@ -124,6 +133,7 @@ class ProblemServiceTest {
 			.hasFieldOrPropertyWithValue("code", HttpStatus.NOT_FOUND.value())
 			.hasFieldOrPropertyWithValue("error","존재하지 않는 그룹 입니다.");
 	}
+
 	@Test
 	@DisplayName("문제 생성 실패 : 권한 없음")
 	void createProblemFailed_2(){
@@ -140,6 +150,26 @@ class ProblemServiceTest {
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error","문제에 대한 권한이 없습니다. : create");
+	}
+
+	@Test
+	@DisplayName("문제 생성 성공, 알림 전송 실패")
+	void createProblemSuccess_NotificationFailed(){
+		// given
+		CreateProblemRequest request = CreateProblemRequest.builder()
+				.groupId(10L)
+				.link("https://www.acmicpc.net/problem/1000")
+				.startDate(LocalDate.now().minusDays(7))
+				.endDate(LocalDate.now())
+				.build();
+		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		doThrow(new RuntimeException()).when(notificationService).sendList(any(),any(),any(),any());
+		// when
+		problemService.createProblem(user, request);
+		// then
+		verify(problemRepository,times(1)).save(any(Problem.class));
+		verify(notificationService, times(1)).sendList(any(),any(),any(),any());
+		verify(notificationRepository, never()).save(any(Notification.class));
 	}
 
 	@Test
@@ -221,39 +251,54 @@ class ProblemServiceTest {
 		Field problemField = Problem.class.getDeclaredField("id");
 		problemField.setAccessible(true);
 
-		List<Problem> list = new ArrayList<>(30);
-		for(int i=0; i<30; i++){
+		List<Problem> list = new ArrayList<>();
+		for(int i=0; i<10; i++){
 			Problem problem = Problem.builder()
 				.studyGroup(group)
 				.startDate(LocalDate.now())
-				.endDate(LocalDate.now().plusDays(i))
+				.endDate(LocalDate.now().plusDays(i+1))
 				.link("https://www.acmicpc.net/problem/"+i)
 				.title("title"+i)
 				.build();
 			list.add(problem);
 			problemField.set(problem,(long)i);
 		}
+		for(int i=10; i<20; i++){
+			Problem problem = Problem.builder()
+					.studyGroup(group)
+					.startDate(LocalDate.now().minusDays(i+30))
+					.endDate(LocalDate.now().minusDays(i))
+					.link("https://www.acmicpc.net/problem/"+i)
+					.title("title"+i)
+					.build();
+			list.add(problem);
+			problemField.set(problem,(long)i);
+		}
+
 		Page<Problem> problemPage = new PageImpl<>(list.subList(0,20),pageable,list.size());
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
 		when(problemRepository.findAllByStudyGroup(eq(group),any(Pageable.class))).thenReturn(problemPage);
 		// 각 문제 ID에 대한 stub 설정
 		when(solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(anyLong())).thenReturn(8);
 		when(solutionRepository.countDistinctUsersByProblemId(anyLong())).thenReturn(10);
-
 		// when
-		Page<GetProblemResponse> result = problemService.getProblemList(user, 10L,pageable);
-
+		GetProblemListsResponse result = problemService.getProblemList(user, 10L, pageable);
 		// then
-		assertThat(result.getContent().size()).isEqualTo(20);
-		assertThat(result.getTotalElements()).isEqualTo(30);
-		for(int i=0; i<result.getContent().size(); i++){
-			GetProblemResponse response = result.getContent().get(i);
-			assertThat(response.getStartDate()).isEqualTo(LocalDate.now());
-			assertThat(response.getEndDate()).isEqualTo(LocalDate.now().plusDays(i));
-			assertThat(response.getLink()).isEqualTo("https://www.acmicpc.net/problem/"+i);
-			assertThat(response.getTitle()).isEqualTo("title"+i);
-			assertThat(response.getSubmitMemberCount()).isEqualTo(10);
-			assertThat(response.getAccurancy()).isEqualTo(80);  // 8/10 * 100 = 80%
+		List<GetProblemResponse> inProgress = result.getInProgressProblems();
+		List<GetProblemResponse> expired = result.getExpiredProblems();
+		assertThat(inProgress.size()).isEqualTo(10);
+		assertThat(expired.size()).isEqualTo(10);
+		for(int i=0; i<10; i++){
+			assertThat(inProgress.get(i).getProblemId()).isEqualTo(i);
+			assertThat(inProgress.get(i).getLink()).isEqualTo("https://www.acmicpc.net/problem/"+i);
+			assertThat(inProgress.get(i).getTitle()).isEqualTo("title"+i);
+			assertThat(inProgress.get(i).getEndDate()).isEqualTo(LocalDate.now().plusDays(i+1));
+		}
+		for(int i=10; i<20; i++){
+			assertThat(expired.get(i-10).getProblemId()).isEqualTo(i);
+			assertThat(expired.get(i-10).getLink()).isEqualTo("https://www.acmicpc.net/problem/"+i);
+			assertThat(expired.get(i-10).getTitle()).isEqualTo("title"+i);
+			assertThat(expired.get(i-10).getEndDate()).isEqualTo(LocalDate.now().minusDays(i));
 		}
 	}
 
