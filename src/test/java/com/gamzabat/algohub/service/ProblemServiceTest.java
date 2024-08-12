@@ -279,7 +279,6 @@ class ProblemServiceTest {
 //			assertThat(response.getAccurancy()).isEqualTo(80);  // 8/10 * 100 = 80%
 //		}
 //	}
-
 	@Test
 	@DisplayName("문제 목록 조회 실패 : 존재하지 않는 그룹")
 	void getProblemListFailed_1(){
