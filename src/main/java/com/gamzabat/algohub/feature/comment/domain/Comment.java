@@ -39,4 +39,5 @@ public class Comment {
 		this.content = content;
 		this.createdAt = createdAt;
 	}
+	//여기에요 여기~
 }
