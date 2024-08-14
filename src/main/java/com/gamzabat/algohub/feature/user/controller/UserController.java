@@ -4,6 +4,7 @@ import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.dto.*;
 import com.gamzabat.algohub.feature.user.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
@@ -21,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/user")
+@Slf4j
 @Tag(name = "회원 컨트롤러", description = "회원 관련된 API 명세서")
 public class UserController {
 	private final UserService userService;
@@ -32,6 +34,7 @@ public class UserController {
 		if(errors.hasErrors())
 			throw new RequestException("올바르지 않은 요청입니다.",errors);
 		userService.register(request, profileImage);
+		log.info("TEST, DO NOT MERGE THIS PR");
 		return ResponseEntity.ok().body("OK");
 	}
 
