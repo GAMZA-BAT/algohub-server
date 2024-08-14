@@ -37,7 +37,7 @@ public class UserController {
 		log.info("TEST, DO NOT MERGE THIS PR");
 		return ResponseEntity.ok().body("OK");
 	}
-
+ // ㅋㅋㄹㅃㅃ 여기가 다르지롱~!
 	@PostMapping(value = "/sign-in")
 	@Operation(summary = "로그인 API")
 	public ResponseEntity<Object> signIn(@Valid @RequestBody SignInRequest request, Errors errors){
