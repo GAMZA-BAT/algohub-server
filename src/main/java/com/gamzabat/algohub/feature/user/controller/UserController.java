@@ -4,8 +4,6 @@ import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.dto.*;
 import com.gamzabat.algohub.feature.user.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
@@ -25,7 +23,6 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/user")
 @Tag(name = "회원 컨트롤러", description = "회원 관련된 API 명세서")
 public class UserController {
-	private static final Logger log = LoggerFactory.getLogger(UserController.class);
 	private final UserService userService;
 
 	@PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -43,7 +40,6 @@ public class UserController {
 	public ResponseEntity<Object> signIn(@Valid @RequestBody SignInRequest request, Errors errors){
 		if(errors.hasErrors())
 			throw new RequestException("로그인 요청이 올바르지 않습니다.",errors);
-		log.info("Test Commit, DO NOT MERGE THIS PR");
 		SignInResponse response = userService.signIn(request);
 		return ResponseEntity.ok().body(response);
 	}
