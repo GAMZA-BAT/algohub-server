@@ -34,8 +34,6 @@ import com.gamzabat.algohub.feature.studygroup.repository.StudyGroupRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.swing.*;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -48,8 +46,9 @@ public class StudyGroupService {
 	private final UserRepository userRepository;
 
 	@Transactional
-	public void createGroup(User user, CreateGroupRequest request, MultipartFile profileImage) {
+	public CreateGroupResponse createGroup(User user, CreateGroupRequest request, MultipartFile profileImage) {
 		String imageUrl = imageService.saveImage(profileImage);
+		String inviteCode = NanoIdUtils.randomNanoId();
 		groupRepository.save(StudyGroup.builder()
 				.name(request.name())
 				.startDate(request.startDate())
@@ -57,9 +56,10 @@ public class StudyGroupService {
 				.introduction(request.introduction())
 				.groupImage(imageUrl)
 				.owner(user)
-				.groupCode(NanoIdUtils.randomNanoId())
+				.groupCode(inviteCode)
 				.build());
 		log.info("success to save study group");
+		return new CreateGroupResponse(inviteCode);
 	}
 
 	@Transactional

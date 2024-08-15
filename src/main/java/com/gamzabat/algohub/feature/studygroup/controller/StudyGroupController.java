@@ -2,7 +2,6 @@ package com.gamzabat.algohub.feature.studygroup.controller;
 
 import java.util.List;
 
-import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.studygroup.dto.*;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -37,12 +36,12 @@ public class StudyGroupController {
 
 	@PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(summary = "그룹 생성 API")
-	public ResponseEntity<Object> createGroup(@AuthedUser User user,
+	public ResponseEntity<CreateGroupResponse> createGroup(@AuthedUser User user,
 		@Valid @RequestPart CreateGroupRequest request, Errors errors, @RequestPart(required = false) MultipartFile profileImage){
 		if (errors.hasErrors())
 			throw new RequestException("그룹 생성 요청이 올바르지 않습니다.",errors);
-		studyGroupService.createGroup(user, request, profileImage);
-		return ResponseEntity.ok().body("OK");
+		CreateGroupResponse inviteCode = studyGroupService.createGroup(user, request, profileImage);
+		return ResponseEntity.ok().body(inviteCode);
 	}
 
 	@PostMapping(value = "/{code}/join")
