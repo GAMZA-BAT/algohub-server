@@ -2,6 +2,7 @@ package com.gamzabat.algohub.feature.comment.repository;
 
 import java.util.List;
 
+import com.gamzabat.algohub.feature.user.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.gamzabat.algohub.feature.comment.domain.Comment;
@@ -13,4 +14,5 @@ public interface CommentRepository extends JpaRepository<Comment,Long> {
 	List<Comment> findAllBySolution(Solution solution);
 	@Query("SELECT COUNT(c) FROM Comment c WHERE c.solution.id = :solutionId")
 	long countCommentsBySolutionId(@Param("solutionId") Long solutionId);
+	boolean existsByUser(User user);
 }

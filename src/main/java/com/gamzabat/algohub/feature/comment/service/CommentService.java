@@ -1,10 +1,13 @@
 package com.gamzabat.algohub.feature.comment.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.comment.domain.Comment;
 import com.gamzabat.algohub.feature.comment.dto.GetCommentResponse;
+import com.gamzabat.algohub.feature.comment.dto.ModifyCommentRequest;
 import com.gamzabat.algohub.feature.comment.exception.CommentValidationException;
 import com.gamzabat.algohub.feature.comment.exception.SolutionValidationException;
 import org.springframework.http.HttpStatus;
@@ -105,4 +108,15 @@ public class CommentService {
 
 		return solution;
 	}
+	@Transactional
+	public void modifyComment(ModifyCommentRequest request) {
+		Comment comment = commentRepository.findById(request.commentId())
+				.orElseThrow(() -> new CommentValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 댓글 입니다."));
+
+		comment.setContent(request.content());
+		comment.setCreatedAt(LocalDateTime.now());
+		commentRepository.save(comment);
+
+	}
+
 }

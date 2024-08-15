@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.gamzabat.algohub.feature.comment.dto.CreateCommentRequest;
 import com.gamzabat.algohub.feature.comment.dto.GetCommentResponse;
+import com.gamzabat.algohub.feature.comment.dto.ModifyCommentRequest;
 import com.gamzabat.algohub.feature.comment.service.CommentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
@@ -52,6 +53,14 @@ public class CommentController {
 	@Operation(summary = "댓글 삭제 API")
 	public ResponseEntity<Object> deleteComment(@AuthedUser User user, @RequestParam Long commentId){
 		commentService.deleteComment(user,commentId);
+		return ResponseEntity.ok().body("OK");
+	}
+	@PostMapping("/modify")
+	@Operation(summary = "댓글 수정 API")
+	public ResponseEntity<Object> modifyComment(@Valid @RequestBody ModifyCommentRequest request, Errors errors){
+		if(errors.hasErrors())
+			throw new RequestException("수정 요청이 올바르지 않습니다",errors);
+		commentService.modifyComment(request);
 		return ResponseEntity.ok().body("OK");
 	}
 }
