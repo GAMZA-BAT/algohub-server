@@ -24,16 +24,16 @@ jobs:
           distribution: 'temurin'
 
       - name: Create mysql.yml
-        run: echo "${{ secrets.MYSQL_YML }}" > src/main/resources/mysql.yml
+        run: echo "${{ secrets.MYSQL_YML }}" | base64 --decode > src/main/resources/mysql.yml
 
       - name: Create aws.yml
-        run: echo "${{ secrets.AWS_YML }}" > src/main/resources/aws.yml
+        run: echo "${{ secrets.AWS_YML }}" | base64 --decode > src/main/resources/aws.yml
 
       - name: Create jwt.yml
-        run: echo "${{ secrets.JWT_YML }}" > src/main/resources/jwt.yml
+        run: echo "${{ secrets.JWT_YML }}" | base64 --decode > src/main/resources/jwt.yml
 
       - name: Create application.yml
-        run: echo "${{ secrets.APPLICATION_YML }}" > src/main/resources/application.yml
+        run: echo "${{ secrets.APPLICATION_YML }}" | base64 --decode > src/main/resources/application.yml
 
       - name: Test YML
         run: ls -l src/main/resources
