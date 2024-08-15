@@ -23,8 +23,15 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
+      - uses: mirromutth/mysql-action@v1.1
+        with:
+          host port: 3306
+          container port: 3306
+          mysql database: 'algohub'
+          mysql root password: ${{ secrets.DB_PASSWORD }}
+
       - name: Create mysql.yml
-        run: echo "${{ secrets.MYSQL_YML }}" | base64 --decode > src/main/resources/mysql.yml
+        run: echo "${{ secrets.MYSQL_YML_TEST }}" | base64 --decode > src/main/resources/mysql.yml
 
       - name: Create aws.yml
         run: echo "${{ secrets.AWS_YML }}" | base64 --decode > src/main/resources/aws.yml
