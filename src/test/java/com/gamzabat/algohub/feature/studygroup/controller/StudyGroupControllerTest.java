@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import com.gamzabat.algohub.feature.studygroup.dto.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,11 +36,6 @@ import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.image.service.ImageService;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
-import com.gamzabat.algohub.feature.studygroup.dto.CheckSolvedProblemResponse;
-import com.gamzabat.algohub.feature.studygroup.dto.CreateGroupRequest;
-import com.gamzabat.algohub.feature.studygroup.dto.EditGroupRequest;
-import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupListsResponse;
-import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupResponse;
 import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundGroupException;
 import com.gamzabat.algohub.feature.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.studygroup.repository.GroupMemberRepository;
@@ -91,9 +87,10 @@ class StudyGroupControllerTest {
 	void createGroup() throws Exception {
 		// given
 		CreateGroupRequest request = new CreateGroupRequest("name", LocalDate.now(), LocalDate.now().plusDays(30),"introduction");
+		CreateGroupResponse response = new CreateGroupResponse("inviteCode");
 		MockMultipartFile requestPart = new MockMultipartFile("request","","application/json",objectMapper.writeValueAsString(request).getBytes());
 		MockMultipartFile profileImage = new MockMultipartFile("profileImage","profile.jpg","image/jpeg","image".getBytes());
-		doNothing().when(studyGroupService).createGroup(any(User.class),any(CreateGroupRequest.class),any(MultipartFile.class));
+		when(studyGroupService.createGroup(any(User.class),any(CreateGroupRequest.class),any(MultipartFile.class))).thenReturn(response);
 		// when, then
 		mockMvc.perform(multipart("/api/group")
 			.file(requestPart)
@@ -105,7 +102,7 @@ class StudyGroupControllerTest {
 					return request1;
 				}))
 			.andExpect(status().isOk())
-			.andExpect(content().string("OK"));
+			.andExpect(content().json(objectMapper.writeValueAsString(response)));
 
 		verify(studyGroupService,times(1)).createGroup(user,request,profileImage);
 	}
