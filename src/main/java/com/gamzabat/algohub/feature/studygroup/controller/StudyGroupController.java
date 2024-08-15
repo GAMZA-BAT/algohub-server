@@ -112,10 +112,17 @@ public class StudyGroupController {
 		return ResponseEntity.ok().body(studyGroupService.getGroupByCode(code));
 	}
 
-	@GetMapping(value = "ranking")
-	@Operation(summary = "과제 진행도 순위")
-	public ResponseEntity<Object> getRanking(@AuthedUser User user, @RequestParam Long groupId) {
-		List<GetRankingResponse> rankingResponse = studyGroupService.getRank(user, groupId);
+	@GetMapping(value = "top-ranking")
+	@Operation(summary = "과제 진행도 상위순위")
+	public ResponseEntity<Object> getTopRanking(@AuthedUser User user, @RequestParam Long groupId) {
+		List<GetRankingResponse> rankingResponse = studyGroupService.getTopRank(user, groupId);
+		return ResponseEntity.ok().body(rankingResponse);
+	}
+
+	@GetMapping(value = "all-ranking")
+	@Operation(summary = "과제 진행도 전체순위")
+	public ResponseEntity<Object> getAllRanking(@AuthedUser User user, @RequestParam Long groupId) {
+		List<GetRankingResponse> rankingResponse = studyGroupService.getAllRank(user, groupId);
 		return ResponseEntity.ok().body(rankingResponse);
 	}
 
