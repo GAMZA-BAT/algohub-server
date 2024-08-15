@@ -4,8 +4,6 @@ name: ALGOHUB CI/CD
 on:
   push:
     branches: [ "test" ]
-#  pull_request:
-#    branches: [ "main" ]
 
 
 permissions:
