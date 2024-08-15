@@ -36,7 +36,7 @@ jobs:
         run: echo "${{ secrets.JWT_YML }}" > src/main/resources/jwt.yml
 
       - name: Test YML
-        run: ls -l src/maim/resources
+        run: ls -l src/main/resources
 
       - name : test db
         run: cat src/main/resources/mysql.yml
