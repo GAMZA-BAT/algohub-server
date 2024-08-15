@@ -23,17 +23,26 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
+      - name: Prepare yml
+        run: |
+          mkdir -p ./src/main/resources
+          cd ./src/main/resources
+          touch ./application.yml
+          touch ./mysql.yml
+          touch ./aws.yml
+          touch ./jwt.yml
+
       - name: Create application.yml
-        run: echo "${{ secrets.APPLICATION_YML }}" > src/main/resources/application.yml
+        run: echo "${{ secrets.APPLICATION_YML }}" > ./application.yml
 
       - name: Create mysql.yml
-        run: echo "${{ secrets.MYSQL_YML }}" > src/main/resources/mysql.yml
+        run: echo "${{ secrets.MYSQL_YML }}" > ./mysql.yml
 
       - name: Create aws.yml
-        run: echo "${{ secrets.AWS_YML }}" > src/main/resources/aws.yml
+        run: echo "${{ secrets.AWS_YML }}" > ./aws.yml
 
       - name: Create jwt.yml
-        run: echo "${{ secrets.JWT_YML }}" > src/main/resources/jwt.yml
+        run: echo "${{ secrets.JWT_YML }}" > ./jwt.yml
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -41,7 +50,7 @@ jobs:
       - name: Build with Gradle
         uses: gradle/gradle-build-action@v2.6.0
         with:
-          arguments: build -x test
+          arguments: build
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v2
