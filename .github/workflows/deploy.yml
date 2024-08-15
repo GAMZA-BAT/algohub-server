@@ -23,9 +23,6 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Create application.yml
-        run: echo "${{ secrets.APPLICATION_YML }}" > src/main/resources/application.yml
-
       - name: Create mysql.yml
         run: echo "${{ secrets.MYSQL_YML }}" > src/main/resources/mysql.yml
 
@@ -35,11 +32,11 @@ jobs:
       - name: Create jwt.yml
         run: echo "${{ secrets.JWT_YML }}" > src/main/resources/jwt.yml
 
+      - name: Create application.yml
+        run: echo "${{ secrets.APPLICATION_YML }}" > src/main/resources/application.yml
+
       - name: Test YML
         run: ls -l src/main/resources
-
-      - name : test db
-        run: cat src/main/resources/mysql.yml
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
