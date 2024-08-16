@@ -267,7 +267,7 @@ public class StudyGroupService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<GetRankingResponse> getRank(User user, Long groupId) {
+	public List<GetRankingResponse> getTopRank(User user, Long groupId) {
 
 		StudyGroup group = groupRepository.findById(groupId).orElseThrow(() -> new CannotFoundGroupException("그룹을 찾을 수 없습니다."));
 
@@ -282,6 +282,24 @@ public class StudyGroupService {
 					return new GetRankingResponse(response.getUserNickname(), response.getProfileImage(), i + 1, response.getSolvedCount());
 				})
 				.limit(3)
+				.collect(Collectors.toList());
+	}
+
+	@Transactional(readOnly = true)
+	public List<GetRankingResponse> getAllRank(User user, Long groupId) {
+
+		StudyGroup group = groupRepository.findById(groupId).orElseThrow(() -> new CannotFoundGroupException("그룹을 찾을 수 없습니다."));
+
+		if (!(groupMemberRepository.existsByUserAndStudyGroup(user, group) || group.getOwner().getId().equals(user.getId()))) {
+			throw new UserValidationException("랭킹을 확인할 권한이 없습니다.");
+		}
+
+		List<GetRankingResponse> rankingResponses = solutionRepository.findTopUsersByGroup(group);
+		return IntStream.range(0, rankingResponses.size())
+				.mapToObj(i -> {
+					GetRankingResponse response = rankingResponses.get(i);
+					return new GetRankingResponse(response.getUserNickname(), response.getProfileImage(), i + 1, response.getSolvedCount());
+				})
 				.collect(Collectors.toList());
 	}
 
