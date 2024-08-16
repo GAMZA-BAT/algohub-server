@@ -5,6 +5,11 @@ on:
   pull_request:
     branches:
       - develop
+  workflow_call:
+    inputs:
+      run_tests:
+        required: true
+        type: boolean
 
 permissions:
   contents: read
