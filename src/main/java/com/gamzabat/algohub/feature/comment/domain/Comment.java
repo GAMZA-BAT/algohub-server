@@ -42,7 +42,7 @@ public class Comment {
 		this.createdAt = createdAt;
 	}
 
-	public void upadateComment(String content,LocalDateTime createdAt) {
+	public void upadateComment(String content) {
 		this.content = content;
 		this.createdAt = LocalDateTime.now();
 	}
