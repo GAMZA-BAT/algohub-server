@@ -1,6 +1,6 @@
 package com.gamzabat.algohub.feature.comment.service;
 
-import java.time.LocalDate;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -109,14 +109,13 @@ public class CommentService {
 		return solution;
 	}
 	@Transactional
-	public void modifyComment(ModifyCommentRequest request) {
+	public void updateComment(User user, ModifyCommentRequest request) {
 		Comment comment = commentRepository.findById(request.commentId())
 				.orElseThrow(() -> new CommentValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 댓글 입니다."));
+		if(!comment.getUser().getId().equals(user.getId()))
+			throw new UserValidationException("댓글 작성자가 아닙니다.");
 
-		comment.setContent(request.content());
-		comment.setCreatedAt(LocalDateTime.now());
-		commentRepository.save(comment);
-
+		comment.upadateComment(request.content(),LocalDateTime.now());
 	}
 
 }

@@ -8,13 +8,7 @@ import com.gamzabat.algohub.feature.comment.dto.ModifyCommentRequest;
 import com.gamzabat.algohub.feature.comment.service.CommentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.gamzabat.algohub.common.annotation.AuthedUser;
 import com.gamzabat.algohub.feature.user.domain.User;
@@ -55,12 +49,13 @@ public class CommentController {
 		commentService.deleteComment(user,commentId);
 		return ResponseEntity.ok().body("OK");
 	}
-	@PostMapping("/modify")
+	@PutMapping
 	@Operation(summary = "댓글 수정 API")
-	public ResponseEntity<Object> modifyComment(@Valid @RequestBody ModifyCommentRequest request, Errors errors){
+	public ResponseEntity<String> modifyComment(@AuthedUser User user,
+												@Valid @RequestBody ModifyCommentRequest request, Errors errors){
 		if(errors.hasErrors())
 			throw new RequestException("수정 요청이 올바르지 않습니다",errors);
-		commentService.modifyComment(request);
+		commentService.updateComment(user,request);
 		return ResponseEntity.ok().body("OK");
 	}
 }
