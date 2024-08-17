@@ -2,6 +2,7 @@ package com.gamzabat.algohub.feature.problem.service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -154,7 +155,9 @@ public class ProblemService {
 			&&!groupMemberRepository.existsByUserAndStudyGroup(user,group))
 			throw new ProblemValidationException(HttpStatus.FORBIDDEN.value(),"문제를 조회할 권한이 없습니다.");
 
-		List<Problem> problems = problemRepository.findAllByStudyGroupAndEndDate(group,LocalDate.now());
+		List<Problem> problems = problemRepository.findAllByStudyGroupAndEndDateBetween(group,LocalDate.now(),LocalDate.now().plusDays(1));
+		problems.sort(Comparator.comparing(Problem::getEndDate));
+
 		return problems.stream().map(problem -> {
 			Long problemId = problem.getId();
 			Integer correctCount = solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(problemId);
