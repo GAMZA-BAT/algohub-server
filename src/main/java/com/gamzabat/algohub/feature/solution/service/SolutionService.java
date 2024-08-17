@@ -85,6 +85,7 @@ public class SolutionService {
 			throw new UserValidationException("해당 풀이를 확인 할 권한이 없습니다.");
 		}
 	}
+
 	public void createSolution(CreateSolutionRequest request) {
 
 		List<Problem> problems = problemRepository.findAllByNumber(request.problemNumber());
@@ -117,7 +118,7 @@ public class SolutionService {
 					.executionTime(request.executionTime())
 					.language(request.codeType())
 					.codeLength(request.codeLength())
-					.isCorrect(request.result().equals("맞았습니다!!"))
+					.result(request.result())
 					.solvedDateTime(LocalDateTime.now())
 					.build()
 			);

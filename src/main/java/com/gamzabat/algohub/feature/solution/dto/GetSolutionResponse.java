@@ -12,7 +12,7 @@ public record GetSolutionResponse(Long solutionId,
 								  String profileImage,
 								  String solvedDateTime,
 								  String content,
-								  boolean isCorrect,
+								  String result,
 								  Integer memoryUsage,
 								  Integer executionTime,
 								  String language,
@@ -28,7 +28,7 @@ public record GetSolutionResponse(Long solutionId,
 			.profileImage(solution.getUser().getProfileImage())
 			.solvedDateTime(solvedDateTime)
 			.content(solution.getContent())
-			.isCorrect(solution.isCorrect())
+			.result(solution.getResult())
 			.memoryUsage(solution.getMemoryUsage())
 			.executionTime(solution.getExecutionTime())
 			.language(solution.getLanguage())
