@@ -70,7 +70,7 @@ public class ProblemController {
 	}
 
 	@GetMapping("/deadline-reached")
-	@Operation(summary = "마감 기한이 오늘까지인 문제들 조회 API")
+	@Operation(summary = "마감 기한이 내일까지인 문제들 조회 API")
 	public ResponseEntity<List<GetProblemResponse>> getDeadlineReachedProblemList(@AuthedUser User user, @RequestParam Long groupId){
 		return ResponseEntity.ok().body(problemService.getDeadlineReachedProblemList(user,groupId));
 	}

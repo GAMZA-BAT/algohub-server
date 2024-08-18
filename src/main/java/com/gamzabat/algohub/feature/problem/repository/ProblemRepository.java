@@ -14,7 +14,7 @@ import org.springframework.data.repository.query.Param;
 public interface ProblemRepository extends JpaRepository<Problem, Long> {
 	Page<Problem> findAllByStudyGroup(StudyGroup studyGroup, Pageable pageable);
 	List<Problem> findAllByNumber(Integer Number);
-	List<Problem> findAllByStudyGroupAndEndDate(StudyGroup studyGroup, LocalDate endDate);
+	List<Problem> findAllByStudyGroupAndEndDateBetween(StudyGroup studyGroup, LocalDate now,LocalDate tomorrow);
 	@Query("SELECT COUNT(p) FROM Problem p WHERE p.studyGroup.id = :groupId")
 	Long countProblemsByGroupId(@Param("groupId") Long groupId);
 }
