@@ -113,7 +113,7 @@ class ProblemServiceTest {
 	 	assertThat(result.getLevel()).isEqualTo(1);
 	 	assertThat(result.getStartDate()).isEqualTo(LocalDate.now().minusDays(7));
 	 	assertThat(result.getEndDate()).isEqualTo(LocalDate.now());
-		 verify(notificationService, times(1)).sendList(any(),any(),any(),any());
+		 verify(notificationService, times(3)).sendList(any(),any(),any(),any());
 	}
 
 	@Test
