@@ -12,7 +12,7 @@ public record GetCommentResponse(Long commentId,
 								 String writerProfileImage,
 								 String content,
 								 LocalDateTime createdAt) {
-	public static GetCommentResponse toDTO(Comment comment){
+	public static GetCommentResponse toDTO(Comment comment) {
 		return GetCommentResponse.builder()
 			.commentId(comment.getId())
 			.writerNickname(comment.getUser().getNickname())

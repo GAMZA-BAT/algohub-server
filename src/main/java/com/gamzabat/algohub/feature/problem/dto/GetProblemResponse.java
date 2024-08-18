@@ -1,8 +1,8 @@
 package com.gamzabat.algohub.feature.problem.dto;
 
-import lombok.Getter;
-
 import java.time.LocalDate;
+
+import lombok.Getter;
 
 @Getter
 public class GetProblemResponse {
@@ -18,7 +18,9 @@ public class GetProblemResponse {
 	private Integer accurancy;
 	private boolean inProgress;
 
-	public GetProblemResponse(String title,Long problemId, String link, LocalDate startDate, LocalDate endDate, Integer level, boolean solved, Integer submissionCount, Integer memberCount, Integer accurancy,boolean inProgress) {
+	public GetProblemResponse(String title, Long problemId, String link, LocalDate startDate, LocalDate endDate,
+		Integer level, boolean solved, Integer submissionCount, Integer memberCount, Integer accurancy,
+		boolean inProgress) {
 		this.title = title;
 		this.problemId = problemId;
 		this.link = link;
