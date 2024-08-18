@@ -103,7 +103,7 @@ public class ProblemService {
 			LocalDate startDate = problem.getStartDate();
 			LocalDate endDate = problem.getEndDate();
 			Integer level = problem.getLevel();
-			boolean solved = solutionRepository.existsByUserAndProblemAndIsCorrect(user, problem, true);
+			boolean solved = solutionRepository.existsByUserAndProblemAndResult(user, problem, "맞았습니다!!");
 			Integer correctCount = solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(problemId);
 			Integer submitMemberCount = solutionRepository.countDistinctUsersByProblemId(problemId);
 			Integer groupMemberCount = groupMemberRepository.countMembersByStudyGroupId(groupId) + 1;
@@ -180,7 +180,7 @@ public class ProblemService {
 				problem.getStartDate(),
 				problem.getEndDate(),
 				problem.getLevel(),
-				solutionRepository.existsByUserAndProblemAndIsCorrect(user, problem, true),
+				solutionRepository.existsByUserAndProblemAndResult(user, problem, "맞았습니다!!"),
 				submitMemberCount,
 				groupMemberCount,
 				accuracy,
