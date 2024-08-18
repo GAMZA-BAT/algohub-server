@@ -14,10 +14,12 @@ import jakarta.persistence.ManyToOne;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.DynamicUpdate;
 
 @Entity
 @Getter
 @NoArgsConstructor
+@DynamicUpdate
 public class Comment {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,4 +41,10 @@ public class Comment {
 		this.content = content;
 		this.createdAt = createdAt;
 	}
+
+	public void upadateComment(String content) {
+		this.content = content;
+		this.createdAt = LocalDateTime.now();
+	}
+
 }
