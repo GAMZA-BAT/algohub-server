@@ -6,8 +6,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.exception.UserValidationException;
+import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 			.orElseThrow(() -> new UserValidationException("존재하지 않는 회원입니다."));
 	}
 
-	private UserDetails createUserDetails(User user){
+	private UserDetails createUserDetails(User user) {
 		return org.springframework.security.core.userdetails.User.builder()
 			.username(user.getEmail())
 			.password(user.getPassword())

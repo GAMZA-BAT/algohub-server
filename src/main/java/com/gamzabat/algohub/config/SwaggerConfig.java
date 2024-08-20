@@ -14,14 +14,14 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 @Configuration
 public class SwaggerConfig {
 	@Bean
-	public OpenAPI openAPI(){
+	public OpenAPI openAPI() {
 		SecurityScheme scheme = new SecurityScheme()
 			.type(SecurityScheme.Type.HTTP).scheme("bearer").bearerFormat("JWT")
 			.in(SecurityScheme.In.HEADER).name("Authorization");
 		SecurityRequirement requirement = new SecurityRequirement().addList("bearerAuth");
 
 		return new OpenAPI()
-			.components(new Components().addSecuritySchemes("bearerAuth",scheme))
+			.components(new Components().addSecuritySchemes("bearerAuth", scheme))
 			.security(Collections.singletonList(requirement))
 			.info(new Info()
 				.title("AlgoHub API 명세서")

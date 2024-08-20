@@ -8,8 +8,8 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
 import com.gamzabat.algohub.common.jwt.TokenProvider;
-import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.exception.UserValidationException;
+import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -30,8 +30,9 @@ public class AuthedUserResolver implements HandlerMethodArgumentResolver {
 	public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
 		NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
 		String jwt = webRequest.getHeader("Authorization");
-		if(jwt != null)
-			return userRepository.findByEmail(tokenProvider.getUserEmail(jwt)).orElseThrow(() -> new UserValidationException("없는 사용자 입니다."));
+		if (jwt != null)
+			return userRepository.findByEmail(tokenProvider.getUserEmail(jwt))
+				.orElseThrow(() -> new UserValidationException("없는 사용자 입니다."));
 		else
 			throw new UserValidationException("로그인 되지 않았습니다.");
 	}

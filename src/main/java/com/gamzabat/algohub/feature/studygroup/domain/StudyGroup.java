@@ -3,9 +3,10 @@ package com.gamzabat.algohub.feature.studygroup.domain;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-import com.gamzabat.algohub.feature.user.domain.User;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
+
+import com.gamzabat.algohub.feature.user.domain.User;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -52,11 +53,14 @@ public class StudyGroup {
 		this.owner = owner;
 	}
 
-	public void editGroupInfo(String name, LocalDate startDate, LocalDate endDate, String introduction){
+	public void editGroupInfo(String name, LocalDate startDate, LocalDate endDate, String introduction) {
 		this.name = name;
 		this.startDate = startDate;
 		this.endDate = endDate;
 		this.introduction = introduction;
 	}
-	public void editGroupImage(String groupImage){this.groupImage = groupImage;}
+
+	public void editGroupImage(String groupImage) {
+		this.groupImage = groupImage;
+	}
 }

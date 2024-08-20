@@ -30,21 +30,21 @@ public class NotificationController {
 
 	@GetMapping(value = "/subscribe", produces = TEXT_EVENT_STREAM_VALUE)
 	@Operation(summary = "SSE 알림 연결 API")
-	public SseEmitter streamNotifications(@AuthedUser User user, @RequestHeader(value = "Last-Event_Id", required = false, defaultValue = "") String lastEventId){
-		return notificationService.subscribe(user,lastEventId);
+	public SseEmitter streamNotifications(@AuthedUser User user,
+		@RequestHeader(value = "Last-Event_Id", required = false, defaultValue = "") String lastEventId) {
+		return notificationService.subscribe(user, lastEventId);
 	}
 
 	@GetMapping
 	@Operation(summary = "알림 목록 조회 API")
-	public ResponseEntity<List<GetNotificationResponse>> getNotifications(@AuthedUser User user){
+	public ResponseEntity<List<GetNotificationResponse>> getNotifications(@AuthedUser User user) {
 		return ResponseEntity.ok().body(notificationService.getNotifications(user));
 	}
 
 	@PatchMapping
 	@Operation(summary = "알림 읽음을 표시하는 API", description = "알림 탭을 연 후 닫을 때 호출하면 봤던 알림들은 읽음 처리 되는 API")
-	public void updateIsRead(@AuthedUser User user){
+	public void updateIsRead(@AuthedUser User user) {
 		notificationService.updateIsRead(user);
 	}
-
 
 }

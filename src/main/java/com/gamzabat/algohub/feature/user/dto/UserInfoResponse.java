@@ -8,8 +8,8 @@ import lombok.Data;
 @Builder
 @AllArgsConstructor
 public class UserInfoResponse {
-    private String email;
-    private String nickname;
-    private String profileImage;
-    private String bjNickname;
+	private String email;
+	private String nickname;
+	private String profileImage;
+	private String bjNickname;
 }
