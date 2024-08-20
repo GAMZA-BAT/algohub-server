@@ -2,9 +2,8 @@ package com.gamzabat.algohub.feature.solution.domain;
 
 import java.time.LocalDateTime;
 
-import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.user.domain.User;
-
+import com.gamzabat.algohub.feature.problem.domain.Problem;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -34,27 +33,23 @@ public class Solution {
 
 	private LocalDateTime solvedDateTime;
 	private String content;
-	private boolean isCorrect;
+	private String result;
 	private Integer memoryUsage;
 	private Integer executionTime;
 	private String language;
 	private Integer codeLength;
 
 	@Builder
-	public Solution(Problem problem, User user, LocalDateTime solvedDateTime, String content, boolean isCorrect,
-		Integer memoryUsage, Integer executionTime, String language, Integer codeLength) {
+	public Solution(Problem problem, User user, LocalDateTime solvedDateTime, String content, String result,
+					Integer memoryUsage, Integer executionTime, String language, Integer codeLength) {
 		this.problem = problem;
 		this.user = user;
 		this.solvedDateTime = solvedDateTime;
 		this.content = content;
-		this.isCorrect = isCorrect;
+		this.result = result;
 		this.memoryUsage = memoryUsage;
 		this.executionTime = executionTime;
 		this.language = language;
 		this.codeLength = codeLength;
-	}
-
-	public LocalDateTime getSolvedDateTime() {
-		return solvedDateTime;
 	}
 }
