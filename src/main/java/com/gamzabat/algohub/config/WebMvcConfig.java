@@ -17,13 +17,13 @@ public class WebMvcConfig implements WebMvcConfigurer {
 	private final AuthedUserResolver authedUserResolver;
 
 	@Override
-	public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers){
+	public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
 		resolvers.add(authedUserResolver);
 	}
 
 	@Override
 	public void addCorsMappings(CorsRegistry registry) {
 		registry.addMapping("/**")
-			.allowedMethods("GET","POST","PATCH","PUT","DELETE");
+			.allowedMethods("GET", "POST", "PATCH", "PUT", "DELETE");
 	}
 }

@@ -18,7 +18,7 @@ public record GetSolutionResponse(Long solutionId,
 								  String language,
 								  Integer codeLength,
 								  Long commentCount) {
-	public static GetSolutionResponse toDTO(Solution solution, Long commentCount){
+	public static GetSolutionResponse toDTO(Solution solution, Long commentCount) {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 		String solvedDateTime = solution.getSolvedDateTime().format(formatter);
 

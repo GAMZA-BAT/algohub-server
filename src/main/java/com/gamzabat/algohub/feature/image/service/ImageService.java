@@ -23,12 +23,13 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional
 @RequiredArgsConstructor
 public class ImageService {
+	private final AmazonS3 amazonS3;
 	@Value("${aws_bucket_name}")
 	private String bucket;
-	private final AmazonS3 amazonS3;
 
-	public String saveImage(MultipartFile multipartFile){
-		if (multipartFile == null) return null;
+	public String saveImage(MultipartFile multipartFile) {
+		if (multipartFile == null)
+			return null;
 		String originalFilename = multipartFile.getOriginalFilename();
 		String filename = UUID.randomUUID().toString().concat(Objects.requireNonNull(originalFilename));
 		ObjectMetadata metadata = new ObjectMetadata();
@@ -39,13 +40,13 @@ public class ImageService {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-		return amazonS3.getUrl(bucket,filename).toString();
+		return amazonS3.getUrl(bucket, filename).toString();
 	}
 
-	public void deleteImage(String imageUrl){
+	public void deleteImage(String imageUrl) {
 		String splitStr = ".com/";
 		String fileName = imageUrl.substring(imageUrl.lastIndexOf(splitStr) + splitStr.length());
 		String file = URLDecoder.decode(fileName, StandardCharsets.UTF_8);
-		amazonS3.deleteObject(bucket,file);
+		amazonS3.deleteObject(bucket, file);
 	}
 }

@@ -1,6 +1,5 @@
 package com.gamzabat.algohub.feature.studygroup.repository.querydsl;
 
-
 import static com.gamzabat.algohub.feature.studygroup.domain.QGroupMember.*;
 import static com.gamzabat.algohub.feature.studygroup.domain.QStudyGroup.*;
 
@@ -18,7 +17,7 @@ import lombok.AllArgsConstructor;
 
 @Repository
 @AllArgsConstructor
-public class CustomStudyGroupRepositoryImpl implements CustomStudyGroupRepository{
+public class CustomStudyGroupRepositoryImpl implements CustomStudyGroupRepository {
 	private final JPAQueryFactory queryFactory;
 
 	@Override

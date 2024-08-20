@@ -11,7 +11,7 @@ public record GetStudyGroupWithCodeResponse(Long id,
 											LocalDate endDate,
 											String introduction) {
 
-	public static GetStudyGroupWithCodeResponse toDTO(StudyGroup group){
+	public static GetStudyGroupWithCodeResponse toDTO(StudyGroup group) {
 		return new GetStudyGroupWithCodeResponse(
 			group.getId(),
 			group.getName(),
