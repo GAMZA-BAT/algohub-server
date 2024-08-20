@@ -125,11 +125,4 @@ public class SolutionService {
 		}
 
 	}
-
-	public void test(CreateSolutionRequest request) {
-		log.info("username:"+request.userName());
-		log.info("code:"+request.code());
-	}
-
-
 }

@@ -3,9 +3,10 @@ package com.gamzabat.algohub.feature.problem.domain;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
+
+import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -39,7 +40,8 @@ public class Problem {
 	private LocalDateTime deletedAt;
 
 	@Builder
-	public Problem(String link, LocalDate startDate, LocalDate endDate, Integer number, String title, Integer level, StudyGroup studyGroup) {
+	public Problem(String link, LocalDate startDate, LocalDate endDate, Integer number, String title, Integer level,
+		StudyGroup studyGroup) {
 		this.link = link;
 		this.number = number;
 		this.startDate = startDate;
@@ -49,7 +51,7 @@ public class Problem {
 		this.studyGroup = studyGroup;
 	}
 
-	public void editProblemInfo(LocalDate startDate, LocalDate endDate){
+	public void editProblemInfo(LocalDate startDate, LocalDate endDate) {
 		this.startDate = startDate;
 		this.endDate = endDate;
 	}

@@ -8,9 +8,13 @@ import com.gamzabat.algohub.feature.user.domain.User;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 	boolean existsByEmail(String email);
+
 	Optional<User> findByEmail(String email);
+
 	void deleteByEmail(String email);
+
 	Optional<User> findByBjNickname(String bjNickname);
+
 	Optional<User> findById(Long Id);
 
 }

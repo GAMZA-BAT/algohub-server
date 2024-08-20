@@ -19,12 +19,12 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class JwtAuthenticationFilter extends OncePerRequestFilter{
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	private final TokenProvider tokenProvider;
-	private final List<String> excludedPaths = Arrays.asList("/api/user/sign-in","/api/user/register");
+	private final List<String> excludedPaths = Arrays.asList("/api/user/sign-in", "/api/user/register");
 
 	@Override
-	protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException{
+	protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
 		String path = request.getRequestURI();
 		return excludedPaths.stream().anyMatch(path::startsWith);
 	}
@@ -32,11 +32,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
 		FilterChain filterChain) throws ServletException, IOException {
-		if (shouldNotFilter(request)){
-			filterChain.doFilter(request,response);
+		if (shouldNotFilter(request)) {
+			filterChain.doFilter(request, response);
 			return;
 		}
-		try{
+		try {
 			String token = tokenProvider.resolveToken(request);
 			if (token != null && tokenProvider.validateToken(token)) {
 				Authentication authentication = tokenProvider.getAuthentication(token);
@@ -44,7 +44,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
 			}
 			filterChain.doFilter(request, response);
 		} catch (JwtRequestException e) {
-			sendErrorResponse(response,e);
+			sendErrorResponse(response, e);
 		}
 	}
 

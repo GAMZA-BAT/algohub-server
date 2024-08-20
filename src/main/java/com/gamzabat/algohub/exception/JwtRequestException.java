@@ -2,7 +2,7 @@ package com.gamzabat.algohub.exception;
 
 import java.util.ArrayList;
 
-public class JwtRequestException extends RuntimeException{
+public class JwtRequestException extends RuntimeException {
 	private final Integer code;
 	private final String error;
 	private final ArrayList<String> messages = new ArrayList<>();

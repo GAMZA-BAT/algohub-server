@@ -2,8 +2,11 @@ package com.gamzabat.algohub.feature.comment.domain;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.DynamicUpdate;
+
 import com.gamzabat.algohub.feature.solution.domain.Solution;
 import com.gamzabat.algohub.feature.user.domain.User;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -18,6 +21,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor
+@DynamicUpdate
 public class Comment {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,4 +43,10 @@ public class Comment {
 		this.content = content;
 		this.createdAt = createdAt;
 	}
+
+	public void upadateComment(String content) {
+		this.content = content;
+		this.createdAt = LocalDateTime.now();
+	}
+
 }
