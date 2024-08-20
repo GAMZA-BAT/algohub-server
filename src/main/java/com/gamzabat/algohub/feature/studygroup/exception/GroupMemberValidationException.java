@@ -3,7 +3,7 @@ package com.gamzabat.algohub.feature.studygroup.exception;
 import lombok.Getter;
 
 @Getter
-public class GroupMemberValidationException extends RuntimeException{
+public class GroupMemberValidationException extends RuntimeException {
 	private final int code;
 	private final String error;
 

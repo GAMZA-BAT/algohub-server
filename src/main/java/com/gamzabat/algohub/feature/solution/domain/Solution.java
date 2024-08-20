@@ -33,27 +33,23 @@ public class Solution {
 
 	private LocalDateTime solvedDateTime;
 	private String content;
-	private boolean isCorrect;
+	private String result;
 	private Integer memoryUsage;
 	private Integer executionTime;
 	private String language;
 	private Integer codeLength;
 
 	@Builder
-	public Solution(Problem problem, User user, LocalDateTime solvedDateTime, String content, boolean isCorrect,
+	public Solution(Problem problem, User user, LocalDateTime solvedDateTime, String content, String result,
 					Integer memoryUsage, Integer executionTime, String language, Integer codeLength) {
 		this.problem = problem;
 		this.user = user;
 		this.solvedDateTime = solvedDateTime;
 		this.content = content;
-		this.isCorrect = isCorrect;
+		this.result = result;
 		this.memoryUsage = memoryUsage;
 		this.executionTime = executionTime;
 		this.language = language;
 		this.codeLength = codeLength;
-	}
-
-	public LocalDateTime getSolvedDateTime() {
-		return solvedDateTime;
 	}
 }

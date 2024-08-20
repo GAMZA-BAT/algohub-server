@@ -11,7 +11,7 @@ public record GetNotificationResponse(Long id,
 									  String subContent,
 									  LocalDateTime createdAt,
 									  boolean isRead) {
-	public static GetNotificationResponse toDTO(Notification notification){
+	public static GetNotificationResponse toDTO(Notification notification) {
 		return new GetNotificationResponse(
 			notification.getId(),
 			notification.getStudyGroup().getName(),

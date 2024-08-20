@@ -2,14 +2,19 @@ package com.gamzabat.algohub.feature.user.domain;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
 import com.gamzabat.algohub.enums.Role;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Getter
@@ -32,9 +37,8 @@ public class User {
 
 	private Role role;
 
-
 	@Builder
-	public User(String email, String password, String nickname, String bjNickname,String profileImage, Role role) {
+	public User(String email, String password, String nickname, String bjNickname, String profileImage, Role role) {
 		this.email = email;
 		this.password = password;
 		this.nickname = nickname;
@@ -44,13 +48,15 @@ public class User {
 		this.deletedAt = null;
 	}
 
-	public void editNickname(String nickname){
+	public void editNickname(String nickname) {
 		this.nickname = nickname;
 	}
-	public void editBjNickname(String bjNickname){
+
+	public void editBjNickname(String bjNickname) {
 		this.bjNickname = bjNickname;
 	}
-	public void editProfileImage(String profileImage){
+
+	public void editProfileImage(String profileImage) {
 		this.profileImage = profileImage;
 	}
 }

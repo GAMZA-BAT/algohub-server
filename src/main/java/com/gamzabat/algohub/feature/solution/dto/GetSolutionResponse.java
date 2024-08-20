@@ -12,13 +12,13 @@ public record GetSolutionResponse(Long solutionId,
 								  String profileImage,
 								  String solvedDateTime,
 								  String content,
-								  boolean isCorrect,
+								  String result,
 								  Integer memoryUsage,
 								  Integer executionTime,
 								  String language,
 								  Integer codeLength,
 								  Long commentCount) {
-	public static GetSolutionResponse toDTO(Solution solution, Long commentCount){
+	public static GetSolutionResponse toDTO(Solution solution, Long commentCount) {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 		String solvedDateTime = solution.getSolvedDateTime().format(formatter);
 
@@ -28,7 +28,7 @@ public record GetSolutionResponse(Long solutionId,
 			.profileImage(solution.getUser().getProfileImage())
 			.solvedDateTime(solvedDateTime)
 			.content(solution.getContent())
-			.isCorrect(solution.isCorrect())
+			.result(solution.getResult())
 			.memoryUsage(solution.getMemoryUsage())
 			.executionTime(solution.getExecutionTime())
 			.language(solution.getLanguage())

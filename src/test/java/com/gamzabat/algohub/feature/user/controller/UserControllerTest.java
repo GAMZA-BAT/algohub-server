@@ -1,8 +1,8 @@
 package com.gamzabat.algohub.feature.user.controller;
 
 import static org.hamcrest.Matchers.*;
-import static org.mockito.Mockito.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -81,12 +81,14 @@ class UserControllerTest {
 	@DisplayName("회원 가입 성공")
 	void register() throws Exception {
 		// given
-		RegisterRequest request = new RegisterRequest("email","password","nickname","bojNickname");
+		RegisterRequest request = new RegisterRequest("email", "password", "nickname", "bojNickname");
 		String requestJson = objectMapper.writeValueAsString(request);
-		MockMultipartFile requestPart = new MockMultipartFile("request","","application/json",requestJson.getBytes());
-		MockMultipartFile profileImage = new MockMultipartFile("profileImage","profile.jpg","image/jpeg","image".getBytes());
+		MockMultipartFile requestPart = new MockMultipartFile("request", "", "application/json",
+			requestJson.getBytes());
+		MockMultipartFile profileImage = new MockMultipartFile("profileImage", "profile.jpg", "image/jpeg",
+			"image".getBytes());
 
-		doNothing().when(userService).register(any(RegisterRequest.class),any(MultipartFile.class));
+		doNothing().when(userService).register(any(RegisterRequest.class), any(MultipartFile.class));
 		// when, then
 		mockMvc.perform(multipart("/api/user/register")
 				.file(requestPart)
@@ -95,18 +97,19 @@ class UserControllerTest {
 			.andExpect(status().isOk())
 			.andExpect(content().string("OK"));
 
-		verify(userService,times(1)).register(any(RegisterRequest.class),any(MultipartFile.class));
+		verify(userService, times(1)).register(any(RegisterRequest.class), any(MultipartFile.class));
 	}
 
 	@Test
 	@DisplayName("회원 가입 성공 : 프로필 사진 X")
 	void register_2() throws Exception {
 		// given
-		RegisterRequest request = new RegisterRequest("email","password","nickname","bojNickname");
+		RegisterRequest request = new RegisterRequest("email", "password", "nickname", "bojNickname");
 		String requestJson = objectMapper.writeValueAsString(request);
-		MockMultipartFile requestPart = new MockMultipartFile("request","","application/json",requestJson.getBytes());
+		MockMultipartFile requestPart = new MockMultipartFile("request", "", "application/json",
+			requestJson.getBytes());
 
-		doNothing().when(userService).register(any(RegisterRequest.class),any());
+		doNothing().when(userService).register(any(RegisterRequest.class), any());
 		// when, then
 		mockMvc.perform(multipart("/api/user/register")
 				.file(requestPart)
@@ -114,7 +117,7 @@ class UserControllerTest {
 			.andExpect(status().isOk())
 			.andExpect(content().string("OK"));
 
-		verify(userService,times(1)).register(any(RegisterRequest.class),any());
+		verify(userService, times(1)).register(any(RegisterRequest.class), any());
 	}
 
 	@ParameterizedTest
@@ -125,17 +128,20 @@ class UserControllerTest {
 		"email, password, nickname, ' ', bjNickname : 백준 닉네임은 필수 입력입니다."
 	}, nullValues = "null")
 	@DisplayName("회원 가입 실패 : 잘못된 요청")
-	void registerFailed_1(String email, String password, String nickname, String bjNickname, String exceptionMessage) throws Exception {
+	void registerFailed_1(String email, String password, String nickname, String bjNickname,
+		String exceptionMessage) throws Exception {
 		// given
-		RegisterRequest request = new RegisterRequest(email,password,nickname,bjNickname);
+		RegisterRequest request = new RegisterRequest(email, password, nickname, bjNickname);
 		String requestJson = objectMapper.writeValueAsString(request);
-		MockMultipartFile requestPart = new MockMultipartFile("request","","application/json",requestJson.getBytes());
-		MockMultipartFile profileImage = new MockMultipartFile("profileImage","profile.jpg","image/jpeg","image".getBytes());
+		MockMultipartFile requestPart = new MockMultipartFile("request", "", "application/json",
+			requestJson.getBytes());
+		MockMultipartFile profileImage = new MockMultipartFile("profileImage", "profile.jpg", "image/jpeg",
+			"image".getBytes());
 		// when, then
 		mockMvc.perform(multipart("/api/user/register")
-			.file(requestPart)
-			.file(profileImage)
-			.contentType(MediaType.MULTIPART_FORM_DATA))
+				.file(requestPart)
+				.file(profileImage)
+				.contentType(MediaType.MULTIPART_FORM_DATA))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.status").value(400))
 			.andExpect(jsonPath("$.error").value("올바르지 않은 요청입니다."))
@@ -146,11 +152,14 @@ class UserControllerTest {
 	@DisplayName("회원가입 실패 : 이미 가입 된 이메일")
 	void registerFailed_2() throws Exception {
 		// given
-		RegisterRequest request = new RegisterRequest("duplicatedEmail","password","nickname","bjNickname");
+		RegisterRequest request = new RegisterRequest("duplicatedEmail", "password", "nickname", "bjNickname");
 		String requestJson = objectMapper.writeValueAsString(request);
-		MockMultipartFile requestPart = new MockMultipartFile("request","","application/json",requestJson.getBytes());
-		MockMultipartFile profileImage = new MockMultipartFile("profileImage","profile.jpg","image/jpeg","image".getBytes());
-		doThrow(new UserValidationException("이미 가입 된 이메일 입니다.")).when(userService).register(any(RegisterRequest.class),any(MultipartFile.class));
+		MockMultipartFile requestPart = new MockMultipartFile("request", "", "application/json",
+			requestJson.getBytes());
+		MockMultipartFile profileImage = new MockMultipartFile("profileImage", "profile.jpg", "image/jpeg",
+			"image".getBytes());
+		doThrow(new UserValidationException("이미 가입 된 이메일 입니다.")).when(userService)
+			.register(any(RegisterRequest.class), any(MultipartFile.class));
 		// when, then
 		mockMvc.perform(multipart("/api/user/register")
 				.file(requestPart)
@@ -160,35 +169,35 @@ class UserControllerTest {
 			.andExpect(jsonPath("$.status").value(400))
 			.andExpect(jsonPath("$.error").value("이미 가입 된 이메일 입니다."));
 
-		verify(userService,times(1)).register(request,profileImage);
+		verify(userService, times(1)).register(request, profileImage);
 	}
 
 	@Test
 	@DisplayName("로그인 성공")
 	void signIn() throws Exception {
 		// given
-		SignInRequest request = new SignInRequest("email","password");
+		SignInRequest request = new SignInRequest("email", "password");
 		SignInResponse response = new SignInResponse("token");
 		when(userService.signIn(any(SignInRequest.class))).thenReturn(response);
 		// when, then
 		mockMvc.perform(post("/api/user/sign-in")
-			.contentType(MediaType.APPLICATION_JSON)
-			.content(objectMapper.writeValueAsString(request)))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.token").value("token"));
 
-		verify(userService,times(1)).signIn(request);
+		verify(userService, times(1)).signIn(request);
 	}
 
 	@ParameterizedTest
 	@CsvSource(value = {
 		"'',password, email : 이메일은 필수 입력 입니다.",
 		"email,'', password : 비밀번호는 필수 입력 입니다."
-	},nullValues = "null")
+	}, nullValues = "null")
 	@DisplayName("로그인 실패 : 잘못된 요청")
 	void signInFailed_1(String email, String password, String exceptionMessage) throws Exception {
 		// given
-		SignInRequest request = new SignInRequest(email,password);
+		SignInRequest request = new SignInRequest(email, password);
 		// when, then
 		mockMvc.perform(post("/api/user/sign-in")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -196,14 +205,14 @@ class UserControllerTest {
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.status").value(400))
 			.andExpect(jsonPath("$.error").value("로그인 요청이 올바르지 않습니다."))
-			.andExpect(jsonPath("$.messages",hasItem(exceptionMessage)));
+			.andExpect(jsonPath("$.messages", hasItem(exceptionMessage)));
 	}
 
 	@Test
 	@DisplayName("로그인 실패 : 존재하지 않는 회원")
 	void signInFailed_2() throws Exception {
 		// given
-		SignInRequest request = new SignInRequest("invalidEmail","password");
+		SignInRequest request = new SignInRequest("invalidEmail", "password");
 		doThrow(new UserValidationException("존재하지 않는 회원 입니다.")).when(userService).signIn(any(SignInRequest.class));
 		// when, then
 		mockMvc.perform(post("/api/user/sign-in")
@@ -212,14 +221,14 @@ class UserControllerTest {
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.status").value(400))
 			.andExpect(jsonPath("$.error").value("존재하지 않는 회원 입니다."));
-		verify(userService,times(1)).signIn(any(SignInRequest.class));
+		verify(userService, times(1)).signIn(any(SignInRequest.class));
 	}
 
 	@Test
 	@DisplayName("로그인 실패 : 비밀번호 틀림")
 	void signInFailed_3() throws Exception {
 		// given
-		SignInRequest request = new SignInRequest("email","invalidPassword");
+		SignInRequest request = new SignInRequest("email", "invalidPassword");
 		doThrow(new UncorrectedPasswordException("비밀번호가 틀렸습니다.")).when(userService).signIn(any(SignInRequest.class));
 		// when, then
 		mockMvc.perform(post("/api/user/sign-in")
@@ -228,7 +237,7 @@ class UserControllerTest {
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.status").value(400))
 			.andExpect(jsonPath("$.error").value("비밀번호가 틀렸습니다."));
-		verify(userService,times(1)).signIn(any(SignInRequest.class));
+		verify(userService, times(1)).signIn(any(SignInRequest.class));
 	}
 
 	@Test
@@ -238,40 +247,43 @@ class UserControllerTest {
 		UpdateUserRequest request = new UpdateUserRequest();
 		request.setNickname("nickname");
 		request.setBjNickname("bjNickname");
-		MockMultipartFile requestPart = new MockMultipartFile("request","","application/json",objectMapper.writeValueAsString(request).getBytes());
-		MockMultipartFile profileImage = new MockMultipartFile("profileImage","profile.jpg","image/jpeg","image".getBytes());
+		MockMultipartFile requestPart = new MockMultipartFile("request", "", "application/json",
+			objectMapper.writeValueAsString(request).getBytes());
+		MockMultipartFile profileImage = new MockMultipartFile("profileImage", "profile.jpg", "image/jpeg",
+			"image".getBytes());
 		// when, then
 		mockMvc.perform(multipart("/api/user")
 				.file(requestPart)
 				.file(profileImage)
-				.header("Authorization",token)
+				.header("Authorization", token)
 				.with(request1 -> {
 					request1.setMethod("PATCH");
 					return request1;
 				})
-			.contentType(MediaType.MULTIPART_FORM_DATA))
+				.contentType(MediaType.MULTIPART_FORM_DATA))
 			.andExpect(status().isOk())
 			.andExpect(content().string("OK"));
 
-		verify(userService,times(1)).userUpdate(any(User.class),any(UpdateUserRequest.class),any(MultipartFile.class));
+		verify(userService, times(1)).userUpdate(any(User.class), any(UpdateUserRequest.class),
+			any(MultipartFile.class));
 	}
 
 	@Test
 	@DisplayName("회원 정보 조회 성공")
 	void getUserInfo() throws Exception {
 		// given
-		UserInfoResponse response = new UserInfoResponse("email","nickname","profileImage","bjNickname");
+		UserInfoResponse response = new UserInfoResponse("email", "nickname", "profileImage", "bjNickname");
 		when(userService.userInfo(user)).thenReturn(response);
 		// when, then
 		mockMvc.perform(get("/api/user")
-			.header("Authorization",token))
+				.header("Authorization", token))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.email").value("email"))
 			.andExpect(jsonPath("$.nickname").value("nickname"))
 			.andExpect(jsonPath("$.profileImage").value("profileImage"))
 			.andExpect(jsonPath("$.bjNickname").value("bjNickname"));
 
-		verify(userService,times(1)).userInfo(any(User.class));
+		verify(userService, times(1)).userInfo(any(User.class));
 	}
 
 	@Test
@@ -281,13 +293,13 @@ class UserControllerTest {
 		DeleteUserRequest request = new DeleteUserRequest("password");
 		// when, then
 		mockMvc.perform(delete("/api/user")
-			.header("Authorization",token)
+				.header("Authorization", token)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isOk())
 			.andExpect(content().string("회원정보를 삭제했습니다."));
 
-		verify(userService,times(1)).deleteUser(user,request);
+		verify(userService, times(1)).deleteUser(user, request);
 	}
 
 	@Test
@@ -297,12 +309,12 @@ class UserControllerTest {
 		DeleteUserRequest request = new DeleteUserRequest("");
 		// when, then
 		mockMvc.perform(delete("/api/user")
-				.header("Authorization",token)
+				.header("Authorization", token)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.error").value("올바르지 않은 요청입니다."))
-			.andExpect(jsonPath("$.messages",hasItem("password : 비밀번호는 필수 입력입니다.")));
+			.andExpect(jsonPath("$.messages", hasItem("password : 비밀번호는 필수 입력입니다.")));
 	}
 
 	@Test
@@ -310,15 +322,15 @@ class UserControllerTest {
 	void deleteUserFailed_2() throws Exception {
 		// given
 		DeleteUserRequest request = new DeleteUserRequest("invalidPassword");
-		doThrow(new UncorrectedPasswordException("비밀번호가 틀렸습니다.")).when(userService).deleteUser(user,request);
+		doThrow(new UncorrectedPasswordException("비밀번호가 틀렸습니다.")).when(userService).deleteUser(user, request);
 		// when, then
 		mockMvc.perform(delete("/api/user")
-				.header("Authorization",token)
+				.header("Authorization", token)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.error").value("비밀번호가 틀렸습니다."));
 
-		verify(userService,times(1)).deleteUser(any(User.class),any(DeleteUserRequest.class));
+		verify(userService, times(1)).deleteUser(any(User.class), any(DeleteUserRequest.class));
 	}
 }

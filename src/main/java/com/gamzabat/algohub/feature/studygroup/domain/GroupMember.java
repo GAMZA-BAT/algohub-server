@@ -3,6 +3,7 @@ package com.gamzabat.algohub.feature.studygroup.domain;
 import java.time.LocalDate;
 
 import com.gamzabat.algohub.feature.user.domain.User;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;

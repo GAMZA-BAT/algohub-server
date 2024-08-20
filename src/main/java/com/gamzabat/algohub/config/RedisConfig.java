@@ -11,28 +11,28 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @Configuration
 public class RedisConfig {
 
-    @Value("${spring.data.redis.host}")
-    private String host;
-    @Value("${spring.data.redis.port}")
-    private int port;
+	@Value("${spring.data.redis.host}")
+	private String host;
+	@Value("${spring.data.redis.port}")
+	private int port;
 
-    @Bean
-    public RedisConnectionFactory redisConnectionFactory() {
-        return new LettuceConnectionFactory(host, port);
-    }
+	@Bean
+	public RedisConnectionFactory redisConnectionFactory() {
+		return new LettuceConnectionFactory(host, port);
+	}
 
-    @Bean
-    public RedisTemplate<String, Object> redisTemplate() {
-        RedisTemplate<String, Object> template = new RedisTemplate<>();
-        template.setConnectionFactory(redisConnectionFactory()); // Redis 연결
+	@Bean
+	public RedisTemplate<String, Object> redisTemplate() {
+		RedisTemplate<String, Object> template = new RedisTemplate<>();
+		template.setConnectionFactory(redisConnectionFactory()); // Redis 연결
 
-        template.setKeySerializer(new StringRedisSerializer()); // key-value 형태로 직렬화
-        template.setValueSerializer(new StringRedisSerializer());
+		template.setKeySerializer(new StringRedisSerializer()); // key-value 형태로 직렬화
+		template.setValueSerializer(new StringRedisSerializer());
 
-        template.setHashKeySerializer(new StringRedisSerializer()); // hash key-value 형태로 직렬화
-        template.setHashValueSerializer(new StringRedisSerializer());
+		template.setHashKeySerializer(new StringRedisSerializer()); // hash key-value 형태로 직렬화
+		template.setHashValueSerializer(new StringRedisSerializer());
 
-        template.setDefaultSerializer(new StringRedisSerializer()); // default 직렬화
-        return template;
-    }
+		template.setDefaultSerializer(new StringRedisSerializer()); // default 직렬화
+		return template;
+	}
 }

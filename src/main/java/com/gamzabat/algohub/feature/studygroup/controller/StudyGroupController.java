@@ -2,7 +2,6 @@ package com.gamzabat.algohub.feature.studygroup.controller;
 
 import java.util.List;
 
-import com.gamzabat.algohub.feature.studygroup.dto.*;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
@@ -18,9 +17,18 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.gamzabat.algohub.common.annotation.AuthedUser;
-import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.exception.RequestException;
+import com.gamzabat.algohub.feature.studygroup.dto.CheckSolvedProblemResponse;
+import com.gamzabat.algohub.feature.studygroup.dto.CreateGroupRequest;
+import com.gamzabat.algohub.feature.studygroup.dto.CreateGroupResponse;
+import com.gamzabat.algohub.feature.studygroup.dto.EditGroupRequest;
+import com.gamzabat.algohub.feature.studygroup.dto.GetGroupMemberResponse;
+import com.gamzabat.algohub.feature.studygroup.dto.GetGroupResponse;
+import com.gamzabat.algohub.feature.studygroup.dto.GetRankingResponse;
+import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupListsResponse;
+import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupWithCodeResponse;
 import com.gamzabat.algohub.feature.studygroup.service.StudyGroupService;
+import com.gamzabat.algohub.feature.user.domain.User;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -37,39 +45,40 @@ public class StudyGroupController {
 	@PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(summary = "그룹 생성 API")
 	public ResponseEntity<CreateGroupResponse> createGroup(@AuthedUser User user,
-		@Valid @RequestPart CreateGroupRequest request, Errors errors, @RequestPart(required = false) MultipartFile profileImage){
+		@Valid @RequestPart CreateGroupRequest request, Errors errors,
+		@RequestPart(required = false) MultipartFile profileImage) {
 		if (errors.hasErrors())
-			throw new RequestException("그룹 생성 요청이 올바르지 않습니다.",errors);
+			throw new RequestException("그룹 생성 요청이 올바르지 않습니다.", errors);
 		CreateGroupResponse inviteCode = studyGroupService.createGroup(user, request, profileImage);
 		return ResponseEntity.ok().body(inviteCode);
 	}
 
 	@PostMapping(value = "/{code}/join")
 	@Operation(summary = "그룹 코드를 사용한 그룹 참여 API")
-	public ResponseEntity<Object> joinGroupWithCode(@AuthedUser User user, @PathVariable String code){
-		studyGroupService.joinGroupWithCode(user,code);
+	public ResponseEntity<Object> joinGroupWithCode(@AuthedUser User user, @PathVariable String code) {
+		studyGroupService.joinGroupWithCode(user, code);
 		return ResponseEntity.ok().body("OK");
 	}
 
 	@GetMapping(value = "list")
 	@Operation(summary = "그룹 목록 조회 API", description = "방장 여부 상관 없이 유저가 참여하고 있는 그룹 모두 조회")
-	public ResponseEntity<GetStudyGroupListsResponse> getStudyGroupList(@AuthedUser User user){
+	public ResponseEntity<GetStudyGroupListsResponse> getStudyGroupList(@AuthedUser User user) {
 		GetStudyGroupListsResponse response = studyGroupService.getStudyGroupList(user);
 		return ResponseEntity.ok().body(response);
 	}
 
 	@DeleteMapping(value = "leave")
 	@Operation(summary = "그룹 탈퇴 API", description = "방장,멤버 상관 없이 해당 그룹을 삭제,탈퇴하는 API")
-	public ResponseEntity<Object> deleteGroup(@AuthedUser User user, @RequestParam Long groupId){
-		studyGroupService.deleteGroup(user,groupId);
+	public ResponseEntity<Object> deleteGroup(@AuthedUser User user, @RequestParam Long groupId) {
+		studyGroupService.deleteGroup(user, groupId);
 		return ResponseEntity.ok().body("OK");
 	}
 
-
-	@DeleteMapping(value  = "delete")
+	@DeleteMapping(value = "delete")
 	@Operation(summary = "그룹 멤버 삭제", description = "방장만 가능한 그룹 멤버를 삭제하는 API")
-	public ResponseEntity<Object> deleteUser(@AuthedUser User user, @RequestParam Long userId, @RequestParam Long groupId) {
-		studyGroupService.deleteMember(user,userId,groupId);
+	public ResponseEntity<Object> deleteUser(@AuthedUser User user, @RequestParam Long userId,
+		@RequestParam Long groupId) {
+		studyGroupService.deleteMember(user, userId, groupId);
 		return ResponseEntity.ok().body("OK");
 	}
 
@@ -77,10 +86,10 @@ public class StudyGroupController {
 	@Operation(summary = "그룹 정보 수정 API")
 	public ResponseEntity<Object> editGroup(@AuthedUser User user,
 		@Valid @RequestPart EditGroupRequest request, Errors errors,
-		@RequestPart(required = false) MultipartFile groupImage){
-		if(errors.hasErrors())
-			throw new RequestException("그룹 정보 수정 요청이 올바르지 않습니다.",errors);
-		studyGroupService.editGroup(user,request,groupImage);
+		@RequestPart(required = false) MultipartFile groupImage) {
+		if (errors.hasErrors())
+			throw new RequestException("그룹 정보 수정 요청이 올바르지 않습니다.", errors);
+		studyGroupService.editGroup(user, request, groupImage);
 		return ResponseEntity.ok().body("OK");
 	}
 
@@ -88,27 +97,26 @@ public class StudyGroupController {
 	@Operation(summary = "그룹 회원 목록 조회")
 	public ResponseEntity<Object> getGroupInfo(@AuthedUser User user, @RequestParam Long groupId) {
 
-
-		List<GetGroupMemberResponse> members = studyGroupService.groupInfo(user,groupId);
+		List<GetGroupMemberResponse> members = studyGroupService.groupInfo(user, groupId);
 		return ResponseEntity.ok().body(members);
 	}
 
 	@GetMapping(value = "problem-solving")
 	@Operation(summary = "문제 별 회원 풀이 여부 조회")
 	public ResponseEntity<Object> getCheckingSolvedProblem(@AuthedUser User user, @RequestParam Long problemId) {
-			List<CheckSolvedProblemResponse> responseList = studyGroupService.getChekingSolvedProblem(user,problemId);
-			return ResponseEntity.ok().body(responseList);
+		List<CheckSolvedProblemResponse> responseList = studyGroupService.getChekingSolvedProblem(user, problemId);
+		return ResponseEntity.ok().body(responseList);
 	}
 
 	@GetMapping(value = "group-code")
 	@Operation(summary = "그룹 초대 코드 조회")
 	public ResponseEntity<Object> getGroupCode(@AuthedUser User user, @RequestParam Long groupId) {
-		return ResponseEntity.ok().body(studyGroupService.getGroupCode(user,groupId));
+		return ResponseEntity.ok().body(studyGroupService.getGroupCode(user, groupId));
 	}
 
 	@GetMapping(value = "/{code}")
 	@Operation(summary = "그룹 코드를 사용한 그룹 정보 조회 API")
-	public ResponseEntity<GetStudyGroupWithCodeResponse> getGroupByCode(@PathVariable String code){
+	public ResponseEntity<GetStudyGroupWithCodeResponse> getGroupByCode(@PathVariable String code) {
 		return ResponseEntity.ok().body(studyGroupService.getGroupByCode(code));
 	}
 
@@ -129,7 +137,7 @@ public class StudyGroupController {
 	@GetMapping(value = "group-info")
 	@Operation(summary = "그룹정보")
 	public ResponseEntity<GetGroupResponse> groupInfo(@AuthedUser User user, @RequestParam Long groupId) {
-		GetGroupResponse response = studyGroupService.getGroup(user,groupId);
+		GetGroupResponse response = studyGroupService.getGroup(user, groupId);
 		return ResponseEntity.ok().body(response);
 	}
- }
+}

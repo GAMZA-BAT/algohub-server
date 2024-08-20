@@ -13,7 +13,7 @@ public record GetStudyGroupResponse(Long id,
 									String introduction,
 									String ownerNickname,
 									boolean isOwner) {
-	public static GetStudyGroupResponse toDTO(StudyGroup group, User user){
+	public static GetStudyGroupResponse toDTO(StudyGroup group, User user) {
 		return new GetStudyGroupResponse(
 			group.getId(),
 			group.getName(),

@@ -22,14 +22,14 @@ public interface SolutionRepository extends JpaRepository<Solution,Long> {
 	@Query("SELECT COUNT(DISTINCT s.user) FROM Solution s WHERE s.problem.id = :problemId")
 	Integer countDistinctUsersByProblemId(@Param("problemId") Long problemId);
 
-	@Query("SELECT COUNT(DISTINCT s.user) FROM Solution s WHERE s.problem.id = :problemId AND s.isCorrect = true")
+	@Query("SELECT COUNT(DISTINCT s.user) FROM Solution s WHERE s.problem.id = :problemId AND s.result = '맞았습니다!!'")
 	Integer countDistinctUsersWithCorrectSolutionsByProblemId(@Param("problemId") Long problemId);
 
 	@Query("SELECT COUNT(DISTINCT s.problem.id) FROM Solution s " +
 			"JOIN s.problem p " +
 			"WHERE s.user = :user " +
 			"AND p.studyGroup.id = :groupId " +
-			"AND s.isCorrect = true")
+			"AND s.result = '맞았습니다!!'")
 	Long countDistinctCorrectSolutionsByUserAndGroup(@Param("user") User user, @Param("groupId") Long groupId);
 
 	@Query("SELECT new com.gamzabat.algohub.feature.studygroup.dto.GetRankingResponse(u.nickname, u.profileImage, 0, COUNT(DISTINCT s.problem.id)) " +
@@ -37,11 +37,11 @@ public interface SolutionRepository extends JpaRepository<Solution,Long> {
 			"JOIN s.user u " +
 			"JOIN s.problem p " +
 			"JOIN p.studyGroup g " +
-			"WHERE s.isCorrect = true AND g = :group " +
+			"WHERE s.result = '맞았습니다!!' AND g = :group " +
 			"GROUP BY u.id, u.nickname, u.profileImage " +
 			"ORDER BY COUNT(DISTINCT s.problem.id) DESC, MAX(s.solvedDateTime) ASC")
 	List<GetRankingResponse> findTopUsersByGroup(@Param("group") StudyGroup group);
 
 
-	boolean existsByUserAndProblemAndIsCorrect(User user, Problem problem, boolean isCorrect);
+	boolean existsByUserAndProblemAndResult(User user, Problem problem, String result);
 }

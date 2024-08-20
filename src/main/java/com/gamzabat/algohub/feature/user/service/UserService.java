@@ -1,14 +1,7 @@
 package com.gamzabat.algohub.feature.user.service;
 
+import java.time.Duration;
 
-import com.gamzabat.algohub.common.jwt.dto.JwtDTO;
-import com.gamzabat.algohub.common.redis.RedisService;
-import com.gamzabat.algohub.exception.JwtRequestException;
-import com.gamzabat.algohub.feature.user.dto.*;
-import com.gamzabat.algohub.feature.user.exception.UncorrectedPasswordException;
-import com.gamzabat.algohub.feature.image.service.ImageService;
-
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -16,19 +9,29 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.gamzabat.algohub.common.jwt.TokenProvider;
-import com.gamzabat.algohub.feature.user.domain.User;
+import com.gamzabat.algohub.common.jwt.dto.JwtDTO;
+import com.gamzabat.algohub.common.redis.RedisService;
 import com.gamzabat.algohub.enums.Role;
+import com.gamzabat.algohub.exception.JwtRequestException;
 import com.gamzabat.algohub.exception.UserValidationException;
+import com.gamzabat.algohub.feature.image.service.ImageService;
+import com.gamzabat.algohub.feature.user.domain.User;
+import com.gamzabat.algohub.feature.user.dto.DeleteUserRequest;
+import com.gamzabat.algohub.feature.user.dto.RegisterRequest;
+import com.gamzabat.algohub.feature.user.dto.SignInRequest;
+import com.gamzabat.algohub.feature.user.dto.SignInResponse;
+import com.gamzabat.algohub.feature.user.dto.UpdateUserRequest;
+import com.gamzabat.algohub.feature.user.dto.UserInfoResponse;
+import com.gamzabat.algohub.feature.user.exception.UncorrectedPasswordException;
 import com.gamzabat.algohub.feature.user.repository.UserRepository;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import java.time.Duration;
 
 @Slf4j
 @Service
@@ -60,26 +63,25 @@ public class UserService {
 	@Transactional(readOnly = true)
 	public SignInResponse signIn(SignInRequest request) {
 		UsernamePasswordAuthenticationToken authenticationToken
-			= new UsernamePasswordAuthenticationToken(request.email(),request.password());
+			= new UsernamePasswordAuthenticationToken(request.email(), request.password());
 		Authentication authenticate;
 		try {
 			authenticate = authManager.getObject().authenticate(authenticationToken);
-		} catch (BadCredentialsException e){
+		} catch (BadCredentialsException e) {
 			throw new UncorrectedPasswordException("비밀번호가 틀렸습니다.");
 		}
 		JwtDTO token = tokenProvider.generateToken(authenticate);
 		return new SignInResponse(token.getToken());
 	}
 
-	private void checkEmailDuplication(String email){
-		if(userRepository.existsByEmail(email))
+	private void checkEmailDuplication(String email) {
+		if (userRepository.existsByEmail(email))
 			throw new UserValidationException("이미 가입 된 이메일 입니다.");
 	}
 
-
 	@Transactional(readOnly = true)
 	public UserInfoResponse userInfo(User user) {
-		return new UserInfoResponse(user.getEmail(), user.getNickname(),user.getProfileImage(), user.getBjNickname());
+		return new UserInfoResponse(user.getEmail(), user.getNickname(), user.getProfileImage(), user.getBjNickname());
 	}
 
 	@Transactional
@@ -103,10 +105,9 @@ public class UserService {
 	}
 
 	@Transactional
-	public void deleteUser( User user, DeleteUserRequest deleteUserRequest) {
+	public void deleteUser(User user, DeleteUserRequest deleteUserRequest) {
 
-		if (!passwordEncoder.matches(deleteUserRequest.password(),user.getPassword()))
-		{
+		if (!passwordEncoder.matches(deleteUserRequest.password(), user.getPassword())) {
 			throw new UncorrectedPasswordException("비밀번호가 틀렸습니다.");
 		}
 		userRepository.delete(user);
@@ -116,10 +117,10 @@ public class UserService {
 	public void logout(HttpServletRequest request) {
 		String accessToken = tokenProvider.resolveToken(request);
 		if (accessToken == null)
-			throw new JwtRequestException(HttpStatus.BAD_REQUEST.value(),"BAD_REQUEST","토큰이 비어있습니다.");
+			throw new JwtRequestException(HttpStatus.BAD_REQUEST.value(), "BAD_REQUEST", "토큰이 비어있습니다.");
 
 		long tokenExpiration = tokenProvider.getTokenExpiration();
-		redisService.setValues(accessToken,"logout", Duration.ofMillis(tokenExpiration));
+		redisService.setValues(accessToken, "logout", Duration.ofMillis(tokenExpiration));
 		log.info("success to logout");
 	}
 }
