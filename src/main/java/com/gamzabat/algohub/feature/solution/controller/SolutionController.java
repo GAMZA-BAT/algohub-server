@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,7 +32,7 @@ import lombok.RequiredArgsConstructor;
 public class SolutionController {
 	private final SolutionService solutionService;
 
-	@GetMapping("/solutions")
+	@GetMapping
 	@Operation(summary = "풀이 목록 조회 API", description = "특정 문제에 대한 풀이를 모두 조회하는 API")
 	public ResponseEntity<Page<GetSolutionResponse>> getSolutionList(@AuthedUser User user,
 		@RequestParam Long problemId,
@@ -42,10 +43,10 @@ public class SolutionController {
 		return ResponseEntity.ok().body(response);
 	}
 
-	@GetMapping("/solution")
+	@GetMapping("/{solutionId}")
 	@Operation(summary = "풀이 하나 조회 API", description = "특정 풀이 하나를 조회하는 API")
 	public ResponseEntity<GetSolutionResponse> getSolution(@AuthedUser User user,
-		@RequestParam Long solutionId) {
+		@PathVariable Long solutionId) {
 		GetSolutionResponse response = solutionService.getSolution(user, solutionId);
 		return ResponseEntity.ok().body(response);
 	}
