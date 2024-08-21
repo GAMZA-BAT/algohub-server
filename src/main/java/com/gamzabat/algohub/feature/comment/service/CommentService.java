@@ -115,7 +115,7 @@ public class CommentService {
 		if (!comment.getUser().getId().equals(user.getId()))
 			throw new UserValidationException("댓글 작성자가 아닙니다.");
 
-		comment.upadateComment(request.content());
+		comment.upadateComment(request.content(), LocalDateTime.now());
 	}
 
 }

@@ -35,6 +35,7 @@ public class Comment {
 
 	private String content;
 	private LocalDateTime createdAt;
+	private LocalDateTime updatedAt;
 
 	@Builder
 	public Comment(Solution solution, User user, String content, LocalDateTime createdAt) {
@@ -44,9 +45,9 @@ public class Comment {
 		this.createdAt = createdAt;
 	}
 
-	public void upadateComment(String content) {
+	public void upadateComment(String content, LocalDateTime now) {
 		this.content = content;
-		this.createdAt = LocalDateTime.now();
+		this.updatedAt = LocalDateTime.now();
 	}
 
 }

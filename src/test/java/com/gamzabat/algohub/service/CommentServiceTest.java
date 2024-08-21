@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Field;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -437,11 +438,12 @@ class CommentServiceTest {
 		// then
 		verify(commentRepository).findById(request.commentId());
 		assertEquals("Updated content", comment.getContent());
+		assertEquals(LocalDateTime.now(), comment.getUpdatedAt());
 	}
 
 	@Test
-	@DisplayName("댓글 수정 실패")
-	void testUpdateCommentFailed() {
+	@DisplayName("댓글 수정 실패(작성자가 아님)")
+	void testUpdateCommentFailed_1() {
 		//given
 		UpdateCommentRequest request = new UpdateCommentRequest(40L, "Updated content");
 		when(commentRepository.findById(request.commentId())).thenReturn(Optional.ofNullable(comment));
@@ -449,5 +451,18 @@ class CommentServiceTest {
 		assertThatThrownBy(() -> commentService.updateComment(user2, request))
 			.hasFieldOrPropertyWithValue("errors", "댓글 작성자가 아닙니다.");
 
+	}
+
+	@Test
+	@DisplayName("댓글 수정 실패(존재하지 않는 댓글)")
+	void testUpdateCommentFailed_2() {
+		//given
+		UpdateCommentRequest request = new UpdateCommentRequest(50L, "Updated content");
+		when(commentRepository.findById(request.commentId())).thenReturn(Optional.empty());
+		//when, then
+		assertThatThrownBy(() -> commentService.updateComment(user2, request))
+			.isInstanceOf(CommentValidationException.class)
+			.extracting("code", "error")
+			.containsExactly(HttpStatus.NOT_FOUND.value(), "존재하지 않는 댓글 입니다.");
 	}
 }
