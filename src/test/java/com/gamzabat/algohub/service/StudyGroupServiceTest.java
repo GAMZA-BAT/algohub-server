@@ -22,11 +22,14 @@ import org.springframework.mock.web.MockMultipartFile;
 import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.feature.image.service.ImageService;
+import com.gamzabat.algohub.feature.studygroup.domain.BookmarkedStudyGroup;
 import com.gamzabat.algohub.feature.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.studygroup.dto.CreateGroupRequest;
 import com.gamzabat.algohub.feature.studygroup.dto.EditGroupRequest;
+import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundGroupException;
 import com.gamzabat.algohub.feature.studygroup.exception.GroupMemberValidationException;
+import com.gamzabat.algohub.feature.studygroup.repository.BookmarkedStudyGroupRepository;
 import com.gamzabat.algohub.feature.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.studygroup.service.StudyGroupService;
@@ -41,10 +44,13 @@ class StudyGroupServiceTest {
 	@Mock
 	private GroupMemberRepository groupMemberRepository;
 	@Mock
+	private BookmarkedStudyGroupRepository bookmarkedStudyGroupRepository;
+	@Mock
 	private ImageService imageService;
 	private User user;
 	private User user2;
 	private StudyGroup group;
+	private final Long groupId = 10L;
 	@Captor
 	private ArgumentCaptor<StudyGroup> groupCaptor;
 	@Captor
@@ -276,4 +282,85 @@ class StudyGroupServiceTest {
 			.hasFieldOrPropertyWithValue("error", "그룹 정보 수정에 대한 권한이 없습니다.");
 	}
 
+	@Test
+	@DisplayName("스터디 그룹 즐겨찾기 추가 성공 (주인)")
+	void updateBookmarkStudyGroup_1() {
+		// given
+		when(studyGroupRepository.findById(anyLong())).thenReturn(Optional.ofNullable(group));
+		when(bookmarkedStudyGroupRepository.findByUserAndStudyGroup(user, group)).thenReturn(
+			Optional.empty());
+		// when
+		String response = studyGroupService.updateBookmarkGroup(user, groupId);
+		// then
+		assertThat(response).isEqualTo("스터디 그룹 즐겨찾기 추가 성공");
+	}
+
+	@Test
+	@DisplayName("스터디 그룹 즐겨찾기 추가 성공 (멤버)")
+	void updateBookmarkStudyGroup_2() {
+		// given
+		when(studyGroupRepository.findById(anyLong())).thenReturn(Optional.ofNullable(group));
+		when(groupMemberRepository.existsByUserAndStudyGroup(user2, group)).thenReturn(true);
+		when(bookmarkedStudyGroupRepository.findByUserAndStudyGroup(user2, group)).thenReturn(
+			Optional.empty());
+		// when
+		String response = studyGroupService.updateBookmarkGroup(user2, groupId);
+		// then
+		assertThat(response).isEqualTo("스터디 그룹 즐겨찾기 추가 성공");
+	}
+
+	@Test
+	@DisplayName("스터디 그룹 즐겨찾기 삭제 성공 (주인)")
+	void updateBookmarkStudyGroup_3() {
+		// given
+		BookmarkedStudyGroup bookmarkedStudyGroup = BookmarkedStudyGroup.builder().user(user).studyGroup(group).build();
+		when(studyGroupRepository.findById(anyLong())).thenReturn(Optional.ofNullable(group));
+		when(bookmarkedStudyGroupRepository.findByUserAndStudyGroup(user, group)).thenReturn(
+			Optional.of(bookmarkedStudyGroup));
+		// when
+		String response = studyGroupService.updateBookmarkGroup(user, groupId);
+		// then
+		assertThat(response).isEqualTo("스터디 그룹 즐겨찾기 삭제 성공");
+	}
+
+	@Test
+	@DisplayName("스터디 그룹 즐겨찾기 삭제 성공 (멤버)")
+	void updateBookmarkStudyGroup_4() {
+		// given
+		BookmarkedStudyGroup bookmarkedStudyGroup = BookmarkedStudyGroup.builder()
+			.user(user2)
+			.studyGroup(group)
+			.build();
+		when(studyGroupRepository.findById(anyLong())).thenReturn(Optional.ofNullable(group));
+		when(groupMemberRepository.existsByUserAndStudyGroup(user2, group)).thenReturn(true);
+		when(bookmarkedStudyGroupRepository.findByUserAndStudyGroup(user2, group)).thenReturn(
+			Optional.of(bookmarkedStudyGroup));
+		// when
+		String response = studyGroupService.updateBookmarkGroup(user2, groupId);
+		// then
+		assertThat(response).isEqualTo("스터디 그룹 즐겨찾기 삭제 성공");
+	}
+
+	@Test
+	@DisplayName("스터디 그룹 즐겨찾기 추가/삭제 실패 : 존재하지 않는 그룹")
+	void updateBookmarkedStudyGroupFailed_1() {
+		// given
+		when(studyGroupRepository.findById(anyLong())).thenReturn(Optional.empty());
+		// when, then
+		assertThatThrownBy(() -> studyGroupService.updateBookmarkGroup(user, groupId))
+			.isInstanceOf(CannotFoundGroupException.class)
+			.hasFieldOrPropertyWithValue("errors", "존재하지 않는 그룹 입니다.");
+	}
+
+	@Test
+	@DisplayName("스터디 그룹 즐겨찾기 추가/삭제 실패 : 참여하지 않은 그룹")
+	void updateBookmarkedStudyGroupFailed_2() {
+		// given
+		when(studyGroupRepository.findById(anyLong())).thenReturn(Optional.of(group));
+		// when, then
+		assertThatThrownBy(() -> studyGroupService.updateBookmarkGroup(user2, groupId))
+			.isInstanceOf(StudyGroupValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
+			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹 입니다.");
+	}
 }
