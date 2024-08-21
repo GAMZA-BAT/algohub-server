@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -438,7 +439,7 @@ class CommentServiceTest {
 		// then
 		verify(commentRepository).findById(request.commentId());
 		assertEquals("Updated content", comment.getContent());
-		assertEquals(LocalDateTime.now(), comment.getUpdatedAt());
+		assertThat(comment.getUpdatedAt()).isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.SECONDS));
 	}
 
 	@Test
