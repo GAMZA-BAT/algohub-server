@@ -9,6 +9,8 @@ import com.gamzabat.algohub.enums.Role;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -35,6 +37,7 @@ public class User {
 	@Column(name = "deleted_at")
 	private LocalDateTime deletedAt;
 
+	@Enumerated(EnumType.STRING)
 	private Role role;
 
 	@Builder
