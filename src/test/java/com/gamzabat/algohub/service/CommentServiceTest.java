@@ -1,6 +1,7 @@
 package com.gamzabat.algohub.service;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Field;
@@ -25,6 +26,7 @@ import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.feature.comment.domain.Comment;
 import com.gamzabat.algohub.feature.comment.dto.CreateCommentRequest;
 import com.gamzabat.algohub.feature.comment.dto.GetCommentResponse;
+import com.gamzabat.algohub.feature.comment.dto.UpdateCommentRequest;
 import com.gamzabat.algohub.feature.comment.exception.CommentValidationException;
 import com.gamzabat.algohub.feature.comment.exception.SolutionValidationException;
 import com.gamzabat.algohub.feature.comment.repository.CommentRepository;
@@ -420,6 +422,33 @@ class CommentServiceTest {
 			.isInstanceOf(GroupMemberValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹 입니다.");
+	}
+
+	@Test
+	@DisplayName("댓글 수정 성공")
+	void testUpdateCommentSuccess() {
+		// given
+		UpdateCommentRequest request = new UpdateCommentRequest(40L, "Updated content");
+		when(commentRepository.findById(request.commentId())).thenReturn(Optional.of(comment));
+
+		// when
+		commentService.updateComment(user, request);
+
+		// then
+		verify(commentRepository).findById(request.commentId());
+		assertEquals("Updated content", comment.getContent());
+	}
+
+	@Test
+	@DisplayName("댓글 수정 실패")
+	void testUpdateCommentFailed() {
+		//given
+		UpdateCommentRequest request = new UpdateCommentRequest(40L, "Updated content");
+		when(commentRepository.findById(request.commentId())).thenReturn(Optional.ofNullable(comment));
+		//when,then
+		assertThatThrownBy(() -> commentService.updateComment(user2, request))
+			.hasFieldOrPropertyWithValue("errors", "댓글 작성자가 아닙니다.");
+
 	}
 
 }
