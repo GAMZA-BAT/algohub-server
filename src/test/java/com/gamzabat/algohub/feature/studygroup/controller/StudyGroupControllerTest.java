@@ -36,6 +36,7 @@ import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.image.service.ImageService;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
+import com.gamzabat.algohub.feature.solution.exception.CannotFoundSolutionException;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
 import com.gamzabat.algohub.feature.studygroup.dto.CheckSolvedProblemResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.CreateGroupRequest;
@@ -555,5 +556,63 @@ class StudyGroupControllerTest {
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.error").value("코드를 조회할 권한이 없습니다."));
 		verify(studyGroupService, times(1)).getGroupCode(any(User.class), anyLong());
+	}
+
+	@Test
+	@DisplayName("스터디 그룹 즐겨찾기 추가 성공")
+	void updateBookmarked_1() throws Exception {
+		// given
+		when(studyGroupService.updateBookmarkGroup(user, groupId)).thenReturn("스터디 그룹 즐겨찾기 추가 성공");
+		// when, then
+		mockMvc.perform(post("/api/group/bookmark")
+				.header("Authorization", token)
+				.param("groupId", String.valueOf(groupId)))
+			.andExpect(status().isOk())
+			.andExpect(content().string("스터디 그룹 즐겨찾기 추가 성공"));
+		verify(studyGroupService, times(1)).updateBookmarkGroup(user, groupId);
+	}
+
+	@Test
+	@DisplayName("스터디 그룹 즐겨찾기 삭제 성공")
+	void updateBookmarked_2() throws Exception {
+		// given
+		when(studyGroupService.updateBookmarkGroup(user, groupId)).thenReturn("스터디 그룹 즐겨찾기 실패 성공");
+		// when, then
+		mockMvc.perform(post("/api/group/bookmark")
+				.header("Authorization", token)
+				.param("groupId", String.valueOf(groupId)))
+			.andExpect(status().isOk())
+			.andExpect(content().string("스터디 그룹 즐겨찾기 실패 성공"));
+		verify(studyGroupService, times(1)).updateBookmarkGroup(user, groupId);
+	}
+
+	@Test
+	@DisplayName("스터디 그룹 즐겨찾기 추가/삭제 실패 : 존재하지 않는 그룹")
+	void updateBookmarkedFailed_1() throws Exception {
+		// given
+		when(studyGroupService.updateBookmarkGroup(user, groupId)).thenThrow(
+			new CannotFoundSolutionException("존재하지 않는 그룹 입니다."));
+		// when, then
+		mockMvc.perform(post("/api/group/bookmark")
+				.header("Authorization", token)
+				.param("groupId", String.valueOf(groupId)))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.error").value("존재하지 않는 그룹 입니다."));
+		verify(studyGroupService, times(1)).updateBookmarkGroup(user, groupId);
+	}
+
+	@Test
+	@DisplayName("스터디 그룹 즐겨찾기 추가/삭제 실패 : 참여하지 않은 그룹")
+	void updateBookmarkedFailed_2() throws Exception {
+		// given
+		when(studyGroupService.updateBookmarkGroup(user, groupId)).thenThrow(
+			new StudyGroupValidationException(HttpStatus.BAD_REQUEST.value(), "참여하지 않은 그룹 입니다."));
+		// when, then
+		mockMvc.perform(post("/api/group/bookmark")
+				.header("Authorization", token)
+				.param("groupId", String.valueOf(groupId)))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.error").value("참여하지 않은 그룹 입니다."));
+		verify(studyGroupService, times(1)).updateBookmarkGroup(user, groupId);
 	}
 }
