@@ -13,7 +13,7 @@ import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.comment.domain.Comment;
 import com.gamzabat.algohub.feature.comment.dto.CreateCommentRequest;
 import com.gamzabat.algohub.feature.comment.dto.GetCommentResponse;
-import com.gamzabat.algohub.feature.comment.dto.ModifyCommentRequest;
+import com.gamzabat.algohub.feature.comment.dto.UpdateCommentRequest;
 import com.gamzabat.algohub.feature.comment.exception.CommentValidationException;
 import com.gamzabat.algohub.feature.comment.exception.SolutionValidationException;
 import com.gamzabat.algohub.feature.comment.repository.CommentRepository;
@@ -109,7 +109,7 @@ public class CommentService {
 	}
 
 	@Transactional
-	public void updateComment(User user, ModifyCommentRequest request) {
+	public void updateComment(User user, UpdateCommentRequest request) {
 		Comment comment = commentRepository.findById(request.commentId())
 			.orElseThrow(() -> new CommentValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 댓글 입니다."));
 		if (!comment.getUser().getId().equals(user.getId()))
