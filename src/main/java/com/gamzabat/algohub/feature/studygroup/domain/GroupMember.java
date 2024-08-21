@@ -2,9 +2,12 @@ package com.gamzabat.algohub.feature.studygroup.domain;
 
 import java.time.LocalDate;
 
+import com.gamzabat.algohub.feature.studygroup.etc.Role;
 import com.gamzabat.algohub.feature.user.domain.User;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -29,10 +32,11 @@ public class GroupMember {
 	@JoinColumn(name = "study_group_id")
 	private StudyGroup studyGroup;
 	private LocalDate joinDate;
-	private String role;
+	@Enumerated(EnumType.STRING)
+	private Role role;
 
 	@Builder
-	public GroupMember(User user, StudyGroup studyGroup, LocalDate joinDate, String role) {
+	public GroupMember(User user, StudyGroup studyGroup, LocalDate joinDate, Role role) {
 		this.user = user;
 		this.studyGroup = studyGroup;
 		this.joinDate = joinDate;
