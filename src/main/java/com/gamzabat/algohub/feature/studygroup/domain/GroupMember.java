@@ -29,11 +29,13 @@ public class GroupMember {
 	@JoinColumn(name = "study_group_id")
 	private StudyGroup studyGroup;
 	private LocalDate joinDate;
+	private String role;
 
 	@Builder
-	public GroupMember(User user, StudyGroup studyGroup, LocalDate joinDate) {
+	public GroupMember(User user, StudyGroup studyGroup, LocalDate joinDate, String role) {
 		this.user = user;
 		this.studyGroup = studyGroup;
 		this.joinDate = joinDate;
+		this.role = role;
 	}
 }

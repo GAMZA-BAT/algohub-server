@@ -85,6 +85,7 @@ public class StudyGroupService {
 			GroupMember.builder()
 				.studyGroup(studyGroup)
 				.user(user)
+				.role("participant")
 				.joinDate(LocalDate.now())
 				.build()
 		);
