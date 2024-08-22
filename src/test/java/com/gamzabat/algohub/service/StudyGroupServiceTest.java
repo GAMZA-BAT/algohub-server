@@ -5,6 +5,8 @@ import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Field;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -27,6 +29,8 @@ import com.gamzabat.algohub.feature.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.studygroup.dto.CreateGroupRequest;
 import com.gamzabat.algohub.feature.studygroup.dto.EditGroupRequest;
+import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupListsResponse;
+import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupResponse;
 import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundGroupException;
 import com.gamzabat.algohub.feature.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.studygroup.repository.BookmarkedStudyGroupRepository;
@@ -201,37 +205,80 @@ class StudyGroupServiceTest {
 			.hasFieldOrPropertyWithValue("error", "이미 참여하지 않은 그룹 입니다.");
 	}
 
-	//	@Test
-	//	@DisplayName("그룹 목록 조회")
-	//	void getGroupList(){
-	//		// given
-	//		List<StudyGroup> groups = new ArrayList<>(30);
-	//		for(int i=0; i<30; i++){
-	//			groups.add(StudyGroup.builder()
-	//				.name("name"+i)
-	//				.owner(user)
-	//				.groupImage("imageUrl"+i)
-	//					.startDate(LocalDate.now())
-	//					.endDate(LocalDate.now().plusDays(i))
-	//					.introduction("introduction"+i)
-	//				.groupCode("code"+i)
-	//				.build());
-	//		}
-	//		when(studyGroupRepository.findByUser(user)).thenReturn(groups);
-	//		// when
-	//		List<GetStudyGroupResponse> result = studyGroupService.getStudyGroupList(user);
-	//		// then
-	//		assertThat(result.size()).isEqualTo(30);
-	//		for(int i=0; i<30; i++){
-	//			assertThat(result.get(i).name()).isEqualTo("name"+i);
-	//			assertThat(result.get(i).ownerNickname()).isEqualTo("nickname");
-	//			assertThat(result.get(i).groupImage()).isEqualTo("imageUrl"+i);
-	//			assertThat(result.get(i).startDate()).isEqualTo(LocalDate.now());
-	//			assertThat(result.get(i).endDate()).isEqualTo(LocalDate.now().plusDays(i));
-	//			assertThat(result.get(i).introduction()).isEqualTo("introduction"+i);
-	//			assertThat(result.get(i).isOwner()).isTrue();
-	//		}
-	//	}
+	@Test
+	@DisplayName("그룹 목록 조회")
+	void getGroupList() {
+		// given
+		List<StudyGroup> groups = new ArrayList<>(30);
+		for (int i = 0; i < 10; i++) {
+			groups.add(StudyGroup.builder()
+				.name("name" + i)
+				.owner(user)
+				.startDate(LocalDate.now().minusDays(i + 30))
+				.endDate(LocalDate.now().minusDays(30))
+				.build());
+		}
+		for (int i = 0; i < 10; i++) {
+			groups.add(StudyGroup.builder()
+				.name("name" + i)
+				.owner(user)
+				.startDate(LocalDate.now().minusDays(i + 1))
+				.endDate(LocalDate.now().plusDays(i + 1))
+				.build());
+		}
+		for (int i = 0; i < 10; i++) {
+			groups.add(StudyGroup.builder()
+				.name("name" + i)
+				.owner(user)
+				.startDate(LocalDate.now().plusDays(30))
+				.endDate(LocalDate.now().plusDays(i + 30))
+				.build());
+		}
+		List<BookmarkedStudyGroup> bookmarks = new ArrayList<>(10);
+		for (int i = 10; i < 20; i++) {
+			bookmarks.add(BookmarkedStudyGroup.builder()
+				.studyGroup(groups.get(i))
+				.user(user)
+				.build());
+		}
+		when(bookmarkedStudyGroupRepository.findAllByUser(user)).thenReturn(bookmarks);
+		when(studyGroupRepository.findByUser(user)).thenReturn(groups);
+		// when
+		GetStudyGroupListsResponse result = studyGroupService.getStudyGroupList(user);
+		// then
+		List<GetStudyGroupResponse> bookmarked = result.getBookmarked();
+		List<GetStudyGroupResponse> done = result.getDone();
+		List<GetStudyGroupResponse> inProgress = result.getInProgress();
+		List<GetStudyGroupResponse> queued = result.getQueued();
+		assertThat(bookmarked.size()).isEqualTo(10);
+		assertThat(done.size()).isEqualTo(10);
+		assertThat(inProgress.size()).isEqualTo(10);
+		assertThat(queued.size()).isEqualTo(10);
+		for (int i = 0; i < 10; i++) {
+			assertThat(done.get(i).name()).isEqualTo("name" + i);
+			assertThat(done.get(i).ownerNickname()).isEqualTo("nickname");
+			assertThat(done.get(i).startDate()).isEqualTo(LocalDate.now().minusDays(i + 30));
+			assertThat(done.get(i).endDate()).isEqualTo(LocalDate.now().minusDays(30));
+		}
+		for (int i = 0; i < 10; i++) {
+			assertThat(inProgress.get(i).name()).isEqualTo("name" + i);
+			assertThat(inProgress.get(i).ownerNickname()).isEqualTo("nickname");
+			assertThat(inProgress.get(i).startDate()).isEqualTo(LocalDate.now().minusDays(i + 1));
+			assertThat(inProgress.get(i).endDate()).isEqualTo(LocalDate.now().plusDays(i + 1));
+		}
+		for (int i = 0; i < 10; i++) {
+			assertThat(queued.get(i).name()).isEqualTo("name" + i);
+			assertThat(queued.get(i).ownerNickname()).isEqualTo("nickname");
+			assertThat(queued.get(i).startDate()).isEqualTo(LocalDate.now().plusDays(30));
+			assertThat(queued.get(i).endDate()).isEqualTo(LocalDate.now().plusDays(i + 30));
+		}
+		for (int i = 0; i < 10; i++) {
+			assertThat(bookmarked.get(i).name()).isEqualTo("name" + i);
+			assertThat(bookmarked.get(i).ownerNickname()).isEqualTo("nickname");
+			assertThat(bookmarked.get(i).startDate()).isEqualTo(LocalDate.now().minusDays(i + 1));
+			assertThat(bookmarked.get(i).endDate()).isEqualTo(LocalDate.now().plusDays(i + 1));
+		}
+	}
 
 	@Test
 	@DisplayName("그룹 정보 수정 성공")
