@@ -34,6 +34,7 @@ import com.gamzabat.algohub.feature.studygroup.dto.GetRankingResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupListsResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupWithCodeResponse;
+import com.gamzabat.algohub.feature.studygroup.etc.RoleOfGroupMember;
 import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundGroupException;
 import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundProblemException;
 import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundUserException;
@@ -90,6 +91,7 @@ public class StudyGroupService {
 			GroupMember.builder()
 				.studyGroup(studyGroup)
 				.user(user)
+				.role(RoleOfGroupMember.PARTICIPANT)
 				.joinDate(LocalDate.now())
 				.build()
 		);
