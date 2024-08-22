@@ -6,7 +6,6 @@ import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -19,12 +18,14 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
 import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.exception.ProblemValidationException;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
+import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.comment.domain.Comment;
 import com.gamzabat.algohub.feature.comment.dto.CreateCommentRequest;
 import com.gamzabat.algohub.feature.comment.dto.GetCommentResponse;
@@ -434,15 +435,20 @@ class CommentServiceTest {
 		when(commentRepository.findById(request.commentId())).thenReturn(Optional.of(comment));
 		LocalDateTime previousUpdatedAt = comment.getUpdatedAt();
 
-		// when
-		commentService.updateComment(user, request);
+		// 현재 시간을 모킹
+		LocalDateTime fixedNow = LocalDateTime.of(2024, 8, 23, 12, 0);
+		try (MockedStatic<LocalDateTime> mockedStatic = mockStatic(LocalDateTime.class)) {
+			mockedStatic.when(LocalDateTime::now).thenReturn(fixedNow);
 
-		// then
-		verify(commentRepository).findById(request.commentId());
-		assertEquals("Updated content", comment.getContent());
-		assertTrue(comment.getUpdatedAt().isAfter(previousUpdatedAt),
-			"Updated time should be after the previous updated time.");
-		assertThat(comment.getUpdatedAt()).isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.SECONDS));
+			// when
+			commentService.updateComment(user, request);
+
+			// then
+			verify(commentRepository).findById(request.commentId());
+			assertEquals("Updated content", comment.getContent());
+			assertEquals(fixedNow, comment.getUpdatedAt());  // 모킹한 시간으로 검증
+
+		}
 	}
 
 	@Test
@@ -453,6 +459,7 @@ class CommentServiceTest {
 		when(commentRepository.findById(request.commentId())).thenReturn(Optional.ofNullable(comment));
 		//when,then
 		assertThatThrownBy(() -> commentService.updateComment(user2, request))
+			.isInstanceOf(UserValidationException.class)
 			.hasFieldOrPropertyWithValue("errors", "댓글 작성자가 아닙니다.");
 
 	}
