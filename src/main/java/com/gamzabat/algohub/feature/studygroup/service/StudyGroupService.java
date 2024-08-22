@@ -147,8 +147,11 @@ public class StudyGroupService {
 			.collect(Collectors.toList());
 
 		List<GetStudyGroupResponse> inProgress = groups.stream()
-			.filter(group -> group.getStartDate() != null && group.getStartDate().isBefore(today) &&
-				(group.getEndDate() == null || group.getEndDate().isAfter(today)))
+			.filter(
+				group -> group.getStartDate() != null && (group.getStartDate().isBefore(today) || group.getStartDate()
+					.isEqual(today))
+					&& (group.getEndDate() != null && (group.getEndDate().isAfter(today) || group.getEndDate()
+					.isEqual(today))))
 			.map(group -> GetStudyGroupResponse.toDTO(group, user))
 			.collect(Collectors.toList());
 
