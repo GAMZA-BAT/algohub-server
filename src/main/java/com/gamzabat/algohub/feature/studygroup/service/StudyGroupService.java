@@ -5,6 +5,7 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -20,6 +21,7 @@ import com.gamzabat.algohub.feature.image.service.ImageService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
+import com.gamzabat.algohub.feature.studygroup.domain.BookmarkedStudyGroup;
 import com.gamzabat.algohub.feature.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.studygroup.dto.CheckSolvedProblemResponse;
@@ -32,10 +34,12 @@ import com.gamzabat.algohub.feature.studygroup.dto.GetRankingResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupListsResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupWithCodeResponse;
+import com.gamzabat.algohub.feature.studygroup.etc.RoleOfGroupMember;
 import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundGroupException;
 import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundProblemException;
 import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundUserException;
 import com.gamzabat.algohub.feature.studygroup.exception.GroupMemberValidationException;
+import com.gamzabat.algohub.feature.studygroup.repository.BookmarkedStudyGroupRepository;
 import com.gamzabat.algohub.feature.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
@@ -54,6 +58,8 @@ public class StudyGroupService {
 	private final SolutionRepository solutionRepository;
 	private final ProblemRepository problemRepository;
 	private final UserRepository userRepository;
+	private final StudyGroupRepository studyGroupRepository;
+	private final BookmarkedStudyGroupRepository bookmarkedStudyGroupRepository;
 
 	@Transactional
 	public CreateGroupResponse createGroup(User user, CreateGroupRequest request, MultipartFile profileImage) {
@@ -85,6 +91,7 @@ public class StudyGroupService {
 			GroupMember.builder()
 				.studyGroup(studyGroup)
 				.user(user)
+				.role(RoleOfGroupMember.PARTICIPANT)
 				.joinDate(LocalDate.now())
 				.build()
 		);
@@ -356,5 +363,27 @@ public class StudyGroupService {
 		BigDecimal percentage = num.multiply(BigDecimal.valueOf(100)).divide(den, 0, RoundingMode.HALF_UP);
 
 		return percentage.toString();
+	}
+
+	@Transactional
+	public String updateBookmarkGroup(User user, Long groupId) {
+		StudyGroup studyGroup = studyGroupRepository.findById(groupId)
+			.orElseThrow(() -> new CannotFoundGroupException("존재하지 않는 그룹 입니다."));
+
+		if (!studyGroup.getOwner().getId().equals(user.getId()) && !groupMemberRepository.existsByUserAndStudyGroup(
+			user, studyGroup))
+			throw new StudyGroupValidationException(HttpStatus.BAD_REQUEST.value(), "참여하지 않은 그룹 입니다.");
+
+		Optional<BookmarkedStudyGroup> bookmarked = bookmarkedStudyGroupRepository.findByUserAndStudyGroup(user,
+			studyGroup);
+
+		if (bookmarked.isEmpty()) {
+			bookmarkedStudyGroupRepository.save(
+				BookmarkedStudyGroup.builder().studyGroup(studyGroup).user(user).build());
+			return "스터디 그룹 즐겨찾기 추가 성공";
+		} else {
+			bookmarkedStudyGroupRepository.delete(bookmarked.get());
+			return "스터디 그룹 즐겨찾기 삭제 성공";
+		}
 	}
 }

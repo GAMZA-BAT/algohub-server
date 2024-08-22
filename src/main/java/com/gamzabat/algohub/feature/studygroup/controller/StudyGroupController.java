@@ -140,4 +140,11 @@ public class StudyGroupController {
 		GetGroupResponse response = studyGroupService.getGroup(user, groupId);
 		return ResponseEntity.ok().body(response);
 	}
+
+	@PostMapping(value = "/bookmark")
+	@Operation(summary = "스터디 그룹 즐겨찾기 추가/취소 API", description = "스터디 그룹을 즐겨찾기 추가,취소할 때 사용하는 API")
+	public ResponseEntity<String> updateBookmarkGroup(@AuthedUser User user, @RequestParam Long groupId) {
+		String response = studyGroupService.updateBookmarkGroup(user, groupId);
+		return ResponseEntity.ok().body(response);
+	}
 }
