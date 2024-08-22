@@ -5,7 +5,8 @@ import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Field;
 import java.time.LocalDate;
-import java.util.ArrayList;
+import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,6 +26,8 @@ import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.image.service.ImageService;
+import com.gamzabat.algohub.feature.problem.domain.Problem;
+import com.gamzabat.algohub.feature.solution.domain.Solution;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
 import com.gamzabat.algohub.feature.studygroup.domain.BookmarkedStudyGroup;
 import com.gamzabat.algohub.feature.studygroup.domain.GroupMember;
@@ -57,7 +60,11 @@ class StudyGroupServiceTest {
 	private User user;
 	private User user2;
 	private StudyGroup group;
-	private GroupMember groupMember;
+	private Problem problem1;
+	private Problem problem2;
+	private Solution solution1;
+	private Solution solution2;
+	private Solution solution3;
 	private final Long groupId = 10L;
 	@Captor
 	private ArgumentCaptor<StudyGroup> groupCaptor;
@@ -66,10 +73,10 @@ class StudyGroupServiceTest {
 
 	@BeforeEach
 	void setUp() throws NoSuchFieldException, IllegalAccessException {
-		user = User.builder().email("email1").password("password").nickname("nickname")
-			.role(Role.USER).profileImage("image").build();
-		user2 = User.builder().email("email2").password("password").nickname("nickname")
-			.role(Role.USER).profileImage("image").build();
+		user = User.builder().email("email1").password("password").nickname("nickname1")
+			.role(Role.USER).profileImage("image1").build();
+		user2 = User.builder().email("email2").password("password").nickname("nickname2")
+			.role(Role.USER).profileImage("image2").build();
 		group = StudyGroup.builder()
 			.name("name")
 			.owner(user)
@@ -78,7 +85,30 @@ class StudyGroupServiceTest {
 			.groupImage("imageUrl")
 			.groupCode("code")
 			.build();
-
+		problem1 = Problem.builder()
+			.studyGroup(group)
+			.build();
+		problem2 = Problem.builder()
+			.studyGroup(group)
+			.build();
+		solution1 = Solution.builder()
+			.result("맞았습니다!!")
+			.solvedDateTime(LocalDateTime.now().minusDays(1))
+			.problem(problem1)
+			.user(user)
+			.build();
+		solution2 = Solution.builder()
+			.result("맞았습니다!!")
+			.solvedDateTime(LocalDateTime.now().minusDays(2))
+			.problem(problem2)
+			.user(user)
+			.build();
+		solution3 = Solution.builder()
+			.result("맞았습니다!!")
+			.solvedDateTime(LocalDateTime.now().minusDays(1))
+			.problem(problem1)
+			.user(user2)
+			.build();
 		Field userField = User.class.getDeclaredField("id");
 		userField.setAccessible(true);
 		userField.set(user, 1L);
@@ -379,20 +409,24 @@ class StudyGroupServiceTest {
 		//given
 		when(studyGroupRepository.findById(10L)).thenReturn(Optional.of(group));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user2, group)).thenReturn(true);
-		List<GetRankingResponse> response = new ArrayList<>();
-		GetRankingResponse getRankingResponse1 = new GetRankingResponse(user.getNickname(), user.getProfileImage(), 2,
-			1L);
-		GetRankingResponse getRankingResponse2 = new GetRankingResponse(user2.getNickname(), user2.getProfileImage(), 1,
-			2L);
-		response.add(getRankingResponse1);
-		response.add(getRankingResponse2);
+		List<GetRankingResponse> response = Arrays.asList(
+			new GetRankingResponse("nickname2", "image2", 1, 2L), // user2
+			new GetRankingResponse("nickname1", "image1", 2, 1L)  // user1
+		);
 		when(solutionRepository.findTopUsersByGroup(group)).thenReturn(response);
 
 		//when
 		List<GetRankingResponse> result = studyGroupService.getAllRank(user2, 10L);
 
 		//then
+		assertThat(result.get(0).getProfileImage()).isEqualTo("image2");
+		assertThat(result.get(0).getSolvedCount()).isEqualTo(2L);
+		assertThat(result.get(0).getUserNickname()).isEqualTo("nickname2");
 		assertThat(result.get(0).getRank()).isEqualTo(1);
+
+		assertThat(result.get(1).getProfileImage()).isEqualTo("image1");
+		assertThat(result.get(1).getSolvedCount()).isEqualTo(1L);
+		assertThat(result.get(1).getUserNickname()).isEqualTo("nickname1");
 		assertThat((result.get(1).getRank())).isEqualTo(2);
 	}
 
@@ -414,7 +448,7 @@ class StudyGroupServiceTest {
 		//given
 		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.of(group));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user2, group)).thenReturn(false);
-		
+
 		//then
 		assertThatThrownBy(() -> studyGroupService.getAllRank(user2, groupId))
 			.isInstanceOf(UserValidationException.class)
