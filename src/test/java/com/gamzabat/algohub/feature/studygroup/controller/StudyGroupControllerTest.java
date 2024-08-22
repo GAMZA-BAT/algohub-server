@@ -200,9 +200,18 @@ class StudyGroupControllerTest {
 	@DisplayName("그룹 목록 조회 성공")
 	void getStudyGroupList() throws Exception {
 		// given
+		List<GetStudyGroupResponse> bookmarked = new ArrayList<>();
 		List<GetStudyGroupResponse> done = new ArrayList<>();
 		List<GetStudyGroupResponse> inProgress = new ArrayList<>();
 		List<GetStudyGroupResponse> queued = new ArrayList<>();
+
+		for (int i = 0; i < 10; i++) {
+			bookmarked.add(new GetStudyGroupResponse(
+				(long)i, "name" + i, "groupImage" + 1,
+				LocalDate.now(), LocalDate.now().plusDays(i),
+				"introduction" + 1, "nickname", true
+			));
+		}
 
 		for (int i = 0; i < 10; i++) {
 			done.add(new GetStudyGroupResponse(
@@ -225,7 +234,7 @@ class StudyGroupControllerTest {
 				"introduction" + 1, "nickname", true
 			));
 		}
-		GetStudyGroupListsResponse response = new GetStudyGroupListsResponse(done, inProgress, queued);
+		GetStudyGroupListsResponse response = new GetStudyGroupListsResponse(bookmarked, done, inProgress, queued);
 		when(studyGroupService.getStudyGroupList(user)).thenReturn(response);
 		// when, then
 		mockMvc.perform(get("/api/group/list")

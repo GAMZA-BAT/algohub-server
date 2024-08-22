@@ -136,6 +136,9 @@ public class StudyGroupService {
 	public GetStudyGroupListsResponse getStudyGroupList(User user) {
 		List<StudyGroup> groups = groupRepository.findByUser(user);
 
+		List<GetStudyGroupResponse> bookmarked = bookmarkedStudyGroupRepository.findAllByUser(user).stream()
+			.map(bookmark -> GetStudyGroupResponse.toDTO(bookmark.getStudyGroup(), user)).toList();
+
 		LocalDate today = LocalDate.now();
 
 		List<GetStudyGroupResponse> done = groups.stream()
@@ -154,7 +157,7 @@ public class StudyGroupService {
 			.map(group -> GetStudyGroupResponse.toDTO(group, user))
 			.collect(Collectors.toList());
 
-		GetStudyGroupListsResponse response = new GetStudyGroupListsResponse(done, inProgress, queued);
+		GetStudyGroupListsResponse response = new GetStudyGroupListsResponse(bookmarked, done, inProgress, queued);
 
 		log.info("success to get study group list");
 		return response;
