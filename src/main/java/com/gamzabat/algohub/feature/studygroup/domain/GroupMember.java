@@ -2,7 +2,7 @@ package com.gamzabat.algohub.feature.studygroup.domain;
 
 import java.time.LocalDate;
 
-import com.gamzabat.algohub.feature.studygroup.etc.Role;
+import com.gamzabat.algohub.feature.studygroup.etc.RoleOfGroupMember;
 import com.gamzabat.algohub.feature.user.domain.User;
 
 import jakarta.persistence.Entity;
@@ -33,10 +33,10 @@ public class GroupMember {
 	private StudyGroup studyGroup;
 	private LocalDate joinDate;
 	@Enumerated(EnumType.STRING)
-	private Role role;
+	private RoleOfGroupMember role;
 
 	@Builder
-	public GroupMember(User user, StudyGroup studyGroup, LocalDate joinDate, Role role) {
+	public GroupMember(User user, StudyGroup studyGroup, LocalDate joinDate, RoleOfGroupMember role) {
 		this.user = user;
 		this.studyGroup = studyGroup;
 		this.joinDate = joinDate;

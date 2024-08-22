@@ -4,13 +4,13 @@ import org.springframework.http.HttpStatus;
 
 import com.gamzabat.algohub.feature.studygroup.exception.InvalidRoleException;
 
-public enum Role {
+public enum RoleOfGroupMember {
 	ADMIN("ADMIN"),
 	PARTICIPANT("PARTICIPANT");
 
 	private final String value;
 
-	Role(String value) {
+	RoleOfGroupMember(String value) {
 		this.value = value;
 	}
 
@@ -18,8 +18,8 @@ public enum Role {
 		return value;
 	}
 
-	public static Role fromValue(String value) {
-		for (Role role : Role.values()) {
+	public static RoleOfGroupMember fromValue(String value) {
+		for (RoleOfGroupMember role : RoleOfGroupMember.values()) {
 			if (role.value.equals(value)) {
 				return role;
 			}
