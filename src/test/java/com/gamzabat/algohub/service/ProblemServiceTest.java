@@ -38,7 +38,9 @@ import com.gamzabat.algohub.feature.problem.dto.GetProblemResponse;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.problem.service.ProblemService;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
+import com.gamzabat.algohub.feature.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
+import com.gamzabat.algohub.feature.studygroup.etc.RoleOfGroupMember;
 import com.gamzabat.algohub.feature.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
@@ -62,7 +64,9 @@ class ProblemServiceTest {
 
 	private User user;
 	private User user2;
+	private User user3;
 	private StudyGroup group;
+	private GroupMember groupMember;
 	private Problem problem;
 	@Captor
 	private ArgumentCaptor<Problem> problemCaptor;
@@ -73,7 +77,10 @@ class ProblemServiceTest {
 			.role(Role.USER).profileImage("image").build();
 		user2 = User.builder().email("email2").password("password").nickname("nickname")
 			.role(Role.USER).profileImage("image").build();
+		user3 = User.builder().email("email3").password("password").nickname("nickname")
+			.role(Role.USER).profileImage("image").build();
 		group = StudyGroup.builder().name("name").owner(user).groupImage("imageUrl").groupCode("code").build();
+		groupMember = GroupMember.builder().role(RoleOfGroupMember.ADMIN).studyGroup(group).user(user3).build();
 		problem = Problem.builder()
 			.studyGroup(group)
 			.link("link")
@@ -96,8 +103,8 @@ class ProblemServiceTest {
 	}
 
 	@Test
-	@DisplayName("문제 생성 성공")
-	void createProblem() {
+	@DisplayName("문제 생성 성공 : 방장일 때")
+	void createProblem_SuccessBy방장() {
 		// given
 		CreateProblemRequest request = CreateProblemRequest.builder()
 			.groupId(10L)
@@ -106,8 +113,37 @@ class ProblemServiceTest {
 			.endDate(LocalDate.now())
 			.build();
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+
 		// when
 		problemService.createProblem(user, request);
+		// then
+		verify(problemRepository, times(1)).save(problemCaptor.capture());
+		Problem result = problemCaptor.getValue();
+		assertThat(result.getStudyGroup()).isEqualTo(group);
+		assertThat(result.getLink()).isEqualTo("https://www.acmicpc.net/problem/1000");
+		assertThat(result.getNumber()).isEqualTo(1000);
+		assertThat(result.getTitle()).isEqualTo("A+B");
+		assertThat(result.getLevel()).isEqualTo(1);
+		assertThat(result.getStartDate()).isEqualTo(LocalDate.now().minusDays(7));
+		assertThat(result.getEndDate()).isEqualTo(LocalDate.now());
+		verify(notificationService, times(1)).sendList(any(), any(), any(), any());
+	}
+
+	@Test
+	@DisplayName("문제 생성 성공 : 부방장일 때")
+	void createProblem_SuccessByADMIN() {
+		// given
+		CreateProblemRequest request = CreateProblemRequest.builder()
+			.groupId(10L)
+			.link("https://www.acmicpc.net/problem/1000")
+			.startDate(LocalDate.now().minusDays(7))
+			.endDate(LocalDate.now())
+			.build();
+		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user3, group)).thenReturn(Optional.of(groupMember));
+
+		// when
+		problemService.createProblem(user3, request);
 		// then
 		verify(problemRepository, times(1)).save(problemCaptor.capture());
 		Problem result = problemCaptor.getValue();

@@ -28,6 +28,7 @@ import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
 import com.gamzabat.algohub.feature.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
+import com.gamzabat.algohub.feature.studygroup.etc.RoleOfGroupMember;
 import com.gamzabat.algohub.feature.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
@@ -53,41 +54,82 @@ public class ProblemService {
 	@Transactional
 	public void createProblem(User user, CreateProblemRequest request) {
 		StudyGroup group = getGroup(request.groupId());
+		if (group.getOwner().getId().equals(user.getId())) {
+			String number = getProblemId(request);
+			int level = Integer.parseInt(getProblemLevel(number));
+			String title = getProblemTitle(number);
 
-		checkOwnerPermission(user, group, "create");
+			problemRepository.save(Problem.builder()
+				.studyGroup(group)
+				.link(request.link())
+				.number(Integer.parseInt(number))
+				.title(title)
+				.level(level)
+				.startDate(request.startDate())
+				.endDate(request.endDate())
+				.build());
 
-		String number = getProblemId(request);
-		int level = Integer.parseInt(getProblemLevel(number));
-		String title = getProblemTitle(number);
+			List<GroupMember> members = groupMemberRepository.findAllByStudyGroup(group);
+			List<String> users = members.stream().map(member -> member.getUser().getEmail()).toList();
+			try {
+				notificationService.sendList(users, "새로운 과제가 등록되었습니다.", group, null);
+			} catch (Exception e) {
+				log.info("failed to send notification", e);
+			}
+			log.info("success to create problem");
+		} else {
+			GroupMember groupMember = groupMemberRepository.findByUserAndStudyGroup(user, group)
+				.orElseThrow(
+					() -> new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "문제에 대한 권한이 없습니다. : create"));
+			if (!groupMember.getRole().equals(RoleOfGroupMember.ADMIN)) {
+				throw new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "문제에 대한 권한이 없습니다. : create");
+			} else {
+				String number = getProblemId(request);
+				int level = Integer.parseInt(getProblemLevel(number));
+				String title = getProblemTitle(number);
 
-		problemRepository.save(Problem.builder()
-			.studyGroup(group)
-			.link(request.link())
-			.number(Integer.parseInt(number))
-			.title(title)
-			.level(level)
-			.startDate(request.startDate())
-			.endDate(request.endDate())
-			.build());
+				problemRepository.save(Problem.builder()
+					.studyGroup(group)
+					.link(request.link())
+					.number(Integer.parseInt(number))
+					.title(title)
+					.level(level)
+					.startDate(request.startDate())
+					.endDate(request.endDate())
+					.build());
 
-		List<GroupMember> members = groupMemberRepository.findAllByStudyGroup(group);
-		List<String> users = members.stream().map(member -> member.getUser().getEmail()).toList();
-		try {
-			notificationService.sendList(users, "새로운 과제가 등록되었습니다.", group, null);
-		} catch (Exception e) {
-			log.info("failed to send notification", e);
+				List<GroupMember> members = groupMemberRepository.findAllByStudyGroup(group);
+				List<String> users = members.stream().map(member -> member.getUser().getEmail()).toList();
+				try {
+					notificationService.sendList(users, "새로운 과제가 등록되었습니다.", group, null);
+				} catch (Exception e) {
+					log.info("failed to send notification", e);
+				}
+				log.info("success to create problem");
+			}
 		}
-		log.info("success to create problem");
+
 	}
 
 	@Transactional
 	public void editProblem(User user, EditProblemRequest request) {
 		Problem problem = getProblem(request.problemId());
 		StudyGroup group = getGroup(problem.getStudyGroup().getId());
-		checkOwnerPermission(user, group, "edit");
+		if (group.getOwner().getId().equals(user.getId())) {
+			problem.editProblemInfo(request.startDate(), request.endDate());
+			log.info("success to edit problem deadline");
+		} else {
+			GroupMember groupMember = groupMemberRepository.findByUserAndStudyGroup(user, group)
+				.orElseThrow(
+					() -> new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "문제에 대한 권한이 없습니다. : edit"));
+			if (!groupMember.getRole().equals(RoleOfGroupMember.ADMIN)) {
+				throw new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "문제에 대한 권한이 없습니다. : edit");
+			} else {
+				problem.editProblemInfo(request.startDate(), request.endDate());
+				log.info("success to edit problem deadline");
+			}
+		}
 
-		problem.editProblemInfo(request.startDate(), request.endDate());
-		log.info("success to edit problem deadline");
 	}
 
 	@Transactional(readOnly = true)
