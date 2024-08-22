@@ -432,6 +432,7 @@ class CommentServiceTest {
 		// given
 		UpdateCommentRequest request = new UpdateCommentRequest(40L, "Updated content");
 		when(commentRepository.findById(request.commentId())).thenReturn(Optional.of(comment));
+		LocalDateTime previousUpdatedAt = comment.getUpdatedAt();
 
 		// when
 		commentService.updateComment(user, request);
@@ -439,6 +440,8 @@ class CommentServiceTest {
 		// then
 		verify(commentRepository).findById(request.commentId());
 		assertEquals("Updated content", comment.getContent());
+		assertTrue(comment.getUpdatedAt().isAfter(previousUpdatedAt),
+			"Updated time should be after the previous updated time.");
 		assertThat(comment.getUpdatedAt()).isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.SECONDS));
 	}
 
