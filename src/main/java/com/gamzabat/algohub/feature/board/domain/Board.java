@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import org.hibernate.annotations.DynamicUpdate;
 
+import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.user.domain.User;
 
 import jakarta.persistence.Entity;
@@ -28,6 +29,9 @@ public class Board {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id")
 	private User user;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "study_group_id")
+	private StudyGroup studyGroup;
 
 	private String title;
 	private String content;
@@ -35,9 +39,10 @@ public class Board {
 	private LocalDateTime updatedAt;
 
 	@Builder
-	public Board(User user, String title, String content, LocalDateTime createdAt) {
+	public Board(User user, StudyGroup studyGroup, String title, String content, LocalDateTime createdAt) {
 		this.user = user;
 		this.title = title;
+		this.studyGroup = studyGroup;
 		this.content = content;
 		this.createdAt = createdAt;
 		this.updatedAt = null;
