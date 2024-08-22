@@ -5,6 +5,8 @@ import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Field;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -21,12 +23,15 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
+import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.image.service.ImageService;
+import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
 import com.gamzabat.algohub.feature.studygroup.domain.BookmarkedStudyGroup;
 import com.gamzabat.algohub.feature.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.studygroup.dto.CreateGroupRequest;
 import com.gamzabat.algohub.feature.studygroup.dto.EditGroupRequest;
+import com.gamzabat.algohub.feature.studygroup.dto.GetRankingResponse;
 import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundGroupException;
 import com.gamzabat.algohub.feature.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.studygroup.repository.BookmarkedStudyGroupRepository;
@@ -46,10 +51,13 @@ class StudyGroupServiceTest {
 	@Mock
 	private BookmarkedStudyGroupRepository bookmarkedStudyGroupRepository;
 	@Mock
+	private SolutionRepository solutionRepository;
+	@Mock
 	private ImageService imageService;
 	private User user;
 	private User user2;
 	private StudyGroup group;
+	private GroupMember groupMember;
 	private final Long groupId = 10L;
 	@Captor
 	private ArgumentCaptor<StudyGroup> groupCaptor;
@@ -79,6 +87,7 @@ class StudyGroupServiceTest {
 		Field groupId = StudyGroup.class.getDeclaredField("id");
 		groupId.setAccessible(true);
 		groupId.set(group, 10L);
+
 	}
 
 	@Test
@@ -362,5 +371,53 @@ class StudyGroupServiceTest {
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
 			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹 입니다.");
+	}
+
+	@Test
+	@DisplayName("전체랭킹 조회 성공")
+	void getAllRank_SuccessByOwner() {
+		//given
+		when(studyGroupRepository.findById(10L)).thenReturn(Optional.of(group));
+		when(groupMemberRepository.existsByUserAndStudyGroup(user2, group)).thenReturn(true);
+		List<GetRankingResponse> response = new ArrayList<>();
+		GetRankingResponse getRankingResponse1 = new GetRankingResponse(user.getNickname(), user.getProfileImage(), 2,
+			1L);
+		GetRankingResponse getRankingResponse2 = new GetRankingResponse(user2.getNickname(), user2.getProfileImage(), 1,
+			2L);
+		response.add(getRankingResponse1);
+		response.add(getRankingResponse2);
+		when(solutionRepository.findTopUsersByGroup(group)).thenReturn(response);
+
+		//when
+		List<GetRankingResponse> result = studyGroupService.getAllRank(user2, 10L);
+
+		//then
+		assertThat(result.get(0).getRank()).isEqualTo(1);
+		assertThat((result.get(1).getRank())).isEqualTo(2);
+	}
+
+	@Test
+	@DisplayName("전체랭킹 조회 실패 : 그룹을 못 찾은 경우")
+	void getAllRank_FailedByCannotFoundGroup() {
+		//given
+		when(studyGroupRepository.findById(9L)).thenReturn(Optional.empty());
+
+		//then
+		assertThatThrownBy(() -> studyGroupService.getAllRank(user, 9L))
+			.isInstanceOf(CannotFoundGroupException.class)
+			.hasFieldOrPropertyWithValue("errors", "그룹을 찾을 수 없습니다.");
+	}
+
+	@Test
+	@DisplayName("전체랭킹 조회 실패 : 랭킹을 확인할 권한이 없는경우")
+	void getAllRank_FailedByAccess() {
+		//given
+		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.of(group));
+		when(groupMemberRepository.existsByUserAndStudyGroup(user2, group)).thenReturn(false);
+		
+		//then
+		assertThatThrownBy(() -> studyGroupService.getAllRank(user2, groupId))
+			.isInstanceOf(UserValidationException.class)
+			.hasFieldOrPropertyWithValue("errors", "랭킹을 확인할 권한이 없습니다.");
 	}
 }
