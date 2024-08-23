@@ -65,8 +65,11 @@ class ProblemServiceTest {
 	private User user;
 	private User user2;
 	private User user3;
+	private User user4;
 	private StudyGroup group;
-	private GroupMember groupMember;
+	private GroupMember groupMember1;
+	private GroupMember groupMember2;
+
 	private Problem problem;
 	@Captor
 	private ArgumentCaptor<Problem> problemCaptor;
@@ -79,8 +82,12 @@ class ProblemServiceTest {
 			.role(Role.USER).profileImage("image").build();
 		user3 = User.builder().email("email3").password("password").nickname("nickname")
 			.role(Role.USER).profileImage("image").build();
+		user4 = User.builder().email("email4").password("password").nickname("nickname")
+			.role(Role.USER).profileImage("image").build();
 		group = StudyGroup.builder().name("name").owner(user).groupImage("imageUrl").groupCode("code").build();
-		groupMember = GroupMember.builder().role(RoleOfGroupMember.ADMIN).studyGroup(group).user(user3).build();
+		groupMember1 = GroupMember.builder().role(RoleOfGroupMember.ADMIN).studyGroup(group).user(user3).build();
+		groupMember2 = GroupMember.builder().role(RoleOfGroupMember.PARTICIPANT).studyGroup(group).user(user3).build();
+
 		problem = Problem.builder()
 			.studyGroup(group)
 			.link("link")
@@ -140,7 +147,7 @@ class ProblemServiceTest {
 			.endDate(LocalDate.now())
 			.build();
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
-		when(groupMemberRepository.findByUserAndStudyGroup(user3, group)).thenReturn(Optional.of(groupMember));
+		when(groupMemberRepository.findByUserAndStudyGroup(user3, group)).thenReturn(Optional.of(groupMember1));
 
 		// when
 		problemService.createProblem(user3, request);
@@ -176,7 +183,7 @@ class ProblemServiceTest {
 	}
 
 	@Test
-	@DisplayName("문제 생성 실패 : 권한 없음")
+	@DisplayName("문제 생성 실패 : 권한 없음 // 그룹원이 아닌 경우")
 	void createProblemFailed_2() {
 		// given
 		CreateProblemRequest request = CreateProblemRequest.builder()
@@ -188,6 +195,25 @@ class ProblemServiceTest {
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
 		// when, then
 		assertThatThrownBy(() -> problemService.createProblem(user2, request))
+			.isInstanceOf(StudyGroupValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
+			.hasFieldOrPropertyWithValue("error", "문제에 대한 권한이 없습니다. : create");
+	}
+
+	@Test
+	@DisplayName("문제 생성 실패 : 권한 없음 // Role이 PARTICIPANT인 경우")
+	void createProblemFailed_4() {
+		// given
+		CreateProblemRequest request = CreateProblemRequest.builder()
+			.groupId(10L)
+			.link("link")
+			.startDate(LocalDate.now().minusDays(7))
+			.endDate(LocalDate.now())
+			.build();
+		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user3, group)).thenReturn(Optional.of(groupMember2));
+		// when, then
+		assertThatThrownBy(() -> problemService.createProblem(user3, request))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "문제에 대한 권한이 없습니다. : create");
@@ -242,7 +268,7 @@ class ProblemServiceTest {
 			.build();
 		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
-		when(groupMemberRepository.findByUserAndStudyGroup(user3, group)).thenReturn(Optional.of(groupMember));
+		when(groupMemberRepository.findByUserAndStudyGroup(user3, group)).thenReturn(Optional.of(groupMember1));
 		// when
 		problemService.editProblem(user3, request);
 		// then
@@ -286,7 +312,7 @@ class ProblemServiceTest {
 	}
 
 	@Test
-	@DisplayName("문제 정보 수정 실패 : 권한 없음")
+	@DisplayName("문제 정보 수정 실패 : 권한 없음 // 그룹원이 아예 아닌경우")
 	void editProblemFailed_3() {
 		// given
 		EditProblemRequest request = EditProblemRequest.builder()
@@ -298,6 +324,25 @@ class ProblemServiceTest {
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
 		// when, then
 		assertThatThrownBy(() -> problemService.editProblem(user2, request))
+			.isInstanceOf(StudyGroupValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
+			.hasFieldOrPropertyWithValue("error", "문제에 대한 권한이 없습니다. : edit");
+	}
+
+	@Test
+	@DisplayName("문제 정보 수정 실패 : 권한 없음 // Role이 PARTICIPAN인 경우")
+	void editProblemFailed_4() {
+		// given
+		EditProblemRequest request = EditProblemRequest.builder()
+			.problemId(20L)
+			.startDate(LocalDate.now())
+			.endDate(LocalDate.now().plusDays(7))
+			.build();
+		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
+		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user3, group)).thenReturn(Optional.of(groupMember2));
+		// when, then
+		assertThatThrownBy(() -> problemService.editProblem(user3, request))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "문제에 대한 권한이 없습니다. : edit");
@@ -375,7 +420,7 @@ class ProblemServiceTest {
 	}
 
 	@Test
-	@DisplayName("문제 목록 조회 실패 : 문제 조회 권한 없음")
+	@DisplayName("문제 목록 조회 실패 : 문제 조회 권한 없음 // 아예 그룹원이 아닌 경우")
 	void getProblemListFailed_2() {
 		// given
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
