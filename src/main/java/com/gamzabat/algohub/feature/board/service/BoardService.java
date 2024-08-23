@@ -1,15 +1,18 @@
 package com.gamzabat.algohub.feature.board.service;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.gamzabat.algohub.common.annotation.AuthedUser;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.board.domain.Board;
 import com.gamzabat.algohub.feature.board.dto.CreateBoardRequest;
+import com.gamzabat.algohub.feature.board.dto.GetBoardRequest;
 import com.gamzabat.algohub.feature.board.repository.BoardRepository;
 import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.studygroup.repository.GroupMemberRepository;
@@ -43,6 +46,11 @@ public class BoardService {
 			.createdAt(LocalDateTime.now())
 			.build());
 
+	}
+
+	@Transactional(readOnly = true)
+	public void getBoard(@AuthedUser User user, GetBoardRequest request) {
+		StudyGroup studyGroup = studyGroupRepository.findById(request.StudyGroupId());
 	}
 
 }
