@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -54,7 +55,9 @@ public class ProblemService {
 	@Transactional
 	public void createProblem(User user, CreateProblemRequest request) {
 		StudyGroup group = getGroup(request.groupId());
-		if (group.getOwner().getId().equals(user.getId())) {
+		Optional<GroupMember> groupMember = groupMemberRepository.findByUserAndStudyGroup(user, group);
+		if ((group.getOwner().getId().equals(user.getId()) && groupMember.isEmpty()) || (!groupMember.isEmpty()
+			&& groupMember.get().getRole().equals(RoleOfGroupMember.ADMIN))) {
 			String number = getProblemId(request);
 			int level = Integer.parseInt(getProblemLevel(number));
 			String title = getProblemTitle(number);
@@ -78,35 +81,7 @@ public class ProblemService {
 			}
 			log.info("success to create problem");
 		} else {
-			GroupMember groupMember = groupMemberRepository.findByUserAndStudyGroup(user, group)
-				.orElseThrow(
-					() -> new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "문제에 대한 권한이 없습니다. : create"));
-			if (!groupMember.getRole().equals(RoleOfGroupMember.ADMIN)) {
-				throw new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "문제에 대한 권한이 없습니다. : create");
-			} else {
-				String number = getProblemId(request);
-				int level = Integer.parseInt(getProblemLevel(number));
-				String title = getProblemTitle(number);
-
-				problemRepository.save(Problem.builder()
-					.studyGroup(group)
-					.link(request.link())
-					.number(Integer.parseInt(number))
-					.title(title)
-					.level(level)
-					.startDate(request.startDate())
-					.endDate(request.endDate())
-					.build());
-
-				List<GroupMember> members = groupMemberRepository.findAllByStudyGroup(group);
-				List<String> users = members.stream().map(member -> member.getUser().getEmail()).toList();
-				try {
-					notificationService.sendList(users, "새로운 과제가 등록되었습니다.", group, null);
-				} catch (Exception e) {
-					log.info("failed to send notification", e);
-				}
-				log.info("success to create problem");
-			}
+			throw new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "문제에 대한 권한이 없습니다. : create");
 		}
 
 	}
@@ -115,19 +90,13 @@ public class ProblemService {
 	public void editProblem(User user, EditProblemRequest request) {
 		Problem problem = getProblem(request.problemId());
 		StudyGroup group = getGroup(problem.getStudyGroup().getId());
-		if (group.getOwner().getId().equals(user.getId())) {
+		Optional<GroupMember> groupMember = groupMemberRepository.findByUserAndStudyGroup(user, group);
+		if ((group.getOwner().getId().equals(user.getId()) && groupMember.isEmpty()) || (!groupMember.isEmpty()
+			&& groupMember.get().getRole().equals(RoleOfGroupMember.ADMIN))) {
 			problem.editProblemInfo(request.startDate(), request.endDate());
 			log.info("success to edit problem deadline");
 		} else {
-			GroupMember groupMember = groupMemberRepository.findByUserAndStudyGroup(user, group)
-				.orElseThrow(
-					() -> new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "문제에 대한 권한이 없습니다. : edit"));
-			if (!groupMember.getRole().equals(RoleOfGroupMember.ADMIN)) {
-				throw new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "문제에 대한 권한이 없습니다. : edit");
-			} else {
-				problem.editProblemInfo(request.startDate(), request.endDate());
-				log.info("success to edit problem deadline");
-			}
+			throw new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "문제에 대한 권한이 없습니다. : edit");
 		}
 
 	}
