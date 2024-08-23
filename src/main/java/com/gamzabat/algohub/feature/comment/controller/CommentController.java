@@ -17,7 +17,7 @@ import com.gamzabat.algohub.common.annotation.AuthedUser;
 import com.gamzabat.algohub.exception.RequestException;
 import com.gamzabat.algohub.feature.comment.dto.CreateCommentRequest;
 import com.gamzabat.algohub.feature.comment.dto.GetCommentResponse;
-import com.gamzabat.algohub.feature.comment.dto.ModifyCommentRequest;
+import com.gamzabat.algohub.feature.comment.dto.UpdateCommentRequest;
 import com.gamzabat.algohub.feature.comment.service.CommentService;
 import com.gamzabat.algohub.feature.user.domain.User;
 
@@ -61,7 +61,7 @@ public class CommentController {
 	@PutMapping
 	@Operation(summary = "댓글 수정 API")
 	public ResponseEntity<String> modifyComment(@AuthedUser User user,
-		@Valid @RequestBody ModifyCommentRequest request, Errors errors) {
+		@Valid @RequestBody UpdateCommentRequest request, Errors errors) {
 		if (errors.hasErrors())
 			throw new RequestException("수정 요청이 올바르지 않습니다", errors);
 		commentService.updateComment(user, request);
