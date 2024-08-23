@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -198,24 +199,35 @@ class StudyGroupServiceTest {
 	@DisplayName("그룹 삭제 성공 (주인)")
 	void deleteGroup() {
 		// given
+		List<BookmarkedStudyGroup> bookmarks = new ArrayList<>();
+		bookmarks.add(BookmarkedStudyGroup.builder().studyGroup(group).user(user).build());
+		bookmarks.add(BookmarkedStudyGroup.builder().studyGroup(group).user(user2).build());
+
 		when(studyGroupRepository.findById(10L)).thenReturn(Optional.of(group));
+		when(bookmarkedStudyGroupRepository.findAllByStudyGroup(group)).thenReturn(bookmarks);
 		// when
 		studyGroupService.deleteGroup(user, 10L);
 		// then
 		verify(studyGroupRepository, times(1)).delete(group);
+		verify(bookmarkedStudyGroupRepository, times(1)).deleteAll(bookmarks);
 	}
 
 	@Test
 	@DisplayName("그룹 삭제 성공 (멤버)")
 	void exitGroup() {
 		// given
+		BookmarkedStudyGroup bookmark = BookmarkedStudyGroup.builder().studyGroup(group).user(user2).build();
+
 		GroupMember groupMember = GroupMember.builder().studyGroup(group).user(user2).joinDate(LocalDate.now()).build();
 		when(studyGroupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
 		when(groupMemberRepository.findByUserAndStudyGroup(user2, group)).thenReturn(Optional.of(groupMember));
+		when(bookmarkedStudyGroupRepository.findByUserAndStudyGroup(user2, group)).thenReturn(
+			Optional.ofNullable(bookmark));
 		// when
 		studyGroupService.deleteGroup(user2, 10L);
 		// then
 		verify(groupMemberRepository, times(1)).delete(groupMember);
+		verify(bookmarkedStudyGroupRepository, times(1)).delete(Objects.requireNonNull(bookmark));
 	}
 
 	@Test
