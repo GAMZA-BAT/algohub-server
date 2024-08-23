@@ -5,9 +5,8 @@ import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Field;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -295,25 +294,25 @@ class StudyGroupServiceTest {
 		assertThat(queued.size()).isEqualTo(10);
 		for (int i = 0; i < 10; i++) {
 			assertThat(done.get(i).name()).isEqualTo("name" + i);
-			assertThat(done.get(i).ownerNickname()).isEqualTo("nickname");
+			assertThat(done.get(i).ownerNickname()).isEqualTo("nickname1");
 			assertThat(done.get(i).startDate()).isEqualTo(LocalDate.now().minusDays(i + 30));
 			assertThat(done.get(i).endDate()).isEqualTo(LocalDate.now().minusDays(30));
 		}
 		for (int i = 0; i < 10; i++) {
 			assertThat(inProgress.get(i).name()).isEqualTo("name" + i);
-			assertThat(inProgress.get(i).ownerNickname()).isEqualTo("nickname");
+			assertThat(inProgress.get(i).ownerNickname()).isEqualTo("nickname1");
 			assertThat(inProgress.get(i).startDate()).isEqualTo(LocalDate.now().minusDays(i + 1));
 			assertThat(inProgress.get(i).endDate()).isEqualTo(LocalDate.now().plusDays(i + 1));
 		}
 		for (int i = 0; i < 10; i++) {
 			assertThat(queued.get(i).name()).isEqualTo("name" + i);
-			assertThat(queued.get(i).ownerNickname()).isEqualTo("nickname");
+			assertThat(queued.get(i).ownerNickname()).isEqualTo("nickname1");
 			assertThat(queued.get(i).startDate()).isEqualTo(LocalDate.now().plusDays(30));
 			assertThat(queued.get(i).endDate()).isEqualTo(LocalDate.now().plusDays(i + 30));
 		}
 		for (int i = 0; i < 10; i++) {
 			assertThat(bookmarked.get(i).name()).isEqualTo("name" + i);
-			assertThat(bookmarked.get(i).ownerNickname()).isEqualTo("nickname");
+			assertThat(bookmarked.get(i).ownerNickname()).isEqualTo("nickname1");
 			assertThat(bookmarked.get(i).startDate()).isEqualTo(LocalDate.now().minusDays(i + 1));
 			assertThat(bookmarked.get(i).endDate()).isEqualTo(LocalDate.now().plusDays(i + 1));
 		}
