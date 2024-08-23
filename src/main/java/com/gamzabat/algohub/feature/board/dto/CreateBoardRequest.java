@@ -2,7 +2,7 @@ package com.gamzabat.algohub.feature.board.dto;
 
 import jakarta.validation.constraints.NotNull;
 
-public record CreateBoardRequest(@NotNull Long StudyGroupId,
+public record CreateBoardRequest(@NotNull Long studyGroupId,
 								 @NotNull String title,
 								 @NotNull String content
 ) {
