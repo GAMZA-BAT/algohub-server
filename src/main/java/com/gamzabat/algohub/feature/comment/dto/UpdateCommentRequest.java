@@ -1,6 +1,6 @@
 package com.gamzabat.algohub.feature.comment.dto;
 
-public record ModifyCommentRequest(Long commentId,
+public record UpdateCommentRequest(Long commentId,
 								   String content
 ) {
 }
