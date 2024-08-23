@@ -56,33 +56,36 @@ public class ProblemService {
 	public void createProblem(User user, CreateProblemRequest request) {
 		StudyGroup group = getGroup(request.groupId());
 		Optional<GroupMember> groupMember = groupMemberRepository.findByUserAndStudyGroup(user, group);
-		if ((group.getOwner().getId().equals(user.getId()) && groupMember.isEmpty()) || (!groupMember.isEmpty()
-			&& groupMember.get().getRole().equals(RoleOfGroupMember.ADMIN))) {
-			String number = getProblemId(request);
-			int level = Integer.parseInt(getProblemLevel(number));
-			String title = getProblemTitle(number);
 
-			problemRepository.save(Problem.builder()
-				.studyGroup(group)
-				.link(request.link())
-				.number(Integer.parseInt(number))
-				.title(title)
-				.level(level)
-				.startDate(request.startDate())
-				.endDate(request.endDate())
-				.build());
+		Boolean isOwner = (group.getOwner().getId().equals(user.getId()) && groupMember.isEmpty());
+		Boolean isAdmin = (!groupMember.isEmpty() && groupMember.get().getRole().equals(RoleOfGroupMember.ADMIN));
 
-			List<GroupMember> members = groupMemberRepository.findAllByStudyGroup(group);
-			List<String> users = members.stream().map(member -> member.getUser().getEmail()).toList();
-			try {
-				notificationService.sendList(users, "새로운 과제가 등록되었습니다.", group, null);
-			} catch (Exception e) {
-				log.info("failed to send notification", e);
-			}
-			log.info("success to create problem");
-		} else {
+		if (!isOwner && !isAdmin) {
 			throw new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "문제에 대한 권한이 없습니다. : create");
 		}
+
+		String number = getProblemId(request);
+		int level = Integer.parseInt(getProblemLevel(number));
+		String title = getProblemTitle(number);
+
+		problemRepository.save(Problem.builder()
+			.studyGroup(group)
+			.link(request.link())
+			.number(Integer.parseInt(number))
+			.title(title)
+			.level(level)
+			.startDate(request.startDate())
+			.endDate(request.endDate())
+			.build());
+
+		List<GroupMember> members = groupMemberRepository.findAllByStudyGroup(group);
+		List<String> users = members.stream().map(member -> member.getUser().getEmail()).toList();
+		try {
+			notificationService.sendList(users, "새로운 과제가 등록되었습니다.", group, null);
+		} catch (Exception e) {
+			log.info("failed to send notification", e);
+		}
+		log.info("success to create problem");
 
 	}
 
