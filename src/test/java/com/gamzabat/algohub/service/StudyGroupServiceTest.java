@@ -222,8 +222,8 @@ class StudyGroupServiceTest {
 			groups.add(StudyGroup.builder()
 				.name("name" + i)
 				.owner(user)
-				.startDate(LocalDate.now().minusDays(i + 1))
-				.endDate(LocalDate.now().plusDays(i + 1))
+				.startDate(LocalDate.now().minusDays(i))
+				.endDate(LocalDate.now().plusDays(i))
 				.build());
 		}
 		for (int i = 0; i < 10; i++) {
@@ -263,8 +263,8 @@ class StudyGroupServiceTest {
 		for (int i = 0; i < 10; i++) {
 			assertThat(inProgress.get(i).name()).isEqualTo("name" + i);
 			assertThat(inProgress.get(i).ownerNickname()).isEqualTo("nickname");
-			assertThat(inProgress.get(i).startDate()).isEqualTo(LocalDate.now().minusDays(i + 1));
-			assertThat(inProgress.get(i).endDate()).isEqualTo(LocalDate.now().plusDays(i + 1));
+			assertThat(inProgress.get(i).startDate()).isEqualTo(LocalDate.now().minusDays(i));
+			assertThat(inProgress.get(i).endDate()).isEqualTo(LocalDate.now().plusDays(i));
 		}
 		for (int i = 0; i < 10; i++) {
 			assertThat(queued.get(i).name()).isEqualTo("name" + i);
@@ -275,8 +275,8 @@ class StudyGroupServiceTest {
 		for (int i = 0; i < 10; i++) {
 			assertThat(bookmarked.get(i).name()).isEqualTo("name" + i);
 			assertThat(bookmarked.get(i).ownerNickname()).isEqualTo("nickname");
-			assertThat(bookmarked.get(i).startDate()).isEqualTo(LocalDate.now().minusDays(i + 1));
-			assertThat(bookmarked.get(i).endDate()).isEqualTo(LocalDate.now().plusDays(i + 1));
+			assertThat(bookmarked.get(i).startDate()).isEqualTo(LocalDate.now().minusDays(i));
+			assertThat(bookmarked.get(i).endDate()).isEqualTo(LocalDate.now().plusDays(i));
 		}
 	}
 
