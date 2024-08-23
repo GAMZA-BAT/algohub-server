@@ -104,12 +104,10 @@ public class StudyGroupService {
 			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다."));
 
 		if (studyGroup.getOwner().getId().equals(user.getId())) { // owner
+			bookmarkedStudyGroupRepository.deleteAll(bookmarkedStudyGroupRepository.findAllByStudyGroup(studyGroup));
 			groupRepository.delete(studyGroup);
 		} else { // member
-			GroupMember member = groupMemberRepository.findByUserAndStudyGroup(user, studyGroup)
-				.orElseThrow(
-					() -> new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(), "이미 참여하지 않은 그룹 입니다."));
-			groupMemberRepository.delete(member);
+			deleteMemberFromStudyGroup(user, studyGroup);
 		}
 		log.info("success to delete(exit) study group");
 	}
@@ -122,14 +120,20 @@ public class StudyGroupService {
 		if (group.getOwner().getId().equals(user.getId())) {
 			User targetUser = userRepository.findById(userId)
 				.orElseThrow(() -> new CannotFoundUserException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 유저입니다."));
-			GroupMember targetMember = groupMemberRepository.findByUserAndStudyGroup(targetUser, group)
-				.orElseThrow(
-					() -> new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(), "이미 참여하지 않은 그룹 입니다."));
-
-			groupMemberRepository.delete(targetMember);
+			deleteMemberFromStudyGroup(targetUser, group);
 		} else {
 			throw new UserValidationException("삭제 할 권한이 없습니다.");
 		}
+	}
+
+	private void deleteMemberFromStudyGroup(User user, StudyGroup studyGroup) {
+		GroupMember member = groupMemberRepository.findByUserAndStudyGroup(user, studyGroup)
+			.orElseThrow(
+				() -> new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(), "이미 참여하지 않은 그룹 입니다."));
+
+		bookmarkedStudyGroupRepository.findByUserAndStudyGroup(user, studyGroup)
+			.ifPresent(bookmarkedStudyGroupRepository::delete);
+		groupMemberRepository.delete(member);
 	}
 
 	@Transactional(readOnly = true)
