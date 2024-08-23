@@ -59,9 +59,14 @@ public class ProblemService {
 
 		Boolean isOwner = (group.getOwner().getId().equals(user.getId()) && groupMember.isEmpty());
 		Boolean isAdmin = (!groupMember.isEmpty() && groupMember.get().getRole().equals(RoleOfGroupMember.ADMIN));
+		Boolean isGroupMember = groupMember.isPresent();
 
-		if (!isOwner && !isAdmin) {
-			throw new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "문제에 대한 권한이 없습니다. : create");
+		if (!isOwner && !isGroupMember) {
+			throw new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(),
+				"문제에 대한 권한이 없습니다. : create // 해당 그룹의 멤버가 아닙니다.");
+		} else if (!isOwner && !isAdmin) {
+			throw new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(),
+				"문제에 대한 권한이 없습니다. : create // 방장, 부방장일 경우에만 생성이 가능합니다.");
 		}
 
 		String number = getProblemId(request);
@@ -94,14 +99,20 @@ public class ProblemService {
 		Problem problem = getProblem(request.problemId());
 		StudyGroup group = getGroup(problem.getStudyGroup().getId());
 		Optional<GroupMember> groupMember = groupMemberRepository.findByUserAndStudyGroup(user, group);
-		if ((group.getOwner().getId().equals(user.getId()) && groupMember.isEmpty()) || (!groupMember.isEmpty()
-			&& groupMember.get().getRole().equals(RoleOfGroupMember.ADMIN))) {
-			problem.editProblemInfo(request.startDate(), request.endDate());
-			log.info("success to edit problem deadline");
-		} else {
-			throw new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "문제에 대한 권한이 없습니다. : edit");
-		}
 
+		Boolean isOwner = (group.getOwner().getId().equals(user.getId()) && groupMember.isEmpty());
+		Boolean isAdmin = (!groupMember.isEmpty() && groupMember.get().getRole().equals(RoleOfGroupMember.ADMIN));
+		Boolean isGroupMember = groupMember.isPresent();
+
+		if (!isOwner && !isGroupMember) {
+			throw new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(),
+				"문제에 대한 권한이 없습니다. : edit // 해당 그룹의 멤버가 아닙니다.");
+		} else if (!isOwner && !isAdmin) {
+			throw new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(),
+				"문제에 대한 권한이 없습니다. : edit // 방장, 부방장일 경우에만 생성이 가능합니다.");
+		}
+		problem.editProblemInfo(request.startDate(), request.endDate());
+		log.info("success to edit problem deadline");
 	}
 
 	@Transactional(readOnly = true)

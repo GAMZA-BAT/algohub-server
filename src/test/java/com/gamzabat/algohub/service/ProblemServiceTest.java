@@ -86,7 +86,7 @@ class ProblemServiceTest {
 			.role(Role.USER).profileImage("image").build();
 		group = StudyGroup.builder().name("name").owner(user).groupImage("imageUrl").groupCode("code").build();
 		groupMember1 = GroupMember.builder().role(RoleOfGroupMember.ADMIN).studyGroup(group).user(user3).build();
-		groupMember2 = GroupMember.builder().role(RoleOfGroupMember.PARTICIPANT).studyGroup(group).user(user3).build();
+		groupMember2 = GroupMember.builder().role(RoleOfGroupMember.PARTICIPANT).studyGroup(group).user(user4).build();
 
 		problem = Problem.builder()
 			.studyGroup(group)
@@ -197,7 +197,7 @@ class ProblemServiceTest {
 		assertThatThrownBy(() -> problemService.createProblem(user2, request))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
-			.hasFieldOrPropertyWithValue("error", "문제에 대한 권한이 없습니다. : create");
+			.hasFieldOrPropertyWithValue("error", "문제에 대한 권한이 없습니다. : create // 해당 그룹의 멤버가 아닙니다.");
 	}
 
 	@Test
@@ -211,12 +211,12 @@ class ProblemServiceTest {
 			.endDate(LocalDate.now())
 			.build();
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
-		when(groupMemberRepository.findByUserAndStudyGroup(user3, group)).thenReturn(Optional.of(groupMember2));
+		when(groupMemberRepository.findByUserAndStudyGroup(user4, group)).thenReturn(Optional.of(groupMember2));
 		// when, then
-		assertThatThrownBy(() -> problemService.createProblem(user3, request))
+		assertThatThrownBy(() -> problemService.createProblem(user4, request))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
-			.hasFieldOrPropertyWithValue("error", "문제에 대한 권한이 없습니다. : create");
+			.hasFieldOrPropertyWithValue("error", "문제에 대한 권한이 없습니다. : create // 방장, 부방장일 경우에만 생성이 가능합니다.");
 	}
 
 	@Test
@@ -326,7 +326,7 @@ class ProblemServiceTest {
 		assertThatThrownBy(() -> problemService.editProblem(user2, request))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
-			.hasFieldOrPropertyWithValue("error", "문제에 대한 권한이 없습니다. : edit");
+			.hasFieldOrPropertyWithValue("error", "문제에 대한 권한이 없습니다. : edit // 해당 그룹의 멤버가 아닙니다.");
 	}
 
 	@Test
@@ -340,12 +340,12 @@ class ProblemServiceTest {
 			.build();
 		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
-		when(groupMemberRepository.findByUserAndStudyGroup(user3, group)).thenReturn(Optional.of(groupMember2));
+		when(groupMemberRepository.findByUserAndStudyGroup(user4, group)).thenReturn(Optional.of(groupMember2));
 		// when, then
-		assertThatThrownBy(() -> problemService.editProblem(user3, request))
+		assertThatThrownBy(() -> problemService.editProblem(user4, request))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
-			.hasFieldOrPropertyWithValue("error", "문제에 대한 권한이 없습니다. : edit");
+			.hasFieldOrPropertyWithValue("error", "문제에 대한 권한이 없습니다. : edit // 방장, 부방장일 경우에만 생성이 가능합니다.");
 	}
 
 	@Test
