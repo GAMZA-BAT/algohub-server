@@ -1,12 +1,14 @@
 package com.gamzabat.algohub.feature.board.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.gamzabat.algohub.common.annotation.AuthedUser;
+import com.gamzabat.algohub.exception.RequestException;
 import com.gamzabat.algohub.feature.board.dto.CreateBoardRequest;
 import com.gamzabat.algohub.feature.board.service.BoardService;
 import com.gamzabat.algohub.feature.user.domain.User;
@@ -26,7 +28,10 @@ public class BoardController {
 
 	@PostMapping
 	@Operation(summary = "공지 작성API")
-	public ResponseEntity<String> createBoard(@AuthedUser User user, @Valid @RequestBody CreateBoardRequest request) {
+	public ResponseEntity<String> createBoard(@AuthedUser User user, @Valid @RequestBody CreateBoardRequest request,
+		Errors errors) {
+		if (errors.hasErrors())
+			throw new RequestException("올바르지 않은 공지 생성 요청입니다", errors);
 		boardService.createBoard(user, request);
 		return ResponseEntity.ok().body("OK");
 	}

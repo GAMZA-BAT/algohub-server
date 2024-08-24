@@ -7,6 +7,7 @@ import org.hibernate.annotations.DynamicUpdate;
 import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.user.domain.User;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -27,27 +28,27 @@ public class Board {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	private String title;
+	@Column(columnDefinition = "TEXT")
+	private String content;
+	private LocalDateTime createdAt;
+	private LocalDateTime updatedAt;
+
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id")
-	private User user;
+	private User author;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "study_group_id")
 	private StudyGroup studyGroup;
 
-	private String title;
-	private String content;
-	private LocalDateTime createdAt;
-	private LocalDateTime updatedAt;
-
 	@Builder
-	public Board(User user, StudyGroup studyGroup, String title, String content, LocalDateTime createdAt) {
-		this.user = user;
+	public Board(User author, StudyGroup studyGroup, String title, String content, LocalDateTime createdAt) {
+		this.author = author;
 		this.title = title;
 		this.studyGroup = studyGroup;
 		this.content = content;
 		this.createdAt = createdAt;
-		this.updatedAt = null;
 	}
 
 }
