@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,6 +29,7 @@ import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
 import com.gamzabat.algohub.feature.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
+import com.gamzabat.algohub.feature.studygroup.etc.RoleOfGroupMember;
 import com.gamzabat.algohub.feature.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
@@ -53,8 +55,19 @@ public class ProblemService {
 	@Transactional
 	public void createProblem(User user, CreateProblemRequest request) {
 		StudyGroup group = getGroup(request.groupId());
+		Optional<GroupMember> groupMember = groupMemberRepository.findByUserAndStudyGroup(user, group);
 
-		checkOwnerPermission(user, group, "create");
+		Boolean isOwner = (group.getOwner().getId().equals(user.getId()) && groupMember.isEmpty());
+		Boolean isAdmin = (!groupMember.isEmpty() && groupMember.get().getRole().equals(RoleOfGroupMember.ADMIN));
+		Boolean isGroupMember = groupMember.isPresent();
+
+		if (!isOwner && !isGroupMember) {
+			throw new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(),
+				"문제에 대한 권한이 없습니다. : create // 해당 그룹의 멤버가 아닙니다.");
+		} else if (!isOwner && !isAdmin) {
+			throw new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(),
+				"문제에 대한 권한이 없습니다. : create // 방장, 부방장일 경우에만 생성이 가능합니다.");
+		}
 
 		String number = getProblemId(request);
 		int level = Integer.parseInt(getProblemLevel(number));
@@ -78,14 +91,26 @@ public class ProblemService {
 			log.info("failed to send notification", e);
 		}
 		log.info("success to create problem");
+
 	}
 
 	@Transactional
 	public void editProblem(User user, EditProblemRequest request) {
 		Problem problem = getProblem(request.problemId());
 		StudyGroup group = getGroup(problem.getStudyGroup().getId());
-		checkOwnerPermission(user, group, "edit");
+		Optional<GroupMember> groupMember = groupMemberRepository.findByUserAndStudyGroup(user, group);
 
+		Boolean isOwner = (group.getOwner().getId().equals(user.getId()) && groupMember.isEmpty());
+		Boolean isAdmin = (!groupMember.isEmpty() && groupMember.get().getRole().equals(RoleOfGroupMember.ADMIN));
+		Boolean isGroupMember = groupMember.isPresent();
+
+		if (!isOwner && !isGroupMember) {
+			throw new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(),
+				"문제에 대한 권한이 없습니다. : edit // 해당 그룹의 멤버가 아닙니다.");
+		} else if (!isOwner && !isAdmin) {
+			throw new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(),
+				"문제에 대한 권한이 없습니다. : edit // 방장, 부방장일 경우에만 생성이 가능합니다.");
+		}
 		problem.editProblemInfo(request.startDate(), request.endDate());
 		log.info("success to edit problem deadline");
 	}
