@@ -5,6 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
+//TODO: Setter 제거하기
 public class UpdateUserRequest {
 	private String nickname;
 	private String bjNickname;
