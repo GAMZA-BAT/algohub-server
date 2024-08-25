@@ -144,8 +144,9 @@ public class UserService {
 
 		try {
 			restTemplate.exchange(bjUserUrl, HttpMethod.GET, entity, String.class);
-			if (userRepository.existsByBjNickname(bjNickname))
-				throw new CheckBjNicknameValidationException(HttpStatus.CONFLICT.value(), "이미 가입된 백준 닉네임 입니다.");
+			// TODO : 백준 본인 인증 관련 사항 확정 후 로직 수정
+			// if (userRepository.existsByBjNickname(bjNickname))
+			// 	throw new CheckBjNicknameValidationException(HttpStatus.CONFLICT.value(), "이미 가입된 백준 닉네임 입니다.");
 		} catch (HttpClientErrorException e) {
 			if (e.getStatusCode() == HttpStatus.NOT_FOUND)
 				throw new CheckBjNicknameValidationException(HttpStatus.NOT_FOUND.value(), "백준 닉네임이 유효하지 않습니다.");

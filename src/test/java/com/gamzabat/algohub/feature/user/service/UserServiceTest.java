@@ -37,11 +37,11 @@ class UserServiceTest {
 		String bjNickname = "bjNickname";
 		when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
 			.thenReturn(new ResponseEntity<>(HttpStatus.OK));
-		when(userRepository.existsByBjNickname(bjNickname)).thenReturn(false);
+		// when(userRepository.existsByBjNickname(bjNickname)).thenReturn(false);
 		// when
 		userService.checkBjNickname(bjNickname);
 		// then
-		verify(userRepository, times(1)).existsByBjNickname(bjNickname);
+		// verify(userRepository, times(1)).existsByBjNickname(bjNickname);
 	}
 
 	@Test
@@ -58,20 +58,20 @@ class UserServiceTest {
 			.hasFieldOrPropertyWithValue("error", "백준 닉네임이 유효하지 않습니다.");
 	}
 
-	@Test
-	@DisplayName("백준 닉네임 유효성 검증 : 이미 가입된 백준 닉네임")
-	void checkBjNickname_3() {
-		// given
-		String bjNickname = "bjNickname";
-		when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
-			.thenReturn(new ResponseEntity<>(HttpStatus.OK));
-		when(userRepository.existsByBjNickname(bjNickname)).thenReturn(true);
-		// when, then
-		assertThatThrownBy(() -> userService.checkBjNickname(bjNickname))
-			.isInstanceOf(CheckBjNicknameValidationException.class)
-			.hasFieldOrPropertyWithValue("code", HttpStatus.CONFLICT.value())
-			.hasFieldOrPropertyWithValue("error", "이미 가입된 백준 닉네임 입니다.");
-	}
+	// @Test
+	// @DisplayName("백준 닉네임 유효성 검증 : 이미 가입된 백준 닉네임")
+	// void checkBjNickname_3() {
+	// 	// given
+	// 	String bjNickname = "bjNickname";
+	// 	when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
+	// 		.thenReturn(new ResponseEntity<>(HttpStatus.OK));
+	// 	when(userRepository.existsByBjNickname(bjNickname)).thenReturn(true);
+	// 	// when, then
+	// 	assertThatThrownBy(() -> userService.checkBjNickname(bjNickname))
+	// 		.isInstanceOf(CheckBjNicknameValidationException.class)
+	// 		.hasFieldOrPropertyWithValue("code", HttpStatus.CONFLICT.value())
+	// 		.hasFieldOrPropertyWithValue("error", "이미 가입된 백준 닉네임 입니다.");
+	// }
 
 	@Test
 	@DisplayName("백준 닉네임 유효성 검증 실패 : 백준 서버 오류 발생")
