@@ -247,9 +247,7 @@ class UserControllerTest {
 	@DisplayName("회원 정보 수정 성공")
 	void updateUser() throws Exception {
 		// given
-		UpdateUserRequest request = new UpdateUserRequest();
-		request.setNickname("nickname");
-		request.setBjNickname("bjNickname");
+		UpdateUserRequest request = new UpdateUserRequest("newNickname", "newBjNickname");
 		MockMultipartFile requestPart = new MockMultipartFile("request", "", "application/json",
 			objectMapper.writeValueAsString(request).getBytes());
 		MockMultipartFile profileImage = new MockMultipartFile("profileImage", "profile.jpg", "image/jpeg",
