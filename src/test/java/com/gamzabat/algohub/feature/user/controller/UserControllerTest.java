@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -38,6 +39,8 @@ import com.gamzabat.algohub.feature.user.dto.SignInRequest;
 import com.gamzabat.algohub.feature.user.dto.SignInResponse;
 import com.gamzabat.algohub.feature.user.dto.UpdateUserRequest;
 import com.gamzabat.algohub.feature.user.dto.UserInfoResponse;
+import com.gamzabat.algohub.feature.user.exception.BOJServerErrorException;
+import com.gamzabat.algohub.feature.user.exception.CheckBjNicknameValidationException;
 import com.gamzabat.algohub.feature.user.exception.UncorrectedPasswordException;
 import com.gamzabat.algohub.feature.user.repository.UserRepository;
 import com.gamzabat.algohub.feature.user.service.UserService;
@@ -332,5 +335,64 @@ class UserControllerTest {
 			.andExpect(jsonPath("$.error").value("비밀번호가 틀렸습니다."));
 
 		verify(userService, times(1)).deleteUser(any(User.class), any(DeleteUserRequest.class));
+	}
+
+	@Test
+	@DisplayName("백준 닉네임 검증 : 사용 가능한 백준 닉네임")
+	void checkBjNickname() throws Exception {
+		// given
+		String bjNickname = "bjNickname";
+		doNothing().when(userService).checkBjNickname(bjNickname);
+		// when, then
+		mockMvc.perform(get("/api/user/check-baekjoon-nickname")
+				.param("bjNickname", bjNickname))
+			.andExpect(status().isOk())
+			.andExpect(content().string("OK"));
+		verify(userService, times(1)).checkBjNickname(bjNickname);
+	}
+
+	@Test
+	@DisplayName("백준 닉네임 검증 : 유효하지 않은 백준 닉네임")
+	void checkBjNicknameFailed_1() throws Exception {
+		// given
+		String bjNickname = "bjNickname";
+		doThrow(new CheckBjNicknameValidationException(HttpStatus.NOT_FOUND.value(), "백준 닉네임이 유효하지 않습니다.")).when(
+			userService).checkBjNickname(bjNickname);
+		// when, then
+		mockMvc.perform(get("/api/user/check-baekjoon-nickname")
+				.param("bjNickname", bjNickname))
+			.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.error").value("백준 닉네임이 유효하지 않습니다."));
+		verify(userService, times(1)).checkBjNickname(bjNickname);
+	}
+
+	@Test
+	@DisplayName("백준 닉네임 검증 : 이미 가입된 백준 닉네임")
+	void checkBjNicknameFailed_2() throws Exception {
+		// given
+		String bjNickname = "bjNickname";
+		doThrow(new CheckBjNicknameValidationException(HttpStatus.CONFLICT.value(), "이미 가입된 백준 닉네임 입니다.")).when(
+			userService).checkBjNickname(bjNickname);
+		// when, then
+		mockMvc.perform(get("/api/user/check-baekjoon-nickname")
+				.param("bjNickname", bjNickname))
+			.andExpect(status().isConflict())
+			.andExpect(jsonPath("$.error").value("이미 가입된 백준 닉네임 입니다."));
+		verify(userService, times(1)).checkBjNickname(bjNickname);
+	}
+
+	@Test
+	@DisplayName("백준 닉네임 검증 실패: 백준 서버 오류 발생")
+	void checkBjNicknameFailed_3() throws Exception {
+		// given
+		String bjNickname = "bjNickname";
+		doThrow(new BOJServerErrorException("현재 백준 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요."))
+			.when(userService).checkBjNickname(bjNickname);
+		// when, then
+		mockMvc.perform(get("/api/user/check-baekjoon-nickname")
+				.param("bjNickname", bjNickname))
+			.andExpect(status().isServiceUnavailable())
+			.andExpect(jsonPath("$.error").value("현재 백준 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요."));
+		verify(userService, times(1)).checkBjNickname(bjNickname);
 	}
 }
