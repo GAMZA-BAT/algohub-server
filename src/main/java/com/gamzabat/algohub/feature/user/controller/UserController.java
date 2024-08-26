@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,7 +34,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/user")
-@Tag(name = "회원 컨트롤러", description = "회원 관련된 API 명세서")
+@Tag(name = "회원 API", description = "회원 관련된 API 명세서")
 public class UserController {
 	private final UserService userService;
 
@@ -93,8 +94,11 @@ public class UserController {
 		userService.logout(request);
 		return ResponseEntity.ok().body("OK");
 	}
-}
 
-// 파일이 변경됐어요~!~!
-// pr
-// issue
+	@GetMapping("/check-baekjoon-nickname")
+	@Operation(summary = "백준 닉네임 유효성 검증 API", description = "회원가입 진행 시, 백준 닉네임이 유효한지 검증하는 API")
+	public ResponseEntity<String> checkBjNickname(@RequestParam String bjNickname) {
+		userService.checkBjNickname(bjNickname);
+		return ResponseEntity.ok().body("OK");
+	}
+}

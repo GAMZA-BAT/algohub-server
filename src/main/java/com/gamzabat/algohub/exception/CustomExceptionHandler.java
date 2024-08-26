@@ -12,6 +12,8 @@ import com.gamzabat.algohub.feature.solution.exception.CannotFoundSolutionExcept
 import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundGroupException;
 import com.gamzabat.algohub.feature.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.studygroup.exception.InvalidRoleException;
+import com.gamzabat.algohub.feature.user.exception.BOJServerErrorException;
+import com.gamzabat.algohub.feature.user.exception.CheckBjNicknameValidationException;
 import com.gamzabat.algohub.feature.user.exception.UncorrectedPasswordException;
 
 @ControllerAdvice
@@ -75,5 +77,16 @@ public class CustomExceptionHandler {
 	@ExceptionHandler(InvalidRoleException.class)
 	protected ResponseEntity<Object> handler(InvalidRoleException e) {
 		return ResponseEntity.badRequest().body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), e.getError(), null));
+	}
+
+	@ExceptionHandler(CheckBjNicknameValidationException.class)
+	protected ResponseEntity<Object> handler(CheckBjNicknameValidationException e) {
+		return ResponseEntity.status(e.getCode()).body(new ErrorResponse(e.getCode(), e.getError(), null));
+	}
+
+	@ExceptionHandler(BOJServerErrorException.class)
+	protected ResponseEntity<Object> handler(BOJServerErrorException e) {
+		return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+			.body(new ErrorResponse(HttpStatus.SERVICE_UNAVAILABLE.value(), e.getError(), null));
 	}
 }
