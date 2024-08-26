@@ -151,7 +151,7 @@ public class UserService {
 			if (e.getStatusCode() == HttpStatus.NOT_FOUND)
 				throw new CheckBjNicknameValidationException(HttpStatus.NOT_FOUND.value(), "백준 닉네임이 유효하지 않습니다.");
 		} catch (HttpServerErrorException e) {
-			log.info("BOJ server error occurred : " + e.getMessage());
+			log.error("BOJ server error occurred : " + e.getMessage());
 			throw new BOJServerErrorException("현재 백준 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
 		}
 		log.info("success to check baekjoon nickname validity");
