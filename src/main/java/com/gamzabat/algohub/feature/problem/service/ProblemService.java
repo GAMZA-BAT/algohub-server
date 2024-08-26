@@ -227,6 +227,48 @@ public class ProblemService {
 		}).toList();
 	}
 
+	@Transactional(readOnly = true)
+	public List<GetProblemResponse> getQueuedProblemList(User user, Long groupId) {
+		StudyGroup group = getGroup(groupId);
+		Optional<GroupMember> groupMember = groupMemberRepository.findByUserAndStudyGroup(user, group);
+
+		Boolean isOwner = (group.getOwner().getId().equals(user.getId()) && groupMember.isEmpty());
+		Boolean isAdmin = (!groupMember.isEmpty() && groupMember.get().getRole().equals(RoleOfGroupMember.ADMIN));
+		Boolean isGroupMember = groupMember.isPresent();
+
+		if (!isGroupMember && !isOwner) {
+			throw new ProblemValidationException(HttpStatus.FORBIDDEN.value(), "문제를 조회할 권한이 없습니다. : 그룹원이 아닙니다");
+		}
+
+		if (isGroupMember && !isAdmin) {
+			throw new ProblemValidationException(HttpStatus.FORBIDDEN.value(), "문제를 조회할 권한이 없습니다. : 부방장이 아닙니다");
+		}
+
+		List<Problem> problems = problemRepository.findAllByStudyGroupAndStartDateAfter(group, LocalDate.now());
+		List<GetProblemResponse> responseList = new ArrayList<>();
+
+		problems.forEach(problem -> {
+			String title = problem.getTitle();
+			Long problemId = problem.getId();
+			String link = problem.getLink();
+			LocalDate startDate = problem.getStartDate();
+			LocalDate endDate = problem.getEndDate();
+			Integer level = problem.getLevel();
+			boolean solved = false;
+			Integer submitMemberCount = 0;
+			Integer groupMemberCount = groupMemberRepository.countMembersByStudyGroupId(groupId) + 1;
+			Integer accuracy = 0;
+			Boolean inProgress = false;
+
+			GetProblemResponse response = new GetProblemResponse(title, problemId, link, startDate, endDate, level,
+				solved, submitMemberCount, groupMemberCount, accuracy, inProgress);
+
+			responseList.add(response);
+		});
+
+		return responseList;
+	}
+
 	private Problem getProblem(Long problemId) {
 		return problemRepository.findById(problemId)
 			.orElseThrow(() -> new ProblemValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 문제 입니다."));
