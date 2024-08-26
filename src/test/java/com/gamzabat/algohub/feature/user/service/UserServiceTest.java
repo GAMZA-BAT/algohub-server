@@ -193,9 +193,7 @@ class UserServiceTest {
 	@DisplayName("회원 정보 수정 성공")
 	void userUpdate() {
 		// given
-		UpdateUserRequest request = new UpdateUserRequest();
-		request.setNickname("newNickname");
-		request.setBjNickname("newBjNickname");
+		UpdateUserRequest request = new UpdateUserRequest("newNickname", "newBjNickname");
 		MockMultipartFile newProfileImage = new MockMultipartFile("newImage", "image.jpg", "image/jpeg",
 			"test".getBytes());
 		when(imageService.saveImage(newProfileImage)).thenReturn("newProfileImageUrl");
