@@ -5,5 +5,6 @@ public final class ApiConstants {
 	public static final String BOJ_USER_PROFILE_URL = "https://www.acmicpc.net/user/";
 
 	private ApiConstants() {
+		throw new RuntimeException("Can not instantiate : ApiConstants");
 	}
 }
