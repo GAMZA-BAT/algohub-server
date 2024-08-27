@@ -46,6 +46,7 @@ public class ProblemService {
 	private final StudyGroupRepository studyGroupRepository;
 	private final GroupMemberRepository groupMemberRepository;
 	private final NotificationService notificationService;
+	private final RestTemplate restTemplate;
 
 	private static void checkOwnerPermission(User user, StudyGroup group, String permission) {
 		if (!group.getOwner().getId().equals(user.getId()))
@@ -238,8 +239,6 @@ public class ProblemService {
 	}
 
 	private String getProblemLevel(String problemId) {
-		final RestTemplate restTemplate = new RestTemplate();
-
 		String url = "https://solved.ac/api/v3/problem/lookup?problemIds=" + problemId;
 
 		try {
@@ -263,7 +262,6 @@ public class ProblemService {
 	}
 
 	private String getProblemTitle(String problemId) {
-		final RestTemplate restTemplate = new RestTemplate();
 		String url = "https://solved.ac/api/v3/problem/lookup?problemIds=" + problemId;
 
 		try {
