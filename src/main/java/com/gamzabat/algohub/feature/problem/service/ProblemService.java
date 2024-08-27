@@ -1,5 +1,7 @@
 package com.gamzabat.algohub.feature.problem.service;
 
+import static com.gamzabat.algohub.common.ApiConstants.*;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -240,7 +242,7 @@ public class ProblemService {
 	private String getProblemLevel(String problemId) {
 		final RestTemplate restTemplate = new RestTemplate();
 
-		String url = "https://solved.ac/api/v3/problem/lookup?problemIds=" + problemId;
+		String url = SOLVED_AC_PROBLEM_API_URL + problemId;
 
 		try {
 			ResponseEntity<String> responseEntity = restTemplate.getForEntity(url, String.class);
@@ -264,7 +266,7 @@ public class ProblemService {
 
 	private String getProblemTitle(String problemId) {
 		final RestTemplate restTemplate = new RestTemplate();
-		String url = "https://solved.ac/api/v3/problem/lookup?problemIds=" + problemId;
+		String url = SOLVED_AC_PROBLEM_API_URL + problemId;
 
 		try {
 			ResponseEntity<String> responseEntity = restTemplate.getForEntity(url, String.class);
