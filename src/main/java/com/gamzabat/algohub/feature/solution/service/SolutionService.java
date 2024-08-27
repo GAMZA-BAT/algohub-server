@@ -2,6 +2,7 @@ package com.gamzabat.algohub.feature.solution.service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -22,7 +23,6 @@ import com.gamzabat.algohub.feature.solution.dto.GetSolutionResponse;
 import com.gamzabat.algohub.feature.solution.exception.CannotFoundSolutionException;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
 import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
-import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundUserException;
 import com.gamzabat.algohub.feature.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.studygroup.repository.StudyGroupRepository;
@@ -58,40 +58,18 @@ public class SolutionService {
 			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹 입니다.");
 		}
 		Page<Solution> solutions;
+		List<String> results = new ArrayList<>();
 
-		if (nickname == null && language != null && result == null) { // 언어로만 검색한 경우
-			solutions = solutionRepository.findAllByProblemAndLanguageOrderBySolvedDateTimeDesc(problem, language,
-				pageable);
-		} else if (nickname != null && language == null && result == null) { // 닉네임으로만 검색한 경우
-			User nicknameUser = userRepository.findByNickname(nickname).orElseThrow(() -> new CannotFoundUserException(
-				HttpStatus.NOT_FOUND.value(), "해당 닉네임을 찾을 수 없습니다."));
-			solutions = solutionRepository.findAllByProblemAndUserOrderBySolvedDateTimeDesc(problem, nicknameUser,
-				pageable);
-		} else if (language != null && nickname != null && result == null) { // 언어와 닉네임으로 검색한 경우
-			User nicknameUSer = userRepository.findByNickname(nickname).orElseThrow(() -> new CannotFoundUserException(
-				HttpStatus.NOT_FOUND.value(), "해당 닉네임을 찾을 수 없습니다."));
-			solutions = solutionRepository.findAllByProblemAndUserAndLanguageOrderBySolvedDateTimeDesc(problem,
-				nicknameUSer, language, pageable);
-		} else if (nickname == null && language != null && result != null) { // 언어와 결과로 검색한 경우
-			solutions = solutionRepository.findAllByProblemAndLanguageAndResultOrderBySolvedDateTime(problem,
-				language, result, pageable);
-		} else if (nickname != null && language == null && result != null) { // 닉네임과 결과로 검색한 경우
-			User nicknameUser = userRepository.findByNickname(nickname).orElseThrow(() -> new CannotFoundUserException(
-				HttpStatus.NOT_FOUND.value(), "해당 닉네임을 찾을 수 없습니다."));
-			solutions = solutionRepository.findAllByProblemAndUserAndResultOrderBySolvedDateTimeDesc(problem,
-				nicknameUser, result, pageable);
-		} else if (language != null && nickname != null && result != null) { // 언어, 닉네임, 결과로 검색한 경우
-			User nicknameUser = userRepository.findByNickname(nickname).orElseThrow(() -> new CannotFoundUserException(
-				HttpStatus.NOT_FOUND.value(), "해당 닉네임을 찾을 수 없습니다."));
-			solutions = solutionRepository.findAllByProblemAndUserAndLanguageAndResultOrderBySolvedDateTimeDesc(
-				problem, nicknameUser, language, result, pageable);
-		} else if (language == null && nickname == null && result != null) { // 결과로만 검색한 경우
-			solutions = solutionRepository.findAllByProblemAndResultOrderBySolvedDateTimeDesc(problem, result,
-				pageable);
-		} else { // 모든 풀이 가져오기
-			solutions = solutionRepository.findAllByProblemOrderBySolvedDateTimeDesc(problem, pageable);
+		if (result != null) {
+			if (result.equals("맞았습니다!!")) {
+				results.add(result);
+				results.add("점");
+			} else {
+				results.add(result);
+			}
+
 		}
-
+		solutions = solutionRepository.findSolutions(problem, nickname, language, results, pageable);
 		return solutions.map(solution -> {
 			long commentCount = commentRepository.countCommentsBySolutionId(solution.getId());
 			return GetSolutionResponse.toDTO(solution, commentCount);

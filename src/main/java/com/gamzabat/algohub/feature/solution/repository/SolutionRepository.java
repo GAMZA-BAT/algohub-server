@@ -4,7 +4,9 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -14,28 +16,38 @@ import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.studygroup.dto.GetRankingResponse;
 import com.gamzabat.algohub.feature.user.domain.User;
 
-public interface SolutionRepository extends JpaRepository<Solution, Long> {
+public interface SolutionRepository extends JpaRepository<Solution, Long>, JpaSpecificationExecutor<Solution> {
 	Page<Solution> findAllByProblemOrderBySolvedDateTimeDesc(Problem problem, Pageable pageable);
 
-	Page<Solution> findAllByProblemAndLanguageOrderBySolvedDateTimeDesc(Problem problem, String language,
-		Pageable pageable);
+	default Page<Solution> findSolutions(Problem problem, String nickname, String language, List<String> results,
+		Pageable pageable) {
+		return findAll((Specification<Solution>)(root, query, criteriaBuilder) -> {
+			var predicates = criteriaBuilder.conjunction();
 
-	Page<Solution> findAllByProblemAndUserOrderBySolvedDateTimeDesc(Problem problem, User user, Pageable pageable);
+			if (problem != null) {
+				predicates.getExpressions().add(criteriaBuilder.equal(root.get("problem"), problem));
+			}
 
-	Page<Solution> findAllByProblemAndUserAndLanguageOrderBySolvedDateTimeDesc(Problem problem, User user,
-		String language, Pageable pagealbe);
+			if (nickname != null && !nickname.isEmpty()) {
+				var userJoin = root.join("user");
+				predicates.getExpressions().add(criteriaBuilder.equal(userJoin.get("nickname"), nickname));
+			}
 
-	Page<Solution> findAllByProblemAndLanguageAndResultOrderBySolvedDateTime(Problem problem, String language,
-		String result, Pageable pageable);
+			if (language != null && !language.isEmpty()) {
+				predicates.getExpressions().add(criteriaBuilder.equal(root.get("language"), language));
+			}
 
-	Page<Solution> findAllByProblemAndUserAndResultOrderBySolvedDateTimeDesc(Problem problem, User user, String result,
-		Pageable pagealbe);
+			if (results != null && !results.isEmpty()) {
+				var resultPredicates = criteriaBuilder.disjunction();
+				for (String result : results) {
+					resultPredicates.getExpressions().add(criteriaBuilder.like(root.get("result"), "%" + result + "%"));
+				}
+				predicates.getExpressions().add(resultPredicates);
+			}
 
-	Page<Solution> findAllByProblemAndUserAndLanguageAndResultOrderBySolvedDateTimeDesc(Problem problem, User user,
-		String language, String result, Pageable pageable);
-
-	Page<Solution> findAllByProblemAndResultOrderBySolvedDateTimeDesc(Problem problem, String result,
-		Pageable pageable);
+			return predicates;
+		}, pageable);
+	}
 
 	Boolean existsByUserAndProblem(User user, Problem problem);
 
