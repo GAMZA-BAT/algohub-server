@@ -238,6 +238,9 @@ class ProblemServiceTest {
 			.endDate(LocalDate.now())
 			.build();
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		String apiResult = "[{\"titleKo\":\"A+B\",\"level\":1}]";
+		ResponseEntity<String> responseEntity = new ResponseEntity<>(apiResult, HttpStatus.OK);
+		when(restTemplate.getForEntity(anyString(), eq(String.class))).thenReturn(responseEntity);
 		doThrow(new RuntimeException()).when(notificationService).sendList(any(), any(), any(), any());
 		// when
 		problemService.createProblem(user, request);
