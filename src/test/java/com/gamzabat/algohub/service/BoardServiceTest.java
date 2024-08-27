@@ -27,7 +27,6 @@ import com.gamzabat.algohub.feature.board.repository.BoardRepository;
 import com.gamzabat.algohub.feature.board.service.BoardService;
 import com.gamzabat.algohub.feature.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
-import com.gamzabat.algohub.feature.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
@@ -84,7 +83,7 @@ public class BoardServiceTest {
 	}
 
 	@Test
-	@DisplayName("게시판 작성 성공(그룹장)")
+	@DisplayName("공지 작성 성공(그룹장)")
 	void createBoardSuccess() {
 		//given
 		CreateBoardRequest request = new CreateBoardRequest(30L, "title", "content");
@@ -103,7 +102,7 @@ public class BoardServiceTest {
 	}
 
 	@Test
-	@DisplayName("게시판 작성 성공(부방장)")
+	@DisplayName("공지 작성 성공(부방장)")
 	void createBoardSuccess_1() {
 		//given
 		CreateBoardRequest request = new CreateBoardRequest(30L, "title", "content");
@@ -122,7 +121,7 @@ public class BoardServiceTest {
 	}
 
 	@Test
-	@DisplayName("게시판 작성 실패 그룹장or부방장이 아님")
+	@DisplayName("공지 작성 실패 그룹장or부방장이 아님")
 	void createBoardFail_1() {
 		//given
 		CreateBoardRequest request = new CreateBoardRequest(30L, "title", "content");
@@ -132,12 +131,12 @@ public class BoardServiceTest {
 		//when,then
 		assertThatThrownBy(() -> boardService.createBoard(user3, request))
 			.isInstanceOf(UserValidationException.class)
-			.hasFieldOrPropertyWithValue("errors", "게시글 작성 권한이 없습니다");
+			.hasFieldOrPropertyWithValue("errors", "공지 작성 권한이 없습니다");
 
 	}
 
 	@Test
-	@DisplayName("게시판 작성 실패 존재하지 않는 그룹")
+	@DisplayName("공지 작성 실패 존재하지 않는 그룹")
 	void createBoardFail_2() {
 		//given
 		CreateBoardRequest request = new CreateBoardRequest(31L, "title", "content");
@@ -150,7 +149,7 @@ public class BoardServiceTest {
 	}
 
 	@Test
-	@DisplayName("게시글 작성 실패 존재하지 않는 멤버")
+	@DisplayName("공지 작성 실패 존재하지 않는 멤버")
 	void createBoardFail_3() {
 		//given
 		CreateBoardRequest request = new CreateBoardRequest(30L, "title", "content");
@@ -158,9 +157,8 @@ public class BoardServiceTest {
 		when(groupMemberRepository.findByUserAndStudyGroup(user4, studyGroup)).thenReturn(Optional.empty());
 		//when,then
 		assertThatThrownBy(() -> boardService.createBoard(user4, request))
-			.isInstanceOf(GroupMemberValidationException.class)
-			.extracting("code", "error")
-			.containsExactly(HttpStatus.BAD_REQUEST.value(), "그룹에 속해있지 않은 멤버입니다");
+			.isInstanceOf(UserValidationException.class)
+			.hasFieldOrPropertyWithValue("errors", "그룹에 속해있지 않은 멤버입니다");
 	}
 
 }
