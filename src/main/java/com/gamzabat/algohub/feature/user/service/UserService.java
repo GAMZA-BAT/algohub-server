@@ -1,5 +1,7 @@
 package com.gamzabat.algohub.feature.user.service;
 
+import static com.gamzabat.algohub.common.ApiConstants.*;
+
 import java.time.Duration;
 
 import org.springframework.http.HttpEntity;
@@ -135,7 +137,7 @@ public class UserService {
 
 	@Transactional(readOnly = true)
 	public void checkBjNickname(String bjNickname) {
-		String bjUserUrl = "https://www.acmicpc.net/user/" + bjNickname;
+		String bjUserUrl = BOJ_USER_PROFILE_URL + bjNickname;
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.set("User-Agent",
