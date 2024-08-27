@@ -117,7 +117,6 @@ class ProblemServiceTest {
 	@DisplayName("문제 생성 성공 : 방장일 때")
 	void createProblem_SuccessBy방장() {
 		// given
-		ProblemService spyProblemService = spy(problemService);
 		CreateProblemRequest request = CreateProblemRequest.builder()
 			.groupId(10L)
 			.link("https://www.acmicpc.net/problem/1000")
