@@ -23,6 +23,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
 
 import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.exception.ProblemValidationException;
@@ -61,6 +63,8 @@ class ProblemServiceTest {
 	private SolutionRepository solutionRepository;
 	@Mock
 	private NotificationRepository notificationRepository;
+	@Mock
+	private RestTemplate restTemplate;
 
 	private User user;
 	private User user2;
@@ -113,6 +117,7 @@ class ProblemServiceTest {
 	@DisplayName("문제 생성 성공 : 방장일 때")
 	void createProblem_SuccessBy방장() {
 		// given
+		ProblemService spyProblemService = spy(problemService);
 		CreateProblemRequest request = CreateProblemRequest.builder()
 			.groupId(10L)
 			.link("https://www.acmicpc.net/problem/1000")
@@ -120,7 +125,9 @@ class ProblemServiceTest {
 			.endDate(LocalDate.now())
 			.build();
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
-
+		String apiResult = "[{\"titleKo\":\"A+B\",\"level\":1}]";
+		ResponseEntity<String> responseEntity = new ResponseEntity<>(apiResult, HttpStatus.OK);
+		when(restTemplate.getForEntity(anyString(), eq(String.class))).thenReturn(responseEntity);
 		// when
 		problemService.createProblem(user, request);
 		// then
@@ -148,7 +155,9 @@ class ProblemServiceTest {
 			.build();
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
 		when(groupMemberRepository.findByUserAndStudyGroup(user3, group)).thenReturn(Optional.of(groupMember1));
-
+		String apiResult = "[{\"titleKo\":\"A+B\",\"level\":1}]";
+		ResponseEntity<String> responseEntity = new ResponseEntity<>(apiResult, HttpStatus.OK);
+		when(restTemplate.getForEntity(anyString(), eq(String.class))).thenReturn(responseEntity);
 		// when
 		problemService.createProblem(user3, request);
 		// then
