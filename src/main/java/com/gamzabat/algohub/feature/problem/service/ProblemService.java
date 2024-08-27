@@ -237,11 +237,13 @@ public class ProblemService {
 		Boolean isGroupMember = groupMember.isPresent();
 
 		if (!isGroupMember && !isOwner) {
-			throw new ProblemValidationException(HttpStatus.FORBIDDEN.value(), "문제를 조회할 권한이 없습니다. : 그룹원이 아닙니다");
+			throw new ProblemValidationException(HttpStatus.FORBIDDEN.value(),
+				"문제를 조회할 권한이 없습니다. : 그룹원이 아닙니다 // 그룹의 방장과 부방장만 볼 수 있습니다");
 		}
 
 		if (isGroupMember && !isAdmin) {
-			throw new ProblemValidationException(HttpStatus.FORBIDDEN.value(), "문제를 조회할 권한이 없습니다. : 부방장이 아닙니다");
+			throw new ProblemValidationException(HttpStatus.FORBIDDEN.value(),
+				"문제를 조회할 권한이 없습니다. : 부방장이 아닙니다 // 그룹의 방장과 부방장만 볼 수 있습니다");
 		}
 
 		List<Problem> problems = problemRepository.findAllByStudyGroupAndStartDateAfter(group, LocalDate.now());

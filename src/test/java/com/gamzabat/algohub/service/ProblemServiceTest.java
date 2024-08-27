@@ -585,7 +585,7 @@ class ProblemServiceTest {
 		assertThatThrownBy(() -> problemService.getQueuedProblemList(user2, 10L))
 			.isInstanceOf(ProblemValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
-			.hasFieldOrPropertyWithValue("error", "문제를 조회할 권한이 없습니다. : 그룹원이 아닙니다");
+			.hasFieldOrPropertyWithValue("error", "문제를 조회할 권한이 없습니다. : 그룹원이 아닙니다 // 그룹의 방장과 부방장만 볼 수 있습니다");
 	}
 
 	@Test
@@ -600,7 +600,7 @@ class ProblemServiceTest {
 		assertThatThrownBy(() -> problemService.getQueuedProblemList(user4, 10L))
 			.isInstanceOf(ProblemValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
-			.hasFieldOrPropertyWithValue("error", "문제를 조회할 권한이 없습니다. : 부방장이 아닙니다");
+			.hasFieldOrPropertyWithValue("error", "문제를 조회할 권한이 없습니다. : 부방장이 아닙니다 // 그룹의 방장과 부방장만 볼 수 있습니다");
 	}
 
 }
