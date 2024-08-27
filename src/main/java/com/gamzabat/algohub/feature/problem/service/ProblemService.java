@@ -239,8 +239,6 @@ public class ProblemService {
 	}
 
 	private String getProblemLevel(String problemId) {
-		final RestTemplate restTemplate = new RestTemplate();
-
 		String url = "https://solved.ac/api/v3/problem/lookup?problemIds=" + problemId;
 
 		try {
