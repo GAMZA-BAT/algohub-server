@@ -36,6 +36,7 @@ import com.gamzabat.algohub.feature.problem.dto.CreateProblemRequest;
 import com.gamzabat.algohub.feature.problem.dto.EditProblemRequest;
 import com.gamzabat.algohub.feature.problem.dto.GetProblemListsResponse;
 import com.gamzabat.algohub.feature.problem.dto.GetProblemResponse;
+import com.gamzabat.algohub.feature.problem.exception.SolvedAcApiErrorException;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.problem.service.ProblemService;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
@@ -145,6 +146,51 @@ class ProblemControllerTest {
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isForbidden())
 			.andExpect(jsonPath("$.error").value("문제에 대한 권한이 없습니다. : create"));
+		verify(problemService, times(1)).createProblem(user, request);
+	}
+
+	@Test
+	@DisplayName("문제 생성 실패 : 백준에 유효하지 않은 문제")
+	void createProblemFailed_3() throws Exception {
+		// given
+		CreateProblemRequest request = CreateProblemRequest.builder()
+			.groupId(groupId)
+			.link("link")
+			.startDate(LocalDate.now())
+			.endDate(LocalDate.now())
+			.build();
+		doThrow(new SolvedAcApiErrorException(HttpStatus.BAD_REQUEST.value(), "백준에 유효하지 않은 문제입니다.")).when(
+			problemService).createProblem(user, request);
+		// when, then
+		mockMvc.perform(post("/api/problem")
+				.header("Authorization", token)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.error").value("백준에 유효하지 않은 문제입니다."));
+		verify(problemService, times(1)).createProblem(user, request);
+	}
+
+	@Test
+	@DisplayName("문제 생성 실패 : solved.ac의 잘못된 response")
+	void createProblemFailed_4() throws Exception {
+		// given
+		CreateProblemRequest request = CreateProblemRequest.builder()
+			.groupId(groupId)
+			.link("link")
+			.startDate(LocalDate.now())
+			.endDate(LocalDate.now())
+			.build();
+		doThrow(new SolvedAcApiErrorException(HttpStatus.SERVICE_UNAVAILABLE.value(),
+			"solved.ac API로부터 예상치 못한 응답을 받았습니다.")).when(
+			problemService).createProblem(user, request);
+		// when, then
+		mockMvc.perform(post("/api/problem")
+				.header("Authorization", token)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isServiceUnavailable())
+			.andExpect(jsonPath("$.error").value("solved.ac API로부터 예상치 못한 응답을 받았습니다."));
 		verify(problemService, times(1)).createProblem(user, request);
 	}
 
