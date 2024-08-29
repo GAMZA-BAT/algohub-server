@@ -158,4 +158,10 @@ public class UserService {
 		}
 		log.info("success to check baekjoon nickname validity");
 	}
+
+	@Transactional(readOnly = true)
+	public void checkEmail(String email) {
+		if (userRepository.existsByEmail(email))
+			throw new UserValidationException("이미 사용 중인 이메일 입니다.");
+	}
 }
