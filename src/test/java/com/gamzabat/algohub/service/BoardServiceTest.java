@@ -62,7 +62,6 @@ public class BoardServiceTest {
 		user4 = User.builder().email("email2").password("password").nickname("nickname2")
 			.role(Role.USER).profileImage("image").build();
 		studyGroup = StudyGroup.builder().owner(user).build();
-		// groupMember = GroupMember.builder().user(user).studyGroup(studyGroup).role(ADMIN).build();
 		groupMember2 = GroupMember.builder().user(user2).studyGroup(studyGroup).role(ADMIN).build();
 		groupMember3 = GroupMember.builder().user(user3).studyGroup(studyGroup).role(PARTICIPANT).build();
 		board = Board.builder().studyGroup(studyGroup).title("title").content("content").author(user).build();
@@ -240,6 +239,6 @@ public class BoardServiceTest {
 		//when
 		assertThatThrownBy(() -> boardService.getBoard(user4, 1000L))
 			.isInstanceOf(UserValidationException.class)
-			.hasFieldOrPropertyWithValue("errors", "조회할 권한이 없습니다");
+			.hasFieldOrPropertyWithValue("errors", "공지를 조회할 권한이 없습니다");
 	}
 }

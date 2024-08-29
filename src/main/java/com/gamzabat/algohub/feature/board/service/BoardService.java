@@ -72,7 +72,7 @@ public class BoardService {
 		Boolean isGroupMember = groupMember.isPresent();
 
 		if (!isGroupMember && !isOwner)
-			throw new UserValidationException("조회할 권한이 없습니다");
+			throw new UserValidationException("공지를 조회할 권한이 없습니다");
 
 		log.info("success to get board");
 		return GetBoardResponse.builder()
