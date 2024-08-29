@@ -313,4 +313,26 @@ class UserServiceTest {
 			.isInstanceOf(BOJServerErrorException.class)
 			.hasFieldOrPropertyWithValue("error", "현재 백준 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
 	}
+
+	@Test
+	@DisplayName("이메일 유효성 검증")
+	void checkEmail() {
+		// given
+		when(userRepository.existsByEmail(email)).thenReturn(false);
+		// when
+		userService.checkEmail(email);
+		// then
+		verify(userRepository, times(1)).existsByEmail(email);
+	}
+
+	@Test
+	@DisplayName("이메일 유효성 검증 실패 : 이미 가입된 이메일")
+	void checkEmailFailed() {
+		// given
+		when(userRepository.existsByEmail(email)).thenReturn(true);
+		// when, then
+		assertThatThrownBy(() -> userService.checkEmail(email))
+			.isInstanceOf(UserValidationException.class)
+			.hasFieldOrPropertyWithValue("errors", "이미 사용 중인 이메일 입니다.");
+	}
 }
