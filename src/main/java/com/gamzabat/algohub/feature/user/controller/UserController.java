@@ -18,6 +18,7 @@ import com.gamzabat.algohub.common.annotation.AuthedUser;
 import com.gamzabat.algohub.exception.RequestException;
 import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.dto.DeleteUserRequest;
+import com.gamzabat.algohub.feature.user.dto.EditUserPasswordRequest;
 import com.gamzabat.algohub.feature.user.dto.RegisterRequest;
 import com.gamzabat.algohub.feature.user.dto.SignInRequest;
 import com.gamzabat.algohub.feature.user.dto.SignInResponse;
@@ -99,6 +100,14 @@ public class UserController {
 	@Operation(summary = "백준 닉네임 유효성 검증 API", description = "회원가입 진행 시, 백준 닉네임이 유효한지 검증하는 API")
 	public ResponseEntity<String> checkBjNickname(@RequestParam String bjNickname) {
 		userService.checkBjNickname(bjNickname);
+		return ResponseEntity.ok().body("OK");
+	}
+
+	@PatchMapping("/edit-password")
+	@Operation(summary = "비밀번호 변경")
+	public ResponseEntity<Object> editPassword(@AuthedUser User user,
+		@Valid @RequestBody EditUserPasswordRequest request) {
+		userService.editPassword(user, request);
 		return ResponseEntity.ok().body("OK");
 	}
 }

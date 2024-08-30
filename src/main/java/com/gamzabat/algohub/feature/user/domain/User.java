@@ -60,4 +60,8 @@ public class User {
 	public void editProfileImage(String profileImage) {
 		this.profileImage = profileImage;
 	}
+
+	public void editPassword(String password) {
+		this.password = password;
+	}
 }

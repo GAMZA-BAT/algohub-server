@@ -39,6 +39,7 @@ import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.image.service.ImageService;
 import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.dto.DeleteUserRequest;
+import com.gamzabat.algohub.feature.user.dto.EditUserPasswordRequest;
 import com.gamzabat.algohub.feature.user.dto.RegisterRequest;
 import com.gamzabat.algohub.feature.user.dto.SignInRequest;
 import com.gamzabat.algohub.feature.user.dto.SignInResponse;
@@ -312,5 +313,45 @@ class UserServiceTest {
 		assertThatThrownBy(() -> userService.checkBjNickname(bjNickname))
 			.isInstanceOf(BOJServerErrorException.class)
 			.hasFieldOrPropertyWithValue("error", "현재 백준 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+	}
+
+	@Test
+	@DisplayName("비밀번호 수정 성공")
+	void editPasswordSuccess() {
+		//given
+		EditUserPasswordRequest request = new EditUserPasswordRequest("password", "password1", "password1");
+		when(passwordEncoder.matches(request.currentPassword(), user.getPassword())).thenReturn(true);
+		//when
+		userService.editPassword(user, request);
+
+		//then
+		verify(userRepository).save(user);
+		assertThat(user.getPassword()).isEqualTo(passwordEncoder.encode(request.newPassword1()));
+	}
+
+	@Test
+	@DisplayName("비밀번호 수정 실패 : 현재의 비밀번호가 틀린경우")
+	void editPasswordFailed_1() {
+		//given
+		EditUserPasswordRequest request = new EditUserPasswordRequest("password22", "password1", "password1");
+		when(passwordEncoder.matches(request.currentPassword(), user.getPassword())).thenReturn(false);
+
+		//when,then
+		assertThatThrownBy(() -> userService.editPassword(user, request))
+			.isInstanceOf(UncorrectedPasswordException.class)
+			.hasFieldOrPropertyWithValue("errors", "비밀번호가 틀렸습니다.");
+	}
+
+	@Test
+	@DisplayName("비밀번호 수정 실패 : 비밀번호 두개가 다른경우")
+	void editPasswordFailed_2() {
+		//given
+		EditUserPasswordRequest request = new EditUserPasswordRequest("password", "password1", "password2");
+		when(passwordEncoder.matches(request.currentPassword(), user.getPassword())).thenReturn(true);
+
+		//when,then
+		assertThatThrownBy(() -> userService.editPassword(user, request))
+			.isInstanceOf(UncorrectedPasswordException.class)
+			.hasFieldOrPropertyWithValue("errors", "두개의 비밀번호가 같지 않습니다.");
 	}
 }

@@ -29,6 +29,7 @@ import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.image.service.ImageService;
 import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.dto.DeleteUserRequest;
+import com.gamzabat.algohub.feature.user.dto.EditUserPasswordRequest;
 import com.gamzabat.algohub.feature.user.dto.RegisterRequest;
 import com.gamzabat.algohub.feature.user.dto.SignInRequest;
 import com.gamzabat.algohub.feature.user.dto.SignInResponse;
@@ -135,6 +136,24 @@ public class UserService {
 		log.info("success to logout");
 	}
 
+	@Transactional
+	public void editPassword(User user, EditUserPasswordRequest request) {
+
+		if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+			throw new UncorrectedPasswordException("비밀번호가 틀렸습니다.");
+		}
+
+		if (!request.newPassword1().equals(request.newPassword2())) {
+			throw new UncorrectedPasswordException("두개의 비밀번호가 같지 않습니다.");
+		}
+
+		String encodedPassword = passwordEncoder.encode(request.newPassword1());
+		user.editPassword(encodedPassword);
+
+		userRepository.save(user);
+
+	}
+
 	@Transactional(readOnly = true)
 	public void checkBjNickname(String bjNickname) {
 		String bjUserUrl = BOJ_USER_PROFILE_URL + bjNickname;
@@ -158,4 +177,5 @@ public class UserService {
 		}
 		log.info("success to check baekjoon nickname validity");
 	}
+
 }
