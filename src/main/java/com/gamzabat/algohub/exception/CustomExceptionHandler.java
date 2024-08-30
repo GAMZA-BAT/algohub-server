@@ -9,6 +9,7 @@ import com.gamzabat.algohub.feature.board.exception.BoardValidationExceoption;
 import com.gamzabat.algohub.feature.comment.exception.CommentValidationException;
 import com.gamzabat.algohub.feature.comment.exception.SolutionValidationException;
 import com.gamzabat.algohub.feature.problem.exception.NotBojLinkException;
+import com.gamzabat.algohub.feature.problem.exception.SolvedAcApiErrorException;
 import com.gamzabat.algohub.feature.solution.exception.CannotFoundSolutionException;
 import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundGroupException;
 import com.gamzabat.algohub.feature.studygroup.exception.GroupMemberValidationException;
@@ -89,6 +90,11 @@ public class CustomExceptionHandler {
 	protected ResponseEntity<Object> handler(BOJServerErrorException e) {
 		return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
 			.body(new ErrorResponse(HttpStatus.SERVICE_UNAVAILABLE.value(), e.getError(), null));
+	}
+
+	@ExceptionHandler(SolvedAcApiErrorException.class)
+	protected ResponseEntity<Object> handler(SolvedAcApiErrorException e) {
+		return ResponseEntity.status(e.getCode()).body(new ErrorResponse(e.getCode(), e.getError(), null));
 	}
 
 	@ExceptionHandler(BoardValidationExceoption.class)

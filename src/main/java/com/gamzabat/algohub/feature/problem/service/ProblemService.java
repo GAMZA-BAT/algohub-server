@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gamzabat.algohub.exception.ProblemValidationException;
@@ -27,6 +28,7 @@ import com.gamzabat.algohub.feature.problem.dto.EditProblemRequest;
 import com.gamzabat.algohub.feature.problem.dto.GetProblemListsResponse;
 import com.gamzabat.algohub.feature.problem.dto.GetProblemResponse;
 import com.gamzabat.algohub.feature.problem.exception.NotBojLinkException;
+import com.gamzabat.algohub.feature.problem.exception.SolvedAcApiErrorException;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
 import com.gamzabat.algohub.feature.studygroup.domain.GroupMember;
@@ -73,8 +75,9 @@ public class ProblemService {
 		}
 
 		String number = getProblemId(request);
-		int level = Integer.parseInt(getProblemLevel(number));
-		String title = getProblemTitle(number);
+		JsonNode apiResult = fetchProblemDetails(number);
+		int level = getProblemLevel(apiResult);
+		String title = getProblemTitle(apiResult);
 
 		problemRepository.save(Problem.builder()
 			.studyGroup(group)
@@ -240,49 +243,43 @@ public class ProblemService {
 			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다."));
 	}
 
-	private String getProblemLevel(String problemId) {
+	private JsonNode fetchProblemDetails(String problemId) {
 		String url = SOLVED_AC_PROBLEM_API_URL + problemId;
 
 		try {
 			ResponseEntity<String> responseEntity = restTemplate.getForEntity(url, String.class);
 			String responseBody = responseEntity.getBody();
+			if (responseBody == null || responseBody.isEmpty()) {
+				log.error("Unexpected solved.ac API response format : " + responseBody);
+				throw new SolvedAcApiErrorException(HttpStatus.SERVICE_UNAVAILABLE.value(),
+					"solved.ac API로부터 예상치 못한 응답을 받았습니다.");
+			}
 
 			ObjectMapper objectMapper = new ObjectMapper();
 			JsonNode root = objectMapper.readTree(responseBody);
-			if (root.isArray() && root.size() > 0) {
-				JsonNode firstElement = root.get(0);
-				int level = firstElement.get("level").asInt();
-				return String.valueOf(level);
-			} else {
-				System.out.println("No data found for the given problem ID");
-				return "No data found";
+			if (!root.isArray()) {
+				log.error("Unexpected solved.ac API response format : " + responseBody);
+				throw new SolvedAcApiErrorException(HttpStatus.SERVICE_UNAVAILABLE.value(),
+					"solved.ac API로부터 예상치 못한 응답을 받았습니다.");
 			}
-		} catch (Exception e) {
-			System.out.println("An error occurred: " + e.getMessage());
-			return "Error occurred";
+
+			if (root.isEmpty())
+				throw new SolvedAcApiErrorException(HttpStatus.BAD_REQUEST.value(), "백준에 유효하지 않은 문제입니다.");
+
+			return root.get(0);
+		} catch (JsonProcessingException e) {
+			log.error("Json processing error : " + e.getMessage());
+			throw new SolvedAcApiErrorException(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+				"서버에서 solved.ac API JSON 응답 처리 중 오류가 발생했습니다.");
 		}
 	}
 
-	private String getProblemTitle(String problemId) {
-		String url = SOLVED_AC_PROBLEM_API_URL + problemId;
+	private int getProblemLevel(JsonNode problemDetails) {
+		return problemDetails.get("level").asInt();
+	}
 
-		try {
-			ResponseEntity<String> responseEntity = restTemplate.getForEntity(url, String.class);
-			String responseBody = responseEntity.getBody();
-
-			ObjectMapper objectMapper = new ObjectMapper();
-			JsonNode root = objectMapper.readTree(responseBody);
-			if (root.isArray() && root.size() > 0) {
-				JsonNode firstElement = root.get(0);
-				return firstElement.get("titleKo").asText();
-			} else {
-				System.out.println("No data found for the given problem ID");
-				return "No data found";
-			}
-		} catch (Exception e) {
-			System.out.println("An error occurred: " + e.getMessage());
-			return "Error occurred";
-		}
+	private String getProblemTitle(JsonNode problemDetails) {
+		return problemDetails.get("titleKo").asText();
 	}
 
 	private String getProblemId(CreateProblemRequest request) {
