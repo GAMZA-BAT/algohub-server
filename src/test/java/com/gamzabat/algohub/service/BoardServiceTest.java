@@ -23,11 +23,12 @@ import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.board.domain.Board;
 import com.gamzabat.algohub.feature.board.dto.CreateBoardRequest;
+import com.gamzabat.algohub.feature.board.dto.GetBoardResponse;
+import com.gamzabat.algohub.feature.board.exception.BoardValidationExceoption;
 import com.gamzabat.algohub.feature.board.repository.BoardRepository;
 import com.gamzabat.algohub.feature.board.service.BoardService;
 import com.gamzabat.algohub.feature.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
-import com.gamzabat.algohub.feature.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
@@ -48,6 +49,7 @@ public class BoardServiceTest {
 	private User user, user2, user3, user4;
 	private StudyGroup studyGroup;
 	private GroupMember groupMember, groupMember2, groupMember3;
+	private Board board;
 
 	@BeforeEach
 	void setUp() throws NoSuchFieldException, IllegalAccessException {
@@ -60,9 +62,9 @@ public class BoardServiceTest {
 		user4 = User.builder().email("email2").password("password").nickname("nickname2")
 			.role(Role.USER).profileImage("image").build();
 		studyGroup = StudyGroup.builder().owner(user).build();
-		groupMember = GroupMember.builder().user(user).studyGroup(studyGroup).role(ADMIN).build();
 		groupMember2 = GroupMember.builder().user(user2).studyGroup(studyGroup).role(ADMIN).build();
 		groupMember3 = GroupMember.builder().user(user3).studyGroup(studyGroup).role(PARTICIPANT).build();
+		board = Board.builder().studyGroup(studyGroup).title("title").content("content").author(user).build();
 
 		Field userField = User.class.getDeclaredField("id");
 		userField.setAccessible(true);
@@ -77,20 +79,23 @@ public class BoardServiceTest {
 
 		Field groupMemberField = GroupMember.class.getDeclaredField("id");
 		groupMemberField.setAccessible(true);
-		groupMemberField.set(groupMember, 100L);
 		groupMemberField.set(groupMember2, 200L);
 		groupMemberField.set(groupMember3, 300L);
+
+		Field boardField = Board.class.getDeclaredField("id");
+		boardField.setAccessible(true);
+		boardField.set(board, 1000L);
 
 	}
 
 	@Test
-	@DisplayName("게시판 작성 성공(그룹장)")
+	@DisplayName("공지 작성 성공(방장)")
 	void createBoardSuccess() {
 		//given
 		CreateBoardRequest request = new CreateBoardRequest(30L, "title", "content");
 		when(studyGroupRepository.findById(request.studyGroupId())).thenReturn(Optional.ofNullable(studyGroup));
 		when(groupMemberRepository.findByUserAndStudyGroup(user, studyGroup)).thenReturn(
-			Optional.ofNullable(groupMember));
+			Optional.empty());
 		//when
 		boardService.createBoard(user, request);
 		//then
@@ -99,11 +104,12 @@ public class BoardServiceTest {
 		assertThat(result.getAuthor()).isEqualTo(user);
 		assertThat(result.getContent()).isEqualTo("content");
 		assertThat(result.getTitle()).isEqualTo("title");
+		assertThat(result.getStudyGroup()).isEqualTo(studyGroup);
 
 	}
 
 	@Test
-	@DisplayName("게시판 작성 성공(부방장)")
+	@DisplayName("공지 작성 성공(부방장)")
 	void createBoardSuccess_1() {
 		//given
 		CreateBoardRequest request = new CreateBoardRequest(30L, "title", "content");
@@ -118,11 +124,12 @@ public class BoardServiceTest {
 		assertThat(result.getAuthor()).isEqualTo(user2);
 		assertThat(result.getContent()).isEqualTo("content");
 		assertThat(result.getTitle()).isEqualTo("title");
+		assertThat(result.getStudyGroup()).isEqualTo(studyGroup);
 
 	}
 
 	@Test
-	@DisplayName("게시판 작성 실패 그룹장or부방장이 아님")
+	@DisplayName("공지 작성 실패 그룹장or부방장이 아님")
 	void createBoardFail_1() {
 		//given
 		CreateBoardRequest request = new CreateBoardRequest(30L, "title", "content");
@@ -132,12 +139,12 @@ public class BoardServiceTest {
 		//when,then
 		assertThatThrownBy(() -> boardService.createBoard(user3, request))
 			.isInstanceOf(UserValidationException.class)
-			.hasFieldOrPropertyWithValue("errors", "게시글 작성 권한이 없습니다");
+			.hasFieldOrPropertyWithValue("errors", "공지 작성 권한이 없습니다");
 
 	}
 
 	@Test
-	@DisplayName("게시판 작성 실패 존재하지 않는 그룹")
+	@DisplayName("공지 작성 실패 존재하지 않는 그룹")
 	void createBoardFail_2() {
 		//given
 		CreateBoardRequest request = new CreateBoardRequest(31L, "title", "content");
@@ -150,7 +157,7 @@ public class BoardServiceTest {
 	}
 
 	@Test
-	@DisplayName("게시글 작성 실패 존재하지 않는 멤버")
+	@DisplayName("공지 작성 실패 존재하지 않는 멤버")
 	void createBoardFail_3() {
 		//given
 		CreateBoardRequest request = new CreateBoardRequest(30L, "title", "content");
@@ -158,9 +165,80 @@ public class BoardServiceTest {
 		when(groupMemberRepository.findByUserAndStudyGroup(user4, studyGroup)).thenReturn(Optional.empty());
 		//when,then
 		assertThatThrownBy(() -> boardService.createBoard(user4, request))
-			.isInstanceOf(GroupMemberValidationException.class)
-			.extracting("code", "error")
-			.containsExactly(HttpStatus.BAD_REQUEST.value(), "그룹에 속해있지 않은 멤버입니다");
+			.isInstanceOf(UserValidationException.class)
+			.hasFieldOrPropertyWithValue("errors", "그룹에 속해있지 않은 멤버입니다");
 	}
 
+	@Test
+	@DisplayName("공지 조회 성공(방장)")
+	void getBoardSuccess_1() {
+		//given
+		when(boardRepository.findById(1000L)).thenReturn(Optional.ofNullable(board));
+		when(groupMemberRepository.findByUserAndStudyGroup(user, studyGroup)).thenReturn(Optional.empty());
+		//when
+		GetBoardResponse response = boardService.getBoard(user, 1000L);
+		//then
+		assertThat(response.author()).isEqualTo("nickname1");
+		assertThat(response.boardContent()).isEqualTo("content");
+		assertThat(response.boardTitle()).isEqualTo("title");
+		assertThat(response.boardId()).isEqualTo(1000L);
+	}
+
+	@Test
+	@DisplayName("공지 조회 성공(부방장)")
+	void getBoardSuccess_2() {
+		//given
+		when(boardRepository.findById(1000L)).thenReturn(Optional.ofNullable(board));
+		when(groupMemberRepository.findByUserAndStudyGroup(user2, studyGroup)).thenReturn(
+			Optional.ofNullable(groupMember2));
+		//when
+		GetBoardResponse response = boardService.getBoard(user2, 1000L);
+		//then
+		assertThat(response.author()).isEqualTo("nickname1");
+		assertThat(response.boardContent()).isEqualTo("content");
+		assertThat(response.boardTitle()).isEqualTo("title");
+		assertThat(response.boardId()).isEqualTo(1000L);
+	}
+
+	@Test
+	@DisplayName("공지 조회 성공(일반 그룹 참가자)")
+	void getBoardSuccess_3() {
+		//given
+		when(boardRepository.findById(1000L)).thenReturn(Optional.ofNullable(board));
+		when(groupMemberRepository.findByUserAndStudyGroup(user3, studyGroup)).thenReturn(
+			Optional.ofNullable(groupMember3));
+		//when
+		GetBoardResponse response = boardService.getBoard(user3, 1000L);
+		//then
+		assertThat(response.author()).isEqualTo("nickname1");
+		assertThat(response.boardContent()).isEqualTo("content");
+		assertThat(response.boardTitle()).isEqualTo("title");
+		assertThat(response.boardId()).isEqualTo(1000L);
+	}
+
+	@Test
+	@DisplayName("공지 조회 실패(존재하지 않는 공지)")
+	void getBoardFailed_1() {
+		//given
+		when(boardRepository.findById(1001L)).thenReturn(Optional.empty());
+
+		//when, then
+		assertThatThrownBy(() -> boardService.getBoard(user, 1001L))
+			.isInstanceOf(BoardValidationExceoption.class)
+			.hasFieldOrPropertyWithValue("error", "존재하지 않는 공지입니다");
+
+	}
+
+	@Test
+	@DisplayName("공지 조회 실패(그룹에 참여하지 않은 유저")
+	void getBoardFailed_2() {
+		//given
+		when(boardRepository.findById(1000L)).thenReturn(Optional.ofNullable(board));
+		when(groupMemberRepository.findByUserAndStudyGroup(user4, studyGroup)).thenReturn(Optional.empty());
+
+		//when
+		assertThatThrownBy(() -> boardService.getBoard(user4, 1000L))
+			.isInstanceOf(UserValidationException.class)
+			.hasFieldOrPropertyWithValue("errors", "공지를 조회할 권한이 없습니다");
+	}
 }
