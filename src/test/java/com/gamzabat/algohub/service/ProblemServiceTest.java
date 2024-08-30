@@ -37,6 +37,7 @@ import com.gamzabat.algohub.feature.problem.dto.CreateProblemRequest;
 import com.gamzabat.algohub.feature.problem.dto.EditProblemRequest;
 import com.gamzabat.algohub.feature.problem.dto.GetProblemListsResponse;
 import com.gamzabat.algohub.feature.problem.dto.GetProblemResponse;
+import com.gamzabat.algohub.feature.problem.exception.SolvedAcApiErrorException;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.problem.service.ProblemService;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
@@ -225,6 +226,48 @@ class ProblemServiceTest {
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "문제에 대한 권한이 없습니다. : create // 방장, 부방장일 경우에만 생성이 가능합니다.");
+	}
+
+	@Test
+	@DisplayName("문제 생성 실패 : 백준에 유효하지 않은 문제")
+	void createProblemFailed_5() {
+		// given
+		CreateProblemRequest request = CreateProblemRequest.builder()
+			.groupId(10L)
+			.link("https://www.acmicpc.net/problem/00")
+			.startDate(LocalDate.now().minusDays(7))
+			.endDate(LocalDate.now())
+			.build();
+		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		String apiResult = "[]";
+		ResponseEntity<String> responseEntity = new ResponseEntity<>(apiResult, HttpStatus.OK);
+		when(restTemplate.getForEntity(anyString(), eq(String.class))).thenReturn(responseEntity);
+		// when, then
+		assertThatThrownBy(() -> problemService.createProblem(user, request))
+			.isInstanceOf(SolvedAcApiErrorException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
+			.hasFieldOrPropertyWithValue("error", "백준에 유효하지 않은 문제입니다.");
+	}
+
+	@Test
+	@DisplayName("문제 생성 실패 : solved.ac API의 잘못된 response")
+	void createProblemFailed_6() {
+		// given
+		CreateProblemRequest request = CreateProblemRequest.builder()
+			.groupId(10L)
+			.link("https://www.acmicpc.net/problem/00")
+			.startDate(LocalDate.now().minusDays(7))
+			.endDate(LocalDate.now())
+			.build();
+		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		String apiResult = "{\"titleKo\":\"A+B\",\"level\":1}";
+		ResponseEntity<String> responseEntity = new ResponseEntity<>(apiResult, HttpStatus.OK);
+		when(restTemplate.getForEntity(anyString(), eq(String.class))).thenReturn(responseEntity);
+		// when, then
+		assertThatThrownBy(() -> problemService.createProblem(user, request))
+			.isInstanceOf(SolvedAcApiErrorException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.SERVICE_UNAVAILABLE.value())
+			.hasFieldOrPropertyWithValue("error", "solved.ac API로부터 예상치 못한 응답을 받았습니다.");
 	}
 
 	@Test
