@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import com.gamzabat.algohub.feature.board.exception.BoardValidationExceoption;
 import com.gamzabat.algohub.feature.comment.exception.CommentValidationException;
 import com.gamzabat.algohub.feature.comment.exception.SolutionValidationException;
 import com.gamzabat.algohub.feature.problem.exception.NotBojLinkException;
@@ -89,4 +90,11 @@ public class CustomExceptionHandler {
 		return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
 			.body(new ErrorResponse(HttpStatus.SERVICE_UNAVAILABLE.value(), e.getError(), null));
 	}
+
+	@ExceptionHandler(BoardValidationExceoption.class)
+	protected ResponseEntity<Object> handler(BoardValidationExceoption e) {
+		return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+			.body(new ErrorResponse(HttpStatus.SERVICE_UNAVAILABLE.value(), e.getError(), null));
+	}
+
 }
