@@ -286,11 +286,12 @@ class StudyGroupServiceTest {
 				.build());
 		}
 		List<BookmarkedStudyGroup> bookmarks = new ArrayList<>(10);
-		for (int i = 10; i < 20; i++) {
+		for (int i = 0; i < 10; i++) {
 			bookmarks.add(BookmarkedStudyGroup.builder()
 				.studyGroup(groups.get(i))
 				.user(user)
 				.build());
+			when(bookmarkedStudyGroupRepository.existsByUserAndStudyGroup(user, groups.get(i))).thenReturn(true);
 		}
 		when(bookmarkedStudyGroupRepository.findAllByUser(user)).thenReturn(bookmarks);
 		when(studyGroupRepository.findByUser(user)).thenReturn(groups);
@@ -310,24 +311,28 @@ class StudyGroupServiceTest {
 			assertThat(done.get(i).ownerNickname()).isEqualTo("nickname1");
 			assertThat(done.get(i).startDate()).isEqualTo(LocalDate.now().minusDays(i + 30));
 			assertThat(done.get(i).endDate()).isEqualTo(LocalDate.now().minusDays(30));
+			assertThat(done.get(i).isBookmarked()).isTrue();
 		}
 		for (int i = 0; i < 10; i++) {
 			assertThat(inProgress.get(i).name()).isEqualTo("name" + i);
 			assertThat(inProgress.get(i).ownerNickname()).isEqualTo("nickname1");
 			assertThat(inProgress.get(i).startDate()).isEqualTo(LocalDate.now().minusDays(i));
 			assertThat(inProgress.get(i).endDate()).isEqualTo(LocalDate.now().plusDays(i));
+			assertThat(inProgress.get(i).isBookmarked()).isFalse();
 		}
 		for (int i = 0; i < 10; i++) {
 			assertThat(queued.get(i).name()).isEqualTo("name" + i);
 			assertThat(queued.get(i).ownerNickname()).isEqualTo("nickname1");
 			assertThat(queued.get(i).startDate()).isEqualTo(LocalDate.now().plusDays(30));
 			assertThat(queued.get(i).endDate()).isEqualTo(LocalDate.now().plusDays(i + 30));
+			assertThat(queued.get(i).isBookmarked()).isFalse();
 		}
 		for (int i = 0; i < 10; i++) {
 			assertThat(bookmarked.get(i).name()).isEqualTo("name" + i);
 			assertThat(bookmarked.get(i).ownerNickname()).isEqualTo("nickname1");
-			assertThat(bookmarked.get(i).startDate()).isEqualTo(LocalDate.now().minusDays(i));
-			assertThat(bookmarked.get(i).endDate()).isEqualTo(LocalDate.now().plusDays(i));
+			assertThat(bookmarked.get(i).startDate()).isEqualTo(LocalDate.now().minusDays(i + 30));
+			assertThat(bookmarked.get(i).endDate()).isEqualTo(LocalDate.now().minusDays(30));
+			assertThat(bookmarked.get(i).isBookmarked()).isTrue();
 		}
 	}
 
