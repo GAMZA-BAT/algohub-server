@@ -162,6 +162,12 @@ public class UserService {
 	}
 
 	@Transactional(readOnly = true)
+	public void checkEmail(String email) {
+		if (userRepository.existsByEmail(email))
+			throw new UserValidationException("이미 사용 중인 이메일 입니다.");
+	}
+
+	@Transactional(readOnly = true)
 	public void checkNickname(String nickname) {
 		String regex = "[^a-zA-Z0-9가-힣ㄱ-ㅎㅏ-ㅣ]";
 

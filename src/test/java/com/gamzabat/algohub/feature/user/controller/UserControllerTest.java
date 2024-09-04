@@ -2,6 +2,7 @@ package com.gamzabat.algohub.feature.user.controller;
 
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -34,6 +35,7 @@ import com.gamzabat.algohub.config.SpringSecurityConfig;
 import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.image.service.ImageService;
 import com.gamzabat.algohub.feature.user.domain.User;
+import com.gamzabat.algohub.feature.user.dto.CheckEmailRequest;
 import com.gamzabat.algohub.feature.user.dto.DeleteUserRequest;
 import com.gamzabat.algohub.feature.user.dto.RegisterRequest;
 import com.gamzabat.algohub.feature.user.dto.SignInRequest;
@@ -394,6 +396,54 @@ class UserControllerTest {
 			.andExpect(status().isServiceUnavailable())
 			.andExpect(jsonPath("$.error").value("현재 백준 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요."));
 		verify(userService, times(1)).checkBjNickname(bjNickname);
+	}
+
+	@Test
+	@DisplayName("이메일 유효성 검증 : 사용 가능한 이메일")
+	void checkEmail_1() throws Exception {
+		// given
+		CheckEmailRequest request = new CheckEmailRequest("email@email.com");
+		doNothing().when(userService).checkEmail(anyString());
+		// when, then
+		mockMvc.perform(post("/api/user/check-email")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isOk())
+			.andExpect(content().string("OK"));
+		verify(userService, times(1)).checkEmail(anyString());
+	}
+
+	@Test
+	@DisplayName("이메일 유효성 검증 : 이미 사용 중인 이메일")
+	void checkEmail_2() throws Exception {
+		// given
+		CheckEmailRequest request = new CheckEmailRequest("email@email.com");
+		doThrow(new UserValidationException("이미 사용 중인 이메일 입니다.")).when(userService).checkEmail(anyString());
+		// when, then
+		mockMvc.perform(post("/api/user/check-email")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.error").value("이미 사용 중인 이메일 입니다."));
+		verify(userService, times(1)).checkEmail(anyString());
+	}
+
+	@ParameterizedTest
+	@CsvSource(value = {
+		" '', email : 이메일은 필수 입력 입니다.",
+		"email, email : 이메일 형식이 올바르지 않습니다.",
+	})
+	@DisplayName("이메일 유효성 검증 실패 : 잘못된 요청")
+	void checkEmailFailed_1(String email, String exceptionMessage) throws Exception {
+		// given
+		CheckEmailRequest request = new CheckEmailRequest(email);
+		// when, then
+		mockMvc.perform(post("/api/user/check-email")
+				.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.status").value(400))
+			.andExpect(jsonPath("$.error").value("이메일 중복 검사 요청이 올바르지 않습니다."))
+			.andExpect(jsonPath("$.messages", hasItem(exceptionMessage)));
 	}
 
 	@Test
