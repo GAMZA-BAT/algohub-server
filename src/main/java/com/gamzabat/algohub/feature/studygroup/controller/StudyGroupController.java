@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -27,6 +28,7 @@ import com.gamzabat.algohub.feature.studygroup.dto.GetGroupResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.GetRankingResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupListsResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupWithCodeResponse;
+import com.gamzabat.algohub.feature.studygroup.dto.UpdateGroupMemberRoleRequest;
 import com.gamzabat.algohub.feature.studygroup.service.StudyGroupService;
 import com.gamzabat.algohub.feature.user.domain.User;
 
@@ -146,5 +148,16 @@ public class StudyGroupController {
 	public ResponseEntity<String> updateBookmarkGroup(@AuthedUser User user, @RequestParam Long groupId) {
 		String response = studyGroupService.updateBookmarkGroup(user, groupId);
 		return ResponseEntity.ok().body(response);
+	}
+
+	@PatchMapping(value = "/role")
+	@Operation(summary = "스터디 그룹 멤버 역할 수정 API", description = "스터디 그룹 멤버 역할을 ADMIN/PARTICIPANT 로 수정하는 API")
+	public ResponseEntity<String> updateMemberRole(@AuthedUser User user, @Valid @RequestBody
+	UpdateGroupMemberRoleRequest request, Errors errors) {
+		if (errors.hasErrors())
+			throw new RequestException("스터디 그룹 멤버 역할 수정 요청이 올바르지 않습니다.", errors);
+
+		studyGroupService.updateGroupMemberRole(user, request);
+		return ResponseEntity.ok().body("OK");
 	}
 }
