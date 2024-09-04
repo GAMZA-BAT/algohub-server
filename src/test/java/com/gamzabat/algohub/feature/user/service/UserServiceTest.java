@@ -11,6 +11,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
@@ -46,6 +48,7 @@ import com.gamzabat.algohub.feature.user.dto.UpdateUserRequest;
 import com.gamzabat.algohub.feature.user.dto.UserInfoResponse;
 import com.gamzabat.algohub.feature.user.exception.BOJServerErrorException;
 import com.gamzabat.algohub.feature.user.exception.CheckBjNicknameValidationException;
+import com.gamzabat.algohub.feature.user.exception.CheckNicknameValidationException;
 import com.gamzabat.algohub.feature.user.exception.UncorrectedPasswordException;
 import com.gamzabat.algohub.feature.user.repository.UserRepository;
 
@@ -312,5 +315,39 @@ class UserServiceTest {
 		assertThatThrownBy(() -> userService.checkBjNickname(bjNickname))
 			.isInstanceOf(BOJServerErrorException.class)
 			.hasFieldOrPropertyWithValue("error", "현재 백준 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+	}
+
+	@Test
+	@DisplayName("닉네임 중복 검사")
+	void checkNickname_1() {
+		// given
+		when(userRepository.existsByNickname(nickname)).thenReturn(false);
+		// when
+		userService.checkNickname(nickname);
+		// then
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {"***asdf", "16글자가초과된nickname입니다", "ab"})
+	@DisplayName("닉네임 중복 검사 : 잘못된 형식의 닉네임")
+	void checkNickname_2(String invalidNickname) {
+		// given
+		// when, then
+		assertThatThrownBy(() -> userService.checkNickname(invalidNickname))
+			.isInstanceOf(CheckNicknameValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
+			.hasFieldOrPropertyWithValue("error", "닉네임은 3글자 이상, 16글자 이하이며 특수문자 불가입니다.");
+	}
+
+	@Test
+	@DisplayName("닉네임 중복 검사 : 이미 사용 중인 닉네임")
+	void checkNickname_3() {
+		// given
+		when(userRepository.existsByNickname(nickname)).thenReturn(true);
+		// when, then
+		assertThatThrownBy(() -> userService.checkNickname(nickname))
+			.isInstanceOf(CheckNicknameValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.CONFLICT.value())
+			.hasFieldOrPropertyWithValue("error", "이미 사용 중인 닉네임입니다.");
 	}
 }
