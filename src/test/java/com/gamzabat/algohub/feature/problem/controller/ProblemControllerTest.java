@@ -247,6 +247,25 @@ class ProblemControllerTest {
 	}
 
 	@Test
+	@DisplayName("문제 마감기한 수정 실패 : 이미 진행 중인 문제인데 시작날짜 수정을 요청하는 경우")
+	void editProblemDeadlineFailed_3() throws Exception {
+		// given
+		EditProblemRequest request = new EditProblemRequest(problemId, LocalDate.now(), LocalDate.now().plusDays(10));
+		doThrow(
+			new ProblemValidationException(HttpStatus.FORBIDDEN.value(), "문제 시작 날짜 수정이 불가합니다. : 이미 진행 중인 문제입니다.")).when(
+				problemService)
+			.editProblem(any(User.class), any(EditProblemRequest.class));
+		// when, then
+		mockMvc.perform(patch("/api/problem")
+				.header("Authorization", token)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isForbidden())
+			.andExpect(jsonPath("$.error").value("문제 시작 날짜 수정이 불가합니다. : 이미 진행 중인 문제입니다."));
+		verify(problemService, times(1)).editProblem(user, request);
+	}
+
+	@Test
 	@DisplayName("문제 목록 조회 성공")
 	void getProblemList() throws Exception {
 		// given
