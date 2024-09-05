@@ -118,7 +118,7 @@ public class ProblemService {
 				"문제에 대한 권한이 없습니다. : edit // 방장, 부방장일 경우에만 생성이 가능합니다.");
 		}
 
-		if (!problem.getStartDate().isAfter(LocalDate.now()))
+		if (!problem.getStartDate().isAfter(LocalDate.now()) && !request.startDate().isEqual(problem.getStartDate()))
 			throw new ProblemValidationException(HttpStatus.FORBIDDEN.value(), "문제 시작 날짜 수정이 불가합니다. : 이미 진행 중인 문제입니다.");
 
 		problem.editProblemInfo(request.startDate(), request.endDate());
