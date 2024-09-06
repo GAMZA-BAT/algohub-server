@@ -1,5 +1,7 @@
 package com.gamzabat.algohub.feature.board.controller;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -41,8 +43,15 @@ public class BoardController {
 
 	@GetMapping
 	@Operation(summary = "공지 하나 조회 API")
-	public ResponseEntity<GetBoardResponse> getBoards(@AuthedUser User user, @RequestParam Long boardId) {
+	public ResponseEntity<GetBoardResponse> getBoard(@AuthedUser User user, @RequestParam Long boardId) {
 		GetBoardResponse response = boardService.getBoard(user, boardId);
+		return ResponseEntity.ok().body(response);
+	}
+
+	@GetMapping(value = "/boardList")
+	@Operation(summary = "공지 목록 조회 API")
+	public ResponseEntity<List<GetBoardResponse>> getBoardList(@AuthedUser User user, @RequestParam Long studyGroupId) {
+		List<GetBoardResponse> response = boardService.getBoardList(user, studyGroupId);
 		return ResponseEntity.ok().body(response);
 	}
 }
