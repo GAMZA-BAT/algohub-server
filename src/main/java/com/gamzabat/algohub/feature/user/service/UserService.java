@@ -57,7 +57,7 @@ public class UserService {
 
 	@Transactional
 	public void register(RegisterRequest request, MultipartFile profileImage) {
-		checkEmailDuplication(request.email());
+		checkEmail(request.email());
 		String imageUrl = imageService.saveImage(profileImage);
 		String encodedPassword = passwordEncoder.encode(request.password());
 		userRepository.save(User.builder()
@@ -83,11 +83,6 @@ public class UserService {
 		}
 		JwtDTO token = tokenProvider.generateToken(authenticate);
 		return new SignInResponse(token.getToken());
-	}
-
-	private void checkEmailDuplication(String email) {
-		if (userRepository.existsByEmail(email))
-			throw new UserValidationException("이미 가입 된 이메일 입니다.");
 	}
 
 	@Transactional(readOnly = true)
