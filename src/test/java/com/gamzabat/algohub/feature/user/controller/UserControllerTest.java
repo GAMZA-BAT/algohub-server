@@ -163,7 +163,7 @@ class UserControllerTest {
 			requestJson.getBytes());
 		MockMultipartFile profileImage = new MockMultipartFile("profileImage", "profile.jpg", "image/jpeg",
 			"image".getBytes());
-		doThrow(new UserValidationException("이미 가입 된 이메일 입니다.")).when(userService)
+		doThrow(new UserValidationException("이미 사용 중인 이메일 입니다.")).when(userService)
 			.register(any(RegisterRequest.class), any(MultipartFile.class));
 		// when, then
 		mockMvc.perform(multipart("/api/user/register")
@@ -172,7 +172,7 @@ class UserControllerTest {
 				.contentType(MediaType.MULTIPART_FORM_DATA))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.status").value(400))
-			.andExpect(jsonPath("$.error").value("이미 가입 된 이메일 입니다."));
+			.andExpect(jsonPath("$.error").value("이미 사용 중인 이메일 입니다."));
 
 		verify(userService, times(1)).register(request, profileImage);
 	}

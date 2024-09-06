@@ -123,7 +123,7 @@ class UserServiceTest {
 		// when, then
 		assertThatThrownBy(() -> userService.register(request, profileImage))
 			.isInstanceOf(UserValidationException.class)
-			.hasFieldOrPropertyWithValue("errors", "이미 가입 된 이메일 입니다.");
+			.hasFieldOrPropertyWithValue("errors", "이미 사용 중인 이메일 입니다.");
 	}
 
 	@Test
