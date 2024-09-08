@@ -266,6 +266,45 @@ class ProblemControllerTest {
 	}
 
 	@Test
+	@DisplayName("문제 진행 기간 수정 실패 : 문제 시작 날짜를 오늘 이전의 날짜로 요청한 경우")
+	void editProblemDeadlineFailed_4() throws Exception {
+		// given
+		EditProblemRequest request = new EditProblemRequest(problemId, LocalDate.now().minusDays(10), LocalDate.now());
+		doThrow(
+			new ProblemValidationException(HttpStatus.BAD_REQUEST.value(), "문제 시작 날짜는 오늘 이전의 날짜로 수정할 수 없습니다.")).when(
+				problemService)
+			.editProblem(any(User.class), any(EditProblemRequest.class));
+		// when, then
+		mockMvc.perform(patch("/api/problem")
+				.header("Authorization", token)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.error").value("문제 시작 날짜는 오늘 이전의 날짜로 수정할 수 없습니다."));
+		verify(problemService, times(1)).editProblem(user, request);
+	}
+
+	@Test
+	@DisplayName("문제 진행 기간 수정 실패 : 문제 마감 날짜를 오늘 이전의 날짜로 요청한 경우")
+	void editProblemDeadlineFailed_5() throws Exception {
+		// given
+		EditProblemRequest request = new EditProblemRequest(problemId, LocalDate.now().minusDays(20),
+			LocalDate.now().minusDays(10));
+		doThrow(
+			new ProblemValidationException(HttpStatus.BAD_REQUEST.value(), "문제 마감 날짜는 오늘 이전의 날짜로 수정할 수 없습니다.")).when(
+				problemService)
+			.editProblem(any(User.class), any(EditProblemRequest.class));
+		// when, then
+		mockMvc.perform(patch("/api/problem")
+				.header("Authorization", token)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.error").value("문제 마감 날짜는 오늘 이전의 날짜로 수정할 수 없습니다."));
+		verify(problemService, times(1)).editProblem(user, request);
+	}
+
+	@Test
 	@DisplayName("문제 목록 조회 성공")
 	void getProblemList() throws Exception {
 		// given
