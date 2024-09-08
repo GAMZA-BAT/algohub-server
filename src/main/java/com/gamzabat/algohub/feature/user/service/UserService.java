@@ -57,7 +57,7 @@ public class UserService {
 
 	@Transactional
 	public void register(RegisterRequest request, MultipartFile profileImage) {
-		checkEmail(request.email());
+		checkEmailDuplication(request.email());
 		String imageUrl = imageService.saveImage(profileImage);
 		String encodedPassword = passwordEncoder.encode(request.password());
 		userRepository.save(User.builder()
@@ -155,7 +155,7 @@ public class UserService {
 	}
 
 	@Transactional(readOnly = true)
-	public void checkEmail(String email) {
+	public void checkEmailDuplication(String email) {
 		if (userRepository.existsByEmail(email))
 			throw new UserValidationException("이미 사용 중인 이메일 입니다.");
 	}
