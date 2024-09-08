@@ -95,7 +95,7 @@ public class BoardService {
 		Boolean isOwner = (studyGroup.getOwner().getId().equals(user.getId()) && groupMember.isEmpty());
 		Boolean isGroupMember = groupMember.isPresent();
 		if (!isGroupMember && !isOwner)
-			throw new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(), "참여하지 않은 스터디 그룹입니다");
+			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 스터디 그룹입니다");
 
 		List<Board> list = boardRepository.findAllByStudyGroup(studyGroup);
 		List<GetBoardResponse> result = list.stream().map(GetBoardResponse::toDTO).toList();

@@ -48,7 +48,7 @@ public class BoardController {
 		return ResponseEntity.ok().body(response);
 	}
 
-	@GetMapping(value = "/boardList")
+	@GetMapping(value = "/board-list")
 	@Operation(summary = "공지 목록 조회 API")
 	public ResponseEntity<List<GetBoardResponse>> getBoardList(@AuthedUser User user, @RequestParam Long studyGroupId) {
 		List<GetBoardResponse> response = boardService.getBoardList(user, studyGroupId);
