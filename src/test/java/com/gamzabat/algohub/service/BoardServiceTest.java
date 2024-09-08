@@ -315,7 +315,7 @@ public class BoardServiceTest {
 		//when, then
 		assertThatThrownBy(() -> boardService.getBoardList(user4, 30L))
 			.isInstanceOf(GroupMemberValidationException.class)
-			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
+			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "참여하지 않은 스터디 그룹입니다");
 	}
 
