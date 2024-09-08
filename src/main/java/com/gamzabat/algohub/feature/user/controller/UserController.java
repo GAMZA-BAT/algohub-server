@@ -111,7 +111,7 @@ public class UserController {
 		if (errors.hasErrors())
 			throw new RequestException("이메일 중복 검사 요청이 올바르지 않습니다.", errors);
 
-		userService.checkEmail(request.email());
+		userService.checkEmailDuplication(request.email());
 		return ResponseEntity.ok().body("OK");
 	}
 }
