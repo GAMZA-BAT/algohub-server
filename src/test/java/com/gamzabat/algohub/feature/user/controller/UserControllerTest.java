@@ -401,14 +401,14 @@ class UserControllerTest {
 	void checkEmail_1() throws Exception {
 		// given
 		CheckEmailRequest request = new CheckEmailRequest("email@email.com");
-		doNothing().when(userService).checkEmail(anyString());
+		doNothing().when(userService).checkEmailDuplication(anyString());
 		// when, then
 		mockMvc.perform(post("/api/user/check-email")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isOk())
 			.andExpect(content().string("OK"));
-		verify(userService, times(1)).checkEmail(anyString());
+		verify(userService, times(1)).checkEmailDuplication(anyString());
 	}
 
 	@Test
@@ -416,14 +416,14 @@ class UserControllerTest {
 	void checkEmail_2() throws Exception {
 		// given
 		CheckEmailRequest request = new CheckEmailRequest("email@email.com");
-		doThrow(new UserValidationException("이미 사용 중인 이메일 입니다.")).when(userService).checkEmail(anyString());
+		doThrow(new UserValidationException("이미 사용 중인 이메일 입니다.")).when(userService).checkEmailDuplication(anyString());
 		// when, then
 		mockMvc.perform(post("/api/user/check-email")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.error").value("이미 사용 중인 이메일 입니다."));
-		verify(userService, times(1)).checkEmail(anyString());
+		verify(userService, times(1)).checkEmailDuplication(anyString());
 	}
 
 	@ParameterizedTest

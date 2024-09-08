@@ -320,7 +320,7 @@ class UserServiceTest {
 		// given
 		when(userRepository.existsByEmail(email)).thenReturn(false);
 		// when
-		userService.checkEmail(email);
+		userService.checkEmailDuplication(email);
 		// then
 		verify(userRepository, times(1)).existsByEmail(email);
 	}
@@ -331,7 +331,7 @@ class UserServiceTest {
 		// given
 		when(userRepository.existsByEmail(email)).thenReturn(true);
 		// when, then
-		assertThatThrownBy(() -> userService.checkEmail(email))
+		assertThatThrownBy(() -> userService.checkEmailDuplication(email))
 			.isInstanceOf(UserValidationException.class)
 			.hasFieldOrPropertyWithValue("errors", "이미 사용 중인 이메일 입니다.");
 	}
