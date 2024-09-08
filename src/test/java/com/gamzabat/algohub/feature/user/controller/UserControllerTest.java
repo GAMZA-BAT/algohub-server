@@ -14,6 +14,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -43,6 +44,7 @@ import com.gamzabat.algohub.feature.user.dto.UpdateUserRequest;
 import com.gamzabat.algohub.feature.user.dto.UserInfoResponse;
 import com.gamzabat.algohub.feature.user.exception.BOJServerErrorException;
 import com.gamzabat.algohub.feature.user.exception.CheckBjNicknameValidationException;
+import com.gamzabat.algohub.feature.user.exception.CheckNicknameValidationException;
 import com.gamzabat.algohub.feature.user.exception.UncorrectedPasswordException;
 import com.gamzabat.algohub.feature.user.repository.UserRepository;
 import com.gamzabat.algohub.feature.user.service.UserService;
@@ -444,4 +446,52 @@ class UserControllerTest {
 			.andExpect(jsonPath("$.messages", hasItem(exceptionMessage)));
 	}
 
+	@Test
+	@DisplayName("닉네임 중복 검사")
+	void checkNickname_1() throws Exception {
+		// given
+		String nickname = "nickname";
+		doNothing().when(userService).checkNickname(nickname);
+		// when, then
+		mockMvc.perform(get("/api/user/check-nickname")
+				.header("Authorization", token)
+				.param("nickname", nickname))
+			.andExpect(status().isOk())
+			.andExpect(content().string("OK"));
+		verify(userService, times(1)).checkNickname(nickname);
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {"***asdf", "16글자가초과된nickname입니다", "ab"})
+	@DisplayName("닉네임 중복 검사 : 잘못된 형식의 닉네임")
+	void checkNickname_2(String nickname) throws Exception {
+		// given
+		doThrow(
+			new CheckNicknameValidationException(HttpStatus.BAD_REQUEST.value(), "닉네임은 3글자 이상, 16글자 이하이며 특수문자 불가입니다."))
+			.when(userService).checkNickname(nickname);
+		// when, then
+		mockMvc.perform(get("/api/user/check-nickname")
+				.header("Authorization", token)
+				.param("nickname", nickname))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.error").value("닉네임은 3글자 이상, 16글자 이하이며 특수문자 불가입니다."));
+		verify(userService, times(1)).checkNickname(nickname);
+	}
+
+	@Test
+	@DisplayName("닉네임 중복 검사 : 이미 사용 중인 닉네임")
+	void checkNickname_3() throws Exception {
+		// given
+		String nickname = "nickname";
+		doThrow(
+			new CheckNicknameValidationException(HttpStatus.CONFLICT.value(), "이미 사용 중인 닉네임입니다."))
+			.when(userService).checkNickname(nickname);
+		// when, then
+		mockMvc.perform(get("/api/user/check-nickname")
+				.header("Authorization", token)
+				.param("nickname", nickname))
+			.andExpect(status().isConflict())
+			.andExpect(jsonPath("$.error").value("이미 사용 중인 닉네임입니다."));
+		verify(userService, times(1)).checkNickname(nickname);
+	}
 }

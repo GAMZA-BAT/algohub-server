@@ -114,4 +114,11 @@ public class UserController {
 		userService.checkEmail(request.email());
 		return ResponseEntity.ok().body("OK");
 	}
+
+	@GetMapping("/check-nickname")
+	@Operation(summary = "닉네임 중복 검사 API", description = "회원가입 진행 시, 닉네임 형식 및 중복을 검사하는 API")
+	public ResponseEntity<String> checkNickname(@RequestParam String nickname) {
+		userService.checkNickname(nickname);
+		return ResponseEntity.ok().body("OK");
+	}
 }
