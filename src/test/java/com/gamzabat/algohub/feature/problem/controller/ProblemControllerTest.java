@@ -195,7 +195,7 @@ class ProblemControllerTest {
 	}
 
 	@Test
-	@DisplayName("문제 마감기한 수정 성공")
+	@DisplayName("문제 진행 기간 수정 성공")
 	void editProblemDeadline() throws Exception {
 		// given
 		EditProblemRequest request = new EditProblemRequest(problemId, LocalDate.now(), LocalDate.now().plusDays(10));
@@ -214,7 +214,7 @@ class ProblemControllerTest {
 	@CsvSource(value = {
 		"null,'2024-07-21','2024-08-21',problemId : 문제 고유 아이디는 필수 입력 입니다.",
 	}, nullValues = "null")
-	@DisplayName("문제 마감기한 수정 실패 : 잘못된 요청")
+	@DisplayName("문제 진행 기간 수정 실패 : 잘못된 요청")
 	void editProblemDeadlineFailed_1(Long problemId, LocalDate startDate, LocalDate endDate,
 		String exceptionMessage) throws Exception {
 		// given
@@ -230,7 +230,7 @@ class ProblemControllerTest {
 	}
 
 	@Test
-	@DisplayName("문제 마감기한 수정 실패 : 존재하지 않는 문제")
+	@DisplayName("문제 진행 기간 수정 실패 : 존재하지 않는 문제")
 	void editProblemDeadlineFailed_2() throws Exception {
 		// given
 		EditProblemRequest request = new EditProblemRequest(problemId, LocalDate.now(), LocalDate.now().plusDays(10));
@@ -247,7 +247,7 @@ class ProblemControllerTest {
 	}
 
 	@Test
-	@DisplayName("문제 마감기한 수정 실패 : 이미 진행 중인 문제인데 시작날짜 수정을 요청하는 경우")
+	@DisplayName("문제 진행 기간 수정 실패 : 이미 진행 중인 문제인데 시작날짜 수정을 요청하는 경우")
 	void editProblemDeadlineFailed_3() throws Exception {
 		// given
 		EditProblemRequest request = new EditProblemRequest(problemId, LocalDate.now(), LocalDate.now().plusDays(10));
