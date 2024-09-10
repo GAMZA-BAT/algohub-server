@@ -142,26 +142,26 @@ public class StudyGroupService {
 		List<StudyGroup> groups = groupRepository.findByUser(user);
 
 		List<GetStudyGroupResponse> bookmarked = bookmarkedStudyGroupRepository.findAllByUser(user).stream()
-			.map(bookmark -> GetStudyGroupResponse.toDTO(bookmark.getStudyGroup(), user)).toList();
+			.map(bookmark -> GetStudyGroupResponse.toDTO(bookmark.getStudyGroup(), user, true)).toList();
 
 		LocalDate today = LocalDate.now();
 
 		List<GetStudyGroupResponse> done = groups.stream()
 			.filter(group -> group.getEndDate() != null && group.getEndDate().isBefore(today))
-			.map(group -> GetStudyGroupResponse.toDTO(group, user))
-			.collect(Collectors.toList());
+			.map(group -> GetStudyGroupResponse.toDTO(group, user, isBookmarked(user, group)))
+			.toList();
 
 		List<GetStudyGroupResponse> inProgress = groups.stream()
 			.filter(
 				group -> !(group.getStartDate() == null || group.getStartDate().isAfter(today))
 					&& !(group.getEndDate() == null || group.getEndDate().isBefore(today)))
-			.map(group -> GetStudyGroupResponse.toDTO(group, user))
-			.collect(Collectors.toList());
+			.map(group -> GetStudyGroupResponse.toDTO(group, user, isBookmarked(user, group)))
+			.toList();
 
 		List<GetStudyGroupResponse> queued = groups.stream()
 			.filter(group -> group.getStartDate() != null && group.getStartDate().isAfter(today))
-			.map(group -> GetStudyGroupResponse.toDTO(group, user))
-			.collect(Collectors.toList());
+			.map(group -> GetStudyGroupResponse.toDTO(group, user, isBookmarked(user, group)))
+			.toList();
 
 		GetStudyGroupListsResponse response = new GetStudyGroupListsResponse(bookmarked, done, inProgress, queued);
 
@@ -394,6 +394,10 @@ public class StudyGroupService {
 			bookmarkedStudyGroupRepository.delete(bookmarked.get());
 			return "스터디 그룹 즐겨찾기 삭제 성공";
 		}
+	}
+
+	private boolean isBookmarked(User user, StudyGroup group) {
+		return bookmarkedStudyGroupRepository.existsByUserAndStudyGroup(user, group);
 	}
 
 	@Transactional
