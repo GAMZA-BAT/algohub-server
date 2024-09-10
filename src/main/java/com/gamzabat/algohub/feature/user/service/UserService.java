@@ -3,6 +3,7 @@ package com.gamzabat.algohub.feature.user.service;
 import static com.gamzabat.algohub.common.ApiConstants.*;
 
 import java.time.Duration;
+import java.util.regex.Pattern;
 
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -36,6 +37,7 @@ import com.gamzabat.algohub.feature.user.dto.UpdateUserRequest;
 import com.gamzabat.algohub.feature.user.dto.UserInfoResponse;
 import com.gamzabat.algohub.feature.user.exception.BOJServerErrorException;
 import com.gamzabat.algohub.feature.user.exception.CheckBjNicknameValidationException;
+import com.gamzabat.algohub.feature.user.exception.CheckNicknameValidationException;
 import com.gamzabat.algohub.feature.user.exception.UncorrectedPasswordException;
 import com.gamzabat.algohub.feature.user.repository.UserRepository;
 
@@ -157,5 +159,28 @@ public class UserService {
 			throw new BOJServerErrorException("현재 백준 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
 		}
 		log.info("success to check baekjoon nickname validity");
+	}
+
+	@Transactional(readOnly = true)
+	public void checkEmail(String email) {
+		if (userRepository.existsByEmail(email))
+			throw new UserValidationException("이미 사용 중인 이메일 입니다.");
+	}
+
+	@Transactional(readOnly = true)
+	public void checkNickname(String nickname) {
+		if (isInvalidNicknameForm(nickname))
+			throw new CheckNicknameValidationException(HttpStatus.BAD_REQUEST.value(),
+				"닉네임은 3글자 이상, 16글자 이하이며 특수문자 불가입니다.");
+
+		if (userRepository.existsByNickname(nickname))
+			throw new CheckNicknameValidationException(HttpStatus.CONFLICT.value(), "이미 사용 중인 닉네임입니다.");
+
+		log.info("success to check nickname validity");
+	}
+
+	private boolean isInvalidNicknameForm(String nickname) {
+		String regex = "[^a-zA-Z0-9가-힣ㄱ-ㅎㅏ-ㅣ]";
+		return nickname.length() < 3 || nickname.length() > 16 || Pattern.compile(regex).matcher(nickname).find();
 	}
 }

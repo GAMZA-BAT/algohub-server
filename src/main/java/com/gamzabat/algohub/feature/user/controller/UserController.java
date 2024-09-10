@@ -17,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.gamzabat.algohub.common.annotation.AuthedUser;
 import com.gamzabat.algohub.exception.RequestException;
 import com.gamzabat.algohub.feature.user.domain.User;
+import com.gamzabat.algohub.feature.user.dto.CheckEmailRequest;
 import com.gamzabat.algohub.feature.user.dto.DeleteUserRequest;
 import com.gamzabat.algohub.feature.user.dto.RegisterRequest;
 import com.gamzabat.algohub.feature.user.dto.SignInRequest;
@@ -99,6 +100,25 @@ public class UserController {
 	@Operation(summary = "백준 닉네임 유효성 검증 API", description = "회원가입 진행 시, 백준 닉네임이 유효한지 검증하는 API")
 	public ResponseEntity<String> checkBjNickname(@RequestParam String bjNickname) {
 		userService.checkBjNickname(bjNickname);
+		return ResponseEntity.ok().body("OK");
+	}
+
+	@PostMapping("/check-email")
+	@Operation(summary = "이메일 중복 검사 API", description = "회원가입 진행 시, 이메일 형태 및 중복을 검사하는 API")
+	public ResponseEntity<String> checkEmailDuplication(
+		@Valid @RequestBody CheckEmailRequest request,
+		Errors errors) {
+		if (errors.hasErrors())
+			throw new RequestException("이메일 중복 검사 요청이 올바르지 않습니다.", errors);
+
+		userService.checkEmail(request.email());
+		return ResponseEntity.ok().body("OK");
+	}
+
+	@GetMapping("/check-nickname")
+	@Operation(summary = "닉네임 중복 검사 API", description = "회원가입 진행 시, 닉네임 형식 및 중복을 검사하는 API")
+	public ResponseEntity<String> checkNickname(@RequestParam String nickname) {
+		userService.checkNickname(nickname);
 		return ResponseEntity.ok().body("OK");
 	}
 }
