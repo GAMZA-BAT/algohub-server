@@ -210,7 +210,7 @@ class StudyGroupControllerTest {
 			bookmarked.add(new GetStudyGroupResponse(
 				(long)i, "name" + i, "groupImage" + 1,
 				LocalDate.now(), LocalDate.now().plusDays(i),
-				"introduction" + 1, "nickname", true
+				"introduction" + 1, "nickname", true, true
 			));
 		}
 
@@ -218,21 +218,21 @@ class StudyGroupControllerTest {
 			done.add(new GetStudyGroupResponse(
 				(long)i, "name" + i, "groupImage" + 1,
 				LocalDate.now(), LocalDate.now().plusDays(i),
-				"introduction" + 1, "nickname", true
+				"introduction" + 1, "nickname", true, true
 			));
 		}
 		for (int i = 0; i < 10; i++) {
 			inProgress.add(new GetStudyGroupResponse(
 				(long)i, "name" + i, "groupImage" + 1,
 				LocalDate.now(), LocalDate.now().plusDays(i),
-				"introduction" + 1, "nickname", true
+				"introduction" + 1, "nickname", true, true
 			));
 		}
 		for (int i = 0; i < 10; i++) {
 			queued.add(new GetStudyGroupResponse(
 				(long)i, "name" + i, "groupImage" + 1,
 				LocalDate.now(), LocalDate.now().plusDays(i),
-				"introduction" + 1, "nickname", true
+				"introduction" + 1, "nickname", true, true
 			));
 		}
 		GetStudyGroupListsResponse response = new GetStudyGroupListsResponse(bookmarked, done, inProgress, queued);
