@@ -92,7 +92,7 @@ public class BoardService {
 			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.BAD_REQUEST.value(), "존재하지 않는 스터디 그룹입니다"));
 		Optional<GroupMember> groupMember = groupMemberRepository.findByUserAndStudyGroup(user, studyGroup);
 
-		Boolean isOwner = (studyGroup.getOwner().getId().equals(user.getId()) && groupMember.isEmpty());
+		Boolean isOwner = studyGroup.getOwner().getId().equals(user.getId());
 		Boolean isGroupMember = groupMember.isPresent();
 		if (!isGroupMember && !isOwner)
 			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 스터디 그룹입니다");
