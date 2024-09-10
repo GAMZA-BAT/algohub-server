@@ -87,11 +87,6 @@ public class UserService {
 		return new SignInResponse(token.getToken());
 	}
 
-	private void checkEmailDuplication(String email) {
-		if (userRepository.existsByEmail(email))
-			throw new UserValidationException("이미 가입 된 이메일 입니다.");
-	}
-
 	@Transactional(readOnly = true)
 	public UserInfoResponse userInfo(User user) {
 		return new UserInfoResponse(user.getEmail(), user.getNickname(), user.getProfileImage(), user.getBjNickname());
@@ -162,7 +157,7 @@ public class UserService {
 	}
 
 	@Transactional(readOnly = true)
-	public void checkEmail(String email) {
+	public void checkEmailDuplication(String email) {
 		if (userRepository.existsByEmail(email))
 			throw new UserValidationException("이미 사용 중인 이메일 입니다.");
 	}
