@@ -195,7 +195,7 @@ class ProblemControllerTest {
 	}
 
 	@Test
-	@DisplayName("문제 마감기한 수정 성공")
+	@DisplayName("문제 진행 기간 수정 성공")
 	void editProblemDeadline() throws Exception {
 		// given
 		EditProblemRequest request = new EditProblemRequest(problemId, LocalDate.now(), LocalDate.now().plusDays(10));
@@ -214,7 +214,7 @@ class ProblemControllerTest {
 	@CsvSource(value = {
 		"null,'2024-07-21','2024-08-21',problemId : 문제 고유 아이디는 필수 입력 입니다.",
 	}, nullValues = "null")
-	@DisplayName("문제 마감기한 수정 실패 : 잘못된 요청")
+	@DisplayName("문제 진행 기간 수정 실패 : 잘못된 요청")
 	void editProblemDeadlineFailed_1(Long problemId, LocalDate startDate, LocalDate endDate,
 		String exceptionMessage) throws Exception {
 		// given
@@ -230,7 +230,7 @@ class ProblemControllerTest {
 	}
 
 	@Test
-	@DisplayName("문제 마감기한 수정 실패 : 존재하지 않는 문제")
+	@DisplayName("문제 진행 기간 수정 실패 : 존재하지 않는 문제")
 	void editProblemDeadlineFailed_2() throws Exception {
 		// given
 		EditProblemRequest request = new EditProblemRequest(problemId, LocalDate.now(), LocalDate.now().plusDays(10));
@@ -243,6 +243,64 @@ class ProblemControllerTest {
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.error").value("존재하지 않는 문제 입니다."));
+		verify(problemService, times(1)).editProblem(user, request);
+	}
+
+	@Test
+	@DisplayName("문제 진행 기간 수정 실패 : 이미 진행 중인 문제인데 시작날짜 수정을 요청하는 경우")
+	void editProblemDeadlineFailed_3() throws Exception {
+		// given
+		EditProblemRequest request = new EditProblemRequest(problemId, LocalDate.now(), LocalDate.now().plusDays(10));
+		doThrow(
+			new ProblemValidationException(HttpStatus.FORBIDDEN.value(), "문제 시작 날짜 수정이 불가합니다. : 이미 진행 중인 문제입니다.")).when(
+				problemService)
+			.editProblem(any(User.class), any(EditProblemRequest.class));
+		// when, then
+		mockMvc.perform(patch("/api/problem")
+				.header("Authorization", token)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isForbidden())
+			.andExpect(jsonPath("$.error").value("문제 시작 날짜 수정이 불가합니다. : 이미 진행 중인 문제입니다."));
+		verify(problemService, times(1)).editProblem(user, request);
+	}
+
+	@Test
+	@DisplayName("문제 진행 기간 수정 실패 : 문제 시작 날짜를 오늘 이전의 날짜로 요청한 경우")
+	void editProblemDeadlineFailed_4() throws Exception {
+		// given
+		EditProblemRequest request = new EditProblemRequest(problemId, LocalDate.now().minusDays(10), LocalDate.now());
+		doThrow(
+			new ProblemValidationException(HttpStatus.BAD_REQUEST.value(), "문제 시작 날짜는 오늘 이전의 날짜로 수정할 수 없습니다.")).when(
+				problemService)
+			.editProblem(any(User.class), any(EditProblemRequest.class));
+		// when, then
+		mockMvc.perform(patch("/api/problem")
+				.header("Authorization", token)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.error").value("문제 시작 날짜는 오늘 이전의 날짜로 수정할 수 없습니다."));
+		verify(problemService, times(1)).editProblem(user, request);
+	}
+
+	@Test
+	@DisplayName("문제 진행 기간 수정 실패 : 문제 마감 날짜를 오늘 이전의 날짜로 요청한 경우")
+	void editProblemDeadlineFailed_5() throws Exception {
+		// given
+		EditProblemRequest request = new EditProblemRequest(problemId, LocalDate.now().minusDays(20),
+			LocalDate.now().minusDays(10));
+		doThrow(
+			new ProblemValidationException(HttpStatus.BAD_REQUEST.value(), "문제 마감 날짜는 오늘 이전의 날짜로 수정할 수 없습니다.")).when(
+				problemService)
+			.editProblem(any(User.class), any(EditProblemRequest.class));
+		// when, then
+		mockMvc.perform(patch("/api/problem")
+				.header("Authorization", token)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.error").value("문제 마감 날짜는 오늘 이전의 날짜로 수정할 수 없습니다."));
 		verify(problemService, times(1)).editProblem(user, request);
 	}
 
