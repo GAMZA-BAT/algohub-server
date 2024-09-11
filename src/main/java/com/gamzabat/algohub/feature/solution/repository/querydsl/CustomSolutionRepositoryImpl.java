@@ -43,6 +43,8 @@ public class CustomSolutionRepositoryImpl implements CustomSolutionRepository {
 			if (result.equals("맞았습니다!!"))
 				query.where(solution.result.eq(result)
 					.or(solution.result.endsWith("점")));
+			else if (result.equals("런타임 에러"))
+				query.where(solution.result.startsWith("런타임 에러"));
 			else
 				query.where(solution.result.eq(result));
 		}
