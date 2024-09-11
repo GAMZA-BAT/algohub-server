@@ -47,7 +47,7 @@ jobs:
           arguments: build -x test
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: algohub
           path: build/libs/algohub-0.0.1-SNAPSHOT.jar
