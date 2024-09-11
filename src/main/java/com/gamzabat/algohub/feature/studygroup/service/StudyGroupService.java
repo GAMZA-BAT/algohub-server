@@ -34,6 +34,7 @@ import com.gamzabat.algohub.feature.studygroup.dto.GetRankingResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupListsResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupWithCodeResponse;
+import com.gamzabat.algohub.feature.studygroup.dto.UpdateGroupMemberRoleRequest;
 import com.gamzabat.algohub.feature.studygroup.etc.RoleOfGroupMember;
 import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundGroupException;
 import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundProblemException;
@@ -141,26 +142,26 @@ public class StudyGroupService {
 		List<StudyGroup> groups = groupRepository.findByUser(user);
 
 		List<GetStudyGroupResponse> bookmarked = bookmarkedStudyGroupRepository.findAllByUser(user).stream()
-			.map(bookmark -> GetStudyGroupResponse.toDTO(bookmark.getStudyGroup(), user)).toList();
+			.map(bookmark -> GetStudyGroupResponse.toDTO(bookmark.getStudyGroup(), user, true)).toList();
 
 		LocalDate today = LocalDate.now();
 
 		List<GetStudyGroupResponse> done = groups.stream()
 			.filter(group -> group.getEndDate() != null && group.getEndDate().isBefore(today))
-			.map(group -> GetStudyGroupResponse.toDTO(group, user))
-			.collect(Collectors.toList());
+			.map(group -> GetStudyGroupResponse.toDTO(group, user, isBookmarked(user, group)))
+			.toList();
 
 		List<GetStudyGroupResponse> inProgress = groups.stream()
 			.filter(
 				group -> !(group.getStartDate() == null || group.getStartDate().isAfter(today))
 					&& !(group.getEndDate() == null || group.getEndDate().isBefore(today)))
-			.map(group -> GetStudyGroupResponse.toDTO(group, user))
-			.collect(Collectors.toList());
+			.map(group -> GetStudyGroupResponse.toDTO(group, user, isBookmarked(user, group)))
+			.toList();
 
 		List<GetStudyGroupResponse> queued = groups.stream()
 			.filter(group -> group.getStartDate() != null && group.getStartDate().isAfter(today))
-			.map(group -> GetStudyGroupResponse.toDTO(group, user))
-			.collect(Collectors.toList());
+			.map(group -> GetStudyGroupResponse.toDTO(group, user, isBookmarked(user, group)))
+			.toList();
 
 		GetStudyGroupListsResponse response = new GetStudyGroupListsResponse(bookmarked, done, inProgress, queued);
 
@@ -393,5 +394,28 @@ public class StudyGroupService {
 			bookmarkedStudyGroupRepository.delete(bookmarked.get());
 			return "스터디 그룹 즐겨찾기 삭제 성공";
 		}
+	}
+
+	private boolean isBookmarked(User user, StudyGroup group) {
+		return bookmarkedStudyGroupRepository.existsByUserAndStudyGroup(user, group);
+	}
+
+	@Transactional
+	public void updateGroupMemberRole(User user, UpdateGroupMemberRoleRequest request) {
+		StudyGroup group = studyGroupRepository.findById(request.studyGroupId())
+			.orElseThrow(() -> new CannotFoundGroupException("존재하지 않는 그룹입니다."));
+
+		if (!group.getOwner().getId().equals(user.getId()))
+			throw new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "스터디 그룹의 멤버 역할을 수정할 권한이 없습니다.");
+
+		User targetUser = userRepository.findById(request.memberId())
+			.orElseThrow(() -> new UserValidationException("존재하지 않는 회원입니다."));
+
+		GroupMember member = groupMemberRepository.findByUserAndStudyGroup(targetUser, group)
+			.orElseThrow(
+				() -> new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(), "해당 스터디 그룹에 참여하지 않은 회원입니다."));
+
+		member.updateRole(RoleOfGroupMember.fromValue(request.role()));
+		log.info("success to update group member role");
 	}
 }

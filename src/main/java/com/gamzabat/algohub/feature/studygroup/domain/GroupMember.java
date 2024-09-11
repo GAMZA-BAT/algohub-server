@@ -42,4 +42,8 @@ public class GroupMember {
 		this.joinDate = joinDate;
 		this.role = role;
 	}
+
+	public void updateRole(RoleOfGroupMember role) {
+		this.role = role;
+	}
 }

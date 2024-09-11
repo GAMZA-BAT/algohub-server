@@ -96,8 +96,8 @@ class ProblemServiceTest {
 		problem = Problem.builder()
 			.studyGroup(group)
 			.link("link")
-			.startDate(LocalDate.now().minusDays(7))
-			.endDate(LocalDate.now())
+			.startDate(LocalDate.now().plusDays(3))
+			.endDate(LocalDate.now().plusDays(10))
 			.build();
 
 		Field userField = User.class.getDeclaredField("id");
@@ -400,6 +400,78 @@ class ProblemServiceTest {
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "문제에 대한 권한이 없습니다. : edit // 방장, 부방장일 경우에만 생성이 가능합니다.");
+	}
+
+	@Test
+	@DisplayName("문제 정보 수정 실패 : 이미 진행 중인 문제인데 시작날짜 수정을 요청하는 경우")
+	void editProblemFailed_5() {
+		// given
+		Problem problem = Problem.builder()
+			.studyGroup(group)
+			.link("link")
+			.startDate(LocalDate.now())
+			.endDate(LocalDate.now().plusDays(10))
+			.build();
+		EditProblemRequest request = EditProblemRequest.builder()
+			.problemId(20L)
+			.startDate(LocalDate.now().plusDays(1))
+			.endDate(LocalDate.now().plusDays(7))
+			.build();
+		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
+		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		// when, then
+		assertThatThrownBy(() -> problemService.editProblem(user, request))
+			.isInstanceOf(ProblemValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
+			.hasFieldOrPropertyWithValue("error", "문제 시작 날짜 수정이 불가합니다. : 이미 진행 중인 문제입니다.");
+	}
+
+	@Test
+	@DisplayName("문제 정보 수정 실패 : 문제 시작 날짜를 오늘 이전의 날짜로 요청한 경우")
+	void editProblemFailed_6() {
+		// given
+		Problem problem = Problem.builder()
+			.studyGroup(group)
+			.link("link")
+			.startDate(LocalDate.now())
+			.endDate(LocalDate.now().plusDays(10))
+			.build();
+		EditProblemRequest request = EditProblemRequest.builder()
+			.problemId(20L)
+			.startDate(LocalDate.now().minusDays(3))
+			.endDate(LocalDate.now().plusDays(7))
+			.build();
+		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
+		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		// when, then
+		assertThatThrownBy(() -> problemService.editProblem(user, request))
+			.isInstanceOf(ProblemValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
+			.hasFieldOrPropertyWithValue("error", "문제 시작 날짜는 오늘 이전의 날짜로 수정할 수 없습니다.");
+	}
+
+	@Test
+	@DisplayName("문제 정보 수정 실패 : 문제 마감 날짜를 오늘 이전의 날짜로 요청한 경우")
+	void editProblemFailed_7() {
+		// given
+		Problem problem = Problem.builder()
+			.studyGroup(group)
+			.link("link")
+			.startDate(LocalDate.now().minusDays(10))
+			.endDate(LocalDate.now())
+			.build();
+		EditProblemRequest request = EditProblemRequest.builder()
+			.problemId(20L)
+			.startDate(LocalDate.now().minusDays(10))
+			.endDate(LocalDate.now().minusDays(2))
+			.build();
+		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
+		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		// when, then
+		assertThatThrownBy(() -> problemService.editProblem(user, request))
+			.isInstanceOf(ProblemValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
+			.hasFieldOrPropertyWithValue("error", "문제 마감 날짜는 오늘 이전의 날짜로 수정할 수 없습니다.");
 	}
 
 	@Test

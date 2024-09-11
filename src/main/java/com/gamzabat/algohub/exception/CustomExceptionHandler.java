@@ -16,6 +16,7 @@ import com.gamzabat.algohub.feature.studygroup.exception.GroupMemberValidationEx
 import com.gamzabat.algohub.feature.studygroup.exception.InvalidRoleException;
 import com.gamzabat.algohub.feature.user.exception.BOJServerErrorException;
 import com.gamzabat.algohub.feature.user.exception.CheckBjNicknameValidationException;
+import com.gamzabat.algohub.feature.user.exception.CheckNicknameValidationException;
 import com.gamzabat.algohub.feature.user.exception.UncorrectedPasswordException;
 
 @ControllerAdvice
@@ -103,4 +104,8 @@ public class CustomExceptionHandler {
 			.body(new ErrorResponse(HttpStatus.SERVICE_UNAVAILABLE.value(), e.getError(), null));
 	}
 
+	@ExceptionHandler(CheckNicknameValidationException.class)
+	protected ResponseEntity<Object> handler(CheckNicknameValidationException e) {
+		return ResponseEntity.status(e.getCode()).body(new ErrorResponse(e.getCode(), e.getError(), null));
+	}
 }
