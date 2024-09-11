@@ -11,6 +11,7 @@ import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.dto.*;
 import com.gamzabat.algohub.feature.user.exception.BOJServerErrorException;
 import com.gamzabat.algohub.feature.user.exception.CheckBjNicknameValidationException;
+import com.gamzabat.algohub.feature.user.exception.CheckNicknameValidationException;
 import com.gamzabat.algohub.feature.user.exception.UncorrectedPasswordException;
 import com.gamzabat.algohub.feature.user.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -39,31 +40,9 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
-<<<<<<< feature/89
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-=======
-import com.gamzabat.algohub.common.jwt.TokenProvider;
-import com.gamzabat.algohub.common.jwt.dto.JwtDTO;
-import com.gamzabat.algohub.common.redis.RedisService;
-import com.gamzabat.algohub.enums.Role;
-import com.gamzabat.algohub.exception.JwtRequestException;
-import com.gamzabat.algohub.exception.UserValidationException;
-import com.gamzabat.algohub.feature.image.service.ImageService;
-import com.gamzabat.algohub.feature.user.domain.User;
-import com.gamzabat.algohub.feature.user.dto.DeleteUserRequest;
-import com.gamzabat.algohub.feature.user.dto.RegisterRequest;
-import com.gamzabat.algohub.feature.user.dto.SignInRequest;
-import com.gamzabat.algohub.feature.user.dto.SignInResponse;
-import com.gamzabat.algohub.feature.user.dto.UpdateUserRequest;
-import com.gamzabat.algohub.feature.user.dto.UserInfoResponse;
-import com.gamzabat.algohub.feature.user.exception.BOJServerErrorException;
-import com.gamzabat.algohub.feature.user.exception.CheckBjNicknameValidationException;
-import com.gamzabat.algohub.feature.user.exception.CheckNicknameValidationException;
-import com.gamzabat.algohub.feature.user.exception.UncorrectedPasswordException;
-import com.gamzabat.algohub.feature.user.repository.UserRepository;
->>>>>>> develop
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -141,7 +120,7 @@ class UserServiceTest {
         // when, then
         assertThatThrownBy(() -> userService.register(request, profileImage))
                 .isInstanceOf(UserValidationException.class)
-                .hasFieldOrPropertyWithValue("errors", "이미 가입 된 이메일 입니다.");
+                .hasFieldOrPropertyWithValue("errors", "이미 사용 중인 이메일 입니다.");
     }
 
     @Test
@@ -187,27 +166,11 @@ class UserServiceTest {
         when(authManager.getObject()).thenReturn(authenticationManager);
         when(authManager.getObject().authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenThrow(new UncorrectedPasswordException("비밀번호가 틀렸습니다."));
-
-<<<<<<< feature/89
         // when, then
         assertThatThrownBy(() -> userService.signIn(request))
                 .isInstanceOf(UncorrectedPasswordException.class)
                 .hasFieldOrPropertyWithValue("errors", "비밀번호가 틀렸습니다.");
     }
-=======
-	@Test
-	@DisplayName("회원가입 실패 : 이미 가입 된 이메일")
-	void registerFailed_1() {
-		// given
-		RegisterRequest request = new RegisterRequest(email, password, nickname, bjNickname);
-		MockMultipartFile profileImage = new MockMultipartFile("image", "image.jpg", "image/jpeg", "test".getBytes());
-		when(userRepository.existsByEmail(email)).thenReturn(true);
-		// when, then
-		assertThatThrownBy(() -> userService.register(request, profileImage))
-			.isInstanceOf(UserValidationException.class)
-			.hasFieldOrPropertyWithValue("errors", "이미 사용 중인 이메일 입니다.");
-	}
->>>>>>> develop
 
     @Test
     @DisplayName("회원 정보 조회")
@@ -319,21 +282,6 @@ class UserServiceTest {
                 .hasFieldOrPropertyWithValue("error", "백준 닉네임이 유효하지 않습니다.");
     }
 
-    // @Test
-    // @DisplayName("백준 닉네임 유효성 검증 : 이미 가입된 백준 닉네임")
-    // void checkBjNickname_3() {
-    // 	// given
-    // 	String bjNickname = "bjNickname";
-    // 	when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
-    // 		.thenReturn(new ResponseEntity<>(HttpStatus.OK));
-    // 	when(userRepository.existsByBjNickname(bjNickname)).thenReturn(true);
-    // 	// when, then
-    // 	assertThatThrownBy(() -> userService.checkBjNickname(bjNickname))
-    // 		.isInstanceOf(CheckBjNicknameValidationException.class)
-    // 		.hasFieldOrPropertyWithValue("code", HttpStatus.CONFLICT.value())
-    // 		.hasFieldOrPropertyWithValue("error", "이미 가입된 백준 닉네임 입니다.");
-    // }
-
     @Test
     @DisplayName("백준 닉네임 유효성 검증 실패 : 백준 서버 오류 발생")
     void checkBjNickname_4() {
@@ -373,75 +321,59 @@ class UserServiceTest {
                 .hasFieldOrPropertyWithValue("errors", "비밀번호가 틀렸습니다.");
     }
 
-<<<<<<< feature/89
-=======
-	@Test
-	@DisplayName("백준 닉네임 유효성 검증 실패 : 백준 서버 오류 발생")
-	void checkBjNickname_4() {
-		// given
-		String bjNickname = "bjNickname";
-		when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
-			.thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
-		// when, then
-		assertThatThrownBy(() -> userService.checkBjNickname(bjNickname))
-			.isInstanceOf(BOJServerErrorException.class)
-			.hasFieldOrPropertyWithValue("error", "현재 백준 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
-	}
+    @Test
+    @DisplayName("이메일 유효성 검증")
+    void checkEmail() {
+        // given
+        when(userRepository.existsByEmail(email)).thenReturn(false);
+        // when
+        userService.checkEmailDuplication(email);
+        // then
+        verify(userRepository, times(1)).existsByEmail(email);
+    }
 
-	@Test
-	@DisplayName("이메일 유효성 검증")
-	void checkEmail() {
-		// given
-		when(userRepository.existsByEmail(email)).thenReturn(false);
-		// when
-		userService.checkEmailDuplication(email);
-		// then
-		verify(userRepository, times(1)).existsByEmail(email);
-	}
+    @Test
+    @DisplayName("이메일 유효성 검증 실패 : 이미 가입된 이메일")
+    void checkEmailFailed() {
+        // given
+        when(userRepository.existsByEmail(email)).thenReturn(true);
+        // when, then
+        assertThatThrownBy(() -> userService.checkEmailDuplication(email))
+                .isInstanceOf(UserValidationException.class)
+                .hasFieldOrPropertyWithValue("errors", "이미 사용 중인 이메일 입니다.");
+    }
 
-	@Test
-	@DisplayName("이메일 유효성 검증 실패 : 이미 가입된 이메일")
-	void checkEmailFailed() {
-		// given
-		when(userRepository.existsByEmail(email)).thenReturn(true);
-		// when, then
-		assertThatThrownBy(() -> userService.checkEmailDuplication(email))
-			.isInstanceOf(UserValidationException.class)
-			.hasFieldOrPropertyWithValue("errors", "이미 사용 중인 이메일 입니다.");
-	}
+    @Test
+    @DisplayName("닉네임 중복 검사")
+    void checkNickname_1() {
+        // given
+        when(userRepository.existsByNickname(nickname)).thenReturn(false);
+        // when
+        userService.checkNickname(nickname);
+        // then
+    }
 
-	@Test
-	@DisplayName("닉네임 중복 검사")
-	void checkNickname_1() {
-		// given
-		when(userRepository.existsByNickname(nickname)).thenReturn(false);
-		// when
-		userService.checkNickname(nickname);
-		// then
-	}
+    @ParameterizedTest
+    @ValueSource(strings = {"***asdf", "16글자가초과된nickname입니다", "ab"})
+    @DisplayName("닉네임 중복 검사 : 잘못된 형식의 닉네임")
+    void checkNickname_2(String invalidNickname) {
+        // given
+        // when, then
+        assertThatThrownBy(() -> userService.checkNickname(invalidNickname))
+                .isInstanceOf(CheckNicknameValidationException.class)
+                .hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
+                .hasFieldOrPropertyWithValue("error", "닉네임은 3글자 이상, 16글자 이하이며 특수문자 불가입니다.");
+    }
 
-	@ParameterizedTest
-	@ValueSource(strings = {"***asdf", "16글자가초과된nickname입니다", "ab"})
-	@DisplayName("닉네임 중복 검사 : 잘못된 형식의 닉네임")
-	void checkNickname_2(String invalidNickname) {
-		// given
-		// when, then
-		assertThatThrownBy(() -> userService.checkNickname(invalidNickname))
-			.isInstanceOf(CheckNicknameValidationException.class)
-			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
-			.hasFieldOrPropertyWithValue("error", "닉네임은 3글자 이상, 16글자 이하이며 특수문자 불가입니다.");
-	}
-
-	@Test
-	@DisplayName("닉네임 중복 검사 : 이미 사용 중인 닉네임")
-	void checkNickname_3() {
-		// given
-		when(userRepository.existsByNickname(nickname)).thenReturn(true);
-		// when, then
-		assertThatThrownBy(() -> userService.checkNickname(nickname))
-			.isInstanceOf(CheckNicknameValidationException.class)
-			.hasFieldOrPropertyWithValue("code", HttpStatus.CONFLICT.value())
-			.hasFieldOrPropertyWithValue("error", "이미 사용 중인 닉네임입니다.");
-	}
->>>>>>> develop
+    @Test
+    @DisplayName("닉네임 중복 검사 : 이미 사용 중인 닉네임")
+    void checkNickname_3() {
+        // given
+        when(userRepository.existsByNickname(nickname)).thenReturn(true);
+        // when, then
+        assertThatThrownBy(() -> userService.checkNickname(nickname))
+                .isInstanceOf(CheckNicknameValidationException.class)
+                .hasFieldOrPropertyWithValue("code", HttpStatus.CONFLICT.value())
+                .hasFieldOrPropertyWithValue("error", "이미 사용 중인 닉네임입니다.");
+    }
 }
