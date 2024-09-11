@@ -30,7 +30,8 @@ public class CustomSolutionRepositoryImpl implements CustomSolutionRepository {
 		query = addLanguageFilter(language, query);
 		query = addResultFilter(result, query);
 
-		query.offset(pageable.getOffset())
+		query.orderBy(solution.solvedDateTime.desc())
+			.offset(pageable.getOffset())
 			.limit(pageable.getPageSize());
 
 		JPAQuery<Long> countQuery = solutionCountQuery(query);
