@@ -1,5 +1,15 @@
 package com.gamzabat.algohub.feature.solution.service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Iterator;
+import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+
 import com.gamzabat.algohub.exception.ProblemValidationException;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.exception.UserValidationException;
@@ -17,146 +27,95 @@ import com.gamzabat.algohub.feature.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.repository.UserRepository;
+
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Iterator;
-import java.util.List;
 
 @Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class SolutionService {
-    private final SolutionRepository solutionRepository;
-    private final ProblemRepository problemRepository;
-    private final StudyGroupRepository studyGroupRepository;
-    private final GroupMemberRepository groupMemberRepository;
-    private final UserRepository userRepository;
-    private final CommentRepository commentRepository;
+	private final SolutionRepository solutionRepository;
+	private final ProblemRepository problemRepository;
+	private final StudyGroupRepository studyGroupRepository;
+	private final GroupMemberRepository groupMemberRepository;
+	private final UserRepository userRepository;
+	private final CommentRepository commentRepository;
 
-    public Page<GetSolutionResponse> getSolutionList(User user, Long problemId, String nickname,
-                                                     String language, String result, Pageable pageable) {
-        Problem problem = problemRepository.findById(problemId)
-                .orElseThrow(() -> new ProblemValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 문제 입니다."));
+	public Page<GetSolutionResponse> getSolutionList(User user, Long problemId, String nickname,
+		String language, String result, Pageable pageable) {
+		Problem problem = problemRepository.findById(problemId)
+			.orElseThrow(() -> new ProblemValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 문제 입니다."));
 
-        StudyGroup group = studyGroupRepository.findById(problem.getStudyGroup().getId())
-                .orElseThrow(() -> new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다."));
+		StudyGroup group = studyGroupRepository.findById(problem.getStudyGroup().getId())
+			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다."));
 
-        if (!groupMemberRepository.existsByUserAndStudyGroup(user, group)
-                && !group.getOwner().getId().equals(user.getId())) {
-            throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹 입니다.");
-        }
+		if (!groupMemberRepository.existsByUserAndStudyGroup(user, group)
+			&& !group.getOwner().getId().equals(user.getId())) {
+			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹 입니다.");
+		}
 
-        Page<Solution> solutions = getFilteredList(problem, nickname, language, result, pageable);
+		Page<Solution> solutions = solutionRepository.findAllFilteredSolutions(problem, nickname, language, result,
+			pageable);
+		
+		return solutions.map(solution -> {
+			long commentCount = commentRepository.countCommentsBySolutionId(solution.getId());
+			return GetSolutionResponse.toDTO(solution, commentCount);
+		});
+	}
 
-        return solutions.map(solution -> {
-            long commentCount = commentRepository.countCommentsBySolutionId(solution.getId());
-            return GetSolutionResponse.toDTO(solution, commentCount);
-        });
-    }
+	public GetSolutionResponse getSolution(User user, Long solutionId) {
+		Solution solution = solutionRepository.findById(solutionId)
+			.orElseThrow(() -> new CannotFoundSolutionException("존재하지 않는 풀이 입니다."));
 
-    public GetSolutionResponse getSolution(User user, Long solutionId) {
-        Solution solution = solutionRepository.findById(solutionId)
-                .orElseThrow(() -> new CannotFoundSolutionException("존재하지 않는 풀이 입니다."));
+		StudyGroup group = solution.getProblem().getStudyGroup();
 
-        StudyGroup group = solution.getProblem().getStudyGroup();
+		if (groupMemberRepository.existsByUserAndStudyGroup(user, group)
+			|| group.getOwner().getId().equals(user.getId())) {
+			long commentCount = commentRepository.countCommentsBySolutionId(solution.getId());
+			return GetSolutionResponse.toDTO(solution, commentCount);
+		} else {
+			throw new UserValidationException("해당 풀이를 확인 할 권한이 없습니다.");
+		}
+	}
 
-        if (groupMemberRepository.existsByUserAndStudyGroup(user, group)
-                || group.getOwner().getId().equals(user.getId())) {
-            long commentCount = commentRepository.countCommentsBySolutionId(solution.getId());
-            return GetSolutionResponse.toDTO(solution, commentCount);
-        } else {
-            throw new UserValidationException("해당 풀이를 확인 할 권한이 없습니다.");
-        }
-    }
+	public void createSolution(CreateSolutionRequest request) {
 
-    public void createSolution(CreateSolutionRequest request) {
+		List<Problem> problems = problemRepository.findAllByNumber(request.problemNumber());
+		if (problems.isEmpty()) {
+			throw new ProblemValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 문제 입니다.");
+		}
 
-        List<Problem> problems = problemRepository.findAllByNumber(request.problemNumber());
-        if (problems.isEmpty()) {
-            throw new ProblemValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 문제 입니다.");
-        }
+		User user = userRepository.findByBjNickname(request.userName())
+			.orElseThrow(() -> new UserValidationException("존재하지 않는 유저 입니다."));
 
-        User user = userRepository.findByBjNickname(request.userName())
-                .orElseThrow(() -> new UserValidationException("존재하지 않는 유저 입니다."));
+		Iterator<Problem> iterator = problems.iterator();
+		while (iterator.hasNext()) {
+			Problem problem = iterator.next();
+			StudyGroup studyGroup = problem.getStudyGroup(); // problem에 딸린 그룹 고유id 로 studyGroup 가져오기
 
-        Iterator<Problem> iterator = problems.iterator();
-        while (iterator.hasNext()) {
-            Problem problem = iterator.next();
-            StudyGroup studyGroup = problem.getStudyGroup(); // problem에 딸린 그룹 고유id 로 studyGroup 가져오기
+			LocalDate endDate = problem.getEndDate();
+			LocalDate now = LocalDate.now();
 
-            LocalDate endDate = problem.getEndDate();
-            LocalDate now = LocalDate.now();
-
-            if ((studyGroup.getOwner() != user && !groupMemberRepository.existsByUserAndStudyGroup(user, studyGroup))
-                    || endDate == null || now.isAfter(endDate)) {
-                iterator.remove();
-                continue;
-            }
-            solutionRepository.save(Solution.builder()
-                    .problem(problem)
-                    .user(user)
-                    .content(request.code())
-                    .memoryUsage(request.memoryUsage())
-                    .executionTime(request.executionTime())
-                    .language(request.codeType())
-                    .codeLength(request.codeLength())
-                    .result(request.result())
-                    .solvedDateTime(LocalDateTime.now())
-                    .build()
-            );
-        }
-
-    }
-
-    public Page<Solution> getFilteredList(Problem problem, String nickname, String language, String result, Pageable pageable) {
-
-        User user = userRepository.findByNickname(nickname)
-                .orElse(new User());
-
-        if (nickname == null && language == null && result != null) { // 0 0 1
-            if (resultIsCorrect(result)) {
-                return solutionRepository.findAllByProblemAndResultContainingOrResultContainingOrderBySolvedDateTimeDesc(problem, "맞았습니다!!", "점", pageable);
-            }
-            return solutionRepository.findAllByProblemAndResultContainingOrderBySolvedDateTimeDesc(problem, result, pageable);
-        } else if (nickname == null && language != null && result == null) { // 0 1 0
-            return solutionRepository.findAllByProblemAndLanguageOrderBySolvedDateTimeDesc(problem, language, pageable);
-        } else if (nickname == null && language != null && result != null) { // 0 1 1
-            if (resultIsCorrect(result)) {
-                return solutionRepository.findAllByProblemAndLanguageAndResultContainingOrResultContainingOrderBySolvedDateTimeDesc(problem, language, "맞았습니다!!", "점", pageable);
-            }
-            return solutionRepository.findAllByProblemAndLanguageAndResultContainingOrderBySolvedDateTimeDesc(problem, language, result, pageable);
-        } else if (nickname != null && language == null && result == null) { // 1 0 0
-            return solutionRepository.findAllByProblemAndUserOrderBySolvedDateTimeDesc(problem, user, pageable);
-        } else if (nickname != null && language == null && result != null) { // 1 0 1
-            if (resultIsCorrect(result)) {
-                return solutionRepository.findAllByProblemAndUserAndResultContainingOrResultContainingOrderBySolvedDateTimeDesc(problem, user, "맞았습니다!!", "점", pageable);
-            }
-            return solutionRepository.findAllByProblemAndUserAndResultContainingOrderBySolvedDateTimeDesc(problem, user, result, pageable);
-        } else if (nickname != null && language != null && result == null) { // 1 1 0
-            return solutionRepository.findAllByProblemAndUserAndLanguageOrderBySolvedDateTimeDesc(problem, user, language, pageable);
-        } else if (nickname != null && language != null && result != null) { // 1 1 1
-            if (resultIsCorrect(result)) {
-                return solutionRepository.findAllByProblemAndUserAndLanguageAndResultContainingOrResultContainingOrderBySolvedDateTimeDesc(problem, user, language, "맞았습니다!!", "점", pageable);
-            }
-            return solutionRepository.findAllByProblemAndUserAndLanguageAndResultContainingOrderBySolvedDateTimeDesc(problem, user, language, result, pageable);
-        } else {
-            return solutionRepository.findAllByProblemOrderBySolvedDateTimeDesc(problem, pageable);
-        }
-    }
-
-    private Boolean resultIsCorrect(String result) {
-        if (result.equals("맞았습니다!!") || result.contains("점")) {
-            return true;
-        }
-        return false;
-    }
+			if ((studyGroup.getOwner() != user && !groupMemberRepository.existsByUserAndStudyGroup(user, studyGroup))
+				|| endDate == null || now.isAfter(endDate)) {
+				iterator.remove();
+				continue;
+			}
+			solutionRepository.save(Solution.builder()
+				.problem(problem)
+				.user(user)
+				.content(request.code())
+				.memoryUsage(request.memoryUsage())
+				.executionTime(request.executionTime())
+				.language(request.codeType())
+				.codeLength(request.codeLength())
+				.result(request.result())
+				.solvedDateTime(LocalDateTime.now())
+				.build()
+			);
+		}
+	}
 }
