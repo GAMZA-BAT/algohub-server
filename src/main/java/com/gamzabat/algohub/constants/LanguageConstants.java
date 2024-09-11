@@ -20,6 +20,6 @@ public class LanguageConstants {
 	};
 
 	private LanguageConstants() {
-		throw new IllegalStateException("Utility class");
+		throw new RuntimeException("Can not instantiate : LanguageConstants");
 	}
 }
