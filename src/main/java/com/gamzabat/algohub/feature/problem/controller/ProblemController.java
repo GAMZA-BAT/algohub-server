@@ -75,6 +75,13 @@ public class ProblemController {
 		return ResponseEntity.ok().body(problemService.getDeadlineReachedProblemList(user, groupId));
 	}
 
+	@GetMapping("/queued-problems")
+	@Operation(summary = "시작 예정인 문제들 조회 API")
+	public ResponseEntity<List<GetProblemResponse>> getQueuedProblemList(@AuthedUser User user,
+		@RequestParam Long groupId) {
+		return ResponseEntity.ok().body(problemService.getQueuedProblemList(user, groupId));
+	}
+
 	@DeleteMapping
 	@Operation(summary = "문제 삭제 API")
 	public ResponseEntity<Object> deleteProblem(@AuthedUser User user, @RequestParam Long problemId) {
