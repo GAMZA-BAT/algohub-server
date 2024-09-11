@@ -1,6 +1,6 @@
 package com.gamzabat.algohub.feature.user.service;
 
-import static com.gamzabat.algohub.common.ApiConstants.*;
+import static com.gamzabat.algohub.constants.ApiConstants.*;
 
 import java.time.Duration;
 

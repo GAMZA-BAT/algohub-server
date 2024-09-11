@@ -7,7 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
 
-import com.gamzabat.algohub.common.LanguageConstants;
+import com.gamzabat.algohub.constants.LanguageConstants;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.solution.domain.Solution;
 import com.querydsl.jpa.impl.JPAQuery;

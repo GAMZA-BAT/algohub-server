@@ -1,6 +1,6 @@
 package com.gamzabat.algohub.feature.problem.service;
 
-import static com.gamzabat.algohub.common.ApiConstants.*;
+import static com.gamzabat.algohub.constants.ApiConstants.*;
 
 import java.time.LocalDate;
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-package com.gamzabat.algohub.common;
+package com.gamzabat.algohub.constants;
 
 public class LanguageConstants {
 	public static final String[] C_BOUNDARY = {

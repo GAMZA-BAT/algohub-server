@@ -1,4 +1,4 @@
-package com.gamzabat.algohub.common;
+package com.gamzabat.algohub.constants;
 
 public final class ApiConstants {
 	public static final String SOLVED_AC_PROBLEM_API_URL = "https://solved.ac/api/v3/problem/lookup?problemIds=";
