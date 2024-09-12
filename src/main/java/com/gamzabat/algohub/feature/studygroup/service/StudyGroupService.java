@@ -401,8 +401,7 @@ public class StudyGroupService {
 		StudyGroup studyGroup = studyGroupRepository.findById(groupId)
 			.orElseThrow(() -> new CannotFoundGroupException("존재하지 않는 그룹 입니다."));
 
-		if (!studyGroup.getOwner().getId().equals(user.getId()) && !groupMemberRepository.existsByUserAndStudyGroup(
-			user, studyGroup))
+		if (!groupMemberRepository.existsByUserAndStudyGroup(user, studyGroup))
 			throw new StudyGroupValidationException(HttpStatus.BAD_REQUEST.value(), "참여하지 않은 그룹 입니다.");
 
 		Optional<BookmarkedStudyGroup> bookmarked = bookmarkedStudyGroupRepository.findByUserAndStudyGroup(user,
