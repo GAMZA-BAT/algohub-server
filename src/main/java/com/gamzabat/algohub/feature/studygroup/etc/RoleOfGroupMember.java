@@ -2,6 +2,7 @@ package com.gamzabat.algohub.feature.studygroup.etc;
 
 import org.springframework.http.HttpStatus;
 
+import com.gamzabat.algohub.feature.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.studygroup.exception.InvalidRoleException;
 
 public enum RoleOfGroupMember {
@@ -28,4 +29,15 @@ public enum RoleOfGroupMember {
 		throw new InvalidRoleException(HttpStatus.BAD_REQUEST.value(), "해당 ROLE은 존재하지 않습니다.");
 	}
 
+	public static boolean isOwner(GroupMember groupMember) {
+		return groupMember.getRole().equals(OWNER);
+	}
+
+	public static boolean isAdmin(GroupMember groupMember) {
+		return groupMember.getRole().equals(ADMIN);
+	}
+
+	public static boolean isParticipant(GroupMember groupMember) {
+		return groupMember.getRole().equals(PARTICIPANT);
+	}
 }
