@@ -186,7 +186,14 @@ public class ProblemService {
 	public void deleteProblem(User user, Long problemId) {
 		Problem problem = getProblem(problemId);
 		StudyGroup group = getGroup(problem.getStudyGroup().getId());
-		checkOwnerPermission(user, group, "delete");
+		GroupMember groupMember = groupMemberRepository.findByUserAndStudyGroup(user, group)
+			.orElseThrow(
+				() -> new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹 입니다."));
+
+		if (RoleOfGroupMember.isParticipant(groupMember)) {
+			throw new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(),
+				"문제 삭제 권한이 없습니다. 방장, 부방장일 경우에만 삭제가 가능합니다.");
+		}
 
 		problemRepository.delete(problem);
 		log.info("success to delete problem");
