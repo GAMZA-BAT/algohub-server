@@ -73,7 +73,8 @@ class ProblemServiceTest {
 	private User user4;
 	private StudyGroup group;
 	private GroupMember groupMember1;
-	private GroupMember groupMember2;
+	private GroupMember groupMember3;
+	private GroupMember groupMember4;
 
 	private Problem problem;
 
@@ -91,8 +92,9 @@ class ProblemServiceTest {
 		user4 = User.builder().email("email4").password("password").nickname("nickname")
 			.role(Role.USER).profileImage("image").build();
 		group = StudyGroup.builder().name("name").owner(user).groupImage("imageUrl").groupCode("code").build();
-		groupMember1 = GroupMember.builder().role(RoleOfGroupMember.ADMIN).studyGroup(group).user(user3).build();
-		groupMember2 = GroupMember.builder().role(RoleOfGroupMember.PARTICIPANT).studyGroup(group).user(user4).build();
+		groupMember1 = GroupMember.builder().role(RoleOfGroupMember.OWNER).studyGroup(group).user(user).build();
+		groupMember3 = GroupMember.builder().role(RoleOfGroupMember.ADMIN).studyGroup(group).user(user3).build();
+		groupMember4 = GroupMember.builder().role(RoleOfGroupMember.PARTICIPANT).studyGroup(group).user(user4).build();
 
 		problem = Problem.builder()
 			.studyGroup(group)
@@ -116,8 +118,8 @@ class ProblemServiceTest {
 	}
 
 	@Test
-	@DisplayName("문제 생성 성공 : 방장일 때")
-	void createProblem_SuccessBy방장() {
+	@DisplayName("문제 생성 성공")
+	void createProblem_Success() {
 		// given
 		CreateProblemRequest request = CreateProblemRequest.builder()
 			.groupId(10L)
@@ -129,6 +131,7 @@ class ProblemServiceTest {
 		String apiResult = "[{\"titleKo\":\"A+B\",\"level\":1}]";
 		ResponseEntity<String> responseEntity = new ResponseEntity<>(apiResult, HttpStatus.OK);
 		when(restTemplate.getForEntity(anyString(), eq(String.class))).thenReturn(responseEntity);
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
 		// when
 		problemService.createProblem(user, request);
 		// then
@@ -155,7 +158,7 @@ class ProblemServiceTest {
 			.endDate(LocalDate.now())
 			.build();
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
-		when(groupMemberRepository.findByUserAndStudyGroup(user3, group)).thenReturn(Optional.of(groupMember1));
+		when(groupMemberRepository.findByUserAndStudyGroup(user3, group)).thenReturn(Optional.of(groupMember3));
 		String apiResult = "[{\"titleKo\":\"A+B\",\"level\":1}]";
 		ResponseEntity<String> responseEntity = new ResponseEntity<>(apiResult, HttpStatus.OK);
 		when(restTemplate.getForEntity(anyString(), eq(String.class))).thenReturn(responseEntity);
@@ -207,7 +210,7 @@ class ProblemServiceTest {
 		assertThatThrownBy(() -> problemService.createProblem(user2, request))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
-			.hasFieldOrPropertyWithValue("error", "문제에 대한 권한이 없습니다. : create // 해당 그룹의 멤버가 아닙니다.");
+			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹 입니다.");
 	}
 
 	@Test
@@ -221,12 +224,12 @@ class ProblemServiceTest {
 			.endDate(LocalDate.now())
 			.build();
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
-		when(groupMemberRepository.findByUserAndStudyGroup(user4, group)).thenReturn(Optional.of(groupMember2));
+		when(groupMemberRepository.findByUserAndStudyGroup(user4, group)).thenReturn(Optional.of(groupMember4));
 		// when, then
 		assertThatThrownBy(() -> problemService.createProblem(user4, request))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
-			.hasFieldOrPropertyWithValue("error", "문제에 대한 권한이 없습니다. : create // 방장, 부방장일 경우에만 생성이 가능합니다.");
+			.hasFieldOrPropertyWithValue("error", "문제 생성 권한이 없습니다. 방장, 부방장일 경우에만 생성이 가능합니다.");
 	}
 
 	@Test
@@ -243,6 +246,7 @@ class ProblemServiceTest {
 		String apiResult = "[]";
 		ResponseEntity<String> responseEntity = new ResponseEntity<>(apiResult, HttpStatus.OK);
 		when(restTemplate.getForEntity(anyString(), eq(String.class))).thenReturn(responseEntity);
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
 		// when, then
 		assertThatThrownBy(() -> problemService.createProblem(user, request))
 			.isInstanceOf(SolvedAcApiErrorException.class)
@@ -263,6 +267,7 @@ class ProblemServiceTest {
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
 		String apiResult = "{\"titleKo\":\"A+B\",\"level\":1}";
 		ResponseEntity<String> responseEntity = new ResponseEntity<>(apiResult, HttpStatus.OK);
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
 		when(restTemplate.getForEntity(anyString(), eq(String.class))).thenReturn(responseEntity);
 		// when, then
 		assertThatThrownBy(() -> problemService.createProblem(user, request))
@@ -285,6 +290,7 @@ class ProblemServiceTest {
 		String apiResult = "[{\"titleKo\":\"A+B\",\"level\":1}]";
 		ResponseEntity<String> responseEntity = new ResponseEntity<>(apiResult, HttpStatus.OK);
 		when(restTemplate.getForEntity(anyString(), eq(String.class))).thenReturn(responseEntity);
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
 		doThrow(new RuntimeException()).when(notificationService).sendList(any(), any(), any(), any());
 		// when
 		problemService.createProblem(user, request);
@@ -323,7 +329,7 @@ class ProblemServiceTest {
 			.build();
 		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
-		when(groupMemberRepository.findByUserAndStudyGroup(user3, group)).thenReturn(Optional.of(groupMember1));
+		when(groupMemberRepository.findByUserAndStudyGroup(user3, group)).thenReturn(Optional.of(groupMember3));
 		// when
 		problemService.editProblem(user3, request);
 		// then
@@ -395,7 +401,7 @@ class ProblemServiceTest {
 			.build();
 		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
-		when(groupMemberRepository.findByUserAndStudyGroup(user4, group)).thenReturn(Optional.of(groupMember2));
+		when(groupMemberRepository.findByUserAndStudyGroup(user4, group)).thenReturn(Optional.of(groupMember4));
 		// when, then
 		assertThatThrownBy(() -> problemService.editProblem(user4, request))
 			.isInstanceOf(StudyGroupValidationException.class)
@@ -668,7 +674,7 @@ class ProblemServiceTest {
 			problemField.set(problem, (long)i);
 		}
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
-		when(groupMemberRepository.findByUserAndStudyGroup(user3, group)).thenReturn(Optional.of(groupMember1));
+		when(groupMemberRepository.findByUserAndStudyGroup(user3, group)).thenReturn(Optional.of(groupMember3));
 		when(problemRepository.findAllByStudyGroupAndStartDateAfter(group, LocalDate.now())).thenReturn(list);
 
 		//when
@@ -719,7 +725,7 @@ class ProblemServiceTest {
 	void getQueuedProblemListFailed_4() {
 		//given
 		when(groupRepository.findById(10L)).thenReturn(Optional.of(group));
-		when(groupMemberRepository.findByUserAndStudyGroup(user4, group)).thenReturn(Optional.of(groupMember2));
+		when(groupMemberRepository.findByUserAndStudyGroup(user4, group)).thenReturn(Optional.of(groupMember4));
 
 		//when
 		//then
