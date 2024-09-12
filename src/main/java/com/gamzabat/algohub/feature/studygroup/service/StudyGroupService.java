@@ -159,31 +159,40 @@ public class StudyGroupService {
 		List<StudyGroup> groups = groupRepository.findByUser(user);
 
 		List<GetStudyGroupResponse> bookmarked = bookmarkedStudyGroupRepository.findAllByUser(user).stream()
-			.map(bookmark -> GetStudyGroupResponse.toDTO(bookmark.getStudyGroup(), user, true)).toList();
+			.map(bookmark -> GetStudyGroupResponse.toDTO(bookmark.getStudyGroup(), user, true,
+				getStudyGroupOwner(bookmark.getStudyGroup())))
+			.toList();
 
 		LocalDate today = LocalDate.now();
 
 		List<GetStudyGroupResponse> done = groups.stream()
 			.filter(group -> group.getEndDate() != null && group.getEndDate().isBefore(today))
-			.map(group -> GetStudyGroupResponse.toDTO(group, user, isBookmarked(user, group)))
+			.map(
+				group -> GetStudyGroupResponse.toDTO(group, user, isBookmarked(user, group), getStudyGroupOwner(group)))
 			.toList();
 
 		List<GetStudyGroupResponse> inProgress = groups.stream()
 			.filter(
 				group -> !(group.getStartDate() == null || group.getStartDate().isAfter(today))
 					&& !(group.getEndDate() == null || group.getEndDate().isBefore(today)))
-			.map(group -> GetStudyGroupResponse.toDTO(group, user, isBookmarked(user, group)))
+			.map(
+				group -> GetStudyGroupResponse.toDTO(group, user, isBookmarked(user, group), getStudyGroupOwner(group)))
 			.toList();
 
 		List<GetStudyGroupResponse> queued = groups.stream()
 			.filter(group -> group.getStartDate() != null && group.getStartDate().isAfter(today))
-			.map(group -> GetStudyGroupResponse.toDTO(group, user, isBookmarked(user, group)))
+			.map(
+				group -> GetStudyGroupResponse.toDTO(group, user, isBookmarked(user, group), getStudyGroupOwner(group)))
 			.toList();
 
 		GetStudyGroupListsResponse response = new GetStudyGroupListsResponse(bookmarked, done, inProgress, queued);
 
 		log.info("success to get study group list");
 		return response;
+	}
+
+	private User getStudyGroupOwner(StudyGroup group) {
+		return groupMemberRepository.findByStudyGroupAndRole(group, RoleOfGroupMember.OWNER).getUser();
 	}
 
 	@Transactional

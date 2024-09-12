@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import com.gamzabat.algohub.feature.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
+import com.gamzabat.algohub.feature.studygroup.etc.RoleOfGroupMember;
 import com.gamzabat.algohub.feature.user.domain.User;
 
 public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> {
@@ -22,4 +23,6 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> 
 	Integer countMembersByStudyGroupId(@Param("studyGroupId") Long studyGroupId);
 
 	GroupMember findByUser(User user);
+
+	GroupMember findByStudyGroupAndRole(StudyGroup group, RoleOfGroupMember role);
 }
