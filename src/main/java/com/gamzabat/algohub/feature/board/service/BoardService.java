@@ -1,7 +1,6 @@
 package com.gamzabat.algohub.feature.board.service;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -61,13 +60,9 @@ public class BoardService {
 	public GetBoardResponse getBoard(@AuthedUser User user, Long boardId) {
 		Board board = boardRepository.findById(boardId)
 			.orElseThrow(() -> new BoardValidationExceoption("존재하지 않는 공지입니다"));
-		Optional<GroupMember> groupMember = groupMemberRepository.findByUserAndStudyGroup(user, board.getStudyGroup());
-
-		Boolean isOwner = (board.getStudyGroup().getOwner().getId().equals(user.getId()) && groupMember.isEmpty());
-		Boolean isGroupMember = groupMember.isPresent();
-
-		if (!isGroupMember && !isOwner)
-			throw new UserValidationException("공지를 조회할 권한이 없습니다");
+		GroupMember groupMember = groupMemberRepository.findByUserAndStudyGroup(user, board.getStudyGroup())
+			.orElseThrow(
+				() -> new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹 입니다."));
 
 		log.info("success to get board");
 		return GetBoardResponse.builder()
