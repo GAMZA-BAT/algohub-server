@@ -247,7 +247,7 @@ public class StudyGroupService {
 					achivement = getPercentage(correctSolution, problems) + "%";
 				}
 
-				Boolean isOwner = getStudyGroupOwner(group).getId().equals(user.getId());
+				Boolean isOwner = getStudyGroupOwner(group).getId().equals(groupMember.getUser().getId());
 				String profileImage = groupMember.getUser().getProfileImage();
 				Long userId = groupMember.getUser().getId();
 				responseList.add(
