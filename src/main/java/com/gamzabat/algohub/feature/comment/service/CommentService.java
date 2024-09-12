@@ -101,8 +101,7 @@ public class CommentService {
 		StudyGroup group = studyGroupRepository.findById(problem.getStudyGroup().getId())
 			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다."));
 
-		if (!groupMemberRepository.existsByUserAndStudyGroup(user, group)
-			&& !group.getOwner().getId().equals(user.getId()))
+		if (!groupMemberRepository.existsByUserAndStudyGroup(user, group))
 			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹 입니다.");
 
 		return solution;
