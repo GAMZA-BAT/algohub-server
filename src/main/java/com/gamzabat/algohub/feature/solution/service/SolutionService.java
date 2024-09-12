@@ -70,8 +70,7 @@ public class SolutionService {
 
 		StudyGroup group = solution.getProblem().getStudyGroup();
 
-		if (groupMemberRepository.existsByUserAndStudyGroup(user, group)
-			|| group.getOwner().getId().equals(user.getId())) {
+		if (groupMemberRepository.existsByUserAndStudyGroup(user, group)) {
 			long commentCount = commentRepository.countCommentsBySolutionId(solution.getId());
 			return GetSolutionResponse.toDTO(solution, commentCount);
 		} else {
