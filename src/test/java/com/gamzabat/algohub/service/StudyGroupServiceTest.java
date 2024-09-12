@@ -76,6 +76,7 @@ class StudyGroupServiceTest {
 	private Solution solution3;
 	private final Long groupId = 10L;
 	private GroupMember groupMember1;
+	private GroupMember groupMember2;
 	@Captor
 	private ArgumentCaptor<StudyGroup> groupCaptor;
 	@Captor
@@ -269,28 +270,37 @@ class StudyGroupServiceTest {
 		// given
 		List<StudyGroup> groups = new ArrayList<>(30);
 		for (int i = 0; i < 10; i++) {
-			groups.add(StudyGroup.builder()
+			StudyGroup group = StudyGroup.builder()
 				.name("name" + i)
 				.owner(user)
 				.startDate(LocalDate.now().minusDays(i + 30))
 				.endDate(LocalDate.now().minusDays(30))
-				.build());
+				.build();
+			groups.add(group);
+			when(groupMemberRepository.findByStudyGroupAndRole(group, RoleOfGroupMember.OWNER)).thenReturn(
+				groupMember1);
 		}
 		for (int i = 0; i < 10; i++) {
-			groups.add(StudyGroup.builder()
+			StudyGroup group = StudyGroup.builder()
 				.name("name" + i)
 				.owner(user)
 				.startDate(LocalDate.now().minusDays(i))
 				.endDate(LocalDate.now().plusDays(i))
-				.build());
+				.build();
+			groups.add(group);
+			when(groupMemberRepository.findByStudyGroupAndRole(group, RoleOfGroupMember.OWNER)).thenReturn(
+				groupMember1);
 		}
 		for (int i = 0; i < 10; i++) {
-			groups.add(StudyGroup.builder()
+			StudyGroup group = StudyGroup.builder()
 				.name("name" + i)
 				.owner(user)
 				.startDate(LocalDate.now().plusDays(30))
 				.endDate(LocalDate.now().plusDays(i + 30))
-				.build());
+				.build();
+			groups.add(group);
+			when(groupMemberRepository.findByStudyGroupAndRole(group, RoleOfGroupMember.OWNER)).thenReturn(
+				groupMember1);
 		}
 		List<BookmarkedStudyGroup> bookmarks = new ArrayList<>(10);
 		for (int i = 0; i < 10; i++) {
