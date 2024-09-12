@@ -75,6 +75,7 @@ class StudyGroupServiceTest {
 	private Solution solution2;
 	private Solution solution3;
 	private final Long groupId = 10L;
+	private GroupMember groupMember1;
 	@Captor
 	private ArgumentCaptor<StudyGroup> groupCaptor;
 	@Captor
@@ -93,6 +94,11 @@ class StudyGroupServiceTest {
 			.endDate(LocalDate.now().plusDays(1))
 			.groupImage("imageUrl")
 			.groupCode("code")
+			.build();
+		groupMember1 = GroupMember.builder()
+			.studyGroup(group)
+			.user(user)
+			.role(RoleOfGroupMember.OWNER)
 			.build();
 
 		problem1 = Problem.builder()
@@ -200,10 +206,12 @@ class StudyGroupServiceTest {
 
 		when(studyGroupRepository.findById(10L)).thenReturn(Optional.of(group));
 		when(bookmarkedStudyGroupRepository.findAllByStudyGroup(group)).thenReturn(bookmarks);
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
 		// when
 		studyGroupService.deleteGroup(user, 10L);
 		// then
 		verify(studyGroupRepository, times(1)).delete(group);
+		verify(groupMemberRepository, times(1)).delete(groupMember1);
 		verify(bookmarkedStudyGroupRepository, times(1)).deleteAll(bookmarks);
 	}
 
@@ -213,7 +221,12 @@ class StudyGroupServiceTest {
 		// given
 		BookmarkedStudyGroup bookmark = BookmarkedStudyGroup.builder().studyGroup(group).user(user2).build();
 
-		GroupMember groupMember = GroupMember.builder().studyGroup(group).user(user2).joinDate(LocalDate.now()).build();
+		GroupMember groupMember = GroupMember.builder()
+			.studyGroup(group)
+			.user(user2)
+			.role(RoleOfGroupMember.ADMIN)
+			.joinDate(LocalDate.now())
+			.build();
 		when(studyGroupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
 		when(groupMemberRepository.findByUserAndStudyGroup(user2, group)).thenReturn(Optional.of(groupMember));
 		when(bookmarkedStudyGroupRepository.findByUserAndStudyGroup(user2, group)).thenReturn(
