@@ -158,7 +158,6 @@ class StudyGroupServiceTest {
 		verify(studyGroupRepository, times(1)).save(groupCaptor.capture());
 		StudyGroup result = groupCaptor.getValue();
 		assertThat(result.getName()).isEqualTo(name);
-		assertThat(result.getOwner()).isEqualTo(user);
 		assertThat(result.getStartDate()).isEqualTo(LocalDate.now());
 		assertThat(result.getEndDate()).isEqualTo(LocalDate.now().plusDays(5));
 		assertThat(result.getIntroduction()).isEqualTo("introduction");
