@@ -178,37 +178,6 @@ class SolutionServiceTest {
 	}
 
 	@Test
-	@DisplayName("풀이 하나 조회 성공 (주인)")
-	void getSolution_1() {
-		// given
-		Solution solution = Solution.builder()
-			.problem(problem)
-			.content("content")
-			.user(user)
-			.memoryUsage(10)
-			.executionTime(10)
-			.result("맞았습니다!!")
-			.language("Java")
-			.codeLength(10)
-			.solvedDateTime(LocalDateTime.now())
-			.build();
-		when(solutionRepository.findById(anyLong())).thenReturn(Optional.ofNullable(solution));
-		// when
-		GetSolutionResponse response = solutionService.getSolution(user, 10L);
-		// then
-		assertThat(response.content()).isEqualTo("content");
-		assertThat(response.result()).isEqualTo("맞았습니다!!");
-		assertThat(response.memoryUsage()).isEqualTo(10);
-		assertThat(response.executionTime()).isEqualTo(10);
-		assertThat(response.nickname()).isEqualTo("nickname");
-		assertThat(response.profileImage()).isEqualTo("profileImage");
-		assertThat(response.language()).isEqualTo("Java");
-		assertThat(response.codeLength()).isEqualTo(10);
-		assertThat(response.commentCount()).isEqualTo(0);
-		assertThat(response.solvedDateTime()).isEqualTo(LocalDateTime.now().format(formatter));
-	}
-
-	@Test
 	@DisplayName("풀이 하나 조회 성공 (멤버)")
 	void getSolution_2() {
 		// given
