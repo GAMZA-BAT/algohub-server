@@ -625,7 +625,7 @@ class ProblemServiceTest {
 			problemField.set(problem, (long)i);
 		}
 		when(problemRepository.findAllByStudyGroupAndStartDateAfter(group, LocalDate.now())).thenReturn(list);
-
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
 		//when
 		List<GetProblemResponse> result = problemService.getQueuedProblemList(user, group.getId());
 
@@ -703,13 +703,13 @@ class ProblemServiceTest {
 		//when
 		//then
 		assertThatThrownBy(() -> problemService.getQueuedProblemList(user2, 10L))
-			.isInstanceOf(ProblemValidationException.class)
+			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
-			.hasFieldOrPropertyWithValue("error", "문제를 조회할 권한이 없습니다. : 그룹원이 아닙니다 // 그룹의 방장과 부방장만 볼 수 있습니다");
+			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹 입니다.");
 	}
 
 	@Test
-	@DisplayName("예정 문제 조회 실패 : 부방장이 아님")
+	@DisplayName("예정 문제 조회 실패 : 권한 없음")
 	void getQueuedProblemListFailed_4() {
 		//given
 		when(groupRepository.findById(10L)).thenReturn(Optional.of(group));
@@ -720,7 +720,7 @@ class ProblemServiceTest {
 		assertThatThrownBy(() -> problemService.getQueuedProblemList(user4, 10L))
 			.isInstanceOf(ProblemValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
-			.hasFieldOrPropertyWithValue("error", "문제를 조회할 권한이 없습니다. : 부방장이 아닙니다 // 그룹의 방장과 부방장만 볼 수 있습니다");
+			.hasFieldOrPropertyWithValue("error", "예정 문제를 조회할 권한이 없습니다. : 그룹의 방장과 부방장만 볼 수 있습니다.");
 	}
 
 }
