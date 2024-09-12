@@ -278,12 +278,6 @@ public class StudyGroupService {
 				Boolean solved = solutionRepository.existsByUserAndProblem(groupMember.getUser(), problem);
 				responseList.add(new CheckSolvedProblemResponse(groupMemberId, profileImage, nickname, solved));
 			}
-			String profileImage = studyGroup.getOwner().getProfileImage();
-			Long groupMemberId = studyGroup.getOwner().getId();
-			String nickname = studyGroup.getOwner().getNickname();
-			Boolean solved = solutionRepository.existsByUserAndProblem(studyGroup.getOwner(), problem);
-			responseList.add(new CheckSolvedProblemResponse(groupMemberId, profileImage, nickname, solved));
-
 			return responseList;
 		} else {
 			throw new UserValidationException("풀이 여부 목록을 확인할 권한이 없습니다.");
