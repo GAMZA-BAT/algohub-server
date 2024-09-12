@@ -410,20 +410,7 @@ class StudyGroupServiceTest {
 	}
 
 	@Test
-	@DisplayName("스터디 그룹 즐겨찾기 추가 성공 (주인)")
-	void updateBookmarkStudyGroup_1() {
-		// given
-		when(studyGroupRepository.findById(anyLong())).thenReturn(Optional.ofNullable(group));
-		when(bookmarkedStudyGroupRepository.findByUserAndStudyGroup(user, group)).thenReturn(
-			Optional.empty());
-		// when
-		String response = studyGroupService.updateBookmarkGroup(user, groupId);
-		// then
-		assertThat(response).isEqualTo("스터디 그룹 즐겨찾기 추가 성공");
-	}
-
-	@Test
-	@DisplayName("스터디 그룹 즐겨찾기 추가 성공 (멤버)")
+	@DisplayName("스터디 그룹 즐겨찾기 추가 성공")
 	void updateBookmarkStudyGroup_2() {
 		// given
 		when(studyGroupRepository.findById(anyLong())).thenReturn(Optional.ofNullable(group));
@@ -435,23 +422,9 @@ class StudyGroupServiceTest {
 		// then
 		assertThat(response).isEqualTo("스터디 그룹 즐겨찾기 추가 성공");
 	}
-
+	
 	@Test
-	@DisplayName("스터디 그룹 즐겨찾기 삭제 성공 (주인)")
-	void updateBookmarkStudyGroup_3() {
-		// given
-		BookmarkedStudyGroup bookmarkedStudyGroup = BookmarkedStudyGroup.builder().user(user).studyGroup(group).build();
-		when(studyGroupRepository.findById(anyLong())).thenReturn(Optional.ofNullable(group));
-		when(bookmarkedStudyGroupRepository.findByUserAndStudyGroup(user, group)).thenReturn(
-			Optional.of(bookmarkedStudyGroup));
-		// when
-		String response = studyGroupService.updateBookmarkGroup(user, groupId);
-		// then
-		assertThat(response).isEqualTo("스터디 그룹 즐겨찾기 삭제 성공");
-	}
-
-	@Test
-	@DisplayName("스터디 그룹 즐겨찾기 삭제 성공 (멤버)")
+	@DisplayName("스터디 그룹 즐겨찾기 삭제 성공")
 	void updateBookmarkStudyGroup_4() {
 		// given
 		BookmarkedStudyGroup bookmarkedStudyGroup = BookmarkedStudyGroup.builder()
