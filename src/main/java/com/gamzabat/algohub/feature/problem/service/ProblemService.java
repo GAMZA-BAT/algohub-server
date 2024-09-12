@@ -99,18 +99,13 @@ public class ProblemService {
 	public void editProblem(User user, EditProblemRequest request) {
 		Problem problem = getProblem(request.problemId());
 		StudyGroup group = getGroup(problem.getStudyGroup().getId());
-		Optional<GroupMember> groupMember = groupMemberRepository.findByUserAndStudyGroup(user, group);
+		GroupMember groupMember = groupMemberRepository.findByUserAndStudyGroup(user, group)
+			.orElseThrow(
+				() -> new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹 입니다."));
 
-		Boolean isOwner = (group.getOwner().getId().equals(user.getId()) && groupMember.isEmpty());
-		Boolean isAdmin = (!groupMember.isEmpty() && groupMember.get().getRole().equals(RoleOfGroupMember.ADMIN));
-		Boolean isGroupMember = groupMember.isPresent();
-
-		if (!isOwner && !isGroupMember) {
+		if (RoleOfGroupMember.isParticipant(groupMember)) {
 			throw new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(),
-				"문제에 대한 권한이 없습니다. : edit // 해당 그룹의 멤버가 아닙니다.");
-		} else if (!isOwner && !isAdmin) {
-			throw new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(),
-				"문제에 대한 권한이 없습니다. : edit // 방장, 부방장일 경우에만 생성이 가능합니다.");
+				"문제 수정 권한이 없습니다. 방장, 부방장일 경우에만 생성이 가능합니다.");
 		}
 
 		checkProblemPeriodRequest(request, problem);
