@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import com.gamzabat.algohub.feature.studygroup.exception.InvalidRoleException;
 
 public enum RoleOfGroupMember {
+	OWNER("OWNER"),
 	ADMIN("ADMIN"),
 	PARTICIPANT("PARTICIPANT");
 
