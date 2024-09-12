@@ -486,21 +486,21 @@ class StudyGroupControllerTest {
 		for (int i = 0; i < 30; i++) {
 			response.add(new CheckSolvedProblemResponse((long)i, "nickname" + i, "profileImage" + i, true));
 		}
-		when(studyGroupService.getChekingSolvedProblem(any(User.class), anyLong())).thenReturn(response);
+		when(studyGroupService.getCheckingSolvedProblem(any(User.class), anyLong())).thenReturn(response);
 		// when, then
 		mockMvc.perform(get("/api/group/problem-solving")
 				.header("Authorization", token)
 				.param("problemId", String.valueOf(problemId)))
 			.andExpect(status().isOk())
 			.andExpect(content().json(objectMapper.writeValueAsString(response)));
-		verify(studyGroupService, times(1)).getChekingSolvedProblem(any(User.class), anyLong());
+		verify(studyGroupService, times(1)).getCheckingSolvedProblem(any(User.class), anyLong());
 	}
 
 	@Test
 	@DisplayName("문제 별 회원 풀이 여부 조회 실패 : 존재하지 않는 문제")
 	void getCheckingSolvedProblemFailed_1() throws Exception {
 		// given
-		when(studyGroupService.getChekingSolvedProblem(any(User.class), anyLong())).thenThrow(
+		when(studyGroupService.getCheckingSolvedProblem(any(User.class), anyLong())).thenThrow(
 			new CannotFoundGroupException("문제를 찾을 수 없습니다."));
 		// when, then
 		mockMvc.perform(get("/api/group/problem-solving")
@@ -508,14 +508,14 @@ class StudyGroupControllerTest {
 				.param("problemId", String.valueOf(problemId)))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.error").value("문제를 찾을 수 없습니다."));
-		verify(studyGroupService, times(1)).getChekingSolvedProblem(any(User.class), anyLong());
+		verify(studyGroupService, times(1)).getCheckingSolvedProblem(any(User.class), anyLong());
 	}
 
 	@Test
 	@DisplayName("문제 별 회원 풀이 여부 조회 실패 : 권한 없음")
 	void getCheckingSolvedProblemFailed_2() throws Exception {
 		// given
-		when(studyGroupService.getChekingSolvedProblem(any(User.class), anyLong())).thenThrow(
+		when(studyGroupService.getCheckingSolvedProblem(any(User.class), anyLong())).thenThrow(
 			new UserValidationException("풀이 여부 목록을 확인할 권한이 없습니다."));
 		// when, then
 		mockMvc.perform(get("/api/group/problem-solving")
@@ -523,7 +523,7 @@ class StudyGroupControllerTest {
 				.param("problemId", String.valueOf(problemId)))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.error").value("풀이 여부 목록을 확인할 권한이 없습니다."));
-		verify(studyGroupService, times(1)).getChekingSolvedProblem(any(User.class), anyLong());
+		verify(studyGroupService, times(1)).getCheckingSolvedProblem(any(User.class), anyLong());
 	}
 
 	@Test

@@ -277,14 +277,12 @@ public class StudyGroupService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<CheckSolvedProblemResponse> getChekingSolvedProblem(User user, Long problemId) {
+	public List<CheckSolvedProblemResponse> getCheckingSolvedProblem(User user, Long problemId) {
 		Problem problem = problemRepository.findById(problemId)
 			.orElseThrow(() -> new CannotFoundProblemException("문제를 찾을 수 없습니다."));
 		StudyGroup studyGroup = problem.getStudyGroup();
 
-		if (groupMemberRepository.existsByUserAndStudyGroup(user, studyGroup) || studyGroup.getOwner()
-			.getId()
-			.equals(user.getId())) {
+		if (groupMemberRepository.existsByUserAndStudyGroup(user, studyGroup)) {
 			List<GroupMember> groupMembers = groupMemberRepository.findAllByStudyGroup(studyGroup);
 
 			List<CheckSolvedProblemResponse> responseList = new ArrayList<>();
