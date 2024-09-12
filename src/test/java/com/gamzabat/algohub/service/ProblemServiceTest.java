@@ -388,7 +388,7 @@ class ProblemServiceTest {
 		assertThatThrownBy(() -> problemService.editProblem(user4, request))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
-			.hasFieldOrPropertyWithValue("error", "문제 수정 권한이 없습니다. 방장, 부방장일 경우에만 생성이 가능합니다.");
+			.hasFieldOrPropertyWithValue("error", "문제 수정 권한이 없습니다. 방장, 부방장일 경우에만 수정이 가능합니다.");
 	}
 
 	@Test

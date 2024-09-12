@@ -105,7 +105,7 @@ public class ProblemService {
 
 		if (RoleOfGroupMember.isParticipant(groupMember)) {
 			throw new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(),
-				"문제 수정 권한이 없습니다. 방장, 부방장일 경우에만 생성이 가능합니다.");
+				"문제 수정 권한이 없습니다. 방장, 부방장일 경우에만 수정이 가능합니다.");
 		}
 
 		checkProblemPeriodRequest(request, problem);
