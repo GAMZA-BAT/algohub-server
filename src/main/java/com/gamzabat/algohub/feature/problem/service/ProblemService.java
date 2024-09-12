@@ -130,8 +130,7 @@ public class ProblemService {
 	@Transactional(readOnly = true)
 	public GetProblemListsResponse getProblemList(User user, Long groupId, Pageable pageable) {
 		StudyGroup group = getGroup(groupId);
-		if (!group.getOwner().getId().equals(user.getId()) && !groupMemberRepository.existsByUserAndStudyGroup(user,
-			group)) {
+		if (!groupMemberRepository.existsByUserAndStudyGroup(user, group)) {
 			throw new ProblemValidationException(HttpStatus.FORBIDDEN.value(), "문제를 조회할 권한이 없습니다.");
 		}
 
