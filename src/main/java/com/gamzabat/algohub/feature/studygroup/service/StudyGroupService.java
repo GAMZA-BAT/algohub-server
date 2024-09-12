@@ -66,7 +66,7 @@ public class StudyGroupService {
 	public CreateGroupResponse createGroup(User user, CreateGroupRequest request, MultipartFile profileImage) {
 		String imageUrl = imageService.saveImage(profileImage);
 		String inviteCode = NanoIdUtils.randomNanoId();
-		groupRepository.save(StudyGroup.builder()
+		StudyGroup group = StudyGroup.builder()
 			.name(request.name())
 			.startDate(request.startDate())
 			.endDate(request.endDate())
@@ -74,7 +74,15 @@ public class StudyGroupService {
 			.groupImage(imageUrl)
 			.owner(user)
 			.groupCode(inviteCode)
-			.build());
+			.build();
+
+		groupRepository.save(group);
+		groupMemberRepository.save(GroupMember.builder()
+			.studyGroup(group)
+			.user(user)
+			.role(RoleOfGroupMember.OWNER)
+			.build()
+		);
 		log.info("success to save study group");
 		return new CreateGroupResponse(inviteCode);
 	}
