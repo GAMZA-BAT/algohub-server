@@ -199,7 +199,12 @@ public class StudyGroupService {
 	public void editGroup(User user, EditGroupRequest request, MultipartFile groupImage) {
 		StudyGroup group = groupRepository.findById(request.id())
 			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다."));
-		if (!group.getOwner().getId().equals(user.getId()))
+
+		GroupMember groupMember = groupMemberRepository.findByUserAndStudyGroup(user, group)
+			.orElseThrow(
+				() -> new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(), "참여하지 않은 그룹 입니다."));
+
+		if (!RoleOfGroupMember.isOwner(groupMember))
 			throw new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "그룹 정보 수정에 대한 권한이 없습니다.");
 
 		if (groupImage != null) {
