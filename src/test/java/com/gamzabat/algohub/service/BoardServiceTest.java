@@ -89,27 +89,7 @@ public class BoardServiceTest {
 	}
 
 	@Test
-	@DisplayName("공지 작성 성공(방장)")
-	void createBoardSuccess() {
-		//given
-		CreateBoardRequest request = new CreateBoardRequest(30L, "title", "content");
-		when(studyGroupRepository.findById(request.studyGroupId())).thenReturn(Optional.ofNullable(studyGroup));
-		when(groupMemberRepository.findByUserAndStudyGroup(user, studyGroup)).thenReturn(
-			Optional.empty());
-		//when
-		boardService.createBoard(user, request);
-		//then
-		verify(boardRepository, times(1)).save(boardCaptor.capture());
-		Board result = boardCaptor.getValue();
-		assertThat(result.getAuthor()).isEqualTo(user);
-		assertThat(result.getContent()).isEqualTo("content");
-		assertThat(result.getTitle()).isEqualTo("title");
-		assertThat(result.getStudyGroup()).isEqualTo(studyGroup);
-
-	}
-
-	@Test
-	@DisplayName("공지 작성 성공(부방장)")
+	@DisplayName("공지 작성 성공")
 	void createBoardSuccess_1() {
 		//given
 		CreateBoardRequest request = new CreateBoardRequest(30L, "title", "content");
@@ -165,8 +145,9 @@ public class BoardServiceTest {
 		when(groupMemberRepository.findByUserAndStudyGroup(user4, studyGroup)).thenReturn(Optional.empty());
 		//when,then
 		assertThatThrownBy(() -> boardService.createBoard(user4, request))
-			.isInstanceOf(UserValidationException.class)
-			.hasFieldOrPropertyWithValue("errors", "그룹에 속해있지 않은 멤버입니다");
+			.isInstanceOf(StudyGroupValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
+			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹 입니다.");
 	}
 
 	@Test
