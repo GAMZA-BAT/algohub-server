@@ -227,9 +227,7 @@ public class StudyGroupService {
 		StudyGroup group = groupRepository.findById(id)
 			.orElseThrow(() -> new CannotFoundGroupException("그룹을 찾을 수 없습니다."));
 
-		if (groupMemberRepository.existsByUserAndStudyGroup(user, group) || group.getOwner()
-			.getId()
-			.equals(user.getId())) {
+		if (groupMemberRepository.existsByUserAndStudyGroup(user, group)) {
 			List<GroupMember> groupMembers = groupMemberRepository.findAllByStudyGroup(group);
 
 			List<GetGroupMemberResponse> responseList = new ArrayList<>();
@@ -274,7 +272,7 @@ public class StudyGroupService {
 
 			return responseList;
 		} else {
-			throw new UserValidationException("그룹 내용을 확인할 권한이 없습니다");
+			throw new UserValidationException("그룹 정보를 확인할 권한이 없습니다");
 		}
 	}
 
