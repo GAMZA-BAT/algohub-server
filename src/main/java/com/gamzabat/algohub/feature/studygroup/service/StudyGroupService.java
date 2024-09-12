@@ -354,9 +354,7 @@ public class StudyGroupService {
 		StudyGroup group = groupRepository.findById(groupId)
 			.orElseThrow(() -> new CannotFoundGroupException("그룹을 찾을 수 없습니다."));
 
-		if (!(groupMemberRepository.existsByUserAndStudyGroup(user, group) || group.getOwner()
-			.getId()
-			.equals(user.getId()))) {
+		if (!groupMemberRepository.existsByUserAndStudyGroup(user, group)) {
 			throw new UserValidationException("랭킹을 확인할 권한이 없습니다.");
 		}
 
