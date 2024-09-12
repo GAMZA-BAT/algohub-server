@@ -179,18 +179,7 @@ class StudyGroupServiceTest {
 	}
 
 	@Test
-	@DisplayName("코드 사용한 그룹 참여 실패 : 이미 참여한 그룹 (주인)")
-	void joinGroupWithCodeFailed_2() {
-		// given
-		when(studyGroupRepository.findByGroupCode("code")).thenReturn(Optional.ofNullable(group));
-		// when, then
-		assertThatThrownBy(() -> studyGroupService.joinGroupWithCode(user, "code"))
-			.isInstanceOf(StudyGroupValidationException.class)
-			.hasFieldOrPropertyWithValue("error", "이미 참여한 그룹 입니다.");
-	}
-
-	@Test
-	@DisplayName("코드 사용한 그룹 참여 실패 : 이미 참여한 그룹 (멤버)")
+	@DisplayName("코드 사용한 그룹 참여 실패 : 이미 참여한 그룹")
 	void joinGroupWithCodeFailed_3() {
 		// given
 		when(studyGroupRepository.findByGroupCode("code")).thenReturn(Optional.ofNullable(group));
