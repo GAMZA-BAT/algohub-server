@@ -315,7 +315,7 @@ class StudyGroupServiceTest {
 			when(bookmarkedStudyGroupRepository.existsByUserAndStudyGroup(user, groups.get(i))).thenReturn(true);
 		}
 		when(bookmarkedStudyGroupRepository.findAllByUser(user)).thenReturn(bookmarks);
-		when(studyGroupRepository.findByUser(user)).thenReturn(groups);
+		when(studyGroupRepository.findAllByUser(user)).thenReturn(groups);
 		// when
 		GetStudyGroupListsResponse result = studyGroupService.getStudyGroupList(user);
 		// then

@@ -157,7 +157,7 @@ public class StudyGroupService {
 
 	@Transactional(readOnly = true)
 	public GetStudyGroupListsResponse getStudyGroupList(User user) {
-		List<StudyGroup> groups = groupRepository.findByUser(user);
+		List<StudyGroup> groups = groupRepository.findAllByUser(user);
 
 		List<GetStudyGroupResponse> bookmarked = bookmarkedStudyGroupRepository.findAllByUser(user).stream()
 			.map(bookmark -> GetStudyGroupResponse.toDTO(bookmark.getStudyGroup(), user, true,
