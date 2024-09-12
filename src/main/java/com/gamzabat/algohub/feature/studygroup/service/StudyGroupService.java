@@ -246,28 +246,12 @@ public class StudyGroupService {
 					achivement = getPercentage(correctSolution, problems) + "%";
 				}
 
-				Boolean isOwner = group.getOwner().getId().equals(groupMember.getId());
+				Boolean isOwner = getStudyGroupOwner(group).getId().equals(user.getId());
 				String profileImage = groupMember.getUser().getProfileImage();
 				Long userId = groupMember.getUser().getId();
 				responseList.add(
 					new GetGroupMemberResponse(nickname, joinDate, achivement, isOwner, profileImage, userId));
 			}
-
-			String nickname = group.getOwner().getNickname();
-			LocalDate joinDate = group.getStartDate();
-
-			Long correctSolution = solutionRepository.countDistinctCorrectSolutionsByUserAndGroup(group.getOwner(), id);
-			Long problems = problemRepository.countProblemsByGroupId(id);
-			String achivement;
-			if (correctSolution == 0) {
-				achivement = "0%";
-			} else {
-				achivement = getPercentage(correctSolution, problems) + "%";
-			}
-			String profileImage = group.getOwner().getProfileImage();
-			Long userId = group.getOwner().getId();
-			responseList.add(new GetGroupMemberResponse(nickname, joinDate, achivement, true, profileImage, userId));
-
 			responseList.sort((a, b) -> Boolean.compare(!a.getIsOwner(), !b.getIsOwner()));
 
 			return responseList;
