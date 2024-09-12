@@ -52,11 +52,6 @@ public class ProblemService {
 	private final NotificationService notificationService;
 	private final RestTemplate restTemplate;
 
-	private static void checkOwnerPermission(User user, StudyGroup group, String permission) {
-		if (!group.getOwner().getId().equals(user.getId()))
-			throw new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "문제에 대한 권한이 없습니다. : " + permission);
-	}
-
 	@Transactional
 	public void createProblem(User user, CreateProblemRequest request) {
 		StudyGroup group = getGroup(request.groupId());
