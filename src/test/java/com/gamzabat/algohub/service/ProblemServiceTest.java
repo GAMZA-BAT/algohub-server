@@ -557,6 +557,7 @@ class ProblemServiceTest {
 		// given
 		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
 		// when
 		problemService.deleteProblem(user, 20L);
 		// then
@@ -594,11 +595,12 @@ class ProblemServiceTest {
 		// given
 		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user4, group)).thenReturn(Optional.ofNullable(groupMember4));
 		// when, then
-		assertThatThrownBy(() -> problemService.deleteProblem(user2, 20L))
+		assertThatThrownBy(() -> problemService.deleteProblem(user4, 20L))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
-			.hasFieldOrPropertyWithValue("error", "문제에 대한 권한이 없습니다. : delete");
+			.hasFieldOrPropertyWithValue("error", "문제 삭제 권한이 없습니다. 방장, 부방장일 경우에만 삭제가 가능합니다.");
 	}
 
 	@Test
