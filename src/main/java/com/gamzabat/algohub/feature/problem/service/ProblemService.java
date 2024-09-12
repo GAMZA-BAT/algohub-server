@@ -6,7 +6,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
@@ -247,20 +246,13 @@ public class ProblemService {
 	@Transactional(readOnly = true)
 	public List<GetProblemResponse> getQueuedProblemList(User user, Long groupId) {
 		StudyGroup group = getGroup(groupId);
-		Optional<GroupMember> groupMember = groupMemberRepository.findByUserAndStudyGroup(user, group);
+		GroupMember groupMember = groupMemberRepository.findByUserAndStudyGroup(user, group)
+			.orElseThrow(
+				() -> new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹 입니다."));
 
-		Boolean isOwner = (group.getOwner().getId().equals(user.getId()) && groupMember.isEmpty());
-		Boolean isAdmin = (!groupMember.isEmpty() && groupMember.get().getRole().equals(RoleOfGroupMember.ADMIN));
-		Boolean isGroupMember = groupMember.isPresent();
-
-		if (!isGroupMember && !isOwner) {
+		if (RoleOfGroupMember.isParticipant(groupMember)) {
 			throw new ProblemValidationException(HttpStatus.FORBIDDEN.value(),
-				"문제를 조회할 권한이 없습니다. : 그룹원이 아닙니다 // 그룹의 방장과 부방장만 볼 수 있습니다");
-		}
-
-		if (isGroupMember && !isAdmin) {
-			throw new ProblemValidationException(HttpStatus.FORBIDDEN.value(),
-				"문제를 조회할 권한이 없습니다. : 부방장이 아닙니다 // 그룹의 방장과 부방장만 볼 수 있습니다");
+				"예정 문제를 조회할 권한이 없습니다. : 그룹의 방장과 부방장만 볼 수 있습니다.");
 		}
 
 		List<GetProblemResponse> responseList = problemRepository.findAllByStudyGroupAndStartDateAfter(group,
