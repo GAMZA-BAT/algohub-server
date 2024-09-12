@@ -151,23 +151,8 @@ public class BoardServiceTest {
 	}
 
 	@Test
-	@DisplayName("공지 조회 성공(방장)")
+	@DisplayName("공지 조회 성공")
 	void getBoardSuccess_1() {
-		//given
-		when(boardRepository.findById(1000L)).thenReturn(Optional.ofNullable(board));
-		when(groupMemberRepository.findByUserAndStudyGroup(user, studyGroup)).thenReturn(Optional.empty());
-		//when
-		GetBoardResponse response = boardService.getBoard(user, 1000L);
-		//then
-		assertThat(response.author()).isEqualTo("nickname1");
-		assertThat(response.boardContent()).isEqualTo("content");
-		assertThat(response.boardTitle()).isEqualTo("title");
-		assertThat(response.boardId()).isEqualTo(1000L);
-	}
-
-	@Test
-	@DisplayName("공지 조회 성공(부방장)")
-	void getBoardSuccess_2() {
 		//given
 		when(boardRepository.findById(1000L)).thenReturn(Optional.ofNullable(board));
 		when(groupMemberRepository.findByUserAndStudyGroup(user2, studyGroup)).thenReturn(
@@ -183,7 +168,7 @@ public class BoardServiceTest {
 
 	@Test
 	@DisplayName("공지 조회 성공(일반 그룹 참가자)")
-	void getBoardSuccess_3() {
+	void getBoardSuccess_2() {
 		//given
 		when(boardRepository.findById(1000L)).thenReturn(Optional.ofNullable(board));
 		when(groupMemberRepository.findByUserAndStudyGroup(user3, studyGroup)).thenReturn(
@@ -216,10 +201,10 @@ public class BoardServiceTest {
 		//given
 		when(boardRepository.findById(1000L)).thenReturn(Optional.ofNullable(board));
 		when(groupMemberRepository.findByUserAndStudyGroup(user4, studyGroup)).thenReturn(Optional.empty());
-
 		//when
 		assertThatThrownBy(() -> boardService.getBoard(user4, 1000L))
-			.isInstanceOf(UserValidationException.class)
-			.hasFieldOrPropertyWithValue("errors", "공지를 조회할 권한이 없습니다");
+			.isInstanceOf(StudyGroupValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
+			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹 입니다.");
 	}
 }
