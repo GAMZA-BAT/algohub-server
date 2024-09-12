@@ -5,6 +5,9 @@ import org.springframework.http.HttpStatus;
 import com.gamzabat.algohub.feature.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.studygroup.exception.InvalidRoleException;
 
+import lombok.Getter;
+
+@Getter
 public enum RoleOfGroupMember {
 	OWNER("OWNER"),
 	ADMIN("ADMIN"),
@@ -14,10 +17,6 @@ public enum RoleOfGroupMember {
 
 	RoleOfGroupMember(String value) {
 		this.value = value;
-	}
-
-	public String getValue() {
-		return value;
 	}
 
 	public static RoleOfGroupMember fromValue(String value) {
