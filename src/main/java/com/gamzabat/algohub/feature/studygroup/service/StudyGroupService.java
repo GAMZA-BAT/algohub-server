@@ -374,17 +374,13 @@ public class StudyGroupService {
 		StudyGroup group = groupRepository.findById(groupId)
 			.orElseThrow(() -> new CannotFoundGroupException("그룹을 찾을 수 없습니다."));
 
-		if (!(groupMemberRepository.existsByUserAndStudyGroup(user, group) || group.getOwner()
-			.getId()
-			.equals(user.getId()))) {
-			throw new UserValidationException("그룹을 확인할 권한이 없습니다.");
-		}
-
-		Boolean isOwner = group.getOwner().getId().equals(user.getId());
+		GroupMember member = groupMemberRepository.findByUserAndStudyGroup(user, group)
+			.orElseThrow(
+				() -> new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(), "참여하지 않은 그룹 입니다."));
 
 		GetGroupResponse response = new GetGroupResponse(group.getId(), group.getName(), group.getStartDate(),
-			group.getEndDate(), group.getIntroduction(), group.getGroupImage(), isOwner,
-			group.getOwner().getNickname());
+			group.getEndDate(), group.getIntroduction(), group.getGroupImage(), RoleOfGroupMember.isOwner(member),
+			getStudyGroupOwner(group).getNickname());
 		return response;
 	}
 
