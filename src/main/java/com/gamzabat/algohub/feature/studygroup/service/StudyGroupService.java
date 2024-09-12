@@ -92,8 +92,7 @@ public class StudyGroupService {
 		StudyGroup studyGroup = groupRepository.findByGroupCode(code)
 			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다."));
 
-		if (groupMemberRepository.existsByUserAndStudyGroup(user, studyGroup)
-			|| studyGroup.getOwner().getId().equals(user.getId()))
+		if (groupMemberRepository.existsByUserAndStudyGroup(user, studyGroup))
 			throw new StudyGroupValidationException(HttpStatus.BAD_REQUEST.value(), "이미 참여한 그룹 입니다.");
 
 		groupMemberRepository.save(
