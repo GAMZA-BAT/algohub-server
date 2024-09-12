@@ -96,8 +96,8 @@ public class SolutionService {
 			LocalDate endDate = problem.getEndDate();
 			LocalDate now = LocalDate.now();
 
-			if ((studyGroup.getOwner() != user && !groupMemberRepository.existsByUserAndStudyGroup(user, studyGroup))
-				|| endDate == null || now.isAfter(endDate)) {
+			if (!groupMemberRepository.existsByUserAndStudyGroup(user, studyGroup) || endDate == null || now.isAfter(
+				endDate)) {
 				iterator.remove();
 				continue;
 			}
