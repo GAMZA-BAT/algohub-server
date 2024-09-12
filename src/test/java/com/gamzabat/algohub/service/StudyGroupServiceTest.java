@@ -101,6 +101,11 @@ class StudyGroupServiceTest {
 			.user(user)
 			.role(RoleOfGroupMember.OWNER)
 			.build();
+		groupMember2 = GroupMember.builder()
+			.studyGroup(group)
+			.user(user)
+			.role(RoleOfGroupMember.PARTICIPANT)
+			.build();
 
 		problem1 = Problem.builder()
 			.studyGroup(group)
@@ -362,6 +367,7 @@ class StudyGroupServiceTest {
 		MockMultipartFile editImage = new MockMultipartFile("editImage", new byte[] {1, 2, 3});
 		when(imageService.saveImage(editImage)).thenReturn("editImage");
 		when(studyGroupRepository.findById(anyLong())).thenReturn(Optional.ofNullable(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
 		// when
 		studyGroupService.editGroup(user, request, editImage);
 		// then
@@ -395,6 +401,7 @@ class StudyGroupServiceTest {
 			LocalDate.now().plusDays(10), "editIntroduction");
 		MockMultipartFile editImage = new MockMultipartFile("editImage", new byte[] {1, 2, 3});
 		when(studyGroupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user2, group)).thenReturn(Optional.ofNullable(groupMember2));
 		// when, then
 		assertThatThrownBy(() -> studyGroupService.editGroup(user2, request, editImage))
 			.isInstanceOf(StudyGroupValidationException.class)
