@@ -426,7 +426,11 @@ public class StudyGroupService {
 		StudyGroup group = studyGroupRepository.findById(request.studyGroupId())
 			.orElseThrow(() -> new CannotFoundGroupException("존재하지 않는 그룹입니다."));
 
-		if (!group.getOwner().getId().equals(user.getId()))
+		GroupMember owner = groupMemberRepository.findByUserAndStudyGroup(user, group)
+			.orElseThrow(
+				() -> new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(), "참여하지 않은 그룹 입니다."));
+
+		if (!RoleOfGroupMember.isOwner(owner))
 			throw new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "스터디 그룹의 멤버 역할을 수정할 권한이 없습니다.");
 
 		User targetUser = userRepository.findById(request.memberId())
