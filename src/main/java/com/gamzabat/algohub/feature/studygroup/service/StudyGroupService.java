@@ -81,6 +81,7 @@ public class StudyGroupService {
 			.studyGroup(group)
 			.user(user)
 			.role(RoleOfGroupMember.OWNER)
+			.joinDate(LocalDate.now())
 			.build()
 		);
 		log.info("success to save study group");
