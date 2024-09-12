@@ -1,7 +1,5 @@
 package com.gamzabat.algohub.feature.board.service;
 
-import static com.gamzabat.algohub.feature.studygroup.etc.RoleOfGroupMember.*;
-
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -19,6 +17,7 @@ import com.gamzabat.algohub.feature.board.exception.BoardValidationExceoption;
 import com.gamzabat.algohub.feature.board.repository.BoardRepository;
 import com.gamzabat.algohub.feature.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
+import com.gamzabat.algohub.feature.studygroup.etc.RoleOfGroupMember;
 import com.gamzabat.algohub.feature.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
@@ -41,15 +40,11 @@ public class BoardService {
 	public void createBoard(@AuthedUser User user, CreateBoardRequest request) {
 		StudyGroup studyGroup = studyGroupRepository.findById(request.studyGroupId())
 			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.BAD_REQUEST.value(), "존재하지 않는 스터디 그룹입니다"));
-		Optional<GroupMember> groupMember = groupMemberRepository.findByUserAndStudyGroup(user, studyGroup);
+		GroupMember groupMember = groupMemberRepository.findByUserAndStudyGroup(user, studyGroup)
+			.orElseThrow(
+				() -> new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹 입니다."));
 
-		Boolean isOwner = (studyGroup.getOwner().getId().equals(user.getId()) && groupMember.isEmpty());
-		Boolean isAdmin = (!groupMember.isEmpty() && groupMember.get().getRole().equals(ADMIN));
-		Boolean isGroupMember = groupMember.isPresent();
-
-		if (!isGroupMember && !isOwner)
-			throw new UserValidationException("그룹에 속해있지 않은 멤버입니다");
-		if (!isAdmin && !isOwner)
+		if (RoleOfGroupMember.isParticipant(groupMember))
 			throw new UserValidationException("공지 작성 권한이 없습니다");
 
 		boardRepository.save(Board.builder()
