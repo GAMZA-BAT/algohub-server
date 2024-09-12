@@ -301,7 +301,7 @@ class ProblemServiceTest {
 	}
 
 	@Test
-	@DisplayName("문제 정보 수정 성공 : 방장일 때")
+	@DisplayName("문제 정보 수정 성공")
 	void editProblem() {
 		// given
 		EditProblemRequest request = EditProblemRequest.builder()
@@ -311,27 +311,9 @@ class ProblemServiceTest {
 			.build();
 		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
 		// when
 		problemService.editProblem(user, request);
-		// then
-		assertThat(problem.getStartDate()).isEqualTo(request.startDate());
-		assertThat(problem.getEndDate()).isEqualTo(request.endDate());
-	}
-
-	@Test
-	@DisplayName("문제 정보 수정 성공 : 부방장일 때")
-	void editProblem_2() {
-		// given
-		EditProblemRequest request = EditProblemRequest.builder()
-			.problemId(20L)
-			.startDate(LocalDate.now())
-			.endDate(LocalDate.now().plusDays(7))
-			.build();
-		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
-		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
-		when(groupMemberRepository.findByUserAndStudyGroup(user3, group)).thenReturn(Optional.of(groupMember3));
-		// when
-		problemService.editProblem(user3, request);
 		// then
 		assertThat(problem.getStartDate()).isEqualTo(request.startDate());
 		assertThat(problem.getEndDate()).isEqualTo(request.endDate());
@@ -373,7 +355,7 @@ class ProblemServiceTest {
 	}
 
 	@Test
-	@DisplayName("문제 정보 수정 실패 : 권한 없음 // 그룹원이 아예 아닌경우")
+	@DisplayName("문제 정보 수정 실패 : 권한 없음 // 그룹원이 아닌경우")
 	void editProblemFailed_3() {
 		// given
 		EditProblemRequest request = EditProblemRequest.builder()
@@ -387,7 +369,7 @@ class ProblemServiceTest {
 		assertThatThrownBy(() -> problemService.editProblem(user2, request))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
-			.hasFieldOrPropertyWithValue("error", "문제에 대한 권한이 없습니다. : edit // 해당 그룹의 멤버가 아닙니다.");
+			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹 입니다.");
 	}
 
 	@Test
@@ -406,7 +388,7 @@ class ProblemServiceTest {
 		assertThatThrownBy(() -> problemService.editProblem(user4, request))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
-			.hasFieldOrPropertyWithValue("error", "문제에 대한 권한이 없습니다. : edit // 방장, 부방장일 경우에만 생성이 가능합니다.");
+			.hasFieldOrPropertyWithValue("error", "문제 수정 권한이 없습니다. 방장, 부방장일 경우에만 생성이 가능합니다.");
 	}
 
 	@Test
@@ -426,6 +408,7 @@ class ProblemServiceTest {
 			.build();
 		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
 		// when, then
 		assertThatThrownBy(() -> problemService.editProblem(user, request))
 			.isInstanceOf(ProblemValidationException.class)
@@ -450,6 +433,7 @@ class ProblemServiceTest {
 			.build();
 		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
 		// when, then
 		assertThatThrownBy(() -> problemService.editProblem(user, request))
 			.isInstanceOf(ProblemValidationException.class)
@@ -474,6 +458,7 @@ class ProblemServiceTest {
 			.build();
 		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
 		// when, then
 		assertThatThrownBy(() -> problemService.editProblem(user, request))
 			.isInstanceOf(ProblemValidationException.class)
