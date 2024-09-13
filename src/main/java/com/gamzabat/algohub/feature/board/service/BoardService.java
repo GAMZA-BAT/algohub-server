@@ -1,6 +1,7 @@
 package com.gamzabat.algohub.feature.board.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import com.gamzabat.algohub.feature.board.repository.BoardRepository;
 import com.gamzabat.algohub.feature.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.studygroup.etc.RoleOfGroupMember;
+import com.gamzabat.algohub.feature.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
@@ -72,6 +74,19 @@ public class BoardService {
 			.boardContent(board.getContent())
 			.createAt(board.getCreatedAt())
 			.build();
+	}
+
+	@Transactional(readOnly = true)
+	public List<GetBoardResponse> getBoardList(@AuthedUser User user, Long studyGroupId) {
+		StudyGroup studyGroup = studyGroupRepository.findById(studyGroupId)
+			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.BAD_REQUEST.value(), "존재하지 않는 스터디 그룹입니다"));
+		if (!groupMemberRepository.existsByUserAndStudyGroup(user, studyGroup))
+			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 스터디 그룹입니다");
+
+		List<Board> list = boardRepository.findAllByStudyGroup(studyGroup);
+		List<GetBoardResponse> result = list.stream().map(GetBoardResponse::toDTO).toList();
+		log.info("success to get board list");
+		return result;
 	}
 
 }

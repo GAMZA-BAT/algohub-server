@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -29,6 +31,7 @@ import com.gamzabat.algohub.feature.board.repository.BoardRepository;
 import com.gamzabat.algohub.feature.board.service.BoardService;
 import com.gamzabat.algohub.feature.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
+import com.gamzabat.algohub.feature.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
@@ -196,7 +199,7 @@ public class BoardServiceTest {
 	}
 
 	@Test
-	@DisplayName("공지 조회 실패(그룹에 참여하지 않은 유저")
+	@DisplayName("공지 조회 실패(그룹에 참여하지 않은 유저)")
 	void getBoardFailed_2() {
 		//given
 		when(boardRepository.findById(1000L)).thenReturn(Optional.ofNullable(board));
@@ -207,4 +210,54 @@ public class BoardServiceTest {
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹 입니다.");
 	}
+
+	@Test
+	@DisplayName("공지 목록 조회 성공")
+	void getBoardListSuccess_1() {
+		//given
+		List<Board> boardList = new ArrayList<>(10);
+		for (int i = 0; i < 10; i++)
+			boardList.add(
+				board.builder().author(user).content("content" + i).title("title" + i).studyGroup(studyGroup).build());
+		for (int i = 10; i < 20; i++)
+			boardList.add(
+				board.builder().author(user2).content("content" + i).title("title" + i).studyGroup(studyGroup).build());
+		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
+		when(groupMemberRepository.existsByUserAndStudyGroup(user, studyGroup)).thenReturn(true);
+		when(boardRepository.findAllByStudyGroup(studyGroup)).thenReturn(boardList);
+		//when
+		List<GetBoardResponse> result = boardService.getBoardList(user, 30L);
+		//then
+		assertThat(result.size()).isEqualTo(20);
+		for (int i = 0; i < 20; i++) {
+			assertThat(result.get(i).boardContent()).isEqualTo("content" + i);
+			assertThat(result.get(i).boardTitle()).isEqualTo("title" + i);
+		}
+	}
+
+	@Test
+	@DisplayName("공지 목록 조회 실패 (존재하지 않는 스터디 그룹임)")
+	void getBoardListFailed_1() {
+		//given
+		when(studyGroupRepository.findById(31L)).thenReturn(Optional.empty());
+		//when,then
+		assertThatThrownBy(() -> boardService.getBoardList(user, 31L))
+			.isInstanceOf(StudyGroupValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
+			.hasFieldOrPropertyWithValue("error", "존재하지 않는 스터디 그룹입니다");
+	}
+
+	@Test
+	@DisplayName("공지 목록 조회 실패(참여하지 않은 스터디 그룹)")
+	void getBoardListFailed_2() {
+		//given
+		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
+		when(groupMemberRepository.existsByUserAndStudyGroup(user4, studyGroup)).thenReturn(false);
+		//when, then
+		assertThatThrownBy(() -> boardService.getBoardList(user4, 30L))
+			.isInstanceOf(GroupMemberValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
+			.hasFieldOrPropertyWithValue("error", "참여하지 않은 스터디 그룹입니다");
+	}
+
 }
