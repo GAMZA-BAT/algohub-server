@@ -62,9 +62,8 @@ public class BoardService {
 	public GetBoardResponse getBoard(@AuthedUser User user, Long boardId) {
 		Board board = boardRepository.findById(boardId)
 			.orElseThrow(() -> new BoardValidationExceoption("존재하지 않는 공지입니다"));
-		GroupMember groupMember = groupMemberRepository.findByUserAndStudyGroup(user, board.getStudyGroup())
-			.orElseThrow(
-				() -> new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹 입니다."));
+		if (!groupMemberRepository.existsByUserAndStudyGroup(user, board.getStudyGroup()))
+			throw new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 스터디 그룹 입니다.");
 
 		log.info("success to get board");
 		return GetBoardResponse.builder()
