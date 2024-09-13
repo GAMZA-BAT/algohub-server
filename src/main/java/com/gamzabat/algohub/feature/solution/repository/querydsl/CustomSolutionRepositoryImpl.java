@@ -26,9 +26,9 @@ public class CustomSolutionRepositoryImpl implements CustomSolutionRepository {
 		JPAQuery<Solution> query = queryFactory.selectFrom(solution)
 			.where(solution.problem.eq(problem));
 
-		query = addNicknameFilter(nickname, query);
-		query = addLanguageFilter(language, query);
-		query = addResultFilter(result, query);
+		addNicknameFilter(nickname, query);
+		addLanguageFilter(language, query);
+		addResultFilter(result, query);
 
 		query.orderBy(solution.solvedDateTime.desc())
 			.offset(pageable.getOffset())
@@ -39,7 +39,7 @@ public class CustomSolutionRepositoryImpl implements CustomSolutionRepository {
 		return PageableExecutionUtils.getPage(query.fetch(), pageable, countQuery::fetchOne);
 	}
 
-	private JPAQuery<Solution> addResultFilter(String result, JPAQuery<Solution> query) {
+	private void addResultFilter(String result, JPAQuery<Solution> query) {
 		if (result != null && !result.isBlank()) {
 			if (result.equals("맞았습니다!!"))
 				query.where(solution.result.eq(result)
@@ -49,30 +49,30 @@ public class CustomSolutionRepositoryImpl implements CustomSolutionRepository {
 			else
 				query.where(solution.result.eq(result));
 		}
-		return query;
 	}
 
-	private JPAQuery<Solution> addNicknameFilter(String nickname, JPAQuery<Solution> query) {
+	private void addNicknameFilter(String nickname, JPAQuery<Solution> query) {
 		if (nickname != null && !nickname.isBlank())
 			query.where(solution.user.nickname.eq(nickname));
-		return query;
 	}
 
-	private JPAQuery<Solution> addLanguageFilter(String language, JPAQuery<Solution> query) {
+	private void addLanguageFilter(String language, JPAQuery<Solution> query) {
 		if (language != null && !language.isBlank())
-			query = languageFilter(query, language);
-		return query;
+			languageFilter(query, language);
 	}
 
-	private JPAQuery<Solution> languageFilter(JPAQuery<Solution> query, String language) {
-		return switch (language) {
-			case "C" -> query.where(solution.language.in(LanguageConstants.C_BOUNDARY));
-			case "C++" -> query.where(solution.language.in(LanguageConstants.CPP_BOUNDARY));
-			case "Java" -> query.where(solution.language.in(LanguageConstants.JAVA_BOUNDARY));
-			case "Python" -> query.where(solution.language.in(LanguageConstants.PYTHON_BOUNDARY));
-			case "Rust" -> query.where(solution.language.in(LanguageConstants.RUST_BOUNDARY));
-			default -> query;
-		};
+	private void languageFilter(JPAQuery<Solution> query, String language) {
+		switch (language) {
+			case "C":
+				query.where(solution.language.in(LanguageConstants.C_BOUNDARY));
+			case "C++":
+				query.where(solution.language.in(LanguageConstants.CPP_BOUNDARY));
+			case "Java":
+				query.where(solution.language.in(LanguageConstants.JAVA_BOUNDARY));
+			case "Python":
+				query.where(solution.language.in(LanguageConstants.RUST_BOUNDARY));
+		}
+
 	}
 
 	private JPAQuery<Long> solutionCountQuery(JPAQuery<Solution> query) {
