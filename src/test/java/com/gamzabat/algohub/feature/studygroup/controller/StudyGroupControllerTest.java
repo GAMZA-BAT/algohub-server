@@ -42,6 +42,7 @@ import com.gamzabat.algohub.feature.studygroup.dto.CheckSolvedProblemResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.CreateGroupRequest;
 import com.gamzabat.algohub.feature.studygroup.dto.CreateGroupResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.EditGroupRequest;
+import com.gamzabat.algohub.feature.studygroup.dto.GetGroupMemberResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupListsResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.UpdateGroupMemberRoleRequest;
@@ -314,6 +315,37 @@ class StudyGroupControllerTest {
 	}
 
 	@Test
+	@DisplayName("그룹 탈퇴 실패 : 참여하지 않은 그룹")
+	void deleteMemberFailed_1() throws Exception {
+		// given
+		doThrow(new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(),
+			"멤버 삭제 권한이 없습니다. : 참여하지 않은 그룹 입니다.")).when(
+			studyGroupService).deleteGroup(user, groupId);
+		// when, then
+		mockMvc.perform(delete("/api/group/leave")
+				.header("Authorization", token)
+				.param("groupId", String.valueOf(groupId))
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.error").value("멤버 삭제 권한이 없습니다. : 참여하지 않은 그룹 입니다."));
+	}
+
+	@Test
+	@DisplayName("그룹 탈퇴 실패 : 권한 없음")
+	void deleteMemberFailed_2() throws Exception {
+		// given
+		doThrow(new UserValidationException("멤버를 삭제 할 권한이 없습니다.")).when(
+			studyGroupService).deleteGroup(user, groupId);
+		// when, then
+		mockMvc.perform(delete("/api/group/leave")
+				.header("Authorization", token)
+				.param("groupId", String.valueOf(groupId))
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.error").value("멤버를 삭제 할 권한이 없습니다."));
+	}
+
+	@Test
 	@DisplayName("그룹 정보 수정 성공")
 	void editGroup() throws Exception {
 		// given
@@ -427,26 +459,26 @@ class StudyGroupControllerTest {
 			any(MultipartFile.class));
 	}
 
-	// @Test
-	// @DisplayName("그룹 회원 목록 조회 성공")
-	// void getGroupInfo() throws Exception {
-	// 	// given
-	// 	List<GetGroupMemberResponse> response = new ArrayList<>(30);
-	// 	for(int i=0; i<30; i++){
-	// 		response.add(new GetGroupMemberResponse(
-	// 			"name"+i,"profileImage"+i,(long)i
-	// 		));
-	// 	}
-	// 	when(studyGroupService.groupInfo(user,groupId)).thenReturn(response);
-	// 	// when, then
-	// 	mockMvc.perform(get("/api/group/member-list")
-	// 			.header("Authorization",token)
-	// 			.param("groupId",String.valueOf(groupId)))
-	// 		.andExpect(status().isOk())
-	// 		.andExpect(content().json(objectMapper.writeValueAsString(response)));
-	//
-	// 	verify(studyGroupService,times(1)).groupInfo(any(User.class),anyLong());
-	// }
+	@Test
+	@DisplayName("그룹 회원 목록 조회 성공")
+	void getGroupInfo() throws Exception {
+		// given
+		List<GetGroupMemberResponse> response = new ArrayList<>(30);
+		for (int i = 0; i < 30; i++) {
+			response.add(new GetGroupMemberResponse(
+				"name" + i, LocalDate.now(), "70%", false, "profileImage" + i, (long)i
+			));
+		}
+		when(studyGroupService.groupInfo(user, groupId)).thenReturn(response);
+		// when, then
+		mockMvc.perform(get("/api/group/member-list")
+				.header("Authorization", token)
+				.param("groupId", String.valueOf(groupId)))
+			.andExpect(status().isOk())
+			.andExpect(content().json(objectMapper.writeValueAsString(response)));
+
+		verify(studyGroupService, times(1)).groupInfo(any(User.class), anyLong());
+	}
 
 	@Test
 	@DisplayName("그룹 회원 목록 조회 실패 : 존재하지 않는 그룹")
@@ -558,13 +590,14 @@ class StudyGroupControllerTest {
 	@DisplayName("그룹 초대 코드 조회 실패 : 권한 없음")
 	void getGroupCodeFailed_2() throws Exception {
 		// given
-		when(studyGroupService.getGroupCode(user, groupId)).thenThrow(new UserValidationException("코드를 조회할 권한이 없습니다."));
+		when(studyGroupService.getGroupCode(user, groupId)).thenThrow(
+			new UserValidationException("초대 코드를 조회할 권한이 없습니다."));
 		// when, then
 		mockMvc.perform(get("/api/group/group-code")
 				.header("Authorization", token)
 				.param("groupId", String.valueOf(groupId)))
 			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.error").value("코드를 조회할 권한이 없습니다."));
+			.andExpect(jsonPath("$.error").value("초대 코드를 조회할 권한이 없습니다."));
 		verify(studyGroupService, times(1)).getGroupCode(any(User.class), anyLong());
 	}
 
