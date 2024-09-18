@@ -39,6 +39,8 @@ import com.gamzabat.algohub.feature.studygroup.dto.EditGroupRequest;
 import com.gamzabat.algohub.feature.studygroup.dto.GetRankingResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupListsResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupResponse;
+import com.gamzabat.algohub.feature.studygroup.dto.UpdateGroupMemberRoleRequest;
+import com.gamzabat.algohub.feature.studygroup.etc.RoleOfGroupMember;
 import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundGroupException;
 import com.gamzabat.algohub.feature.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.studygroup.repository.BookmarkedStudyGroupRepository;
@@ -46,6 +48,7 @@ import com.gamzabat.algohub.feature.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.studygroup.service.StudyGroupService;
 import com.gamzabat.algohub.feature.user.domain.User;
+import com.gamzabat.algohub.feature.user.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 class StudyGroupServiceTest {
@@ -59,6 +62,8 @@ class StudyGroupServiceTest {
 	private BookmarkedStudyGroupRepository bookmarkedStudyGroupRepository;
 	@Mock
 	private SolutionRepository solutionRepository;
+	@Mock
+	private UserRepository userRepository;
 	@Mock
 	private ImageService imageService;
 	private User user;
@@ -286,11 +291,12 @@ class StudyGroupServiceTest {
 				.build());
 		}
 		List<BookmarkedStudyGroup> bookmarks = new ArrayList<>(10);
-		for (int i = 10; i < 20; i++) {
+		for (int i = 0; i < 10; i++) {
 			bookmarks.add(BookmarkedStudyGroup.builder()
 				.studyGroup(groups.get(i))
 				.user(user)
 				.build());
+			when(bookmarkedStudyGroupRepository.existsByUserAndStudyGroup(user, groups.get(i))).thenReturn(true);
 		}
 		when(bookmarkedStudyGroupRepository.findAllByUser(user)).thenReturn(bookmarks);
 		when(studyGroupRepository.findByUser(user)).thenReturn(groups);
@@ -310,24 +316,28 @@ class StudyGroupServiceTest {
 			assertThat(done.get(i).ownerNickname()).isEqualTo("nickname1");
 			assertThat(done.get(i).startDate()).isEqualTo(LocalDate.now().minusDays(i + 30));
 			assertThat(done.get(i).endDate()).isEqualTo(LocalDate.now().minusDays(30));
+			assertThat(done.get(i).isBookmarked()).isTrue();
 		}
 		for (int i = 0; i < 10; i++) {
 			assertThat(inProgress.get(i).name()).isEqualTo("name" + i);
 			assertThat(inProgress.get(i).ownerNickname()).isEqualTo("nickname1");
 			assertThat(inProgress.get(i).startDate()).isEqualTo(LocalDate.now().minusDays(i));
 			assertThat(inProgress.get(i).endDate()).isEqualTo(LocalDate.now().plusDays(i));
+			assertThat(inProgress.get(i).isBookmarked()).isFalse();
 		}
 		for (int i = 0; i < 10; i++) {
 			assertThat(queued.get(i).name()).isEqualTo("name" + i);
 			assertThat(queued.get(i).ownerNickname()).isEqualTo("nickname1");
 			assertThat(queued.get(i).startDate()).isEqualTo(LocalDate.now().plusDays(30));
 			assertThat(queued.get(i).endDate()).isEqualTo(LocalDate.now().plusDays(i + 30));
+			assertThat(queued.get(i).isBookmarked()).isFalse();
 		}
 		for (int i = 0; i < 10; i++) {
 			assertThat(bookmarked.get(i).name()).isEqualTo("name" + i);
 			assertThat(bookmarked.get(i).ownerNickname()).isEqualTo("nickname1");
-			assertThat(bookmarked.get(i).startDate()).isEqualTo(LocalDate.now().minusDays(i));
-			assertThat(bookmarked.get(i).endDate()).isEqualTo(LocalDate.now().plusDays(i));
+			assertThat(bookmarked.get(i).startDate()).isEqualTo(LocalDate.now().minusDays(i + 30));
+			assertThat(bookmarked.get(i).endDate()).isEqualTo(LocalDate.now().minusDays(30));
+			assertThat(bookmarked.get(i).isBookmarked()).isTrue();
 		}
 	}
 
@@ -512,5 +522,79 @@ class StudyGroupServiceTest {
 		assertThatThrownBy(() -> studyGroupService.getAllRank(user2, groupId))
 			.isInstanceOf(UserValidationException.class)
 			.hasFieldOrPropertyWithValue("errors", "랭킹을 확인할 권한이 없습니다.");
+	}
+
+	@Test
+	@DisplayName("스터디 그룹 멤버 역할 수정 성공")
+	void updateGroupMemberRole() {
+		// given
+		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(groupId, 2L, "ADMIN");
+		GroupMember member = GroupMember.builder()
+			.studyGroup(group)
+			.user(user2)
+			.role(RoleOfGroupMember.PARTICIPANT)
+			.build();
+		when(groupMemberRepository.findByUserAndStudyGroup(user2, group)).thenReturn(Optional.ofNullable(member));
+		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.ofNullable(group));
+		when(userRepository.findById(anyLong())).thenReturn(Optional.ofNullable(user2));
+		// when
+		studyGroupService.updateGroupMemberRole(user, request);
+		// then
+		assertThat(member.getUser()).isEqualTo(user2);
+		assertThat(member.getStudyGroup()).isEqualTo(group);
+		assertThat(member.getRole()).isEqualTo(RoleOfGroupMember.ADMIN);
+	}
+
+	@Test
+	@DisplayName("스터디 그룹 멤버 역할 수정 실패 : 존재하지 않는 그룹")
+	void updateGroupMemberRoleFailed_1() {
+		// given
+		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(groupId, 2L, "ADMIN");
+		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.empty());
+		// when, then
+		assertThatThrownBy(() -> studyGroupService.updateGroupMemberRole(user, request))
+			.isInstanceOf(CannotFoundGroupException.class)
+			.hasFieldOrPropertyWithValue("errors", "존재하지 않는 그룹입니다.");
+	}
+
+	@Test
+	@DisplayName("스터디 그룹 멤버 역할 수정 실패 : 역할 수정 권한 없음")
+	void updateGroupMemberRoleFailed_2() {
+		// given
+		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(groupId, 2L, "ADMIN");
+		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.of(group));
+		// when, then
+		assertThatThrownBy(() -> studyGroupService.updateGroupMemberRole(user2, request))
+			.isInstanceOf(StudyGroupValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
+			.hasFieldOrPropertyWithValue("error", "스터디 그룹의 멤버 역할을 수정할 권한이 없습니다.");
+	}
+
+	@Test
+	@DisplayName("스터디 그룹 멤버 역할 수정 실패 : 존재하지 않는 회원")
+	void updateGroupMemberRoleFailed_3() {
+		// given
+		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(groupId, 2L, "ADMIN");
+		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.of(group));
+		when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+		// when, then
+		assertThatThrownBy(() -> studyGroupService.updateGroupMemberRole(user, request))
+			.isInstanceOf(UserValidationException.class)
+			.hasFieldOrPropertyWithValue("errors", "존재하지 않는 회원입니다.");
+	}
+
+	@Test
+	@DisplayName("스터디 그룹 멤버 역할 수정 실패 : 참여하지 않은 회원")
+	void updateGroupMemberRoleFailed_4() {
+		// given
+		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(groupId, 2L, "ADMIN");
+		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.of(group));
+		when(userRepository.findById(anyLong())).thenReturn(Optional.of(user2));
+		when(groupMemberRepository.findByUserAndStudyGroup(user2, group)).thenReturn(Optional.empty());
+		// when, then
+		assertThatThrownBy(() -> studyGroupService.updateGroupMemberRole(user, request))
+			.isInstanceOf(GroupMemberValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
+			.hasFieldOrPropertyWithValue("error", "해당 스터디 그룹에 참여하지 않은 회원입니다.");
 	}
 }

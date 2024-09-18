@@ -44,6 +44,7 @@ import com.gamzabat.algohub.feature.studygroup.dto.CreateGroupResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.EditGroupRequest;
 import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupListsResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupResponse;
+import com.gamzabat.algohub.feature.studygroup.dto.UpdateGroupMemberRoleRequest;
 import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundGroupException;
 import com.gamzabat.algohub.feature.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.studygroup.repository.GroupMemberRepository;
@@ -209,7 +210,7 @@ class StudyGroupControllerTest {
 			bookmarked.add(new GetStudyGroupResponse(
 				(long)i, "name" + i, "groupImage" + 1,
 				LocalDate.now(), LocalDate.now().plusDays(i),
-				"introduction" + 1, "nickname", true
+				"introduction" + 1, "nickname", true, true
 			));
 		}
 
@@ -217,21 +218,21 @@ class StudyGroupControllerTest {
 			done.add(new GetStudyGroupResponse(
 				(long)i, "name" + i, "groupImage" + 1,
 				LocalDate.now(), LocalDate.now().plusDays(i),
-				"introduction" + 1, "nickname", true
+				"introduction" + 1, "nickname", true, true
 			));
 		}
 		for (int i = 0; i < 10; i++) {
 			inProgress.add(new GetStudyGroupResponse(
 				(long)i, "name" + i, "groupImage" + 1,
 				LocalDate.now(), LocalDate.now().plusDays(i),
-				"introduction" + 1, "nickname", true
+				"introduction" + 1, "nickname", true, true
 			));
 		}
 		for (int i = 0; i < 10; i++) {
 			queued.add(new GetStudyGroupResponse(
 				(long)i, "name" + i, "groupImage" + 1,
 				LocalDate.now(), LocalDate.now().plusDays(i),
-				"introduction" + 1, "nickname", true
+				"introduction" + 1, "nickname", true, true
 			));
 		}
 		GetStudyGroupListsResponse response = new GetStudyGroupListsResponse(bookmarked, done, inProgress, queued);
@@ -623,5 +624,83 @@ class StudyGroupControllerTest {
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.error").value("참여하지 않은 그룹 입니다."));
 		verify(studyGroupService, times(1)).updateBookmarkGroup(user, groupId);
+	}
+
+	@Test
+	@DisplayName("스터디 그룹 멤버 역할 수정 성공")
+	void updateGroupMemberRole() throws Exception {
+		// given
+		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(groupId, 20L, "ADMIN");
+		// when, then
+		mockMvc.perform(patch("/api/group/role")
+				.header("Authorization", token)
+				.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isOk())
+			.andExpect(content().string("OK"));
+		verify(studyGroupService, times(1)).updateGroupMemberRole(user, request);
+	}
+
+	@Test
+	@DisplayName("스터디 그룹 멤버 역할 수정 실패 : 존재하지 않는 그룹")
+	void updateGroupMemberRoleFailed_1() throws Exception {
+		// given
+		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(groupId, 20L, "ADMIN");
+		doThrow(new CannotFoundSolutionException("존재하지 않는 그룹입니다.")).when(studyGroupService)
+			.updateGroupMemberRole(user, request);
+		// when, then
+		mockMvc.perform(patch("/api/group/role")
+				.header("Authorization", token)
+				.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.error").value("존재하지 않는 그룹입니다."));
+		verify(studyGroupService, times(1)).updateGroupMemberRole(user, request);
+	}
+
+	@Test
+	@DisplayName("스터디 그룹 멤버 역할 수정 실패 : 스터디 그룹 멤버 역할 수정 권한 없음")
+	void updateGroupMemberRoleFailed_2() throws Exception {
+		// given
+		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(groupId, 20L, "ADMIN");
+		doThrow(new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "스터디 그룹 멤버 역할을 수정할 권한이 없습니다.")).when(
+			studyGroupService).updateGroupMemberRole(user, request);
+		// when, then
+		mockMvc.perform(patch("/api/group/role")
+				.header("Authorization", token)
+				.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isForbidden())
+			.andExpect(jsonPath("$.error").value("스터디 그룹 멤버 역할을 수정할 권한이 없습니다."));
+		verify(studyGroupService, times(1)).updateGroupMemberRole(user, request);
+	}
+
+	@Test
+	@DisplayName("스터디 그룹 멤버 역할 수정 실패 : 존재하지 않는 회원")
+	void updateGroupMemberRoleFailed_3() throws Exception {
+		// given
+		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(groupId, 20L, "ADMIN");
+		doThrow(new UserValidationException("존재하지 않는 회원입니다.")).when(
+			studyGroupService).updateGroupMemberRole(user, request);
+		// when, then
+		mockMvc.perform(patch("/api/group/role")
+				.header("Authorization", token)
+				.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.error").value("존재하지 않는 회원입니다."));
+		verify(studyGroupService, times(1)).updateGroupMemberRole(user, request);
+	}
+
+	@Test
+	@DisplayName("스터디 그룹 멤버 역할 수정 실패 : 스터디 그룹에 참여하지 않은 회원")
+	void updateGroupMemberRoleFailed_4() throws Exception {
+		// given
+		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(groupId, 20L, "ADMIN");
+		doThrow(new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(), "해당 스터디 그룹에 참여하지 않은 회원입니다.")).when(
+			studyGroupService).updateGroupMemberRole(user, request);
+		// when, then
+		mockMvc.perform(patch("/api/group/role")
+				.header("Authorization", token)
+				.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.error").value("해당 스터디 그룹에 참여하지 않은 회원입니다."));
+		verify(studyGroupService, times(1)).updateGroupMemberRole(user, request);
 	}
 }

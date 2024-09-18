@@ -15,4 +15,6 @@ public interface BookmarkedStudyGroupRepository extends JpaRepository<Bookmarked
 	List<BookmarkedStudyGroup> findAllByUser(User user);
 
 	List<BookmarkedStudyGroup> findAllByStudyGroup(StudyGroup studyGroup);
+
+	boolean existsByUserAndStudyGroup(User user, StudyGroup group);
 }
