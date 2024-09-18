@@ -44,7 +44,8 @@ public class SolutionService {
 	private final UserRepository userRepository;
 	private final CommentRepository commentRepository;
 
-	public Page<GetSolutionResponse> getSolutionList(User user, Long problemId, Pageable pageable) {
+	public Page<GetSolutionResponse> getSolutionList(User user, Long problemId, String nickname,
+		String language, String result, Pageable pageable) {
 		Problem problem = problemRepository.findById(problemId)
 			.orElseThrow(() -> new ProblemValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 문제 입니다."));
 
@@ -55,8 +56,8 @@ public class SolutionService {
 			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹 입니다.");
 		}
 
-		Page<Solution> solutions = solutionRepository.findAllByProblemOrderBySolvedDateTimeDesc(problem, pageable);
-		log.info("success to get solution list");
+		Page<Solution> solutions = solutionRepository.findAllFilteredSolutions(problem, nickname, language, result,
+			pageable);
 
 		return solutions.map(solution -> {
 			long commentCount = commentRepository.countCommentsBySolutionId(solution.getId());
