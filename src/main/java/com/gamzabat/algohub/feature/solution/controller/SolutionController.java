@@ -36,10 +36,14 @@ public class SolutionController {
 	@Operation(summary = "풀이 목록 조회 API", description = "특정 문제에 대한 풀이를 모두 조회하는 API")
 	public ResponseEntity<Page<GetSolutionResponse>> getSolutionList(@AuthedUser User user,
 		@RequestParam Long problemId,
+		@RequestParam(required = false) String language,
+		@RequestParam(required = false) String result,
+		@RequestParam(required = false) String nickname,
 		@RequestParam(defaultValue = "0") int page,
 		@RequestParam(defaultValue = "20") int size) {
 		Pageable pageable = PageRequest.of(page, size);
-		Page<GetSolutionResponse> response = solutionService.getSolutionList(user, problemId, pageable);
+		Page<GetSolutionResponse> response = solutionService.getSolutionList(user, problemId, nickname, language,
+			result, pageable);
 		return ResponseEntity.ok().body(response);
 	}
 
