@@ -65,12 +65,16 @@ public class CustomSolutionRepositoryImpl implements CustomSolutionRepository {
 		switch (language) {
 			case "C":
 				query.where(solution.language.in(LanguageConstants.C_BOUNDARY));
+				break;
 			case "C++":
 				query.where(solution.language.in(LanguageConstants.CPP_BOUNDARY));
+				break;
 			case "Java":
 				query.where(solution.language.in(LanguageConstants.JAVA_BOUNDARY));
+				break;
 			case "Python":
 				query.where(solution.language.in(LanguageConstants.RUST_BOUNDARY));
+				break;
 		}
 
 	}
