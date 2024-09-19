@@ -91,7 +91,7 @@ class ProblemServiceTest {
 			.role(Role.USER).profileImage("image").build();
 		user4 = User.builder().email("email4").password("password").nickname("nickname")
 			.role(Role.USER).profileImage("image").build();
-		group = StudyGroup.builder().name("name").owner(user).groupImage("imageUrl").groupCode("code").build();
+		group = StudyGroup.builder().name("name").groupImage("imageUrl").groupCode("code").build();
 		groupMember1 = GroupMember.builder().role(RoleOfGroupMember.OWNER).studyGroup(group).user(user).build();
 		groupMember3 = GroupMember.builder().role(RoleOfGroupMember.ADMIN).studyGroup(group).user(user3).build();
 		groupMember4 = GroupMember.builder().role(RoleOfGroupMember.PARTICIPANT).studyGroup(group).user(user4).build();

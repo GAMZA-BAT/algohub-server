@@ -6,15 +6,10 @@ import java.time.LocalDateTime;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
-import com.gamzabat.algohub.feature.user.domain.User;
-
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -35,22 +30,17 @@ public class StudyGroup {
 	private String groupImage;
 	private String groupCode;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "owner_id")
-	private User owner;
-
 	private LocalDateTime deletedAt;
 
 	@Builder
 	public StudyGroup(String name, LocalDate startDate, LocalDate endDate, String introduction, String groupImage,
-		String groupCode, User owner) {
+		String groupCode) {
 		this.name = name;
 		this.startDate = startDate;
 		this.endDate = endDate;
 		this.introduction = introduction;
 		this.groupImage = groupImage;
 		this.groupCode = groupCode;
-		this.owner = owner;
 	}
 
 	public void editGroupInfo(String name, LocalDate startDate, LocalDate endDate, String introduction) {

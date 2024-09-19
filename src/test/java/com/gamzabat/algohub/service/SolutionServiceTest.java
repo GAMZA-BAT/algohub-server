@@ -68,7 +68,7 @@ class SolutionServiceTest {
 			.role(Role.USER).profileImage("profileImage").build();
 		user2 = User.builder().email("email2").password("password").nickname("nickname2")
 			.role(Role.USER).profileImage("profileImage").build();
-		group = StudyGroup.builder().name("name").owner(user).groupImage("imageUrl").groupCode("code").build();
+		group = StudyGroup.builder().name("name").groupImage("imageUrl").groupCode("code").build();
 		problem = Problem.builder()
 			.studyGroup(group)
 			.link("link")

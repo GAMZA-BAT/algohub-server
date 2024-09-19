@@ -72,7 +72,6 @@ public class StudyGroupService {
 			.endDate(request.endDate())
 			.introduction(request.introduction())
 			.groupImage(imageUrl)
-			.owner(user)
 			.groupCode(inviteCode)
 			.build();
 

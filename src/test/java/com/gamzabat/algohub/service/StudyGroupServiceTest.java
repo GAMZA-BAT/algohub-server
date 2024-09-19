@@ -90,7 +90,6 @@ class StudyGroupServiceTest {
 			.role(Role.USER).profileImage("image2").build();
 		group = StudyGroup.builder()
 			.name("name")
-			.owner(user)
 			.startDate(LocalDate.now())
 			.endDate(LocalDate.now().plusDays(1))
 			.groupImage("imageUrl")
@@ -276,7 +275,6 @@ class StudyGroupServiceTest {
 		for (int i = 0; i < 10; i++) {
 			StudyGroup group = StudyGroup.builder()
 				.name("name" + i)
-				.owner(user)
 				.startDate(LocalDate.now().minusDays(i + 30))
 				.endDate(LocalDate.now().minusDays(30))
 				.build();
@@ -287,7 +285,6 @@ class StudyGroupServiceTest {
 		for (int i = 0; i < 10; i++) {
 			StudyGroup group = StudyGroup.builder()
 				.name("name" + i)
-				.owner(user)
 				.startDate(LocalDate.now().minusDays(i))
 				.endDate(LocalDate.now().plusDays(i))
 				.build();
@@ -298,7 +295,6 @@ class StudyGroupServiceTest {
 		for (int i = 0; i < 10; i++) {
 			StudyGroup group = StudyGroup.builder()
 				.name("name" + i)
-				.owner(user)
 				.startDate(LocalDate.now().plusDays(30))
 				.endDate(LocalDate.now().plusDays(i + 30))
 				.build();

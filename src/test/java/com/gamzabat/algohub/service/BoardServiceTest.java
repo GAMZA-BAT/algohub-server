@@ -64,7 +64,7 @@ public class BoardServiceTest {
 			.role(Role.USER).profileImage("image").build();
 		user4 = User.builder().email("email2").password("password").nickname("nickname2")
 			.role(Role.USER).profileImage("image").build();
-		studyGroup = StudyGroup.builder().owner(user).build();
+		studyGroup = StudyGroup.builder().build();
 		groupMember2 = GroupMember.builder().user(user2).studyGroup(studyGroup).role(ADMIN).build();
 		groupMember3 = GroupMember.builder().user(user3).studyGroup(studyGroup).role(PARTICIPANT).build();
 		board = Board.builder().studyGroup(studyGroup).title("title").content("content").author(user).build();
