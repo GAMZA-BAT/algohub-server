@@ -19,15 +19,17 @@ public interface SolutionRepository extends JpaRepository<Solution, Long>, Custo
 	@Query("SELECT COUNT(DISTINCT s.user) FROM Solution s WHERE s.problem.id = :problemId")
 	Integer countDistinctUsersByProblemId(@Param("problemId") Long problemId);
 
-	@Query("SELECT COUNT(DISTINCT s.user) FROM Solution s WHERE s.problem.id = :problemId AND s.result = '맞았습니다!!'")
-	Integer countDistinctUsersWithCorrectSolutionsByProblemId(@Param("problemId") Long problemId);
+	@Query("SELECT COUNT(DISTINCT s.user) FROM Solution s WHERE s.problem.id = :problemId AND s.result = :correct")
+	Integer countDistinctUsersWithCorrectSolutionsByProblemId(@Param("problemId") Long problemId,
+		@Param("correct") String correct);
 
 	@Query("SELECT COUNT(DISTINCT s.problem.id) FROM Solution s " +
 		"JOIN s.problem p " +
 		"WHERE s.user = :user " +
 		"AND p.studyGroup.id = :groupId " +
-		"AND s.result = '맞았습니다!!'")
-	Long countDistinctCorrectSolutionsByUserAndGroup(@Param("user") User user, @Param("groupId") Long groupId);
+		"AND s.result = :correct")
+	Long countDistinctCorrectSolutionsByUserAndGroup(@Param("user") User user, @Param("groupId") Long groupId,
+		@Param("correct") String correct);
 
 	@Query(
 		"SELECT new com.gamzabat.algohub.feature.studygroup.dto.GetRankingResponse(u.nickname, u.profileImage, 0, COUNT(DISTINCT s.problem.id)) "
@@ -36,10 +38,10 @@ public interface SolutionRepository extends JpaRepository<Solution, Long>, Custo
 			"JOIN s.user u " +
 			"JOIN s.problem p " +
 			"JOIN p.studyGroup g " +
-			"WHERE s.result = '맞았습니다!!' AND g = :group " +
+			"WHERE s.result = :correct AND g = :group " +
 			"GROUP BY u.id, u.nickname, u.profileImage " +
 			"ORDER BY COUNT(DISTINCT s.problem.id) DESC, MAX(s.solvedDateTime) ASC")
-	List<GetRankingResponse> findTopUsersByGroup(@Param("group") StudyGroup group);
+	List<GetRankingResponse> findTopUsersByGroup(@Param("group") StudyGroup group, @Param("correct") String correct);
 
 	boolean existsByUserAndProblemAndResult(User user, Problem problem, String result);
 }
