@@ -41,7 +41,6 @@ import com.gamzabat.algohub.feature.studygroup.exception.GroupMemberValidationEx
 import com.gamzabat.algohub.feature.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
-import com.gamzabat.algohub.feature.user.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 class SolutionServiceTest {
@@ -56,8 +55,6 @@ class SolutionServiceTest {
 	@Mock
 	private GroupMemberRepository groupMemberRepository;
 	@Mock
-	private UserRepository userRepository;
-	@Mock
 	private CommentRepository commentRepository;
 	private User user, user2;
 	private Problem problem;
@@ -71,7 +68,7 @@ class SolutionServiceTest {
 			.role(Role.USER).profileImage("profileImage").build();
 		user2 = User.builder().email("email2").password("password").nickname("nickname2")
 			.role(Role.USER).profileImage("profileImage").build();
-		group = StudyGroup.builder().name("name").owner(user).groupImage("imageUrl").groupCode("code").build();
+		group = StudyGroup.builder().name("name").groupImage("imageUrl").groupCode("code").build();
 		problem = Problem.builder()
 			.studyGroup(group)
 			.link("link")
@@ -94,7 +91,7 @@ class SolutionServiceTest {
 	}
 
 	@Test
-	@DisplayName("풀이 목록 조회 성공 (주인) : 풀이 결과 필터링")
+	@DisplayName("풀이 목록 조회 성공 : 풀이 결과 필터링")
 	void getSolutionList() {
 		// given
 		Pageable pageable = PageRequest.of(0, 10);
@@ -108,6 +105,7 @@ class SolutionServiceTest {
 		Page<Solution> correctPage = new PageImpl<>(list.subList(10, 20), pageable, 10);
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(group));
 		when(problemRepository.findById(10L)).thenReturn(Optional.ofNullable(problem));
+		when(groupMemberRepository.existsByUserAndStudyGroup(user, group)).thenReturn(true);
 		when(solutionRepository.findAllFilteredSolutions(problem, null, null, "컴파일 에러", pageable)).thenReturn(
 			compileErrorPage);
 		when(solutionRepository.findAllFilteredSolutions(problem, null, null, "맞았습니다!!", pageable)).thenReturn(
@@ -245,7 +243,7 @@ class SolutionServiceTest {
 	}
 
 	@Test
-	@DisplayName("풀이 하나 조회 성공 (주인)")
+	@DisplayName("풀이 하나 조회 성공")
 	void getSolution_1() {
 		// given
 		Solution solution = Solution.builder()
@@ -260,6 +258,7 @@ class SolutionServiceTest {
 			.solvedDateTime(LocalDateTime.now())
 			.build();
 		when(solutionRepository.findById(anyLong())).thenReturn(Optional.ofNullable(solution));
+		when(groupMemberRepository.existsByUserAndStudyGroup(user, group)).thenReturn(true);
 		// when
 		GetSolutionResponse response = solutionService.getSolution(user, 10L);
 		// then

@@ -14,7 +14,7 @@ public record GetStudyGroupResponse(Long id,
 									String ownerNickname,
 									boolean isOwner,
 									boolean isBookmarked) {
-	public static GetStudyGroupResponse toDTO(StudyGroup group, User user, boolean isBookmarked) {
+	public static GetStudyGroupResponse toDTO(StudyGroup group, User user, boolean isBookmarked, User owner) {
 		return new GetStudyGroupResponse(
 			group.getId(),
 			group.getName(),
@@ -22,8 +22,8 @@ public record GetStudyGroupResponse(Long id,
 			group.getStartDate(),
 			group.getEndDate(),
 			group.getIntroduction(),
-			group.getOwner().getNickname(),
-			group.getOwner().getId().equals(user.getId()),
+			owner.getNickname(),
+			owner.equals(user),
 			isBookmarked
 		);
 	}

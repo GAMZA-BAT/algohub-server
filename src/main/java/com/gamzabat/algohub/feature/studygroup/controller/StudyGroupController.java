@@ -106,7 +106,7 @@ public class StudyGroupController {
 	@GetMapping(value = "problem-solving")
 	@Operation(summary = "문제 별 회원 풀이 여부 조회")
 	public ResponseEntity<Object> getCheckingSolvedProblem(@AuthedUser User user, @RequestParam Long problemId) {
-		List<CheckSolvedProblemResponse> responseList = studyGroupService.getChekingSolvedProblem(user, problemId);
+		List<CheckSolvedProblemResponse> responseList = studyGroupService.getCheckingSolvedProblem(user, problemId);
 		return ResponseEntity.ok().body(responseList);
 	}
 

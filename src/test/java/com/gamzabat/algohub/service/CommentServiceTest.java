@@ -78,7 +78,7 @@ class CommentServiceTest {
 			.role(Role.USER).profileImage("image").build();
 		user2 = User.builder().email("email2").password("password").nickname("nickname")
 			.role(Role.USER).profileImage("image").build();
-		studyGroup = StudyGroup.builder().owner(user).build();
+		studyGroup = StudyGroup.builder().build();
 		problem = Problem.builder().studyGroup(studyGroup).build();
 		solution = Solution.builder().problem(problem).user(user).content("solution").build();
 		comment = Comment.builder().user(user).content("content").solution(solution).build();
@@ -108,27 +108,8 @@ class CommentServiceTest {
 	}
 
 	@Test
-	@DisplayName("댓글 작성 성공 (주인)")
-	void createComment() {
-		// given
-		CreateCommentRequest request = CreateCommentRequest.builder().solutionId(10L).content("content").build();
-		when(solutionRepository.findById(10L)).thenReturn(Optional.ofNullable(solution));
-		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
-		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
-		// when
-		commentService.createComment(user, request);
-		// then
-		verify(commentRepository, times(1)).save(commentCaptor.capture());
-		Comment result = commentCaptor.getValue();
-		assertThat(result.getContent()).isEqualTo("content");
-		assertThat(result.getUser()).isEqualTo(user);
-		assertThat(result.getSolution()).isEqualTo(solution);
-		verify(notificationService, times(1)).send(any(), any(), any(), any());
-	}
-
-	@Test
-	@DisplayName("댓글 작성 성공 (멤버)")
-	void createComment_2() {
+	@DisplayName("댓글 작성 성공")
+	void createComment_1() {
 		// given
 		CreateCommentRequest request = CreateCommentRequest.builder().solutionId(10L).content("content").build();
 		when(solutionRepository.findById(10L)).thenReturn(Optional.ofNullable(solution));
@@ -226,27 +207,8 @@ class CommentServiceTest {
 	}
 
 	@Test
-	@DisplayName("댓글 조회 성공 (주인)")
-	void getCommentList_1() {
-		// given
-		List<Comment> list = new ArrayList<>(30);
-		for (int i = 0; i < 30; i++)
-			list.add(Comment.builder().solution(solution).user(user).content("content" + i).build());
-		when(solutionRepository.findById(10L)).thenReturn(Optional.ofNullable(solution));
-		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
-		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
-		when(commentRepository.findAllBySolution(solution)).thenReturn(list);
-		// when
-		List<GetCommentResponse> result = commentService.getCommentList(user, 10L);
-		// then
-		assertThat(result.size()).isEqualTo(30);
-		for (int i = 0; i < 30; i++)
-			assertThat(result.get(i).content()).isEqualTo("content" + i);
-	}
-
-	@Test
-	@DisplayName("댓글 조회 성공 (멤버)")
-	void getComment_2() {
+	@DisplayName("댓글 조회 성공")
+	void getComment_1() {
 		// given
 		List<Comment> list = new ArrayList<>(30);
 		for (int i = 0; i < 30; i++)
@@ -318,22 +280,8 @@ class CommentServiceTest {
 	}
 
 	@Test
-	@DisplayName("댓글 삭제 성공 (주인)")
+	@DisplayName("댓글 삭제 성공")
 	void deleteComment_1() {
-		// given
-		when(solutionRepository.findById(10L)).thenReturn(Optional.ofNullable(solution));
-		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
-		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
-		when(commentRepository.findById(40L)).thenReturn(Optional.ofNullable(comment));
-		// when
-		commentService.deleteComment(user, 40L);
-		// then
-		verify(commentRepository, times(1)).delete(comment);
-	}
-
-	@Test
-	@DisplayName("댓글 삭제 성공 (멤버)")
-	void deleteComment_2() {
 		// given
 		when(solutionRepository.findById(10L)).thenReturn(Optional.ofNullable(solution));
 		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));

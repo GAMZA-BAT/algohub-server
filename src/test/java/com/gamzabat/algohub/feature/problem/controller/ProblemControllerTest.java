@@ -137,7 +137,8 @@ class ProblemControllerTest {
 			.startDate(LocalDate.now())
 			.endDate(LocalDate.now())
 			.build();
-		doThrow(new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "문제에 대한 권한이 없습니다. : create")).when(
+		doThrow(new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(),
+			"문제 생성 권한이 없습니다. 방장, 부방장일 경우에만 생성이 가능합니다.")).when(
 			problemService).createProblem(user, request);
 		// when, then
 		mockMvc.perform(post("/api/problem")
@@ -145,7 +146,7 @@ class ProblemControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isForbidden())
-			.andExpect(jsonPath("$.error").value("문제에 대한 권한이 없습니다. : create"));
+			.andExpect(jsonPath("$.error").value("문제 생성 권한이 없습니다. 방장, 부방장일 경우에만 생성이 가능합니다."));
 		verify(problemService, times(1)).createProblem(user, request);
 	}
 
@@ -247,8 +248,26 @@ class ProblemControllerTest {
 	}
 
 	@Test
-	@DisplayName("문제 진행 기간 수정 실패 : 이미 진행 중인 문제인데 시작날짜 수정을 요청하는 경우")
+	@DisplayName("문제 진행 기간 수정 실패 : 권한 없음")
 	void editProblemDeadlineFailed_3() throws Exception {
+		// given
+		EditProblemRequest request = new EditProblemRequest(problemId, LocalDate.now(), LocalDate.now().plusDays(10));
+		doThrow(new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(),
+			"문제 수정 권한이 없습니다. 방장, 부방장일 경우에만 수정이 가능합니다.")).when(problemService)
+			.editProblem(any(User.class), any(EditProblemRequest.class));
+		// when, then
+		mockMvc.perform(patch("/api/problem")
+				.header("Authorization", token)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isForbidden())
+			.andExpect(jsonPath("$.error").value("문제 수정 권한이 없습니다. 방장, 부방장일 경우에만 수정이 가능합니다."));
+		verify(problemService, times(1)).editProblem(user, request);
+	}
+
+	@Test
+	@DisplayName("문제 진행 기간 수정 실패 : 이미 진행 중인 문제인데 시작날짜 수정을 요청하는 경우")
+	void editProblemDeadlineFailed_4() throws Exception {
 		// given
 		EditProblemRequest request = new EditProblemRequest(problemId, LocalDate.now(), LocalDate.now().plusDays(10));
 		doThrow(
@@ -267,7 +286,7 @@ class ProblemControllerTest {
 
 	@Test
 	@DisplayName("문제 진행 기간 수정 실패 : 문제 시작 날짜를 오늘 이전의 날짜로 요청한 경우")
-	void editProblemDeadlineFailed_4() throws Exception {
+	void editProblemDeadlineFailed_5() throws Exception {
 		// given
 		EditProblemRequest request = new EditProblemRequest(problemId, LocalDate.now().minusDays(10), LocalDate.now());
 		doThrow(
@@ -286,7 +305,7 @@ class ProblemControllerTest {
 
 	@Test
 	@DisplayName("문제 진행 기간 수정 실패 : 문제 마감 날짜를 오늘 이전의 날짜로 요청한 경우")
-	void editProblemDeadlineFailed_5() throws Exception {
+	void editProblemDeadlineFailed_6() throws Exception {
 		// given
 		EditProblemRequest request = new EditProblemRequest(problemId, LocalDate.now().minusDays(20),
 			LocalDate.now().minusDays(10));
@@ -368,6 +387,22 @@ class ProblemControllerTest {
 				.param("problemId", String.valueOf(problemId)))
 			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.error").value("존재하지 않는 문제 입니다."));
+		verify(problemService, times(1)).deleteProblem(user, problemId);
+	}
+
+	@Test
+	@DisplayName("문제 삭제 실패 : 권한 없음")
+	void deleteProblemFailed_2() throws Exception {
+		// given
+		doThrow(new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(),
+			"문제 삭제 권한이 없습니다. 방장, 부방장일 경우에만 삭제가 가능합니다.")).when(problemService)
+			.deleteProblem(user, problemId);
+		// when, then
+		mockMvc.perform(delete("/api/problem")
+				.header("Authorization", token)
+				.param("problemId", String.valueOf(problemId)))
+			.andExpect(status().isForbidden())
+			.andExpect(jsonPath("$.error").value("문제 삭제 권한이 없습니다. 방장, 부방장일 경우에만 삭제가 가능합니다."));
 		verify(problemService, times(1)).deleteProblem(user, problemId);
 	}
 }

@@ -52,14 +52,13 @@ public class SolutionService {
 		StudyGroup group = studyGroupRepository.findById(problem.getStudyGroup().getId())
 			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다."));
 
-		if (!groupMemberRepository.existsByUserAndStudyGroup(user, group)
-			&& !group.getOwner().getId().equals(user.getId())) {
+		if (!groupMemberRepository.existsByUserAndStudyGroup(user, group)) {
 			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹 입니다.");
 		}
 
 		Page<Solution> solutions = solutionRepository.findAllFilteredSolutions(problem, nickname, language, result,
 			pageable);
-		
+
 		return solutions.map(solution -> {
 			long commentCount = commentRepository.countCommentsBySolutionId(solution.getId());
 			return GetSolutionResponse.toDTO(solution, commentCount);
@@ -72,8 +71,7 @@ public class SolutionService {
 
 		StudyGroup group = solution.getProblem().getStudyGroup();
 
-		if (groupMemberRepository.existsByUserAndStudyGroup(user, group)
-			|| group.getOwner().getId().equals(user.getId())) {
+		if (groupMemberRepository.existsByUserAndStudyGroup(user, group)) {
 			long commentCount = commentRepository.countCommentsBySolutionId(solution.getId());
 			return GetSolutionResponse.toDTO(solution, commentCount);
 		} else {
@@ -99,8 +97,8 @@ public class SolutionService {
 			LocalDate endDate = problem.getEndDate();
 			LocalDate now = LocalDate.now();
 
-			if ((studyGroup.getOwner() != user && !groupMemberRepository.existsByUserAndStudyGroup(user, studyGroup))
-				|| endDate == null || now.isAfter(endDate)) {
+			if (!groupMemberRepository.existsByUserAndStudyGroup(user, studyGroup) || endDate == null || now.isAfter(
+				endDate)) {
 				iterator.remove();
 				continue;
 			}
@@ -117,5 +115,6 @@ public class SolutionService {
 				.build()
 			);
 		}
+
 	}
 }

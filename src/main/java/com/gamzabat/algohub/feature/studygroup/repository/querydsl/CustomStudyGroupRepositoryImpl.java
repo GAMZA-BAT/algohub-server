@@ -9,8 +9,6 @@ import org.springframework.stereotype.Repository;
 
 import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.user.domain.User;
-import com.querydsl.jpa.JPAExpressions;
-import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import lombok.AllArgsConstructor;
@@ -21,19 +19,12 @@ public class CustomStudyGroupRepositoryImpl implements CustomStudyGroupRepositor
 	private final JPAQueryFactory queryFactory;
 
 	@Override
-	public List<StudyGroup> findByUser(User user) {
-		JPAQuery<StudyGroup> ownerGroups = queryFactory.selectFrom(studyGroup)
-			.where(studyGroup.owner.eq(user));
-		JPAQuery<StudyGroup> memberGroups = queryFactory.select(groupMember.studyGroup)
+	public List<StudyGroup> findAllByUser(User user) {
+		return queryFactory.select(groupMember.studyGroup)
 			.from(groupMember)
-			.where(groupMember.user.eq(user));
-
-		return queryFactory.selectFrom(studyGroup)
-			.where(studyGroup.in(
-				JPAExpressions.selectFrom(studyGroup)
-					.where(studyGroup.in(ownerGroups)
-						.or(studyGroup.in(memberGroups)))
-			))
+			.join(studyGroup)
+			.on(studyGroup.eq(groupMember.studyGroup))
+			.where(groupMember.user.eq(user))
 			.fetch();
 	}
 }
