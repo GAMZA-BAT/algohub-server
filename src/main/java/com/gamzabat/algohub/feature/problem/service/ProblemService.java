@@ -19,6 +19,7 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gamzabat.algohub.constants.BOJResultConstants;
 import com.gamzabat.algohub.exception.ProblemValidationException;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.feature.notification.service.NotificationService;
@@ -140,8 +141,10 @@ public class ProblemService {
 			LocalDate startDate = problem.getStartDate();
 			LocalDate endDate = problem.getEndDate();
 			Integer level = problem.getLevel();
-			boolean solved = solutionRepository.existsByUserAndProblemAndResult(user, problem, "맞았습니다!!");
-			Integer correctCount = solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(problemId);
+			boolean solved = solutionRepository.existsByUserAndProblemAndResult(user, problem,
+				BOJResultConstants.CORRECT);
+			Integer correctCount = solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(problemId,
+				BOJResultConstants.CORRECT);
 			Integer submitMemberCount = solutionRepository.countDistinctUsersByProblemId(problemId);
 			Integer groupMemberCount = groupMemberRepository.countMembersByStudyGroupId(groupId) + 1;
 			Integer accuracy;
@@ -205,7 +208,8 @@ public class ProblemService {
 
 		return problems.stream().map(problem -> {
 			Long problemId = problem.getId();
-			Integer correctCount = solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(problemId);
+			Integer correctCount = solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(problemId,
+				BOJResultConstants.CORRECT);
 			Integer submitMemberCount = solutionRepository.countDistinctUsersByProblemId(problemId);
 			Integer groupMemberCount = groupMemberRepository.countMembersByStudyGroupId(groupId) + 1;
 			Integer accuracy;
@@ -230,7 +234,7 @@ public class ProblemService {
 				problem.getStartDate(),
 				problem.getEndDate(),
 				problem.getLevel(),
-				solutionRepository.existsByUserAndProblemAndResult(user, problem, "맞았습니다!!"),
+				solutionRepository.existsByUserAndProblemAndResult(user, problem, BOJResultConstants.CORRECT),
 				submitMemberCount,
 				groupMemberCount,
 				accuracy,
