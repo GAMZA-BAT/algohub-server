@@ -135,26 +135,14 @@ public class ProblemService {
 		List<GetProblemResponse> expiredProblems = new ArrayList<>();
 
 		problems.forEach(problem -> {
-			String title = problem.getTitle();
-			Long problemId = problem.getId();
-			String link = problem.getLink();
-			LocalDate startDate = problem.getStartDate();
-			LocalDate endDate = problem.getEndDate();
-			Integer level = problem.getLevel();
 			boolean solved = solutionRepository.existsByUserAndProblemAndResult(user, problem,
 				BOJResultConstants.CORRECT);
-			Integer correctCount = solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(problemId,
+			Integer correctCount = solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(problem.getId(),
 				BOJResultConstants.CORRECT);
-			Integer submitMemberCount = solutionRepository.countDistinctUsersByProblemId(problemId);
+			Integer submitMemberCount = solutionRepository.countDistinctUsersByProblemId(problem.getId());
 			Integer groupMemberCount = groupMemberRepository.countMembersByStudyGroupId(groupId) + 1;
 			Integer accuracy;
-			Boolean inProgress;
-
-			if (problem.getEndDate() == null || LocalDate.now().isAfter(problem.getEndDate())) {
-				inProgress = false;
-			} else {
-				inProgress = true;
-			}
+			Boolean inProgress = isInProgress(problem);
 
 			if (submitMemberCount == 0) {
 				accuracy = 0;
@@ -165,7 +153,13 @@ public class ProblemService {
 				accuracy = tempAccuracy.intValue();
 			}
 
-			GetProblemResponse response = new GetProblemResponse(title, problemId, link, startDate, endDate, level,
+			GetProblemResponse response = new GetProblemResponse(
+				problem.getTitle(),
+				problem.getId(),
+				problem.getLink(),
+				problem.getStartDate(),
+				problem.getEndDate(),
+				problem.getLevel(),
 				solved, submitMemberCount, groupMemberCount, accuracy, inProgress);
 
 			if (inProgress) {
@@ -177,6 +171,10 @@ public class ProblemService {
 
 		return new GetProblemListsResponse(inProgressProblems, expiredProblems, problems.getNumber(),
 			problems.getTotalPages(), problems.getTotalElements());
+	}
+
+	private Boolean isInProgress(Problem problem) {
+		return problem.getEndDate() != null && !LocalDate.now().isAfter(problem.getEndDate());
 	}
 
 	@Transactional
@@ -213,12 +211,8 @@ public class ProblemService {
 			Integer submitMemberCount = solutionRepository.countDistinctUsersByProblemId(problemId);
 			Integer groupMemberCount = groupMemberRepository.countMembersByStudyGroupId(groupId) + 1;
 			Integer accuracy;
-			Boolean inProgress;
+			Boolean inProgress = isInProgress(problem);
 
-			if (problem.getEndDate() == null || LocalDate.now().isAfter(problem.getEndDate())) {
-				inProgress = false;
-			} else
-				inProgress = true;
 			if (submitMemberCount == 0) {
 				accuracy = 0;
 			} else {
