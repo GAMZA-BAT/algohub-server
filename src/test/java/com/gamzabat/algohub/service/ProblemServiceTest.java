@@ -503,7 +503,8 @@ class ProblemServiceTest {
 		when(problemRepository.findAllByStudyGroup(eq(group), any(Pageable.class))).thenReturn(problemPage);
 		when(groupMemberRepository.existsByUserAndStudyGroup(user, group)).thenReturn(true);
 		// 각 문제 ID에 대한 stub 설정
-		when(solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(anyLong())).thenReturn(8);
+		when(solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(anyLong(),
+			anyString())).thenReturn(8);
 		when(solutionRepository.countDistinctUsersByProblemId(anyLong())).thenReturn(10);
 		// when
 		GetProblemListsResponse result = problemService.getProblemList(user, 10L, pageable);
