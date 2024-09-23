@@ -141,17 +141,8 @@ public class ProblemService {
 				BOJResultConstants.CORRECT);
 			Integer submitMemberCount = solutionRepository.countDistinctUsersByProblemId(problem.getId());
 			Integer groupMemberCount = groupMemberRepository.countMembersByStudyGroupId(groupId) + 1;
-			Integer accuracy;
+			Integer accuracy = calculateAccuracy(submitMemberCount, correctCount);
 			Boolean inProgress = isInProgress(problem);
-
-			if (submitMemberCount == 0) {
-				accuracy = 0;
-			} else {
-				Double tempCorrectCount = correctCount.doubleValue();
-				Double tempSubmitMemberCount = submitMemberCount.doubleValue();
-				Double tempAccuracy = ((tempCorrectCount / tempSubmitMemberCount) * 100);
-				accuracy = tempAccuracy.intValue();
-			}
 
 			GetProblemResponse response = new GetProblemResponse(
 				problem.getTitle(),
@@ -171,10 +162,6 @@ public class ProblemService {
 
 		return new GetProblemListsResponse(inProgressProblems, expiredProblems, problems.getNumber(),
 			problems.getTotalPages(), problems.getTotalElements());
-	}
-
-	private Boolean isInProgress(Problem problem) {
-		return problem.getEndDate() != null && !LocalDate.now().isAfter(problem.getEndDate());
 	}
 
 	@Transactional
@@ -205,25 +192,16 @@ public class ProblemService {
 		problems.sort(Comparator.comparing(Problem::getEndDate));
 
 		return problems.stream().map(problem -> {
-			Long problemId = problem.getId();
-			Integer correctCount = solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(problemId,
+			Integer correctCount = solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(problem.getId(),
 				BOJResultConstants.CORRECT);
-			Integer submitMemberCount = solutionRepository.countDistinctUsersByProblemId(problemId);
+			Integer submitMemberCount = solutionRepository.countDistinctUsersByProblemId(problem.getId());
 			Integer groupMemberCount = groupMemberRepository.countMembersByStudyGroupId(groupId) + 1;
-			Integer accuracy;
+			Integer accuracy = calculateAccuracy(submitMemberCount, correctCount);
 			Boolean inProgress = isInProgress(problem);
 
-			if (submitMemberCount == 0) {
-				accuracy = 0;
-			} else {
-				Double tempCorrectCount = correctCount.doubleValue();
-				Double tempSubmitMemberCount = submitMemberCount.doubleValue();
-				Double tempAccuracy = ((tempCorrectCount / tempSubmitMemberCount) * 100);
-				accuracy = tempAccuracy.intValue();
-			}
 			return new GetProblemResponse(
 				problem.getTitle(),
-				problemId,
+				problem.getId(),
 				problem.getLink(),
 				problem.getStartDate(),
 				problem.getEndDate(),
@@ -328,5 +306,20 @@ public class ProblemService {
 		if (!parts[2].equals("www.acmicpc.net"))
 			throw new NotBojLinkException(HttpStatus.BAD_REQUEST.value(), "백준 링크가 아닙니다");
 		return parts[parts.length - 1];
+	}
+
+	private Integer calculateAccuracy(Integer submitMemberCount, Integer correctCount) {
+		if (submitMemberCount == 0) {
+			return 0;
+		} else {
+			Double tempCorrectCount = correctCount.doubleValue();
+			Double tempSubmitMemberCount = submitMemberCount.doubleValue();
+			Double tempAccuracy = ((tempCorrectCount / tempSubmitMemberCount) * 100);
+			return tempAccuracy.intValue();
+		}
+	}
+
+	private Boolean isInProgress(Problem problem) {
+		return problem.getEndDate() != null && !LocalDate.now().isAfter(problem.getEndDate());
 	}
 }
