@@ -24,6 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockMultipartFile;
 
+import com.gamzabat.algohub.constants.BOJResultConstants;
 import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.exception.UserValidationException;
@@ -469,7 +470,7 @@ class StudyGroupServiceTest {
 			new GetRankingResponse("nickname2", "image2", 1, 2L), // user2
 			new GetRankingResponse("nickname1", "image1", 2, 1L)  // user1
 		);
-		when(solutionRepository.findTopUsersByGroup(group)).thenReturn(response);
+		when(solutionRepository.findTopUsersByGroup(group, BOJResultConstants.CORRECT)).thenReturn(response);
 
 		//when
 		List<GetRankingResponse> result = studyGroupService.getAllRank(user2, 10L);
