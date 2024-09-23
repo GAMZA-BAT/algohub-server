@@ -75,6 +75,8 @@ class StudyGroupServiceTest {
 	private Solution solution2;
 	private Solution solution3;
 	private final Long groupId = 10L;
+	private GroupMember groupMember1;
+	private GroupMember groupMember2;
 	@Captor
 	private ArgumentCaptor<StudyGroup> groupCaptor;
 	@Captor
@@ -88,11 +90,20 @@ class StudyGroupServiceTest {
 			.role(Role.USER).profileImage("image2").build();
 		group = StudyGroup.builder()
 			.name("name")
-			.owner(user)
 			.startDate(LocalDate.now())
 			.endDate(LocalDate.now().plusDays(1))
 			.groupImage("imageUrl")
 			.groupCode("code")
+			.build();
+		groupMember1 = GroupMember.builder()
+			.studyGroup(group)
+			.user(user)
+			.role(RoleOfGroupMember.OWNER)
+			.build();
+		groupMember2 = GroupMember.builder()
+			.studyGroup(group)
+			.user(user2)
+			.role(RoleOfGroupMember.PARTICIPANT)
 			.build();
 
 		problem1 = Problem.builder()
@@ -146,7 +157,6 @@ class StudyGroupServiceTest {
 		verify(studyGroupRepository, times(1)).save(groupCaptor.capture());
 		StudyGroup result = groupCaptor.getValue();
 		assertThat(result.getName()).isEqualTo(name);
-		assertThat(result.getOwner()).isEqualTo(user);
 		assertThat(result.getStartDate()).isEqualTo(LocalDate.now());
 		assertThat(result.getEndDate()).isEqualTo(LocalDate.now().plusDays(5));
 		assertThat(result.getIntroduction()).isEqualTo("introduction");
@@ -179,18 +189,7 @@ class StudyGroupServiceTest {
 	}
 
 	@Test
-	@DisplayName("코드 사용한 그룹 참여 실패 : 이미 참여한 그룹 (주인)")
-	void joinGroupWithCodeFailed_2() {
-		// given
-		when(studyGroupRepository.findByGroupCode("code")).thenReturn(Optional.ofNullable(group));
-		// when, then
-		assertThatThrownBy(() -> studyGroupService.joinGroupWithCode(user, "code"))
-			.isInstanceOf(StudyGroupValidationException.class)
-			.hasFieldOrPropertyWithValue("error", "이미 참여한 그룹 입니다.");
-	}
-
-	@Test
-	@DisplayName("코드 사용한 그룹 참여 실패 : 이미 참여한 그룹 (멤버)")
+	@DisplayName("코드 사용한 그룹 참여 실패 : 이미 참여한 그룹")
 	void joinGroupWithCodeFailed_3() {
 		// given
 		when(studyGroupRepository.findByGroupCode("code")).thenReturn(Optional.ofNullable(group));
@@ -211,10 +210,12 @@ class StudyGroupServiceTest {
 
 		when(studyGroupRepository.findById(10L)).thenReturn(Optional.of(group));
 		when(bookmarkedStudyGroupRepository.findAllByStudyGroup(group)).thenReturn(bookmarks);
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
 		// when
 		studyGroupService.deleteGroup(user, 10L);
 		// then
 		verify(studyGroupRepository, times(1)).delete(group);
+		verify(groupMemberRepository, times(1)).delete(groupMember1);
 		verify(bookmarkedStudyGroupRepository, times(1)).deleteAll(bookmarks);
 	}
 
@@ -224,7 +225,12 @@ class StudyGroupServiceTest {
 		// given
 		BookmarkedStudyGroup bookmark = BookmarkedStudyGroup.builder().studyGroup(group).user(user2).build();
 
-		GroupMember groupMember = GroupMember.builder().studyGroup(group).user(user2).joinDate(LocalDate.now()).build();
+		GroupMember groupMember = GroupMember.builder()
+			.studyGroup(group)
+			.user(user2)
+			.role(RoleOfGroupMember.ADMIN)
+			.joinDate(LocalDate.now())
+			.build();
 		when(studyGroupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
 		when(groupMemberRepository.findByUserAndStudyGroup(user2, group)).thenReturn(Optional.of(groupMember));
 		when(bookmarkedStudyGroupRepository.findByUserAndStudyGroup(user2, group)).thenReturn(
@@ -267,28 +273,34 @@ class StudyGroupServiceTest {
 		// given
 		List<StudyGroup> groups = new ArrayList<>(30);
 		for (int i = 0; i < 10; i++) {
-			groups.add(StudyGroup.builder()
+			StudyGroup group = StudyGroup.builder()
 				.name("name" + i)
-				.owner(user)
 				.startDate(LocalDate.now().minusDays(i + 30))
 				.endDate(LocalDate.now().minusDays(30))
-				.build());
+				.build();
+			groups.add(group);
+			when(groupMemberRepository.findByStudyGroupAndRole(group, RoleOfGroupMember.OWNER)).thenReturn(
+				groupMember1);
 		}
 		for (int i = 0; i < 10; i++) {
-			groups.add(StudyGroup.builder()
+			StudyGroup group = StudyGroup.builder()
 				.name("name" + i)
-				.owner(user)
 				.startDate(LocalDate.now().minusDays(i))
 				.endDate(LocalDate.now().plusDays(i))
-				.build());
+				.build();
+			groups.add(group);
+			when(groupMemberRepository.findByStudyGroupAndRole(group, RoleOfGroupMember.OWNER)).thenReturn(
+				groupMember1);
 		}
 		for (int i = 0; i < 10; i++) {
-			groups.add(StudyGroup.builder()
+			StudyGroup group = StudyGroup.builder()
 				.name("name" + i)
-				.owner(user)
 				.startDate(LocalDate.now().plusDays(30))
 				.endDate(LocalDate.now().plusDays(i + 30))
-				.build());
+				.build();
+			groups.add(group);
+			when(groupMemberRepository.findByStudyGroupAndRole(group, RoleOfGroupMember.OWNER)).thenReturn(
+				groupMember1);
 		}
 		List<BookmarkedStudyGroup> bookmarks = new ArrayList<>(10);
 		for (int i = 0; i < 10; i++) {
@@ -299,7 +311,7 @@ class StudyGroupServiceTest {
 			when(bookmarkedStudyGroupRepository.existsByUserAndStudyGroup(user, groups.get(i))).thenReturn(true);
 		}
 		when(bookmarkedStudyGroupRepository.findAllByUser(user)).thenReturn(bookmarks);
-		when(studyGroupRepository.findByUser(user)).thenReturn(groups);
+		when(studyGroupRepository.findAllByUser(user)).thenReturn(groups);
 		// when
 		GetStudyGroupListsResponse result = studyGroupService.getStudyGroupList(user);
 		// then
@@ -350,6 +362,7 @@ class StudyGroupServiceTest {
 		MockMultipartFile editImage = new MockMultipartFile("editImage", new byte[] {1, 2, 3});
 		when(imageService.saveImage(editImage)).thenReturn("editImage");
 		when(studyGroupRepository.findById(anyLong())).thenReturn(Optional.ofNullable(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
 		// when
 		studyGroupService.editGroup(user, request, editImage);
 		// then
@@ -383,6 +396,7 @@ class StudyGroupServiceTest {
 			LocalDate.now().plusDays(10), "editIntroduction");
 		MockMultipartFile editImage = new MockMultipartFile("editImage", new byte[] {1, 2, 3});
 		when(studyGroupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user2, group)).thenReturn(Optional.ofNullable(groupMember2));
 		// when, then
 		assertThatThrownBy(() -> studyGroupService.editGroup(user2, request, editImage))
 			.isInstanceOf(StudyGroupValidationException.class)
@@ -391,20 +405,7 @@ class StudyGroupServiceTest {
 	}
 
 	@Test
-	@DisplayName("스터디 그룹 즐겨찾기 추가 성공 (주인)")
-	void updateBookmarkStudyGroup_1() {
-		// given
-		when(studyGroupRepository.findById(anyLong())).thenReturn(Optional.ofNullable(group));
-		when(bookmarkedStudyGroupRepository.findByUserAndStudyGroup(user, group)).thenReturn(
-			Optional.empty());
-		// when
-		String response = studyGroupService.updateBookmarkGroup(user, groupId);
-		// then
-		assertThat(response).isEqualTo("스터디 그룹 즐겨찾기 추가 성공");
-	}
-
-	@Test
-	@DisplayName("스터디 그룹 즐겨찾기 추가 성공 (멤버)")
+	@DisplayName("스터디 그룹 즐겨찾기 추가 성공")
 	void updateBookmarkStudyGroup_2() {
 		// given
 		when(studyGroupRepository.findById(anyLong())).thenReturn(Optional.ofNullable(group));
@@ -418,21 +419,7 @@ class StudyGroupServiceTest {
 	}
 
 	@Test
-	@DisplayName("스터디 그룹 즐겨찾기 삭제 성공 (주인)")
-	void updateBookmarkStudyGroup_3() {
-		// given
-		BookmarkedStudyGroup bookmarkedStudyGroup = BookmarkedStudyGroup.builder().user(user).studyGroup(group).build();
-		when(studyGroupRepository.findById(anyLong())).thenReturn(Optional.ofNullable(group));
-		when(bookmarkedStudyGroupRepository.findByUserAndStudyGroup(user, group)).thenReturn(
-			Optional.of(bookmarkedStudyGroup));
-		// when
-		String response = studyGroupService.updateBookmarkGroup(user, groupId);
-		// then
-		assertThat(response).isEqualTo("스터디 그룹 즐겨찾기 삭제 성공");
-	}
-
-	@Test
-	@DisplayName("스터디 그룹 즐겨찾기 삭제 성공 (멤버)")
+	@DisplayName("스터디 그룹 즐겨찾기 삭제 성공")
 	void updateBookmarkStudyGroup_4() {
 		// given
 		BookmarkedStudyGroup bookmarkedStudyGroup = BookmarkedStudyGroup.builder()
@@ -529,20 +516,16 @@ class StudyGroupServiceTest {
 	void updateGroupMemberRole() {
 		// given
 		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(groupId, 2L, "ADMIN");
-		GroupMember member = GroupMember.builder()
-			.studyGroup(group)
-			.user(user2)
-			.role(RoleOfGroupMember.PARTICIPANT)
-			.build();
-		when(groupMemberRepository.findByUserAndStudyGroup(user2, group)).thenReturn(Optional.ofNullable(member));
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
+		when(groupMemberRepository.findByUserAndStudyGroup(user2, group)).thenReturn(Optional.ofNullable(groupMember2));
 		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.ofNullable(group));
 		when(userRepository.findById(anyLong())).thenReturn(Optional.ofNullable(user2));
 		// when
 		studyGroupService.updateGroupMemberRole(user, request);
 		// then
-		assertThat(member.getUser()).isEqualTo(user2);
-		assertThat(member.getStudyGroup()).isEqualTo(group);
-		assertThat(member.getRole()).isEqualTo(RoleOfGroupMember.ADMIN);
+		assertThat(groupMember2.getUser()).isEqualTo(user2);
+		assertThat(groupMember2.getStudyGroup()).isEqualTo(group);
+		assertThat(groupMember2.getRole()).isEqualTo(RoleOfGroupMember.ADMIN);
 	}
 
 	@Test
@@ -563,6 +546,7 @@ class StudyGroupServiceTest {
 		// given
 		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(groupId, 2L, "ADMIN");
 		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.of(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user2, group)).thenReturn(Optional.ofNullable(groupMember2));
 		// when, then
 		assertThatThrownBy(() -> studyGroupService.updateGroupMemberRole(user2, request))
 			.isInstanceOf(StudyGroupValidationException.class)
@@ -576,6 +560,7 @@ class StudyGroupServiceTest {
 		// given
 		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(groupId, 2L, "ADMIN");
 		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.of(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
 		when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
 		// when, then
 		assertThatThrownBy(() -> studyGroupService.updateGroupMemberRole(user, request))
@@ -590,6 +575,7 @@ class StudyGroupServiceTest {
 		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(groupId, 2L, "ADMIN");
 		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.of(group));
 		when(userRepository.findById(anyLong())).thenReturn(Optional.of(user2));
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
 		when(groupMemberRepository.findByUserAndStudyGroup(user2, group)).thenReturn(Optional.empty());
 		// when, then
 		assertThatThrownBy(() -> studyGroupService.updateGroupMemberRole(user, request))

@@ -64,7 +64,7 @@ public class BoardServiceTest {
 			.role(Role.USER).profileImage("image").build();
 		user4 = User.builder().email("email2").password("password").nickname("nickname2")
 			.role(Role.USER).profileImage("image").build();
-		studyGroup = StudyGroup.builder().owner(user).build();
+		studyGroup = StudyGroup.builder().build();
 		groupMember2 = GroupMember.builder().user(user2).studyGroup(studyGroup).role(ADMIN).build();
 		groupMember3 = GroupMember.builder().user(user3).studyGroup(studyGroup).role(PARTICIPANT).build();
 		board = Board.builder().studyGroup(studyGroup).title("title").content("content").author(user).build();
@@ -92,27 +92,7 @@ public class BoardServiceTest {
 	}
 
 	@Test
-	@DisplayName("공지 작성 성공(방장)")
-	void createBoardSuccess() {
-		//given
-		CreateBoardRequest request = new CreateBoardRequest(30L, "title", "content");
-		when(studyGroupRepository.findById(request.studyGroupId())).thenReturn(Optional.ofNullable(studyGroup));
-		when(groupMemberRepository.findByUserAndStudyGroup(user, studyGroup)).thenReturn(
-			Optional.empty());
-		//when
-		boardService.createBoard(user, request);
-		//then
-		verify(boardRepository, times(1)).save(boardCaptor.capture());
-		Board result = boardCaptor.getValue();
-		assertThat(result.getAuthor()).isEqualTo(user);
-		assertThat(result.getContent()).isEqualTo("content");
-		assertThat(result.getTitle()).isEqualTo("title");
-		assertThat(result.getStudyGroup()).isEqualTo(studyGroup);
-
-	}
-
-	@Test
-	@DisplayName("공지 작성 성공(부방장)")
+	@DisplayName("공지 작성 성공")
 	void createBoardSuccess_1() {
 		//given
 		CreateBoardRequest request = new CreateBoardRequest(30L, "title", "content");
@@ -168,50 +148,20 @@ public class BoardServiceTest {
 		when(groupMemberRepository.findByUserAndStudyGroup(user4, studyGroup)).thenReturn(Optional.empty());
 		//when,then
 		assertThatThrownBy(() -> boardService.createBoard(user4, request))
-			.isInstanceOf(UserValidationException.class)
-			.hasFieldOrPropertyWithValue("errors", "그룹에 속해있지 않은 멤버입니다");
+			.isInstanceOf(StudyGroupValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
+			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹 입니다.");
 	}
 
 	@Test
-	@DisplayName("공지 조회 성공(방장)")
+	@DisplayName("공지 조회 성공")
 	void getBoardSuccess_1() {
 		//given
 		when(boardRepository.findById(1000L)).thenReturn(Optional.ofNullable(board));
-		when(groupMemberRepository.findByUserAndStudyGroup(user, studyGroup)).thenReturn(Optional.empty());
-		//when
-		GetBoardResponse response = boardService.getBoard(user, 1000L);
-		//then
-		assertThat(response.author()).isEqualTo("nickname1");
-		assertThat(response.boardContent()).isEqualTo("content");
-		assertThat(response.boardTitle()).isEqualTo("title");
-		assertThat(response.boardId()).isEqualTo(1000L);
-	}
-
-	@Test
-	@DisplayName("공지 조회 성공(부방장)")
-	void getBoardSuccess_2() {
-		//given
-		when(boardRepository.findById(1000L)).thenReturn(Optional.ofNullable(board));
-		when(groupMemberRepository.findByUserAndStudyGroup(user2, studyGroup)).thenReturn(
-			Optional.ofNullable(groupMember2));
+		when(groupMemberRepository.existsByUserAndStudyGroup(user2, studyGroup)).thenReturn(
+			true);
 		//when
 		GetBoardResponse response = boardService.getBoard(user2, 1000L);
-		//then
-		assertThat(response.author()).isEqualTo("nickname1");
-		assertThat(response.boardContent()).isEqualTo("content");
-		assertThat(response.boardTitle()).isEqualTo("title");
-		assertThat(response.boardId()).isEqualTo(1000L);
-	}
-
-	@Test
-	@DisplayName("공지 조회 성공(일반 그룹 참가자)")
-	void getBoardSuccess_3() {
-		//given
-		when(boardRepository.findById(1000L)).thenReturn(Optional.ofNullable(board));
-		when(groupMemberRepository.findByUserAndStudyGroup(user3, studyGroup)).thenReturn(
-			Optional.ofNullable(groupMember3));
-		//when
-		GetBoardResponse response = boardService.getBoard(user3, 1000L);
 		//then
 		assertThat(response.author()).isEqualTo("nickname1");
 		assertThat(response.boardContent()).isEqualTo("content");
@@ -237,16 +187,16 @@ public class BoardServiceTest {
 	void getBoardFailed_2() {
 		//given
 		when(boardRepository.findById(1000L)).thenReturn(Optional.ofNullable(board));
-		when(groupMemberRepository.findByUserAndStudyGroup(user4, studyGroup)).thenReturn(Optional.empty());
-
+		when(groupMemberRepository.existsByUserAndStudyGroup(user4, board.getStudyGroup())).thenReturn(false);
 		//when
 		assertThatThrownBy(() -> boardService.getBoard(user4, 1000L))
-			.isInstanceOf(UserValidationException.class)
-			.hasFieldOrPropertyWithValue("errors", "공지를 조회할 권한이 없습니다");
+			.isInstanceOf(StudyGroupValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
+			.hasFieldOrPropertyWithValue("error", "참여하지 않은 스터디 그룹 입니다.");
 	}
 
 	@Test
-	@DisplayName("공지 목록 조회 성공(방장인 경우)")
+	@DisplayName("공지 목록 조회 성공")
 	void getBoardListSuccess_1() {
 		//given
 		List<Board> boardList = new ArrayList<>(10);
@@ -257,35 +207,10 @@ public class BoardServiceTest {
 			boardList.add(
 				board.builder().author(user2).content("content" + i).title("title" + i).studyGroup(studyGroup).build());
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
-		when(groupMemberRepository.findByUserAndStudyGroup(user, studyGroup)).thenReturn(Optional.empty());
+		when(groupMemberRepository.existsByUserAndStudyGroup(user, studyGroup)).thenReturn(true);
 		when(boardRepository.findAllByStudyGroup(studyGroup)).thenReturn(boardList);
 		//when
 		List<GetBoardResponse> result = boardService.getBoardList(user, 30L);
-		//then
-		assertThat(result.size()).isEqualTo(20);
-		for (int i = 0; i < 20; i++) {
-			assertThat(result.get(i).boardContent()).isEqualTo("content" + i);
-			assertThat(result.get(i).boardTitle()).isEqualTo("title" + i);
-		}
-	}
-
-	@Test
-	@DisplayName("공지 목록 조회 성공(일반 멤버인 경우)")
-	void getBoardListSuccess_2() {
-		//given
-		List<Board> boardList = new ArrayList<>(10);
-		for (int i = 0; i < 10; i++)
-			boardList.add(
-				board.builder().author(user).content("content" + i).title("title" + i).studyGroup(studyGroup).build());
-		for (int i = 10; i < 20; i++)
-			boardList.add(
-				board.builder().author(user2).content("content" + i).title("title" + i).studyGroup(studyGroup).build());
-		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
-		when(groupMemberRepository.findByUserAndStudyGroup(user3, studyGroup)).thenReturn(
-			Optional.ofNullable(groupMember2));
-		when(boardRepository.findAllByStudyGroup(studyGroup)).thenReturn(boardList);
-		//when
-		List<GetBoardResponse> result = boardService.getBoardList(user3, 30L);
 		//then
 		assertThat(result.size()).isEqualTo(20);
 		for (int i = 0; i < 20; i++) {
@@ -311,7 +236,7 @@ public class BoardServiceTest {
 	void getBoardListFailed_2() {
 		//given
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
-		when(groupMemberRepository.findByUserAndStudyGroup(user4, studyGroup)).thenReturn(Optional.empty());
+		when(groupMemberRepository.existsByUserAndStudyGroup(user4, studyGroup)).thenReturn(false);
 		//when, then
 		assertThatThrownBy(() -> boardService.getBoardList(user4, 30L))
 			.isInstanceOf(GroupMemberValidationException.class)

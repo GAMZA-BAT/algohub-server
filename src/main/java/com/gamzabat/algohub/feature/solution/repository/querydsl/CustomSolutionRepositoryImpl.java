@@ -74,6 +74,9 @@ public class CustomSolutionRepositoryImpl implements CustomSolutionRepository {
 				query.where(solution.language.in(LanguageConstants.JAVA_BOUNDARY));
 				break;
 			case "Python":
+				query.where(solution.language.in(LanguageConstants.PYTHON_BOUNDARY));
+				break;
+			case "Rust":
 				query.where(solution.language.in(LanguageConstants.RUST_BOUNDARY));
 				break;
 		}
