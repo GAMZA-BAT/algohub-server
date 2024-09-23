@@ -309,14 +309,13 @@ public class ProblemService {
 	}
 
 	private Integer calculateAccuracy(Integer submitMemberCount, Integer correctCount) {
-		if (submitMemberCount == 0) {
+		if (submitMemberCount == 0)
 			return 0;
-		} else {
-			Double tempCorrectCount = correctCount.doubleValue();
-			Double tempSubmitMemberCount = submitMemberCount.doubleValue();
-			Double tempAccuracy = ((tempCorrectCount / tempSubmitMemberCount) * 100);
-			return tempAccuracy.intValue();
-		}
+
+		Double tempCorrectCount = correctCount.doubleValue();
+		Double tempSubmitMemberCount = submitMemberCount.doubleValue();
+		Double tempAccuracy = ((tempCorrectCount / tempSubmitMemberCount) * 100);
+		return tempAccuracy.intValue();
 	}
 
 	private Boolean isInProgress(Problem problem) {
