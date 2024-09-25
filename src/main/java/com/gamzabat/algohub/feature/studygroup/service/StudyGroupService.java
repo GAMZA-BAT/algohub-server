@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
+import com.gamzabat.algohub.constants.BOJResultConstants;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.image.service.ImageService;
@@ -237,7 +238,7 @@ public class StudyGroupService {
 				LocalDate joinDate = groupMember.getJoinDate();
 
 				Long correctSolution = solutionRepository.countDistinctCorrectSolutionsByUserAndGroup(
-					groupMember.getUser(), id);
+					groupMember.getUser(), id, BOJResultConstants.CORRECT);
 				Long problems = problemRepository.countProblemsByGroupId(id);
 				String achivement;
 				if (correctSolution == 0) {
@@ -315,7 +316,8 @@ public class StudyGroupService {
 			throw new UserValidationException("랭킹을 확인할 권한이 없습니다.");
 		}
 
-		List<GetRankingResponse> rankingResponses = solutionRepository.findTopUsersByGroup(group);
+		List<GetRankingResponse> rankingResponses = solutionRepository.findTopUsersByGroup(group,
+			BOJResultConstants.CORRECT);
 		return IntStream.range(0, rankingResponses.size())
 			.mapToObj(i -> {
 				GetRankingResponse response = rankingResponses.get(i);
@@ -336,7 +338,8 @@ public class StudyGroupService {
 			throw new UserValidationException("랭킹을 확인할 권한이 없습니다.");
 		}
 
-		List<GetRankingResponse> rankingResponses = solutionRepository.findTopUsersByGroup(group);
+		List<GetRankingResponse> rankingResponses = solutionRepository.findTopUsersByGroup(group,
+			BOJResultConstants.CORRECT);
 		return IntStream.range(0, rankingResponses.size())
 			.mapToObj(i -> {
 				GetRankingResponse response = rankingResponses.get(i);

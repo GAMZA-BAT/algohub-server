@@ -1,5 +1,6 @@
 package com.gamzabat.algohub.feature.solution.repository.querydsl;
 
+import static com.gamzabat.algohub.constants.BOJResultConstants.*;
 import static com.gamzabat.algohub.feature.solution.domain.QSolution.*;
 
 import org.springframework.data.domain.Page;
@@ -41,11 +42,11 @@ public class CustomSolutionRepositoryImpl implements CustomSolutionRepository {
 
 	private void addResultFilter(String result, JPAQuery<Solution> query) {
 		if (result != null && !result.isBlank()) {
-			if (result.equals("맞았습니다!!"))
+			if (result.equals(CORRECT))
 				query.where(solution.result.eq(result)
 					.or(solution.result.endsWith("점")));
-			else if (result.equals("런타임 에러"))
-				query.where(solution.result.startsWith("런타임 에러"));
+			else if (result.equals(RUNTIME_ERROR))
+				query.where(solution.result.startsWith(RUNTIME_ERROR));
 			else
 				query.where(solution.result.eq(result));
 		}
