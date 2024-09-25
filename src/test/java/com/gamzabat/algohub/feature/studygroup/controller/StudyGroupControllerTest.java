@@ -46,6 +46,7 @@ import com.gamzabat.algohub.feature.studygroup.dto.GetGroupMemberResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupListsResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.UpdateGroupMemberRoleRequest;
+import com.gamzabat.algohub.feature.studygroup.etc.RoleOfGroupMember;
 import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundGroupException;
 import com.gamzabat.algohub.feature.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.studygroup.repository.GroupMemberRepository;
@@ -466,7 +467,7 @@ class StudyGroupControllerTest {
 		List<GetGroupMemberResponse> response = new ArrayList<>(30);
 		for (int i = 0; i < 30; i++) {
 			response.add(new GetGroupMemberResponse(
-				"name" + i, LocalDate.now(), "70%", false, "profileImage" + i, (long)i
+				"name" + i, LocalDate.now(), "70%", RoleOfGroupMember.ADMIN, "profileImage" + i, (long)i
 			));
 		}
 		when(studyGroupService.getGroupMemberList(user, groupId)).thenReturn(response);
