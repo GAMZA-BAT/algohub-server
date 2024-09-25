@@ -491,7 +491,7 @@ class StudyGroupControllerTest {
 		mockMvc.perform(get("/api/group/member-list")
 				.header("Authorization", token)
 				.param("groupId", String.valueOf(groupId)))
-			.andExpect(status().isBadRequest())
+			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.error").value("그룹을 찾을 수 없습니다."));
 
 		verify(studyGroupService, times(1)).getGroupMemberList(any(User.class), anyLong());
@@ -541,7 +541,7 @@ class StudyGroupControllerTest {
 		mockMvc.perform(get("/api/group/problem-solving")
 				.header("Authorization", token)
 				.param("problemId", String.valueOf(problemId)))
-			.andExpect(status().isBadRequest())
+			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.error").value("문제를 찾을 수 없습니다."));
 		verify(studyGroupService, times(1)).getCheckingSolvedProblem(any(User.class), anyLong());
 	}
@@ -584,7 +584,7 @@ class StudyGroupControllerTest {
 		mockMvc.perform(get("/api/group/group-code")
 				.header("Authorization", token)
 				.param("groupId", String.valueOf(groupId)))
-			.andExpect(status().isBadRequest())
+			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.error").value("그룹을 찾지 못했습니다."));
 		verify(studyGroupService, times(1)).getGroupCode(any(User.class), anyLong());
 	}
