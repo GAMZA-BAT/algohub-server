@@ -224,7 +224,7 @@ public class StudyGroupService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<GetGroupMemberResponse> groupInfo(User user, Long id) {
+	public List<GetGroupMemberResponse> getGroupMemberList(User user, Long id) {
 		StudyGroup group = groupRepository.findById(id)
 			.orElseThrow(() -> new CannotFoundGroupException("그룹을 찾을 수 없습니다."));
 

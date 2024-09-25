@@ -469,7 +469,7 @@ class StudyGroupControllerTest {
 				"name" + i, LocalDate.now(), "70%", false, "profileImage" + i, (long)i
 			));
 		}
-		when(studyGroupService.groupInfo(user, groupId)).thenReturn(response);
+		when(studyGroupService.getGroupMemberList(user, groupId)).thenReturn(response);
 		// when, then
 		mockMvc.perform(get("/api/group/member-list")
 				.header("Authorization", token)
@@ -477,14 +477,15 @@ class StudyGroupControllerTest {
 			.andExpect(status().isOk())
 			.andExpect(content().json(objectMapper.writeValueAsString(response)));
 
-		verify(studyGroupService, times(1)).groupInfo(any(User.class), anyLong());
+		verify(studyGroupService, times(1)).getGroupMemberList(any(User.class), anyLong());
 	}
 
 	@Test
 	@DisplayName("그룹 회원 목록 조회 실패 : 존재하지 않는 그룹")
 	void getGroupInfoFailed_1() throws Exception {
 		// given
-		when(studyGroupService.groupInfo(user, groupId)).thenThrow(new CannotFoundGroupException("그룹을 찾을 수 없습니다."));
+		when(studyGroupService.getGroupMemberList(user, groupId)).thenThrow(
+			new CannotFoundGroupException("그룹을 찾을 수 없습니다."));
 		// when, then
 		mockMvc.perform(get("/api/group/member-list")
 				.header("Authorization", token)
@@ -492,14 +493,15 @@ class StudyGroupControllerTest {
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.error").value("그룹을 찾을 수 없습니다."));
 
-		verify(studyGroupService, times(1)).groupInfo(any(User.class), anyLong());
+		verify(studyGroupService, times(1)).getGroupMemberList(any(User.class), anyLong());
 	}
 
 	@Test
 	@DisplayName("그룹 회원 목록 조회 실패 : 권한 없음")
 	void getGroupInfoFailed_2() throws Exception {
 		// given
-		when(studyGroupService.groupInfo(user, groupId)).thenThrow(new UserValidationException("그룹 내용을 확인할 권한이 없습니다"));
+		when(studyGroupService.getGroupMemberList(user, groupId)).thenThrow(
+			new UserValidationException("그룹 내용을 확인할 권한이 없습니다"));
 		// when, then
 		mockMvc.perform(get("/api/group/member-list")
 				.header("Authorization", token)
@@ -507,7 +509,7 @@ class StudyGroupControllerTest {
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.error").value("그룹 내용을 확인할 권한이 없습니다"));
 
-		verify(studyGroupService, times(1)).groupInfo(any(User.class), anyLong());
+		verify(studyGroupService, times(1)).getGroupMemberList(any(User.class), anyLong());
 	}
 
 	@Test
