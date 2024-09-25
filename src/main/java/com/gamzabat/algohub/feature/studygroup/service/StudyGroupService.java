@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -247,13 +248,13 @@ public class StudyGroupService {
 					achivement = getPercentage(correctSolution, problems) + "%";
 				}
 
-				Boolean isOwner = getStudyGroupOwner(group).getId().equals(groupMember.getUser().getId());
+				RoleOfGroupMember role = groupMember.getRole();
 				String profileImage = groupMember.getUser().getProfileImage();
 				Long userId = groupMember.getUser().getId();
 				responseList.add(
-					new GetGroupMemberResponse(nickname, joinDate, achivement, isOwner, profileImage, userId));
+					new GetGroupMemberResponse(nickname, joinDate, achivement, role, profileImage, userId));
 			}
-			responseList.sort((a, b) -> Boolean.compare(!a.getIsOwner(), !b.getIsOwner()));
+			responseList.sort(Comparator.comparing(GetGroupMemberResponse::getRole));
 
 			return responseList;
 		} else {
