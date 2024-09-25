@@ -502,12 +502,12 @@ class StudyGroupControllerTest {
 	void getGroupInfoFailed_2() throws Exception {
 		// given
 		when(studyGroupService.getGroupMemberList(user, groupId)).thenThrow(
-			new UserValidationException("그룹 내용을 확인할 권한이 없습니다"));
+			new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "그룹 내용을 확인할 권한이 없습니다"));
 		// when, then
 		mockMvc.perform(get("/api/group/member-list")
 				.header("Authorization", token)
 				.param("groupId", String.valueOf(groupId)))
-			.andExpect(status().isBadRequest())
+			.andExpect(status().isForbidden())
 			.andExpect(jsonPath("$.error").value("그룹 내용을 확인할 권한이 없습니다"));
 
 		verify(studyGroupService, times(1)).getGroupMemberList(any(User.class), anyLong());
