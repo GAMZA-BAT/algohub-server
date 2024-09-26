@@ -23,7 +23,7 @@ public record GetStudyGroupResponse(Long id,
 			group.getEndDate(),
 			group.getIntroduction(),
 			owner.getNickname(),
-			owner.equals(user),
+			owner.getId().equals(user.getId()),
 			isBookmarked
 		);
 	}
