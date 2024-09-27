@@ -30,6 +30,7 @@ import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.image.service.ImageService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
+import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.solution.domain.Solution;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
 import com.gamzabat.algohub.feature.studygroup.domain.BookmarkedStudyGroup;
@@ -37,6 +38,7 @@ import com.gamzabat.algohub.feature.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.studygroup.dto.CreateGroupRequest;
 import com.gamzabat.algohub.feature.studygroup.dto.EditGroupRequest;
+import com.gamzabat.algohub.feature.studygroup.dto.GetGroupMemberResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.GetRankingResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupListsResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupResponse;
@@ -64,11 +66,14 @@ class StudyGroupServiceTest {
 	@Mock
 	private SolutionRepository solutionRepository;
 	@Mock
+	private ProblemRepository problemRepository;
+	@Mock
 	private UserRepository userRepository;
 	@Mock
 	private ImageService imageService;
 	private User user;
 	private User user2;
+	private User user3;
 	private StudyGroup group;
 	private Problem problem1;
 	private Problem problem2;
@@ -78,6 +83,7 @@ class StudyGroupServiceTest {
 	private final Long groupId = 10L;
 	private GroupMember groupMember1;
 	private GroupMember groupMember2;
+	private GroupMember groupMember3;
 	@Captor
 	private ArgumentCaptor<StudyGroup> groupCaptor;
 	@Captor
@@ -89,6 +95,8 @@ class StudyGroupServiceTest {
 			.role(Role.USER).profileImage("image1").build();
 		user2 = User.builder().email("email2").password("password").nickname("nickname2")
 			.role(Role.USER).profileImage("image2").build();
+		user3 = User.builder().email("email3").password("password").nickname("nickname3")
+			.role(Role.USER).profileImage("image3").build();
 		group = StudyGroup.builder()
 			.name("name")
 			.startDate(LocalDate.now())
@@ -105,6 +113,11 @@ class StudyGroupServiceTest {
 			.studyGroup(group)
 			.user(user2)
 			.role(RoleOfGroupMember.PARTICIPANT)
+			.build();
+		groupMember3 = GroupMember.builder()
+			.studyGroup(group)
+			.user(user3)
+			.role(RoleOfGroupMember.ADMIN)
 			.build();
 
 		problem1 = Problem.builder()
@@ -136,6 +149,7 @@ class StudyGroupServiceTest {
 		userField.setAccessible(true);
 		userField.set(user, 1L);
 		userField.set(user2, 2L);
+		userField.set(user3, 3L);
 
 		Field groupId = StudyGroup.class.getDeclaredField("id");
 		groupId.setAccessible(true);
@@ -403,6 +417,55 @@ class StudyGroupServiceTest {
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "그룹 정보 수정에 대한 권한이 없습니다.");
+	}
+
+	@Test
+	@DisplayName("스터디 그룹 회원 목록 조회")
+	void getGroupMemberList() {
+		// given
+		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.ofNullable(group));
+		when(groupMemberRepository.existsByUserAndStudyGroup(user, group)).thenReturn(true);
+		List<GroupMember> groupMemberList = new ArrayList<>();
+		groupMemberList.add(groupMember1);
+		groupMemberList.add(groupMember2);
+		groupMemberList.add(groupMember3);
+		when(groupMemberRepository.findAllByStudyGroup(group)).thenReturn(groupMemberList);
+		// when
+		List<GetGroupMemberResponse> response = studyGroupService.getGroupMemberList(user, groupId);
+		// then
+		assertThat(response.get(0).getMemberId()).isEqualTo(1);
+		assertThat(response.get(0).getNickname()).isEqualTo("nickname1");
+		assertThat(response.get(0).getRole()).isEqualTo(RoleOfGroupMember.OWNER);
+		assertThat(response.get(1).getMemberId()).isEqualTo(3);
+		assertThat(response.get(1).getNickname()).isEqualTo("nickname3");
+		assertThat(response.get(1).getRole()).isEqualTo(RoleOfGroupMember.ADMIN);
+		assertThat(response.get(2).getMemberId()).isEqualTo(2);
+		assertThat(response.get(2).getRole()).isEqualTo(RoleOfGroupMember.PARTICIPANT);
+		assertThat(response.get(2).getNickname()).isEqualTo("nickname2");
+	}
+
+	@Test
+	@DisplayName("스터디 그룹 회원 목록 조회 실패 : 존재하지 않는 그룹")
+	void getGroupMemberListFailed_1() {
+		// given
+		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.empty());
+		// when, then
+		assertThatThrownBy(() -> studyGroupService.getGroupMemberList(user, groupId))
+			.isInstanceOf(CannotFoundGroupException.class)
+			.hasFieldOrPropertyWithValue("errors", "그룹을 찾을 수 없습니다.");
+	}
+
+	@Test
+	@DisplayName("스터디 그룹 회원 목록 조회 실패 : 참여하지 않은 그룹")
+	void getGroupMemberListFailed_2() {
+		// given
+		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.ofNullable(group));
+		when(groupMemberRepository.existsByUserAndStudyGroup(user, group)).thenReturn(false);
+		// when, then
+		assertThatThrownBy(() -> studyGroupService.getGroupMemberList(user, groupId))
+			.isInstanceOf(GroupMemberValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
+			.hasFieldOrPropertyWithValue("error", "그룹 정보를 확인할 권한이 없습니다");
 	}
 
 	@Test

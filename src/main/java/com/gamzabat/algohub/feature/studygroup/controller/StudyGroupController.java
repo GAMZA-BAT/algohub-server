@@ -99,7 +99,7 @@ public class StudyGroupController {
 	@Operation(summary = "그룹 회원 목록 조회")
 	public ResponseEntity<Object> getGroupInfo(@AuthedUser User user, @RequestParam Long groupId) {
 
-		List<GetGroupMemberResponse> members = studyGroupService.groupInfo(user, groupId);
+		List<GetGroupMemberResponse> members = studyGroupService.getGroupMemberList(user, groupId);
 		return ResponseEntity.ok().body(members);
 	}
 

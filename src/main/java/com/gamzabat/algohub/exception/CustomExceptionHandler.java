@@ -65,7 +65,8 @@ public class CustomExceptionHandler {
 
 	@ExceptionHandler(CannotFoundGroupException.class)
 	protected ResponseEntity<Object> handler(CannotFoundGroupException e) {
-		return ResponseEntity.badRequest().body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), e.getErrors(), null));
+		return ResponseEntity.status(HttpStatus.NOT_FOUND)
+			.body(new ErrorResponse(HttpStatus.NOT_FOUND.value(), e.getErrors(), null));
 	}
 
 	@ExceptionHandler(NotBojLinkException.class)

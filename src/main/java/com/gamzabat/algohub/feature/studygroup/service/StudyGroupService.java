@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -224,41 +225,40 @@ public class StudyGroupService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<GetGroupMemberResponse> groupInfo(User user, Long id) {
+	public List<GetGroupMemberResponse> getGroupMemberList(User user, Long id) {
 		StudyGroup group = groupRepository.findById(id)
 			.orElseThrow(() -> new CannotFoundGroupException("그룹을 찾을 수 없습니다."));
 
-		if (groupMemberRepository.existsByUserAndStudyGroup(user, group)) {
-			List<GroupMember> groupMembers = groupMemberRepository.findAllByStudyGroup(group);
+		if (!groupMemberRepository.existsByUserAndStudyGroup(user, group))
+			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "그룹 정보를 확인할 권한이 없습니다");
 
-			List<GetGroupMemberResponse> responseList = new ArrayList<>();
+		List<GroupMember> groupMembers = groupMemberRepository.findAllByStudyGroup(group);
 
-			for (GroupMember groupMember : groupMembers) {
-				String nickname = groupMember.getUser().getNickname();
-				LocalDate joinDate = groupMember.getJoinDate();
+		List<GetGroupMemberResponse> responseList = new ArrayList<>();
 
-				Long correctSolution = solutionRepository.countDistinctCorrectSolutionsByUserAndGroup(
-					groupMember.getUser(), id, BOJResultConstants.CORRECT);
-				Long problems = problemRepository.countProblemsByGroupId(id);
-				String achivement;
-				if (correctSolution == 0) {
-					achivement = "0%";
-				} else {
-					achivement = getPercentage(correctSolution, problems) + "%";
-				}
+		for (GroupMember groupMember : groupMembers) {
+			String nickname = groupMember.getUser().getNickname();
+			LocalDate joinDate = groupMember.getJoinDate();
 
-				Boolean isOwner = getStudyGroupOwner(group).getId().equals(groupMember.getUser().getId());
-				String profileImage = groupMember.getUser().getProfileImage();
-				Long userId = groupMember.getUser().getId();
-				responseList.add(
-					new GetGroupMemberResponse(nickname, joinDate, achivement, isOwner, profileImage, userId));
+			Long correctSolution = solutionRepository.countDistinctCorrectSolutionsByUserAndGroup(
+				groupMember.getUser(), id, BOJResultConstants.CORRECT);
+			Long problems = problemRepository.countProblemsByGroupId(id);
+			String achivement;
+			if (correctSolution == 0) {
+				achivement = "0%";
+			} else {
+				achivement = getPercentage(correctSolution, problems) + "%";
 			}
-			responseList.sort((a, b) -> Boolean.compare(!a.getIsOwner(), !b.getIsOwner()));
 
-			return responseList;
-		} else {
-			throw new UserValidationException("그룹 정보를 확인할 권한이 없습니다");
+			RoleOfGroupMember role = groupMember.getRole();
+			String profileImage = groupMember.getUser().getProfileImage();
+			Long userId = groupMember.getUser().getId();
+			responseList.add(
+				new GetGroupMemberResponse(nickname, joinDate, achivement, role, profileImage, userId));
 		}
+		responseList.sort(Comparator.comparing(GetGroupMemberResponse::getRole));
+
+		return responseList;
 	}
 
 	@Transactional(readOnly = true)
