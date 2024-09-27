@@ -68,6 +68,7 @@ class StudyGroupServiceTest {
 	@Mock
 	private ImageService imageService;
 	private User user;
+	private User owner;
 	private User user2;
 	private StudyGroup group;
 	private Problem problem1;
@@ -76,6 +77,7 @@ class StudyGroupServiceTest {
 	private Solution solution2;
 	private Solution solution3;
 	private final Long groupId = 10L;
+	private GroupMember ownerGroupmember;
 	private GroupMember groupMember1;
 	private GroupMember groupMember2;
 	@Captor
@@ -87,6 +89,8 @@ class StudyGroupServiceTest {
 	void setUp() throws NoSuchFieldException, IllegalAccessException {
 		user = User.builder().email("email1").password("password").nickname("nickname1")
 			.role(Role.USER).profileImage("image1").build();
+		owner = User.builder().email("email1").password("password").nickname("nickname1")
+			.role(Role.USER).profileImage("image1").build();
 		user2 = User.builder().email("email2").password("password").nickname("nickname2")
 			.role(Role.USER).profileImage("image2").build();
 		group = StudyGroup.builder()
@@ -95,6 +99,11 @@ class StudyGroupServiceTest {
 			.endDate(LocalDate.now().plusDays(1))
 			.groupImage("imageUrl")
 			.groupCode("code")
+			.build();
+		ownerGroupmember = GroupMember.builder()
+			.studyGroup(group)
+			.user(owner)
+			.role(RoleOfGroupMember.OWNER)
 			.build();
 		groupMember1 = GroupMember.builder()
 			.studyGroup(group)
@@ -135,6 +144,7 @@ class StudyGroupServiceTest {
 		Field userField = User.class.getDeclaredField("id");
 		userField.setAccessible(true);
 		userField.set(user, 1L);
+		userField.set(owner, 1L);
 		userField.set(user2, 2L);
 
 		Field groupId = StudyGroup.class.getDeclaredField("id");
@@ -281,7 +291,7 @@ class StudyGroupServiceTest {
 				.build();
 			groups.add(group);
 			when(groupMemberRepository.findByStudyGroupAndRole(group, RoleOfGroupMember.OWNER)).thenReturn(
-				groupMember1);
+				ownerGroupmember);
 		}
 		for (int i = 0; i < 10; i++) {
 			StudyGroup group = StudyGroup.builder()
@@ -291,7 +301,7 @@ class StudyGroupServiceTest {
 				.build();
 			groups.add(group);
 			when(groupMemberRepository.findByStudyGroupAndRole(group, RoleOfGroupMember.OWNER)).thenReturn(
-				groupMember1);
+				ownerGroupmember);
 		}
 		for (int i = 0; i < 10; i++) {
 			StudyGroup group = StudyGroup.builder()
@@ -301,7 +311,7 @@ class StudyGroupServiceTest {
 				.build();
 			groups.add(group);
 			when(groupMemberRepository.findByStudyGroupAndRole(group, RoleOfGroupMember.OWNER)).thenReturn(
-				groupMember1);
+				groupMember2);
 		}
 		List<BookmarkedStudyGroup> bookmarks = new ArrayList<>(10);
 		for (int i = 0; i < 10; i++) {
@@ -330,6 +340,7 @@ class StudyGroupServiceTest {
 			assertThat(done.get(i).startDate()).isEqualTo(LocalDate.now().minusDays(i + 30));
 			assertThat(done.get(i).endDate()).isEqualTo(LocalDate.now().minusDays(30));
 			assertThat(done.get(i).isBookmarked()).isTrue();
+			assertThat(done.get(i).isOwner()).isTrue();
 		}
 		for (int i = 0; i < 10; i++) {
 			assertThat(inProgress.get(i).name()).isEqualTo("name" + i);
@@ -337,13 +348,15 @@ class StudyGroupServiceTest {
 			assertThat(inProgress.get(i).startDate()).isEqualTo(LocalDate.now().minusDays(i));
 			assertThat(inProgress.get(i).endDate()).isEqualTo(LocalDate.now().plusDays(i));
 			assertThat(inProgress.get(i).isBookmarked()).isFalse();
+			assertThat(inProgress.get(i).isOwner()).isTrue();
 		}
 		for (int i = 0; i < 10; i++) {
 			assertThat(queued.get(i).name()).isEqualTo("name" + i);
-			assertThat(queued.get(i).ownerNickname()).isEqualTo("nickname1");
+			assertThat(queued.get(i).ownerNickname()).isEqualTo("nickname2");
 			assertThat(queued.get(i).startDate()).isEqualTo(LocalDate.now().plusDays(30));
 			assertThat(queued.get(i).endDate()).isEqualTo(LocalDate.now().plusDays(i + 30));
 			assertThat(queued.get(i).isBookmarked()).isFalse();
+			assertThat(queued.get(i).isOwner()).isFalse();
 		}
 		for (int i = 0; i < 10; i++) {
 			assertThat(bookmarked.get(i).name()).isEqualTo("name" + i);
@@ -351,6 +364,7 @@ class StudyGroupServiceTest {
 			assertThat(bookmarked.get(i).startDate()).isEqualTo(LocalDate.now().minusDays(i + 30));
 			assertThat(bookmarked.get(i).endDate()).isEqualTo(LocalDate.now().minusDays(30));
 			assertThat(bookmarked.get(i).isBookmarked()).isTrue();
+			assertThat(bookmarked.get(i).isOwner()).isTrue();
 		}
 	}
 
