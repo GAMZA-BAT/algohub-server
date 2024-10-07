@@ -25,6 +25,7 @@ import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
 import com.gamzabat.algohub.feature.studygroup.domain.BookmarkedStudyGroup;
 import com.gamzabat.algohub.feature.studygroup.domain.GroupMember;
+import com.gamzabat.algohub.feature.studygroup.domain.Rank;
 import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.studygroup.dto.CheckSolvedProblemResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.CreateGroupRequest;
@@ -44,6 +45,7 @@ import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundUserExceptio
 import com.gamzabat.algohub.feature.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.studygroup.repository.BookmarkedStudyGroupRepository;
 import com.gamzabat.algohub.feature.studygroup.repository.GroupMemberRepository;
+import com.gamzabat.algohub.feature.studygroup.repository.RankRepository;
 import com.gamzabat.algohub.feature.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.repository.UserRepository;
@@ -63,11 +65,13 @@ public class StudyGroupService {
 	private final UserRepository userRepository;
 	private final StudyGroupRepository studyGroupRepository;
 	private final BookmarkedStudyGroupRepository bookmarkedStudyGroupRepository;
+	private final RankRepository rankRepository;
 
 	@Transactional
 	public CreateGroupResponse createGroup(User user, CreateGroupRequest request, MultipartFile profileImage) {
 		String imageUrl = imageService.saveImage(profileImage);
 		String inviteCode = NanoIdUtils.randomNanoId();
+
 		StudyGroup group = StudyGroup.builder()
 			.name(request.name())
 			.startDate(request.startDate())
@@ -76,16 +80,22 @@ public class StudyGroupService {
 			.groupImage(imageUrl)
 			.groupCode(inviteCode)
 			.build();
-
 		groupRepository.save(group);
-		groupMemberRepository.save(GroupMember.builder()
+
+		GroupMember member = GroupMember.builder()
 			.studyGroup(group)
 			.user(user)
 			.role(RoleOfGroupMember.OWNER)
 			.joinDate(LocalDate.now())
-			.rank(groupMemberRepository.countByStudyGroup(group))
-			.build()
-		);
+			.build();
+		groupMemberRepository.save(member);
+
+		rankRepository.save(Rank.builder()
+			.member(member)
+			.solvedCount(0)
+			.rank(1)
+			.rankDiff(0)
+			.build());
 		log.info("success to save study group");
 		return new CreateGroupResponse(inviteCode);
 	}
