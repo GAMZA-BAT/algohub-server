@@ -83,6 +83,7 @@ public class StudyGroupService {
 			.user(user)
 			.role(RoleOfGroupMember.OWNER)
 			.joinDate(LocalDate.now())
+			.rank(groupMemberRepository.countByStudyGroup(group))
 			.build()
 		);
 		log.info("success to save study group");
@@ -423,5 +424,19 @@ public class StudyGroupService {
 
 		member.updateRole(RoleOfGroupMember.fromValue(request.role()));
 		log.info("success to update group member role");
+	}
+
+	public void updateRanking(GroupMember member, StudyGroup group) {
+		// 1. 해당 user에 대해 solvedCount++
+		member.increaseSolvedCount();
+		// 2. 그룹의 모든 멤버를 순회하며 랭킹 갱신
+		List<GroupMember> members = groupMemberRepository.findAllByStudyGroup(group);
+		members.sort((a, b) -> b.getSolvedCount() - a.getSolvedCount()); // 문제 풀이 개수로 정렬
+		for (GroupMember m : members) {
+			int originRank = m.getRank(); // 기존 랭킹
+			int newRank = members.indexOf(m) + 1; // 갱신된 랭킹
+			m.updateRank(newRank);
+			m.updateRankDiff(originRank - newRank);
+		}
 	}
 }

@@ -25,4 +25,6 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> 
 	GroupMember findByUser(User user);
 
 	GroupMember findByStudyGroupAndRole(StudyGroup group, RoleOfGroupMember role);
+
+	int countByStudyGroup(StudyGroup studyGroup);
 }
