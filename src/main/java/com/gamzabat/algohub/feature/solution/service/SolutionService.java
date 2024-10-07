@@ -120,7 +120,7 @@ public class SolutionService {
 			);
 
 			if (isCorrect(request.result())) // 풀이가 맞은 경우
-				studyGroupService.updateRanking(member.get(), studyGroup); // 랭킹 업데이트
+				studyGroupService.updateRanking(member.get()); // 랭킹 업데이트
 		}
 	}
 

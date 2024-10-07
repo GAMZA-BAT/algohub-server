@@ -41,6 +41,7 @@ import com.gamzabat.algohub.feature.studygroup.dto.UpdateGroupMemberRoleRequest;
 import com.gamzabat.algohub.feature.studygroup.etc.RoleOfGroupMember;
 import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundGroupException;
 import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundProblemException;
+import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundRankException;
 import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundUserException;
 import com.gamzabat.algohub.feature.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.studygroup.repository.BookmarkedStudyGroupRepository;
@@ -93,8 +94,8 @@ public class StudyGroupService {
 		rankRepository.save(Rank.builder()
 			.member(member)
 			.solvedCount(0)
-			.rank(1)
-			.rankDiff(0)
+			.currentRank(1)
+			.rankDiff("-")
 			.build());
 		log.info("success to save study group");
 		return new CreateGroupResponse(inviteCode);
@@ -436,17 +437,30 @@ public class StudyGroupService {
 		log.info("success to update group member role");
 	}
 
-	public void updateRanking(GroupMember member, StudyGroup group) {
+	public void updateRanking(GroupMember member) {
 		// 1. 해당 user에 대해 solvedCount++
-		member.increaseSolvedCount();
+		Rank rank = rankRepository.findByMember(member)
+			.orElseThrow(() -> new CannotFoundRankException("유저의 랭킹 정보를 조회할 수 없습니다."));
+		rank.increaseSolvedCount();
+
 		// 2. 그룹의 모든 멤버를 순회하며 랭킹 갱신
-		List<GroupMember> members = groupMemberRepository.findAllByStudyGroup(group);
-		members.sort((a, b) -> b.getSolvedCount() - a.getSolvedCount()); // 문제 풀이 개수로 정렬
-		for (GroupMember m : members) {
-			int originRank = m.getRank(); // 기존 랭킹
-			int newRank = members.indexOf(m) + 1; // 갱신된 랭킹
-			m.updateRank(newRank);
-			m.updateRankDiff(originRank - newRank);
+		List<Rank> ranks = rankRepository.findAllByStudyGroup(member.getStudyGroup());
+		ranks.sort((r1, r2) -> r2.getSolvedCount() - r1.getSolvedCount()); // 문제 풀이 개수로 내림차순 정렬
+		for (Rank r : ranks) {
+			int originRank = r.getCurrentRank(); // 기존 랭킹
+			int newRank = ranks.indexOf(r) + 1; // 갱신된 랭킹
+			r.updateRank(newRank);
+			r.updateRankDiff(generateRankDiffString(originRank, newRank));
 		}
+	}
+
+	private String generateRankDiffString(int originRank, int newRank) {
+		int rankDiff = originRank - newRank;
+		if (rankDiff > 0)
+			return "+" + rankDiff;
+		else if (rankDiff < 0)
+			return String.valueOf(rankDiff);
+		else
+			return "-";
 	}
 }
