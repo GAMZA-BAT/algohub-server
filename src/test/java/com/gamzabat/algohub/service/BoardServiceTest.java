@@ -26,6 +26,7 @@ import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.board.domain.Board;
 import com.gamzabat.algohub.feature.board.dto.CreateBoardRequest;
 import com.gamzabat.algohub.feature.board.dto.GetBoardResponse;
+import com.gamzabat.algohub.feature.board.dto.UpdateBoardRequest;
 import com.gamzabat.algohub.feature.board.exception.BoardValidationExceoption;
 import com.gamzabat.algohub.feature.board.repository.BoardRepository;
 import com.gamzabat.algohub.feature.board.service.BoardService;
@@ -239,6 +240,67 @@ public class BoardServiceTest {
 		when(groupMemberRepository.existsByUserAndStudyGroup(user4, studyGroup)).thenReturn(false);
 		//when, then
 		assertThatThrownBy(() -> boardService.getBoardList(user4, 30L))
+			.isInstanceOf(GroupMemberValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
+			.hasFieldOrPropertyWithValue("error", "참여하지 않은 스터디 그룹입니다");
+	}
+
+	@Test
+	@DisplayName("공지 수정 성공")
+	void updateBoardSuccess() {
+		//given
+		UpdateBoardRequest updateBoardRequest = new UpdateBoardRequest(1000L, "updateTitle", "updateContent");
+		when(boardRepository.findById(1000L)).thenReturn(Optional.ofNullable(board));
+		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
+		when(groupMemberRepository.existsByUserAndStudyGroup(user, studyGroup)).thenReturn(true);
+		//when
+		boardService.updateBoard(user, updateBoardRequest);
+		//then
+		assertThat(board.getContent()).isEqualTo("updateContent");
+		assertThat(board.getTitle()).isEqualTo("updateTitle");
+	}
+
+	@Test
+	@DisplayName("공지 수정 실패(존재하지 않는 게시글)")
+	void updateBoardFailed_1() {
+		//given
+		UpdateBoardRequest updateBoardRequest = new UpdateBoardRequest(1001L, "updateTitle", "updateContent");
+		when(boardRepository.findById(1001L)).thenReturn(Optional.empty());
+		//when,then
+		assertThatThrownBy(() -> boardService.updateBoard(user, updateBoardRequest))
+			.isInstanceOf(BoardValidationExceoption.class)
+			.hasFieldOrPropertyWithValue("error", "존재하지 않는 게시글입니다");
+	}
+
+	@Test
+	@DisplayName("공시 수정 실패(존재하지 않는 스터디 그룹)")
+	void updateBoardFailed_2() {
+		//given
+		UpdateBoardRequest updateBoardRequest = new UpdateBoardRequest(1000L, "updateTitle", "updateContent");
+		when(boardRepository.findById(1000L)).thenReturn(Optional.ofNullable(board));
+		when(studyGroupRepository.findById(30L)).thenReturn(Optional.empty());
+		//when,then
+		assertThatThrownBy(() -> boardService.updateBoard(user, updateBoardRequest))
+			.isInstanceOf(StudyGroupValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
+			.hasFieldOrPropertyWithValue("error", "존재하지 않는 스터디 그룹입니다");
+
+	}
+
+	/*
+	user1 이 그룹 1 과 그룹2 에 참여한 경우
+	내가 실수로 그룹 2 의 게시글을 수정해달라고 요청할 수 있으니... 참여하지 않은 스터디 그룹..
+	 */
+	@Test
+	@DisplayName("공지 수정 실패(참여하지 않은 스터디 그룹)")
+	void updateBoardFailed_3() {
+		//given
+		UpdateBoardRequest updateBoardRequest = new UpdateBoardRequest(1000L, "updateTitle", "updateContent");
+		when(boardRepository.findById(1000L)).thenReturn(Optional.ofNullable(board));
+		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
+		when(groupMemberRepository.existsByUserAndStudyGroup(user4, studyGroup)).thenReturn(false);
+		//when, then
+		assertThatThrownBy(() -> boardService.updateBoard(user4, updateBoardRequest))
 			.isInstanceOf(GroupMemberValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "참여하지 않은 스터디 그룹입니다");
