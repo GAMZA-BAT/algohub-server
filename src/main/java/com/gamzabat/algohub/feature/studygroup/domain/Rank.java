@@ -24,14 +24,18 @@ public class Rank {
 	private GroupMember member;
 
 	private int solvedCount;
-	private int rank;
+	private int currentRank;
 	private int rankDiff;
 
 	@Builder
-	public Rank(GroupMember member, int solvedCount, int rank, int rankDiff) {
+	public Rank(GroupMember member, int solvedCount, int currentRank, int rankDiff) {
 		this.member = member;
 		this.solvedCount = solvedCount;
-		this.rank = rank;
+		this.currentRank = currentRank;
 		this.rankDiff = rankDiff;
+	}
+
+	public void increaseSolvedCount() {
+		this.solvedCount++;
 	}
 }
