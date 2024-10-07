@@ -119,8 +119,12 @@ public class SolutionService {
 				.build()
 			);
 
-			if (request.result().equals(BOJResultConstants.CORRECT) || request.result().endsWith("점")) // 풀이가 맞은 경우
+			if (isCorrect(request.result())) // 풀이가 맞은 경우
 				studyGroupService.updateRanking(member.get(), studyGroup); // 랭킹 업데이트
 		}
+	}
+
+	private boolean isCorrect(String result) {
+		return result.equals(BOJResultConstants.CORRECT) || result.endsWith("점");
 	}
 }
