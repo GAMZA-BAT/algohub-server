@@ -35,34 +35,15 @@ public class GroupMember {
 	@Enumerated(EnumType.STRING)
 	private RoleOfGroupMember role;
 
-	private int solvedCount;
-	private int rank;
-	private int rankDiff;
-
 	@Builder
-	public GroupMember(User user, StudyGroup studyGroup, LocalDate joinDate, RoleOfGroupMember role, int rank) {
+	public GroupMember(User user, StudyGroup studyGroup, LocalDate joinDate, RoleOfGroupMember role) {
 		this.user = user;
 		this.studyGroup = studyGroup;
 		this.joinDate = joinDate;
 		this.role = role;
-		this.solvedCount = 0;
-		this.rank = rank;
-		this.rankDiff = 0;
 	}
 
 	public void updateRole(RoleOfGroupMember role) {
 		this.role = role;
-	}
-
-	public void increaseSolvedCount() {
-		this.solvedCount++;
-	}
-
-	public void updateRankDiff(int diff) {
-		this.rankDiff += diff;
-	}
-
-	public void updateRank(int newRank) {
-		this.rank = newRank;
 	}
 }
