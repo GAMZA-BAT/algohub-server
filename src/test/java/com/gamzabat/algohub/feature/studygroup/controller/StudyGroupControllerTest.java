@@ -413,7 +413,7 @@ class StudyGroupControllerTest {
                         }))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("그룹 정보 수정 요청이 올바르지 않습니다."))
-                .andExpect(jsonPath("$.messages", hasItems("name : 스터디 이름은 15글자 이하로 작성해야 합니다.")));
+                .andExpect(jsonPath("$.messages", hasItems("name : 스터디 이름은 1글자 이상 15글자 이하로 작성해야 합니다.")));
     }
 
     @Test
