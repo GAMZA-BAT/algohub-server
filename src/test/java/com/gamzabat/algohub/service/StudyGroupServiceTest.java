@@ -35,6 +35,7 @@ import com.gamzabat.algohub.feature.solution.domain.Solution;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
 import com.gamzabat.algohub.feature.studygroup.domain.BookmarkedStudyGroup;
 import com.gamzabat.algohub.feature.studygroup.domain.GroupMember;
+import com.gamzabat.algohub.feature.studygroup.domain.Rank;
 import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.studygroup.dto.CreateGroupRequest;
 import com.gamzabat.algohub.feature.studygroup.dto.EditGroupRequest;
@@ -48,6 +49,7 @@ import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundGroupExcepti
 import com.gamzabat.algohub.feature.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.studygroup.repository.BookmarkedStudyGroupRepository;
 import com.gamzabat.algohub.feature.studygroup.repository.GroupMemberRepository;
+import com.gamzabat.algohub.feature.studygroup.repository.RankRepository;
 import com.gamzabat.algohub.feature.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.studygroup.service.StudyGroupService;
 import com.gamzabat.algohub.feature.user.domain.User;
@@ -70,6 +72,8 @@ class StudyGroupServiceTest {
 	@Mock
 	private UserRepository userRepository;
 	@Mock
+	private RankRepository rankRepository;
+	@Mock
 	private ImageService imageService;
 	private User user;
 	private User owner;
@@ -86,6 +90,7 @@ class StudyGroupServiceTest {
 	private GroupMember groupMember1;
 	private GroupMember groupMember2;
 	private GroupMember groupMember3;
+	private Rank rank1, rank2, rank3;
 	@Captor
 	private ArgumentCaptor<StudyGroup> groupCaptor;
 	@Captor
@@ -152,6 +157,25 @@ class StudyGroupServiceTest {
 			.solvedDateTime(LocalDateTime.now().minusDays(1))
 			.problem(problem1)
 			.user(user2)
+			.build();
+
+		rank1 = Rank.builder()
+			.member(groupMember1)
+			.solvedCount(3)
+			.currentRank(1)
+			.rankDiff("-")
+			.build();
+		rank2 = Rank.builder()
+			.member(groupMember2)
+			.solvedCount(2)
+			.currentRank(2)
+			.rankDiff("-")
+			.build();
+		rank3 = Rank.builder()
+			.member(groupMember3)
+			.solvedCount(1)
+			.currentRank(3)
+			.rankDiff("-")
 			.build();
 
 		Field userField = User.class.getDeclaredField("id");
@@ -660,5 +684,38 @@ class StudyGroupServiceTest {
 			.isInstanceOf(GroupMemberValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
 			.hasFieldOrPropertyWithValue("error", "해당 스터디 그룹에 참여하지 않은 회원입니다.");
+	}
+
+	@Test
+	@DisplayName("랭킹 업데이트 성공")
+	void updateRanking() {
+		// given
+		List<Rank> ranks = new ArrayList<>();
+		ranks.add(rank1);
+		ranks.add(rank2);
+		ranks.add(rank3);
+		when(rankRepository.findAllByStudyGroup(group)).thenReturn(ranks);
+		when(rankRepository.findByMember(groupMember3)).thenReturn(Optional.of(rank3));
+
+		// when - user3의 랭킹이 +2
+		studyGroupService.updateRanking(groupMember3);
+		studyGroupService.updateRanking(groupMember3);
+		studyGroupService.updateRanking(groupMember3);
+
+		// then
+		assertThat(rank3.getMember()).isEqualTo(groupMember3);
+		assertThat(rank3.getCurrentRank()).isEqualTo(1);
+		assertThat(rank3.getSolvedCount()).isEqualTo(4);
+		assertThat(rank3.getRankDiff()).isEqualTo("+1");
+
+		assertThat(rank1.getMember()).isEqualTo(groupMember1);
+		assertThat(rank1.getCurrentRank()).isEqualTo(2);
+		assertThat(rank1.getSolvedCount()).isEqualTo(3);
+		assertThat(rank1.getRankDiff()).isEqualTo("-1");
+
+		assertThat(rank2.getMember()).isEqualTo(groupMember2);
+		assertThat(rank2.getCurrentRank()).isEqualTo(3);
+		assertThat(rank2.getSolvedCount()).isEqualTo(2);
+		assertThat(rank2.getRankDiff()).isEqualTo("-");
 	}
 }
