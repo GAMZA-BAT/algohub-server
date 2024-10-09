@@ -7,8 +7,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -328,16 +326,16 @@ public class StudyGroupService {
 			throw new UserValidationException("랭킹을 확인할 권한이 없습니다.");
 		}
 
-		List<GetRankingResponse> rankingResponses = solutionRepository.findTopUsersByGroup(group,
-			BOJResultConstants.CORRECT);
-		return IntStream.range(0, rankingResponses.size())
-			.mapToObj(i -> {
-				GetRankingResponse response = rankingResponses.get(i);
-				return new GetRankingResponse(response.getUserNickname(), response.getProfileImage(), i + 1,
-					response.getSolvedCount());
-			})
-			.limit(3)
-			.collect(Collectors.toList());
+		List<Rank> ranking = rankRepository.findAllByStudyGroup(group)
+			.stream()
+			.filter(r -> r.getSolvedCount() != 0)
+			.sorted(Comparator.comparing(Rank::getCurrentRank))
+			.toList();
+
+		if (ranking.size() >= 3)
+			ranking.subList(0, 3);
+
+		return getRankingResponse(ranking);
 	}
 
 	@Transactional(readOnly = true)
@@ -350,15 +348,21 @@ public class StudyGroupService {
 			throw new UserValidationException("랭킹을 확인할 권한이 없습니다.");
 		}
 
-		List<GetRankingResponse> rankingResponses = solutionRepository.findTopUsersByGroup(group,
-			BOJResultConstants.CORRECT);
-		return IntStream.range(0, rankingResponses.size())
-			.mapToObj(i -> {
-				GetRankingResponse response = rankingResponses.get(i);
-				return new GetRankingResponse(response.getUserNickname(), response.getProfileImage(), i + 1,
-					response.getSolvedCount());
-			})
-			.collect(Collectors.toList());
+		List<Rank> ranking = rankRepository.findAllByStudyGroup(group)
+			.stream()
+			.sorted(Comparator.comparing(Rank::getCurrentRank))
+			.toList();
+		return getRankingResponse(ranking);
+	}
+
+	private List<GetRankingResponse> getRankingResponse(List<Rank> ranking) {
+		return ranking.stream().map(r -> new GetRankingResponse(
+				r.getMember().getUser().getNickname(),
+				r.getMember().getUser().getProfileImage(),
+				r.getCurrentRank(),
+				(long)r.getSolvedCount(),
+				r.getRankDiff()))
+			.toList();
 	}
 
 	@Transactional(readOnly = true)
