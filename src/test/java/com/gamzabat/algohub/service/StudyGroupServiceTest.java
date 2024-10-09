@@ -7,7 +7,6 @@ import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -24,7 +23,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockMultipartFile;
 
-import com.gamzabat.algohub.constants.BOJResultConstants;
 import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.exception.UserValidationException;
@@ -76,22 +74,14 @@ class StudyGroupServiceTest {
 	private RankRepository rankRepository;
 	@Mock
 	private ImageService imageService;
-	private User user;
-	private User owner;
-	private User user2;
-	private User user3;
+	private User user, owner, user2, user3, user4;
 	private StudyGroup group;
-	private Problem problem1;
-	private Problem problem2;
-	private Solution solution1;
-	private Solution solution2;
-	private Solution solution3;
+	private Problem problem1, problem2;
+	private Solution solution1, solution2, solution3;
 	private final Long groupId = 10L;
 	private GroupMember ownerGroupmember;
-	private GroupMember groupMember1;
-	private GroupMember groupMember2;
-	private GroupMember groupMember3;
-	private Rank rank1, rank2, rank3;
+	private GroupMember groupMember1, groupMember2, groupMember3, groupMember4;
+	private Rank rank1, rank2, rank3, rank4;
 	@Captor
 	private ArgumentCaptor<StudyGroup> groupCaptor;
 	@Captor
@@ -107,6 +97,8 @@ class StudyGroupServiceTest {
 			.role(Role.USER).profileImage("image2").build();
 		user3 = User.builder().email("email3").password("password").nickname("nickname3")
 			.role(Role.USER).profileImage("image3").build();
+		user4 = User.builder().email("email4").password("password").nickname("nickname4")
+			.role(Role.USER).profileImage("image4").build();
 		group = StudyGroup.builder()
 			.name("name")
 			.startDate(LocalDate.now())
@@ -133,6 +125,11 @@ class StudyGroupServiceTest {
 			.studyGroup(group)
 			.user(user3)
 			.role(RoleOfGroupMember.ADMIN)
+			.build();
+		groupMember4 = GroupMember.builder()
+			.studyGroup(group)
+			.user(user4)
+			.role(RoleOfGroupMember.PARTICIPANT)
 			.build();
 
 		problem1 = Problem.builder()
@@ -170,12 +167,18 @@ class StudyGroupServiceTest {
 			.member(groupMember2)
 			.solvedCount(2)
 			.currentRank(2)
-			.rankDiff("-")
+			.rankDiff("+1")
 			.build();
 		rank3 = Rank.builder()
 			.member(groupMember3)
 			.solvedCount(1)
 			.currentRank(3)
+			.rankDiff("-1")
+			.build();
+		rank4 = Rank.builder()
+			.member(groupMember4)
+			.solvedCount(0)
+			.currentRank(4)
 			.rankDiff("-")
 			.build();
 
@@ -568,25 +571,25 @@ class StudyGroupServiceTest {
 		//given
 		when(studyGroupRepository.findById(10L)).thenReturn(Optional.of(group));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user2, group)).thenReturn(true);
-		List<GetRankingResponse> response = Arrays.asList(
-			new GetRankingResponse("nickname2", "image2", 1, 2L), // user2
-			new GetRankingResponse("nickname1", "image1", 2, 1L)  // user1
-		);
-		when(solutionRepository.findTopUsersByGroup(group, BOJResultConstants.CORRECT)).thenReturn(response);
+		List<Rank> ranking = new ArrayList<>();
+		ranking.add(rank2);
+		ranking.add(rank3);
+		ranking.add(rank1);
+		ranking.add(rank4);
+		when(rankRepository.findAllByStudyGroup(group)).thenReturn(ranking);
 
 		//when
 		List<GetRankingResponse> result = studyGroupService.getAllRank(user2, 10L);
 
 		//then
-		assertThat(result.get(0).getProfileImage()).isEqualTo("image2");
-		assertThat(result.get(0).getSolvedCount()).isEqualTo(2L);
-		assertThat(result.get(0).getUserNickname()).isEqualTo("nickname2");
-		assertThat(result.get(0).getRank()).isEqualTo(1);
+		assertThat(result.size()).isEqualTo(4);
 
-		assertThat(result.get(1).getProfileImage()).isEqualTo("image1");
-		assertThat(result.get(1).getSolvedCount()).isEqualTo(1L);
-		assertThat(result.get(1).getUserNickname()).isEqualTo("nickname1");
-		assertThat((result.get(1).getRank())).isEqualTo(2);
+		for (int i = 0; i < 4; i++) {
+			assertThat(result.get(i).getProfileImage()).isEqualTo("image" + (i + 1));
+			assertThat(result.get(i).getSolvedCount()).isEqualTo(3 - i);
+			assertThat(result.get(i).getUserNickname()).isEqualTo("nickname" + (i + 1));
+			assertThat(result.get(i).getRank()).isEqualTo(i + 1);
+		}
 	}
 
 	@Test
@@ -602,7 +605,7 @@ class StudyGroupServiceTest {
 	}
 
 	@Test
-	@DisplayName("전체랭킹 조회 실패 : 랭킹을 확인할 권한이 없는경우")
+	@DisplayName("전체랭킹 조회 실패 : 랭킹을 확인할 권한이 없는 경우")
 	void getAllRank_FailedByAccess() {
 		//given
 		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.of(group));
@@ -610,6 +613,90 @@ class StudyGroupServiceTest {
 
 		//then
 		assertThatThrownBy(() -> studyGroupService.getAllRank(user2, groupId))
+			.isInstanceOf(UserValidationException.class)
+			.hasFieldOrPropertyWithValue("errors", "랭킹을 확인할 권한이 없습니다.");
+	}
+
+	@Test
+	@DisplayName("Top 3 랭킹 조회 성공")
+	void getTopRanking() {
+		//given
+		when(studyGroupRepository.findById(10L)).thenReturn(Optional.of(group));
+		when(groupMemberRepository.existsByUserAndStudyGroup(user2, group)).thenReturn(true);
+		List<Rank> ranking = new ArrayList<>();
+		ranking.add(rank2);
+		ranking.add(rank3);
+		ranking.add(rank4);
+		ranking.add(rank1);
+		when(rankRepository.findAllByStudyGroup(group)).thenReturn(ranking);
+
+		//when
+		List<GetRankingResponse> result = studyGroupService.getTopRank(user2, 10L);
+
+		//then
+		assertThat(result.size()).isEqualTo(3);
+
+		for (int i = 0; i < 3; i++) {
+			assertThat(result.get(i).getProfileImage()).isEqualTo("image" + (i + 1));
+			assertThat(result.get(i).getSolvedCount()).isEqualTo(3 - i);
+			assertThat(result.get(i).getUserNickname()).isEqualTo("nickname" + (i + 1));
+			assertThat(result.get(i).getRank()).isEqualTo(i + 1);
+		}
+	}
+
+	@Test
+	@DisplayName("Top 3 랭킹 조회 성공 : 모두 0 solved인 경우")
+	void getTopRanking_EmptyRank() {
+		//given
+		when(studyGroupRepository.findById(10L)).thenReturn(Optional.of(group));
+		when(groupMemberRepository.existsByUserAndStudyGroup(user2, group)).thenReturn(true);
+		List<Rank> ranking = new ArrayList<>();
+		ranking.add(Rank.builder()
+			.member(groupMember1)
+			.solvedCount(0)
+			.build());
+		ranking.add(Rank.builder()
+			.member(groupMember2)
+			.solvedCount(0)
+			.build());
+		ranking.add(Rank.builder()
+			.member(groupMember3)
+			.solvedCount(0)
+			.build());
+		ranking.add(Rank.builder()
+			.member(groupMember4)
+			.solvedCount(0)
+			.build());
+		when(rankRepository.findAllByStudyGroup(group)).thenReturn(ranking);
+
+		//when
+		List<GetRankingResponse> result = studyGroupService.getTopRank(user2, 10L);
+
+		//then
+		assertThat(result.size()).isEqualTo(0);
+	}
+
+	@Test
+	@DisplayName("Top 3 랭킹 조회 실패 : 그룹을 못 찾은 경우")
+	void getTopRanking_FailedByCannotFoundGroup() {
+		//given
+		when(studyGroupRepository.findById(9L)).thenReturn(Optional.empty());
+
+		//then
+		assertThatThrownBy(() -> studyGroupService.getTopRank(user, 9L))
+			.isInstanceOf(CannotFoundGroupException.class)
+			.hasFieldOrPropertyWithValue("errors", "그룹을 찾을 수 없습니다.");
+	}
+
+	@Test
+	@DisplayName("Top 3 랭킹 조회 실패 : 랭킹을 확인할 권한이 없는 경우")
+	void getTopRanking_FailedByAccess() {
+		//given
+		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.of(group));
+		when(groupMemberRepository.existsByUserAndStudyGroup(user2, group)).thenReturn(false);
+
+		//then
+		assertThatThrownBy(() -> studyGroupService.getTopRank(user2, groupId))
 			.isInstanceOf(UserValidationException.class)
 			.hasFieldOrPropertyWithValue("errors", "랭킹을 확인할 권한이 없습니다.");
 	}
