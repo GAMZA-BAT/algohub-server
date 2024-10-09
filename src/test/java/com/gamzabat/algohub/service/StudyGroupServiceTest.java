@@ -46,6 +46,7 @@ import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.UpdateGroupMemberRoleRequest;
 import com.gamzabat.algohub.feature.studygroup.etc.RoleOfGroupMember;
 import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundGroupException;
+import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundRankException;
 import com.gamzabat.algohub.feature.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.studygroup.repository.BookmarkedStudyGroupRepository;
 import com.gamzabat.algohub.feature.studygroup.repository.GroupMemberRepository;
@@ -717,5 +718,16 @@ class StudyGroupServiceTest {
 		assertThat(rank2.getCurrentRank()).isEqualTo(3);
 		assertThat(rank2.getSolvedCount()).isEqualTo(2);
 		assertThat(rank2.getRankDiff()).isEqualTo("-");
+	}
+
+	@Test
+	@DisplayName("랭킹 업데이트 실패 : 유저 랭킹 정보 조회 실패")
+	void updateRankingFailed_1() {
+		// given
+		when(rankRepository.findByMember(groupMember3)).thenReturn(Optional.empty());
+		// when, then
+		assertThatThrownBy(() -> studyGroupService.updateRanking(groupMember3))
+			.isInstanceOf(CannotFoundRankException.class)
+			.hasFieldOrPropertyWithValue("error", "유저의 랭킹 정보를 조회할 수 없습니다.");
 	}
 }
