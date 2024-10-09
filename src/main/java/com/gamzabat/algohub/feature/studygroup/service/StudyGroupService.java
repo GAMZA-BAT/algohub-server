@@ -442,17 +442,20 @@ public class StudyGroupService {
 	}
 
 	public void updateRanking(GroupMember member) {
-		// 1. 해당 user에 대해 solvedCount++
 		Rank rank = rankRepository.findByMember(member)
 			.orElseThrow(() -> new CannotFoundRankException("유저의 랭킹 정보를 조회할 수 없습니다."));
 		rank.increaseSolvedCount();
 
-		// 2. 그룹의 모든 멤버를 순회하며 랭킹 갱신
 		List<Rank> ranks = rankRepository.findAllByStudyGroup(member.getStudyGroup());
-		ranks.sort((r1, r2) -> r2.getSolvedCount() - r1.getSolvedCount()); // 문제 풀이 개수로 내림차순 정렬
+		ranks.sort((r1, r2) -> {
+			int compare = r2.getSolvedCount() - r1.getSolvedCount();
+			if (compare == 0)
+				return r1.getMember().getJoinDate().compareTo(r2.getMember().getJoinDate());
+			return r2.getSolvedCount() - r1.getSolvedCount();
+		});
 		for (Rank r : ranks) {
-			int originRank = r.getCurrentRank(); // 기존 랭킹
-			int newRank = ranks.indexOf(r) + 1; // 갱신된 랭킹
+			int originRank = r.getCurrentRank();
+			int newRank = ranks.indexOf(r) + 1;
 			r.updateRank(newRank);
 			r.updateRankDiff(generateRankDiffString(originRank, newRank));
 		}
