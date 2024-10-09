@@ -613,7 +613,8 @@ class StudyGroupServiceTest {
 
 		//then
 		assertThatThrownBy(() -> studyGroupService.getAllRank(user2, groupId))
-			.isInstanceOf(UserValidationException.class)
+			.isInstanceOf(GroupMemberValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("errors", "랭킹을 확인할 권한이 없습니다.");
 	}
 
@@ -697,7 +698,8 @@ class StudyGroupServiceTest {
 
 		//then
 		assertThatThrownBy(() -> studyGroupService.getTopRank(user2, groupId))
-			.isInstanceOf(UserValidationException.class)
+			.isInstanceOf(GroupMemberValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("errors", "랭킹을 확인할 권한이 없습니다.");
 	}
 
