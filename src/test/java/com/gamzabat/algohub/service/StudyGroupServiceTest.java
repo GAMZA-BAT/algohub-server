@@ -110,26 +110,31 @@ class StudyGroupServiceTest {
 			.studyGroup(group)
 			.user(owner)
 			.role(RoleOfGroupMember.OWNER)
+			.joinDate(LocalDate.now())
 			.build();
 		groupMember1 = GroupMember.builder()
 			.studyGroup(group)
 			.user(user)
 			.role(RoleOfGroupMember.OWNER)
+			.joinDate(LocalDate.now())
 			.build();
 		groupMember2 = GroupMember.builder()
 			.studyGroup(group)
 			.user(user2)
 			.role(RoleOfGroupMember.PARTICIPANT)
+			.joinDate(LocalDate.now())
 			.build();
 		groupMember3 = GroupMember.builder()
 			.studyGroup(group)
 			.user(user3)
 			.role(RoleOfGroupMember.ADMIN)
+			.joinDate(LocalDate.now())
 			.build();
 		groupMember4 = GroupMember.builder()
 			.studyGroup(group)
 			.user(user4)
 			.role(RoleOfGroupMember.PARTICIPANT)
+			.joinDate(LocalDate.now())
 			.build();
 
 		problem1 = Problem.builder()
