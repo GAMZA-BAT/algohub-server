@@ -48,7 +48,6 @@ import com.gamzabat.algohub.feature.studygroup.repository.RankRepository;
 import com.gamzabat.algohub.feature.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.repository.UserRepository;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -99,89 +98,89 @@ public class StudyGroupService {
 		return new CreateGroupResponse(inviteCode);
 	}
 
-	@Transactional
-	public void joinGroupWithCode(User user, String code) {
-		StudyGroup studyGroup = groupRepository.findByGroupCode(code)
-			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다."));
+    @Transactional
+    public void joinGroupWithCode(User user, String code) {
+        StudyGroup studyGroup = groupRepository.findByGroupCode(code)
+                .orElseThrow(() -> new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다."));
 
-		if (groupMemberRepository.existsByUserAndStudyGroup(user, studyGroup))
-			throw new StudyGroupValidationException(HttpStatus.BAD_REQUEST.value(), "이미 참여한 그룹 입니다.");
+        if (groupMemberRepository.existsByUserAndStudyGroup(user, studyGroup))
+            throw new StudyGroupValidationException(HttpStatus.BAD_REQUEST.value(), "이미 참여한 그룹 입니다.");
 
-		groupMemberRepository.save(
-			GroupMember.builder()
-				.studyGroup(studyGroup)
-				.user(user)
-				.role(RoleOfGroupMember.PARTICIPANT)
-				.joinDate(LocalDate.now())
-				.build()
-		);
-		log.info("success to join study group");
-	}
+        groupMemberRepository.save(
+                GroupMember.builder()
+                        .studyGroup(studyGroup)
+                        .user(user)
+                        .role(RoleOfGroupMember.PARTICIPANT)
+                        .joinDate(LocalDate.now())
+                        .build()
+        );
+        log.info("success to join study group");
+    }
 
-	@Transactional
-	public void deleteGroup(User user, Long groupId) {
-		StudyGroup studyGroup = groupRepository.findById(groupId)
-			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다."));
+    @Transactional
+    public void deleteGroup(User user, Long groupId) {
+        StudyGroup studyGroup = groupRepository.findById(groupId)
+                .orElseThrow(() -> new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다."));
 
-		GroupMember groupMember = groupMemberRepository.findByUserAndStudyGroup(user, studyGroup)
-			.orElseThrow(
-				() -> new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(), "이미 참여하지 않은 그룹 입니다."));
+        GroupMember groupMember = groupMemberRepository.findByUserAndStudyGroup(user, studyGroup)
+                .orElseThrow(
+                        () -> new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(), "이미 참여하지 않은 그룹 입니다."));
 
-		if (RoleOfGroupMember.isOwner(groupMember)) { // owner
-			bookmarkedStudyGroupRepository.deleteAll(bookmarkedStudyGroupRepository.findAllByStudyGroup(studyGroup));
-			groupMemberRepository.delete(groupMember);
-			groupRepository.delete(studyGroup);
-		} else { // member
-			deleteMemberFromStudyGroup(user, studyGroup, groupMember);
-		}
-		log.info("success to delete(exit) study group");
-	}
+        if (RoleOfGroupMember.isOwner(groupMember)) { // owner
+            bookmarkedStudyGroupRepository.deleteAll(bookmarkedStudyGroupRepository.findAllByStudyGroup(studyGroup));
+            groupMemberRepository.delete(groupMember);
+            groupRepository.delete(studyGroup);
+        } else { // member
+            deleteMemberFromStudyGroup(user, studyGroup, groupMember);
+        }
+        log.info("success to delete(exit) study group");
+    }
 
-	@Transactional
-	public void deleteMember(User user, Long userId, Long groupId) {
-		StudyGroup group = groupRepository.findById(groupId)
-			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다."));
-		GroupMember owner = groupMemberRepository.findByUserAndStudyGroup(user, group)
-			.orElseThrow(
-				() -> new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(),
-					"멤버 삭제 권한이 없습니다. : 참여하지 않은 그룹 입니다."));
+    @Transactional
+    public void deleteMember(User user, Long userId, Long groupId) {
+        StudyGroup group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다."));
+        GroupMember owner = groupMemberRepository.findByUserAndStudyGroup(user, group)
+                .orElseThrow(
+                        () -> new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(),
+                                "멤버 삭제 권한이 없습니다. : 참여하지 않은 그룹 입니다."));
 
-		if (RoleOfGroupMember.isOwner(owner)) {
-			User targetUser = userRepository.findById(userId)
-				.orElseThrow(() -> new CannotFoundUserException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 유저입니다."));
+        if (RoleOfGroupMember.isOwner(owner)) {
+            User targetUser = userRepository.findById(userId)
+                    .orElseThrow(() -> new CannotFoundUserException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 유저입니다."));
 
-			GroupMember groupMember = groupMemberRepository.findByUserAndStudyGroup(targetUser, group)
-				.orElseThrow(
-					() -> new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(), "이미 참여하지 않은 회원입니다."));
+            GroupMember groupMember = groupMemberRepository.findByUserAndStudyGroup(targetUser, group)
+                    .orElseThrow(
+                            () -> new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(), "이미 참여하지 않은 회원입니다."));
 
-			deleteMemberFromStudyGroup(user, group, groupMember);
-		} else {
-			throw new UserValidationException("멤버를 삭제 할 권한이 없습니다.");
-		}
-	}
+            deleteMemberFromStudyGroup(user, group, groupMember);
+        } else {
+            throw new UserValidationException("멤버를 삭제 할 권한이 없습니다.");
+        }
+    }
 
-	private void deleteMemberFromStudyGroup(User user, StudyGroup studyGroup, GroupMember groupMember) {
-		bookmarkedStudyGroupRepository.findByUserAndStudyGroup(user, studyGroup)
-			.ifPresent(bookmarkedStudyGroupRepository::delete);
-		groupMemberRepository.delete(groupMember);
-	}
+    private void deleteMemberFromStudyGroup(User user, StudyGroup studyGroup, GroupMember groupMember) {
+        bookmarkedStudyGroupRepository.findByUserAndStudyGroup(user, studyGroup)
+                .ifPresent(bookmarkedStudyGroupRepository::delete);
+        groupMemberRepository.delete(groupMember);
+    }
 
-	@Transactional(readOnly = true)
-	public GetStudyGroupListsResponse getStudyGroupList(User user) {
-		List<StudyGroup> groups = groupRepository.findAllByUser(user);
+    @Transactional(readOnly = true)
+    public GetStudyGroupListsResponse getStudyGroupList(User user) {
+        List<StudyGroup> groups = groupRepository.findAllByUser(user);
 
-		List<GetStudyGroupResponse> bookmarked = bookmarkedStudyGroupRepository.findAllByUser(user).stream()
-			.map(bookmark -> GetStudyGroupResponse.toDTO(bookmark.getStudyGroup(), user, true,
-				getStudyGroupOwner(bookmark.getStudyGroup())))
-			.toList();
+        List<GetStudyGroupResponse> bookmarked = bookmarkedStudyGroupRepository.findAllByUser(user).stream()
+                .map(bookmark -> GetStudyGroupResponse.toDTO(bookmark.getStudyGroup(), user, true,
+                        getStudyGroupOwner(bookmark.getStudyGroup())))
+                .toList();
 
-		LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now();
 
-		List<GetStudyGroupResponse> done = groups.stream()
-			.filter(group -> group.getEndDate() != null && group.getEndDate().isBefore(today))
-			.map(
-				group -> GetStudyGroupResponse.toDTO(group, user, isBookmarked(user, group), getStudyGroupOwner(group)))
-			.toList();
+        List<GetStudyGroupResponse> done = groups.stream()
+                .filter(group -> group.getEndDate() != null && group.getEndDate().isBefore(today))
+                .map(
+                        group -> GetStudyGroupResponse.toDTO(group, user, isBookmarked(user, group), getStudyGroupOwner(group)))
+                .toList();
 
 		List<GetStudyGroupResponse> inProgress = groups.stream()
 			.filter(
