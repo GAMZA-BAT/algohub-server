@@ -1,6 +1,6 @@
 package com.gamzabat.algohub.feature.studygroup.repository.querydsl;
 
-import static com.gamzabat.algohub.feature.studygroup.domain.QRank.*;
+import static com.gamzabat.algohub.feature.studygroup.domain.QRanking.*;
 
 import java.util.List;
 
@@ -19,8 +19,8 @@ public class CustomRankingRepositoryImpl implements CustomRankingRepository {
 
 	@Override
 	public List<Ranking> findAllByStudyGroup(StudyGroup studyGroup) {
-		return queryFactory.selectFrom(rank)
-			.where(rank.member.studyGroup.eq(studyGroup))
+		return queryFactory.selectFrom(ranking)
+			.where(ranking.member.studyGroup.eq(studyGroup))
 			.fetch();
 	}
 }
