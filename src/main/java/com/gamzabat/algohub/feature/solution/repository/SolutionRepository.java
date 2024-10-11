@@ -26,6 +26,4 @@ public interface SolutionRepository extends JpaRepository<Solution, Long>, Custo
 		"AND s.result = :correct")
 	Long countDistinctCorrectSolutionsByUserAndGroup(@Param("user") User user, @Param("groupId") Long groupId,
 		@Param("correct") String correct);
-
-	boolean existsByUserAndProblemAndResult(User user, Problem problem, String result);
 }
