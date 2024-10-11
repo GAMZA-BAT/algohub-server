@@ -107,14 +107,22 @@ public class StudyGroupService {
 		if (groupMemberRepository.existsByUserAndStudyGroup(user, studyGroup))
 			throw new StudyGroupValidationException(HttpStatus.BAD_REQUEST.value(), "이미 참여한 그룹 입니다.");
 
-		groupMemberRepository.save(
-			GroupMember.builder()
-				.studyGroup(studyGroup)
-				.user(user)
-				.role(RoleOfGroupMember.PARTICIPANT)
-				.joinDate(LocalDate.now())
-				.build()
+		GroupMember member = GroupMember.builder()
+			.studyGroup(studyGroup)
+			.user(user)
+			.role(RoleOfGroupMember.PARTICIPANT)
+			.joinDate(LocalDate.now())
+			.build();
+		groupMemberRepository.save(member);
+
+		rankingRepository.save(Ranking.builder()
+			.member(member)
+			.currentRank(groupMemberRepository.countByStudyGroup(studyGroup))
+			.solvedCount(0)
+			.rankDiff("-")
+			.build()
 		);
+
 		log.info("success to join study group");
 	}
 
