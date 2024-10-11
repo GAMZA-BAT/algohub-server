@@ -137,6 +137,7 @@ public class StudyGroupService {
 
 		if (RoleOfGroupMember.isOwner(groupMember)) { // owner
 			bookmarkedStudyGroupRepository.deleteAll(bookmarkedStudyGroupRepository.findAllByStudyGroup(studyGroup));
+			rankingRepository.deleteAll(rankingRepository.findAllByStudyGroup(studyGroup));
 			groupMemberRepository.delete(groupMember);
 			groupRepository.delete(studyGroup);
 		} else { // member
