@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
-import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
+import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;

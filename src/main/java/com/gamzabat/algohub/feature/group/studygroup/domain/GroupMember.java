@@ -1,14 +1,13 @@
-package com.gamzabat.algohub.feature.board.domain;
+package com.gamzabat.algohub.feature.group.studygroup.domain;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
-import org.hibernate.annotations.DynamicUpdate;
-
-import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
+import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
 import com.gamzabat.algohub.feature.user.domain.User;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -22,33 +21,29 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor
-@DynamicUpdate
-public class Board {
+public class GroupMember {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-
-	private String title;
-	@Column(columnDefinition = "TEXT")
-	private String content;
-	private LocalDateTime createdAt;
-	private LocalDateTime updatedAt;
-
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id")
-	private User author;
-
+	private User user;
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "study_group_id")
 	private StudyGroup studyGroup;
+	private LocalDate joinDate;
+	@Enumerated(EnumType.STRING)
+	private RoleOfGroupMember role;
 
 	@Builder
-	public Board(User author, StudyGroup studyGroup, String title, String content, LocalDateTime createdAt) {
-		this.author = author;
-		this.title = title;
+	public GroupMember(User user, StudyGroup studyGroup, LocalDate joinDate, RoleOfGroupMember role) {
+		this.user = user;
 		this.studyGroup = studyGroup;
-		this.content = content;
-		this.createdAt = createdAt;
+		this.joinDate = joinDate;
+		this.role = role;
 	}
 
+	public void updateRole(RoleOfGroupMember role) {
+		this.role = role;
+	}
 }

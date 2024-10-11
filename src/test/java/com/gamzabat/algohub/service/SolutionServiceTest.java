@@ -36,10 +36,10 @@ import com.gamzabat.algohub.feature.solution.dto.GetSolutionResponse;
 import com.gamzabat.algohub.feature.solution.exception.CannotFoundSolutionException;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
 import com.gamzabat.algohub.feature.solution.service.SolutionService;
-import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
-import com.gamzabat.algohub.feature.studygroup.exception.GroupMemberValidationException;
-import com.gamzabat.algohub.feature.studygroup.repository.GroupMemberRepository;
-import com.gamzabat.algohub.feature.studygroup.repository.StudyGroupRepository;
+import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
+import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
+import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
+import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
 
 @ExtendWith(MockitoExtension.class)

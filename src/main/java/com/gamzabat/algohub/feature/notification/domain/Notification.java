@@ -2,7 +2,7 @@ package com.gamzabat.algohub.feature.notification.domain;
 
 import java.time.LocalDateTime;
 
-import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
+import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.user.domain.User;
 
 import jakarta.persistence.Entity;

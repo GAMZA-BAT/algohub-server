@@ -32,11 +32,11 @@ import com.gamzabat.algohub.feature.problem.exception.NotBojLinkException;
 import com.gamzabat.algohub.feature.problem.exception.SolvedAcApiErrorException;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
-import com.gamzabat.algohub.feature.studygroup.domain.GroupMember;
-import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
-import com.gamzabat.algohub.feature.studygroup.etc.RoleOfGroupMember;
-import com.gamzabat.algohub.feature.studygroup.repository.GroupMemberRepository;
-import com.gamzabat.algohub.feature.studygroup.repository.StudyGroupRepository;
+import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
+import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
+import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
+import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
+import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
 
 import lombok.RequiredArgsConstructor;

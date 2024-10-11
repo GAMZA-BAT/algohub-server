@@ -16,6 +16,12 @@ import com.gamzabat.algohub.exception.ProblemValidationException;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.comment.repository.CommentRepository;
+import com.gamzabat.algohub.feature.group.ranking.service.RankingService;
+import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
+import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
+import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
+import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
+import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.solution.domain.Solution;
@@ -23,12 +29,6 @@ import com.gamzabat.algohub.feature.solution.dto.CreateSolutionRequest;
 import com.gamzabat.algohub.feature.solution.dto.GetSolutionResponse;
 import com.gamzabat.algohub.feature.solution.exception.CannotFoundSolutionException;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
-import com.gamzabat.algohub.feature.studygroup.domain.GroupMember;
-import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
-import com.gamzabat.algohub.feature.studygroup.exception.GroupMemberValidationException;
-import com.gamzabat.algohub.feature.studygroup.repository.GroupMemberRepository;
-import com.gamzabat.algohub.feature.studygroup.repository.StudyGroupRepository;
-import com.gamzabat.algohub.feature.studygroup.service.StudyGroupService;
 import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.repository.UserRepository;
 
@@ -47,7 +47,7 @@ public class SolutionService {
 	private final GroupMemberRepository groupMemberRepository;
 	private final UserRepository userRepository;
 	private final CommentRepository commentRepository;
-	private final StudyGroupService studyGroupService;
+	private final RankingService rankingService;
 
 	public Page<GetSolutionResponse> getSolutionList(User user, Long problemId, String nickname,
 		String language, String result, Pageable pageable) {
@@ -125,7 +125,7 @@ public class SolutionService {
 			);
 
 			if (isCorrect(request.result()) && updateRankFlag)
-				studyGroupService.updateRanking(member.get());
+				rankingService.updateRanking(member.get());
 		}
 	}
 
