@@ -13,7 +13,7 @@ import com.gamzabat.algohub.feature.problem.exception.SolvedAcApiErrorException;
 import com.gamzabat.algohub.feature.solution.exception.CannotFoundSolutionException;
 import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundGroupException;
 import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundProblemException;
-import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundRankException;
+import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundRankingException;
 import com.gamzabat.algohub.feature.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.studygroup.exception.InvalidRoleException;
 import com.gamzabat.algohub.feature.user.exception.BOJServerErrorException;
@@ -117,8 +117,8 @@ public class CustomExceptionHandler {
 		return ResponseEntity.badRequest().body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), e.getErrors(), null));
 	}
 
-	@ExceptionHandler(CannotFoundRankException.class)
-	protected ResponseEntity<Object> handler(CannotFoundRankException e) {
+	@ExceptionHandler(CannotFoundRankingException.class)
+	protected ResponseEntity<Object> handler(CannotFoundRankingException e) {
 		return ResponseEntity.badRequest().body(new ErrorResponse(HttpStatus.NOT_FOUND.value(), e.getError(), null));
 	}
 }

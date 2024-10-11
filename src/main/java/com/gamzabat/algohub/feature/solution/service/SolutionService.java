@@ -101,11 +101,16 @@ public class SolutionService {
 			Optional<GroupMember> member = groupMemberRepository.findByUserAndStudyGroup(user, studyGroup);
 			LocalDate endDate = problem.getEndDate();
 			LocalDate now = LocalDate.now();
+			boolean updateRankFlag = true;
 
 			if (member.isEmpty() || endDate == null || now.isAfter(endDate)) {
 				iterator.remove();
 				continue;
 			}
+
+			if (solutionRepository.existsByUserAndProblemAndResult(user, problem, BOJResultConstants.CORRECT))
+				updateRankFlag = false;
+
 			solutionRepository.save(Solution.builder()
 				.problem(problem)
 				.user(user)
@@ -119,8 +124,8 @@ public class SolutionService {
 				.build()
 			);
 
-			if (isCorrect(request.result())) // 풀이가 맞은 경우
-				studyGroupService.updateRanking(member.get()); // 랭킹 업데이트
+			if (isCorrect(request.result()) && updateRankFlag)
+				studyGroupService.updateRanking(member.get());
 		}
 	}
 

@@ -33,7 +33,7 @@ import com.gamzabat.algohub.feature.solution.domain.Solution;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
 import com.gamzabat.algohub.feature.studygroup.domain.BookmarkedStudyGroup;
 import com.gamzabat.algohub.feature.studygroup.domain.GroupMember;
-import com.gamzabat.algohub.feature.studygroup.domain.Rank;
+import com.gamzabat.algohub.feature.studygroup.domain.Ranking;
 import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.studygroup.dto.CreateGroupRequest;
 import com.gamzabat.algohub.feature.studygroup.dto.EditGroupRequest;
@@ -44,11 +44,11 @@ import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.UpdateGroupMemberRoleRequest;
 import com.gamzabat.algohub.feature.studygroup.etc.RoleOfGroupMember;
 import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundGroupException;
-import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundRankException;
+import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundRankingException;
 import com.gamzabat.algohub.feature.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.studygroup.repository.BookmarkedStudyGroupRepository;
 import com.gamzabat.algohub.feature.studygroup.repository.GroupMemberRepository;
-import com.gamzabat.algohub.feature.studygroup.repository.RankRepository;
+import com.gamzabat.algohub.feature.studygroup.repository.RankingRepository;
 import com.gamzabat.algohub.feature.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.studygroup.service.StudyGroupService;
 import com.gamzabat.algohub.feature.user.domain.User;
@@ -71,7 +71,7 @@ class StudyGroupServiceTest {
 	@Mock
 	private UserRepository userRepository;
 	@Mock
-	private RankRepository rankRepository;
+	private RankingRepository rankingRepository;
 	@Mock
 	private ImageService imageService;
 	private User user, owner, user2, user3, user4;
@@ -81,7 +81,7 @@ class StudyGroupServiceTest {
 	private final Long groupId = 10L;
 	private GroupMember ownerGroupmember;
 	private GroupMember groupMember1, groupMember2, groupMember3, groupMember4;
-	private Rank rank1, rank2, rank3, rank4;
+	private Ranking ranking1, ranking2, ranking3, ranking4;
 	@Captor
 	private ArgumentCaptor<StudyGroup> groupCaptor;
 	@Captor
@@ -162,25 +162,25 @@ class StudyGroupServiceTest {
 			.user(user2)
 			.build();
 
-		rank1 = Rank.builder()
+		ranking1 = Ranking.builder()
 			.member(groupMember1)
 			.solvedCount(3)
 			.currentRank(1)
 			.rankDiff("-")
 			.build();
-		rank2 = Rank.builder()
+		ranking2 = Ranking.builder()
 			.member(groupMember2)
 			.solvedCount(2)
 			.currentRank(2)
 			.rankDiff("+1")
 			.build();
-		rank3 = Rank.builder()
+		ranking3 = Ranking.builder()
 			.member(groupMember3)
 			.solvedCount(1)
 			.currentRank(3)
 			.rankDiff("-1")
 			.build();
-		rank4 = Rank.builder()
+		ranking4 = Ranking.builder()
 			.member(groupMember4)
 			.solvedCount(0)
 			.currentRank(4)
@@ -576,12 +576,12 @@ class StudyGroupServiceTest {
 		//given
 		when(studyGroupRepository.findById(10L)).thenReturn(Optional.of(group));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user2, group)).thenReturn(true);
-		List<Rank> ranking = new ArrayList<>();
-		ranking.add(rank2);
-		ranking.add(rank3);
-		ranking.add(rank1);
-		ranking.add(rank4);
-		when(rankRepository.findAllByStudyGroup(group)).thenReturn(ranking);
+		List<Ranking> ranking = new ArrayList<>();
+		ranking.add(ranking2);
+		ranking.add(ranking3);
+		ranking.add(ranking1);
+		ranking.add(ranking4);
+		when(rankingRepository.findAllByStudyGroup(group)).thenReturn(ranking);
 
 		//when
 		List<GetRankingResponse> result = studyGroupService.getAllRank(user2, 10L);
@@ -629,12 +629,12 @@ class StudyGroupServiceTest {
 		//given
 		when(studyGroupRepository.findById(10L)).thenReturn(Optional.of(group));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user2, group)).thenReturn(true);
-		List<Rank> ranking = new ArrayList<>();
-		ranking.add(rank2);
-		ranking.add(rank3);
-		ranking.add(rank4);
-		ranking.add(rank1);
-		when(rankRepository.findAllByStudyGroup(group)).thenReturn(ranking);
+		List<Ranking> ranking = new ArrayList<>();
+		ranking.add(ranking2);
+		ranking.add(ranking3);
+		ranking.add(ranking4);
+		ranking.add(ranking1);
+		when(rankingRepository.findAllByStudyGroup(group)).thenReturn(ranking);
 
 		//when
 		List<GetRankingResponse> result = studyGroupService.getTopRank(user2, 10L);
@@ -656,24 +656,24 @@ class StudyGroupServiceTest {
 		//given
 		when(studyGroupRepository.findById(10L)).thenReturn(Optional.of(group));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user2, group)).thenReturn(true);
-		List<Rank> ranking = new ArrayList<>();
-		ranking.add(Rank.builder()
+		List<Ranking> ranking = new ArrayList<>();
+		ranking.add(Ranking.builder()
 			.member(groupMember1)
 			.solvedCount(0)
 			.build());
-		ranking.add(Rank.builder()
+		ranking.add(Ranking.builder()
 			.member(groupMember2)
 			.solvedCount(0)
 			.build());
-		ranking.add(Rank.builder()
+		ranking.add(Ranking.builder()
 			.member(groupMember3)
 			.solvedCount(0)
 			.build());
-		ranking.add(Rank.builder()
+		ranking.add(Ranking.builder()
 			.member(groupMember4)
 			.solvedCount(0)
 			.build());
-		when(rankRepository.findAllByStudyGroup(group)).thenReturn(ranking);
+		when(rankingRepository.findAllByStudyGroup(group)).thenReturn(ranking);
 
 		//when
 		List<GetRankingResponse> result = studyGroupService.getTopRank(user2, 10L);
@@ -785,12 +785,12 @@ class StudyGroupServiceTest {
 	@DisplayName("랭킹 업데이트 성공")
 	void updateRanking() {
 		// given
-		List<Rank> ranks = new ArrayList<>();
-		ranks.add(rank1);
-		ranks.add(rank2);
-		ranks.add(rank3);
-		when(rankRepository.findAllByStudyGroup(group)).thenReturn(ranks);
-		when(rankRepository.findByMember(groupMember3)).thenReturn(Optional.of(rank3));
+		List<Ranking> rankings = new ArrayList<>();
+		rankings.add(ranking1);
+		rankings.add(ranking2);
+		rankings.add(ranking3);
+		when(rankingRepository.findAllByStudyGroup(group)).thenReturn(rankings);
+		when(rankingRepository.findByMember(groupMember3)).thenReturn(Optional.of(ranking3));
 
 		// when - user3의 랭킹이 +2
 		studyGroupService.updateRanking(groupMember3);
@@ -798,30 +798,30 @@ class StudyGroupServiceTest {
 		studyGroupService.updateRanking(groupMember3);
 
 		// then
-		assertThat(rank3.getMember()).isEqualTo(groupMember3);
-		assertThat(rank3.getCurrentRank()).isEqualTo(1);
-		assertThat(rank3.getSolvedCount()).isEqualTo(4);
-		assertThat(rank3.getRankDiff()).isEqualTo("+1");
+		assertThat(ranking3.getMember()).isEqualTo(groupMember3);
+		assertThat(ranking3.getCurrentRank()).isEqualTo(1);
+		assertThat(ranking3.getSolvedCount()).isEqualTo(4);
+		assertThat(ranking3.getRankDiff()).isEqualTo("+1");
 
-		assertThat(rank1.getMember()).isEqualTo(groupMember1);
-		assertThat(rank1.getCurrentRank()).isEqualTo(2);
-		assertThat(rank1.getSolvedCount()).isEqualTo(3);
-		assertThat(rank1.getRankDiff()).isEqualTo("-1");
+		assertThat(ranking1.getMember()).isEqualTo(groupMember1);
+		assertThat(ranking1.getCurrentRank()).isEqualTo(2);
+		assertThat(ranking1.getSolvedCount()).isEqualTo(3);
+		assertThat(ranking1.getRankDiff()).isEqualTo("-1");
 
-		assertThat(rank2.getMember()).isEqualTo(groupMember2);
-		assertThat(rank2.getCurrentRank()).isEqualTo(3);
-		assertThat(rank2.getSolvedCount()).isEqualTo(2);
-		assertThat(rank2.getRankDiff()).isEqualTo("-");
+		assertThat(ranking2.getMember()).isEqualTo(groupMember2);
+		assertThat(ranking2.getCurrentRank()).isEqualTo(3);
+		assertThat(ranking2.getSolvedCount()).isEqualTo(2);
+		assertThat(ranking2.getRankDiff()).isEqualTo("-");
 	}
 
 	@Test
 	@DisplayName("랭킹 업데이트 실패 : 유저 랭킹 정보 조회 실패")
 	void updateRankingFailed_1() {
 		// given
-		when(rankRepository.findByMember(groupMember3)).thenReturn(Optional.empty());
+		when(rankingRepository.findByMember(groupMember3)).thenReturn(Optional.empty());
 		// when, then
 		assertThatThrownBy(() -> studyGroupService.updateRanking(groupMember3))
-			.isInstanceOf(CannotFoundRankException.class)
+			.isInstanceOf(CannotFoundRankingException.class)
 			.hasFieldOrPropertyWithValue("error", "유저의 랭킹 정보를 조회할 수 없습니다.");
 	}
 }

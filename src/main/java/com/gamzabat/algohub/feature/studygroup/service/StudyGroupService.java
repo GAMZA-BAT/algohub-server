@@ -23,7 +23,7 @@ import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
 import com.gamzabat.algohub.feature.studygroup.domain.BookmarkedStudyGroup;
 import com.gamzabat.algohub.feature.studygroup.domain.GroupMember;
-import com.gamzabat.algohub.feature.studygroup.domain.Rank;
+import com.gamzabat.algohub.feature.studygroup.domain.Ranking;
 import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.studygroup.dto.CheckSolvedProblemResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.CreateGroupRequest;
@@ -39,12 +39,12 @@ import com.gamzabat.algohub.feature.studygroup.dto.UpdateGroupMemberRoleRequest;
 import com.gamzabat.algohub.feature.studygroup.etc.RoleOfGroupMember;
 import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundGroupException;
 import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundProblemException;
-import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundRankException;
+import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundRankingException;
 import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundUserException;
 import com.gamzabat.algohub.feature.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.studygroup.repository.BookmarkedStudyGroupRepository;
 import com.gamzabat.algohub.feature.studygroup.repository.GroupMemberRepository;
-import com.gamzabat.algohub.feature.studygroup.repository.RankRepository;
+import com.gamzabat.algohub.feature.studygroup.repository.RankingRepository;
 import com.gamzabat.algohub.feature.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.repository.UserRepository;
@@ -64,7 +64,7 @@ public class StudyGroupService {
 	private final UserRepository userRepository;
 	private final StudyGroupRepository studyGroupRepository;
 	private final BookmarkedStudyGroupRepository bookmarkedStudyGroupRepository;
-	private final RankRepository rankRepository;
+	private final RankingRepository rankingRepository;
 
 	@Transactional
 	public CreateGroupResponse createGroup(User user, CreateGroupRequest request, MultipartFile profileImage) {
@@ -89,7 +89,7 @@ public class StudyGroupService {
 			.build();
 		groupMemberRepository.save(member);
 
-		rankRepository.save(Rank.builder()
+		rankingRepository.save(Ranking.builder()
 			.member(member)
 			.solvedCount(0)
 			.currentRank(1)
@@ -163,6 +163,7 @@ public class StudyGroupService {
 	private void deleteMemberFromStudyGroup(User user, StudyGroup studyGroup, GroupMember groupMember) {
 		bookmarkedStudyGroupRepository.findByUserAndStudyGroup(user, studyGroup)
 			.ifPresent(bookmarkedStudyGroupRepository::delete);
+		rankingRepository.deleteByMember(groupMember);
 		groupMemberRepository.delete(groupMember);
 	}
 
@@ -326,10 +327,10 @@ public class StudyGroupService {
 			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "랭킹을 확인할 권한이 없습니다.");
 		}
 
-		List<Rank> ranking = rankRepository.findAllByStudyGroup(group)
+		List<Ranking> ranking = rankingRepository.findAllByStudyGroup(group)
 			.stream()
 			.filter(r -> r.getSolvedCount() != 0)
-			.sorted(Comparator.comparing(Rank::getCurrentRank))
+			.sorted(Comparator.comparing(Ranking::getCurrentRank))
 			.toList();
 
 		if (ranking.size() >= 3)
@@ -348,14 +349,14 @@ public class StudyGroupService {
 			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "랭킹을 확인할 권한이 없습니다.");
 		}
 
-		List<Rank> ranking = rankRepository.findAllByStudyGroup(group)
+		List<Ranking> ranking = rankingRepository.findAllByStudyGroup(group)
 			.stream()
-			.sorted(Comparator.comparing(Rank::getCurrentRank))
+			.sorted(Comparator.comparing(Ranking::getCurrentRank))
 			.toList();
 		return getRankingResponse(ranking);
 	}
 
-	private List<GetRankingResponse> getRankingResponse(List<Rank> ranking) {
+	private List<GetRankingResponse> getRankingResponse(List<Ranking> ranking) {
 		return ranking.stream().map(r -> new GetRankingResponse(
 				r.getMember().getUser().getNickname(),
 				r.getMember().getUser().getProfileImage(),
@@ -442,20 +443,20 @@ public class StudyGroupService {
 	}
 
 	public void updateRanking(GroupMember member) {
-		Rank rank = rankRepository.findByMember(member)
-			.orElseThrow(() -> new CannotFoundRankException("유저의 랭킹 정보를 조회할 수 없습니다."));
-		rank.increaseSolvedCount();
+		Ranking ranking = rankingRepository.findByMember(member)
+			.orElseThrow(() -> new CannotFoundRankingException("유저의 랭킹 정보를 조회할 수 없습니다."));
+		ranking.increaseSolvedCount();
 
-		List<Rank> ranks = rankRepository.findAllByStudyGroup(member.getStudyGroup());
-		ranks.sort((r1, r2) -> {
+		List<Ranking> rankings = rankingRepository.findAllByStudyGroup(member.getStudyGroup());
+		rankings.sort((r1, r2) -> {
 			int compare = r2.getSolvedCount() - r1.getSolvedCount();
 			if (compare == 0)
 				return r1.getMember().getJoinDate().compareTo(r2.getMember().getJoinDate());
 			return r2.getSolvedCount() - r1.getSolvedCount();
 		});
-		for (Rank r : ranks) {
+		for (Ranking r : rankings) {
 			int originRank = r.getCurrentRank();
-			int newRank = ranks.indexOf(r) + 1;
+			int newRank = rankings.indexOf(r) + 1;
 			r.updateRank(newRank);
 			r.updateRankDiff(generateRankDiffString(originRank, newRank));
 		}

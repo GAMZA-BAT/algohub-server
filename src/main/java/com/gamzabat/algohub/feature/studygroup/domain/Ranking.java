@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor
-public class Rank {
+public class Ranking {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long Id;
@@ -28,7 +28,7 @@ public class Rank {
 	private String rankDiff;
 
 	@Builder
-	public Rank(GroupMember member, int solvedCount, int currentRank, String rankDiff) {
+	public Ranking(GroupMember member, int solvedCount, int currentRank, String rankDiff) {
 		this.member = member;
 		this.solvedCount = solvedCount;
 		this.currentRank = currentRank;
