@@ -1,7 +1,7 @@
 package com.gamzabat.algohub.feature.group.studygroup.repository.querydsl;
 
-import static com.gamzabat.algohub.feature.studygroup.domain.QGroupMember.*;
-import static com.gamzabat.algohub.feature.studygroup.domain.QStudyGroup.*;
+import static com.gamzabat.algohub.feature.group.studygroup.domain.QGroupMember.*;
+import static com.gamzabat.algohub.feature.group.studygroup.domain.QStudyGroup.*;
 
 import java.util.List;
 

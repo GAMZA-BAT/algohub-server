@@ -1,5 +1,6 @@
 package com.gamzabat.algohub.service;
 
+import static com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 

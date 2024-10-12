@@ -1,6 +1,6 @@
 package com.gamzabat.algohub.feature.group.ranking.repository.querydsl;
 
-import static com.gamzabat.algohub.feature.studygroup.domain.QRanking.*;
+import static com.gamzabat.algohub.feature.group.ranking.domain.QRanking.*;
 
 import java.util.List;
 
