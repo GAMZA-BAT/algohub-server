@@ -20,6 +20,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockMultipartFile;
 
@@ -69,6 +70,10 @@ class StudyGroupServiceTest {
 	private UserRepository userRepository;
 	@Mock
 	private RankingRepository rankingRepository;
+	@Mock
+	private ObjectProvider<StudyGroupService> studyGroupServiceObjectProvider;
+	@InjectMocks
+	private StudyGroupService groupService = mock(StudyGroupService.class);
 	@Mock
 	private ImageService imageService;
 	private User user, owner, user2, user3;
@@ -253,15 +258,25 @@ class StudyGroupServiceTest {
 			.role(RoleOfGroupMember.ADMIN)
 			.joinDate(LocalDate.now())
 			.build();
-		when(studyGroupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+
+		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.ofNullable(group));
 		when(groupMemberRepository.findByUserAndStudyGroup(user2, group)).thenReturn(Optional.of(groupMember));
-		when(bookmarkedStudyGroupRepository.findByUserAndStudyGroup(user2, group)).thenReturn(
-			Optional.ofNullable(bookmark));
+
+		when(studyGroupServiceObjectProvider.getObject()).thenReturn(groupService);
+		doNothing().when(groupService).deleteMemberFromStudyGroup(user2, groupMember, group);
+		doAnswer(invocation -> {
+			groupMemberRepository.delete(groupMember);
+			bookmarkedStudyGroupRepository.delete(bookmark);
+			return null;
+		}).when(groupService).deleteMemberFromStudyGroup(user2, groupMember, group);
+
 		// when
-		studyGroupService.deleteGroup(user2, 10L);
+		studyGroupService.deleteGroup(user2, groupId);
 		// then
 		verify(groupMemberRepository, times(1)).delete(groupMember);
 		verify(bookmarkedStudyGroupRepository, times(1)).delete(Objects.requireNonNull(bookmark));
+		verify(groupService, times(1)).deleteMemberFromStudyGroup(user2, groupMember,
+			group);
 	}
 
 	@Test

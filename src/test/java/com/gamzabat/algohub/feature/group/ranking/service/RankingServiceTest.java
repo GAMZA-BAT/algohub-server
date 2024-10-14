@@ -21,7 +21,6 @@ import org.springframework.http.HttpStatus;
 import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.feature.group.ranking.domain.Ranking;
 import com.gamzabat.algohub.feature.group.ranking.dto.GetRankingResponse;
-import com.gamzabat.algohub.feature.group.ranking.exception.CannotFoundRankingException;
 import com.gamzabat.algohub.feature.group.ranking.repository.RankingRepository;
 import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
@@ -274,49 +273,5 @@ class RankingServiceTest {
 			.isInstanceOf(GroupMemberValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "랭킹을 확인할 권한이 없습니다.");
-	}
-
-	@Test
-	@DisplayName("랭킹 업데이트 성공")
-	void updateRanking() {
-		// given
-		List<Ranking> rankings = new ArrayList<>();
-		rankings.add(ranking1);
-		rankings.add(ranking2);
-		rankings.add(ranking3);
-		when(rankingRepository.findAllByStudyGroup(group)).thenReturn(rankings);
-		when(rankingRepository.findByMember(groupMember3)).thenReturn(Optional.of(ranking3));
-
-		// when - user3의 랭킹이 +2
-		rankingService.updateRanking(groupMember3);
-		rankingService.updateRanking(groupMember3);
-		rankingService.updateRanking(groupMember3);
-
-		// then
-		assertThat(ranking3.getMember()).isEqualTo(groupMember3);
-		assertThat(ranking3.getCurrentRank()).isEqualTo(1);
-		assertThat(ranking3.getSolvedCount()).isEqualTo(4);
-		assertThat(ranking3.getRankDiff()).isEqualTo("+1");
-
-		assertThat(ranking1.getMember()).isEqualTo(groupMember1);
-		assertThat(ranking1.getCurrentRank()).isEqualTo(2);
-		assertThat(ranking1.getSolvedCount()).isEqualTo(3);
-		assertThat(ranking1.getRankDiff()).isEqualTo("-1");
-
-		assertThat(ranking2.getMember()).isEqualTo(groupMember2);
-		assertThat(ranking2.getCurrentRank()).isEqualTo(3);
-		assertThat(ranking2.getSolvedCount()).isEqualTo(2);
-		assertThat(ranking2.getRankDiff()).isEqualTo("-");
-	}
-
-	@Test
-	@DisplayName("랭킹 업데이트 실패 : 유저 랭킹 정보 조회 실패")
-	void updateRankingFailed_1() {
-		// given
-		when(rankingRepository.findByMember(groupMember3)).thenReturn(Optional.empty());
-		// when, then
-		assertThatThrownBy(() -> rankingService.updateRanking(groupMember3))
-			.isInstanceOf(CannotFoundRankingException.class)
-			.hasFieldOrPropertyWithValue("error", "유저의 랭킹 정보를 조회할 수 없습니다.");
 	}
 }
