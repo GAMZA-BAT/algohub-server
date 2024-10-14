@@ -28,13 +28,15 @@ public class Ranking {
 	private int solvedCount;
 	private int currentRank;
 	private String rankDiff;
+	private double score;
 
 	@Builder
-	public Ranking(GroupMember member, int solvedCount, int currentRank, String rankDiff) {
+	public Ranking(GroupMember member, int solvedCount, int currentRank, String rankDiff, double score) {
 		this.member = member;
 		this.solvedCount = solvedCount;
 		this.currentRank = currentRank;
 		this.rankDiff = rankDiff;
+		this.score = score;
 	}
 
 	public void increaseSolvedCount() {
@@ -47,5 +49,9 @@ public class Ranking {
 
 	public void updateRankDiff(String newRankDiff) {
 		this.rankDiff = newRankDiff;
+	}
+
+	public void updateScore(double newScore) {
+		this.score += newScore;
 	}
 }
