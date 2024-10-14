@@ -1,7 +1,9 @@
 package com.gamzabat.algohub.feature.solution.service;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -52,6 +54,8 @@ public class SolutionService {
 	private final CommentRepository commentRepository;
 	private final RankingRepository rankingRepository;
 	private final RankingUpdateService rankingUpdateService;
+
+	private static final double SCORE_SCALING_FACTOR = 1e-4;
 
 	public Page<GetSolutionResponse> getSolutionList(User user, Long problemId, String nickname,
 		String language, String result, Pageable pageable) {
@@ -105,15 +109,17 @@ public class SolutionService {
 			Optional<GroupMember> member = groupMemberRepository.findByUserAndStudyGroup(user, studyGroup);
 			LocalDate endDate = problem.getEndDate();
 			LocalDate now = LocalDate.now();
-			boolean updateRankFlag = true;
+			LocalDateTime solvedDateTime = LocalDateTime.now();
+			boolean isFirstCorrectSolution = true;
 
 			if (member.isEmpty() || endDate == null || now.isAfter(endDate)) {
 				iterator.remove();
 				continue;
 			}
 
-			if (solutionRepository.existsByUserAndProblemAndResult(user, problem, BOJResultConstants.CORRECT))
-				updateRankFlag = false;
+			if (!isCorrect(request.result()) || solutionRepository.existsByUserAndProblemAndResult(user, problem,
+				BOJResultConstants.CORRECT))
+				isFirstCorrectSolution = false;
 
 			solutionRepository.save(Solution.builder()
 				.problem(problem)
@@ -124,17 +130,30 @@ public class SolutionService {
 				.language(request.codeType())
 				.codeLength(request.codeLength())
 				.result(request.result())
-				.solvedDateTime(LocalDateTime.now())
+				.solvedDateTime(solvedDateTime)
 				.build()
 			);
 
-			if (isCorrect(request.result()) && updateRankFlag) {
-				Ranking ranking = rankingRepository.findByMember(member.get())
-					.orElseThrow(() -> new CannotFoundRankingException("유저의 랭킹 정보를 조회할 수 없습니다."));
-				ranking.increaseSolvedCount();
-				rankingUpdateService.updateRanking(studyGroup);
-			}
+			if (isFirstCorrectSolution)
+				updateScoreAndRanking(member.get(), studyGroup, problem.getEndDate(), solvedDateTime);
 		}
+	}
+
+	private void updateScoreAndRanking(GroupMember member, StudyGroup studyGroup, LocalDate problemEndDate,
+		LocalDateTime solvedDateTime) {
+		Ranking ranking = rankingRepository.findByMember(member)
+			.orElseThrow(() -> new CannotFoundRankingException("유저의 랭킹 정보를 조회할 수 없습니다."));
+
+		ranking.increaseSolvedCount();
+		ranking.updateScore(calculateNewScore(problemEndDate, solvedDateTime));
+
+		rankingUpdateService.updateRanking(studyGroup);
+	}
+
+	private double calculateNewScore(LocalDate problemEndDate, LocalDateTime solvedDateTime) {
+		LocalDateTime endDateTime = problemEndDate.atTime(LocalTime.MAX);
+		Duration duration = Duration.between(solvedDateTime, endDateTime);
+		return duration.getSeconds() * SCORE_SCALING_FACTOR;
 	}
 
 	private boolean isCorrect(String result) {
