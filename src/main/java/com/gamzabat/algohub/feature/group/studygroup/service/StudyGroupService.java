@@ -8,6 +8,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -63,6 +64,8 @@ public class StudyGroupService {
 	private final StudyGroupRepository studyGroupRepository;
 	private final BookmarkedStudyGroupRepository bookmarkedStudyGroupRepository;
 	private final RankingRepository rankingRepository;
+
+	private final ObjectProvider<StudyGroupService> studyGroupServiceProvider;
 
 	@Transactional
 	public CreateGroupResponse createGroup(User user, CreateGroupRequest request, MultipartFile profileImage) {
@@ -139,7 +142,7 @@ public class StudyGroupService {
 			groupMemberRepository.delete(groupMember);
 			groupRepository.delete(studyGroup);
 		} else { // member
-			deleteMemberFromStudyGroup(user, studyGroup, groupMember);
+			studyGroupServiceProvider.getObject().deleteMemberFromStudyGroup(user, groupMember, studyGroup);
 		}
 		log.info("success to delete(exit) study group");
 	}
@@ -161,17 +164,18 @@ public class StudyGroupService {
 				.orElseThrow(
 					() -> new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(), "이미 참여하지 않은 회원입니다."));
 
-			deleteMemberFromStudyGroup(user, group, groupMember);
+			studyGroupServiceProvider.getObject().deleteMemberFromStudyGroup(user, groupMember, group);
 		} else {
 			throw new UserValidationException("멤버를 삭제 할 권한이 없습니다.");
 		}
 	}
 
-	private void deleteMemberFromStudyGroup(User user, StudyGroup studyGroup, GroupMember groupMember) {
+	public void deleteMemberFromStudyGroup(User user, GroupMember groupMember, StudyGroup studyGroup) {
 		bookmarkedStudyGroupRepository.findByUserAndStudyGroup(user, studyGroup)
 			.ifPresent(bookmarkedStudyGroupRepository::delete);
 		rankingRepository.deleteByMember(groupMember);
 		groupMemberRepository.delete(groupMember);
+		log.info("success to delete group member");
 	}
 
 	@Transactional(readOnly = true)

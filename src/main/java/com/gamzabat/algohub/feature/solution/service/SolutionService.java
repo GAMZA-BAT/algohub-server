@@ -16,7 +16,10 @@ import com.gamzabat.algohub.exception.ProblemValidationException;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.comment.repository.CommentRepository;
-import com.gamzabat.algohub.feature.group.ranking.service.RankingService;
+import com.gamzabat.algohub.feature.group.ranking.domain.Ranking;
+import com.gamzabat.algohub.feature.group.ranking.exception.CannotFoundRankingException;
+import com.gamzabat.algohub.feature.group.ranking.repository.RankingRepository;
+import com.gamzabat.algohub.feature.group.ranking.service.RankingUpdateService;
 import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
@@ -47,7 +50,8 @@ public class SolutionService {
 	private final GroupMemberRepository groupMemberRepository;
 	private final UserRepository userRepository;
 	private final CommentRepository commentRepository;
-	private final RankingService rankingService;
+	private final RankingRepository rankingRepository;
+	private final RankingUpdateService rankingUpdateService;
 
 	public Page<GetSolutionResponse> getSolutionList(User user, Long problemId, String nickname,
 		String language, String result, Pageable pageable) {
@@ -124,8 +128,12 @@ public class SolutionService {
 				.build()
 			);
 
-			if (isCorrect(request.result()) && updateRankFlag)
-				rankingService.updateRanking(member.get());
+			if (isCorrect(request.result()) && updateRankFlag) {
+				Ranking ranking = rankingRepository.findByMember(member.get())
+					.orElseThrow(() -> new CannotFoundRankingException("유저의 랭킹 정보를 조회할 수 없습니다."));
+				ranking.increaseSolvedCount();
+				rankingUpdateService.updateRanking(studyGroup);
+			}
 		}
 	}
 
