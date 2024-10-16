@@ -1,10 +1,14 @@
 package com.gamzabat.algohub.feature.group.ranking.service;
 
+import static com.gamzabat.algohub.feature.group.ranking.service.RankingService.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Field;
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -21,6 +25,7 @@ import org.springframework.http.HttpStatus;
 import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.feature.group.ranking.domain.Ranking;
 import com.gamzabat.algohub.feature.group.ranking.dto.GetRankingResponse;
+import com.gamzabat.algohub.feature.group.ranking.exception.CannotFoundRankingException;
 import com.gamzabat.algohub.feature.group.ranking.repository.RankingRepository;
 import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
@@ -41,6 +46,8 @@ class RankingServiceTest {
 	private StudyGroupRepository studyGroupRepository;
 	@Mock
 	private GroupMemberRepository groupMemberRepository;
+	@Mock
+	private RankingUpdateService rankingUpdateService;
 
 	private User user, owner, user2, user3, user4;
 	private StudyGroup group;
@@ -96,24 +103,28 @@ class RankingServiceTest {
 			.member(groupMember1)
 			.solvedCount(3)
 			.currentRank(1)
+			.score(10)
 			.rankDiff("-")
 			.build();
 		ranking2 = Ranking.builder()
 			.member(groupMember2)
 			.solvedCount(2)
 			.currentRank(2)
-			.rankDiff("+1")
+			.score(8)
+			.rankDiff("-")
 			.build();
 		ranking3 = Ranking.builder()
 			.member(groupMember3)
 			.solvedCount(1)
 			.currentRank(3)
-			.rankDiff("-1")
+			.score(6)
+			.rankDiff("-")
 			.build();
 		ranking4 = Ranking.builder()
 			.member(groupMember4)
 			.solvedCount(0)
 			.currentRank(4)
+			.score(4)
 			.rankDiff("-")
 			.build();
 
@@ -265,5 +276,41 @@ class RankingServiceTest {
 			.isInstanceOf(GroupMemberValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "랭킹을 확인할 권한이 없습니다.");
+	}
+
+	@Test
+	@DisplayName("랭킹 점수 업데이트 성공")
+	void updateRankingAndScore() {
+		// given
+		LocalDate problemEndDate = LocalDate.now().plusDays(10);
+		LocalDateTime solvedDateTime = LocalDateTime.now();
+
+		LocalDateTime endDateTime = problemEndDate.atTime(LocalTime.MAX);
+		Duration duration = Duration.between(solvedDateTime, endDateTime);
+		double score = duration.getSeconds() * SCORE_SCALING_FACTOR;
+
+		when(rankingRepository.findByMember(groupMember2)).thenReturn(Optional.ofNullable(ranking2));
+
+		// when
+		rankingService.updateScore(groupMember2, problemEndDate, solvedDateTime);
+
+		// then
+		assertThat(ranking2.getScore()).isEqualTo(score + 8);
+		assertThat(ranking2.getSolvedCount()).isEqualTo(3);
+	}
+
+	@Test
+	@DisplayName("랭킹 점수 업데이트 실패 : 랭킹 정보 조회 불가")
+	void updateRanking_FailedByCannotFoundRanking() {
+		// given
+		LocalDate problemEndDate = LocalDate.now().plusDays(10);
+		LocalDateTime solvedDateTime = LocalDateTime.now();
+
+		when(rankingRepository.findByMember(groupMember1)).thenReturn(Optional.empty());
+		// when, then
+		assertThatThrownBy(
+			() -> rankingService.updateScore(groupMember1, problemEndDate, solvedDateTime))
+			.isInstanceOf(CannotFoundRankingException.class)
+			.hasFieldOrPropertyWithValue("error", "유저의 랭킹 정보를 조회할 수 없습니다.");
 	}
 }
