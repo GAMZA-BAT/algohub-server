@@ -1,20 +1,19 @@
 package com.gamzabat.algohub.feature.group.ranking.service;
 
-import static org.assertj.core.api.AssertionsForClassTypes.*;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Field;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.feature.group.ranking.domain.Ranking;
@@ -22,19 +21,35 @@ import com.gamzabat.algohub.feature.group.ranking.repository.RankingRepository;
 import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
+import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
+import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
+import com.gamzabat.algohub.feature.group.studygroup.service.StudyGroupService;
+import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.user.domain.User;
+import com.gamzabat.algohub.feature.user.repository.UserRepository;
 
+@SpringBootTest
 @ExtendWith(MockitoExtension.class)
-class RankingUpdateServiceTest {
-	@InjectMocks
-	private RankingUpdateService rankingUpdateService;
-	@Mock
+public class RankingUpdateServiceAOPTest {
+	@MockBean
 	private RankingRepository rankingRepository;
+	@MockBean
+	private StudyGroupRepository studyGroupRepository;
+	@MockBean
+	private GroupMemberRepository groupMemberRepository;
+	@Autowired
+	private StudyGroupService studyGroupService;
+	@MockBean
+	private RankingUpdateService rankingUpdateService;
 
 	private User user, owner, user2, user3, user4;
 	private StudyGroup group;
+	private Problem problem1, problem2;
 	private GroupMember groupMember1, groupMember2, groupMember3, groupMember4;
-	private Ranking ranking1, ranking2, ranking3;
+	private Ranking ranking1, ranking2, ranking3, ranking4;
+	private final Long groupId = 10L;
+	@MockBean
+	private UserRepository userRepository;
 
 	@BeforeEach
 	void setUp() throws NoSuchFieldException, IllegalAccessException {
@@ -79,6 +94,13 @@ class RankingUpdateServiceTest {
 			.role(RoleOfGroupMember.PARTICIPANT)
 			.joinDate(LocalDate.now())
 			.build();
+
+		problem1 = Problem.builder()
+			.studyGroup(group)
+			.build();
+		problem2 = Problem.builder()
+			.studyGroup(group)
+			.build();
 		ranking1 = Ranking.builder()
 			.member(groupMember1)
 			.solvedCount(1)
@@ -100,6 +122,13 @@ class RankingUpdateServiceTest {
 			.score(6)
 			.rankDiff("-")
 			.build();
+		ranking4 = Ranking.builder()
+			.member(groupMember4)
+			.solvedCount(1)
+			.currentRank(4)
+			.score(4)
+			.rankDiff("-")
+			.build();
 
 		Field userField = User.class.getDeclaredField("id");
 		userField.setAccessible(true);
@@ -114,28 +143,30 @@ class RankingUpdateServiceTest {
 	}
 
 	@Test
-	@DisplayName("랭킹 업데이트 성공")
-	void updateRanking() {
+	@DisplayName("deleteMember 후 AOP 랭킹 업데이트 호출 성공")
+	void testAopTriggerAfterDeleteMemberFromStudyGroup() {
 		// given
-		List<Ranking> rankings = new ArrayList<>();
-		rankings.add(ranking1);
-		rankings.add(ranking2);
-		rankings.add(ranking3);
-
-		ranking3.increaseSolvedCount();
-		when(rankingRepository.findAllByStudyGroup(group)).thenReturn(rankings);
-
+		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.of(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.of(groupMember1));
+		when(userRepository.findById(user2.getId())).thenReturn(Optional.ofNullable(user2));
+		when(groupMemberRepository.findByUserAndStudyGroup(user2, group)).thenReturn(Optional.of(groupMember2));
+		doNothing().when(rankingUpdateService).updateRanking(group);
 		// when
-		rankingUpdateService.updateRanking(group);
-
+		studyGroupService.deleteMember(user, user2.getId(), groupId);
 		// then
-		assertThat(ranking3.getCurrentRank()).isEqualTo(1);
-		assertThat(ranking3.getRankDiff()).isEqualTo("+2");
+		verify(rankingUpdateService, times(1)).updateRanking(group);
+	}
 
-		assertThat(ranking1.getCurrentRank()).isEqualTo(2);
-		assertThat(ranking1.getRankDiff()).isEqualTo("-1");
-
-		assertThat(ranking2.getCurrentRank()).isEqualTo(3);
-		assertThat(ranking2.getRankDiff()).isEqualTo("-1");
+	@Test
+	@DisplayName("deleteGroup 후 AOP 랭킹 업데이트 호출 성공")
+	void testAOPTriggerAfterDeleteGroup() {
+		// given
+		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.of(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user2, group)).thenReturn(Optional.of(groupMember2));
+		doNothing().when(rankingUpdateService).updateRanking(group);
+		// when
+		studyGroupService.deleteGroup(user2, groupId);
+		// then
+		verify(rankingUpdateService, times(1)).updateRanking(group);
 	}
 }
