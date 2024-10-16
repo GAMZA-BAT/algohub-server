@@ -28,9 +28,6 @@ import com.gamzabat.algohub.feature.group.ranking.dto.GetRankingResponse;
 import com.gamzabat.algohub.feature.group.ranking.service.RankingService;
 import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundGroupException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
-import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
-import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
-import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.repository.UserRepository;
 
@@ -46,12 +43,6 @@ class RankingControllerTest {
 	private ObjectMapper objectMapper;
 	@MockBean
 	private RankingService rankingService;
-	@MockBean
-	private StudyGroupRepository studyGroupRepository;
-	@MockBean
-	private GroupMemberRepository groupMemberRepository;
-	@MockBean
-	private SolutionRepository solutionRepository;
 	@MockBean
 	private TokenProvider tokenProvider;
 	@MockBean
