@@ -16,7 +16,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
 import com.gamzabat.algohub.enums.Role;
-import com.gamzabat.algohub.feature.group.ranking.domain.Ranking;
 import com.gamzabat.algohub.feature.group.ranking.repository.RankingRepository;
 import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
@@ -24,7 +23,6 @@ import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.group.studygroup.service.StudyGroupService;
-import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.repository.UserRepository;
 
@@ -44,9 +42,7 @@ public class RankingUpdateServiceAOPTest {
 
 	private User user, owner, user2, user3, user4;
 	private StudyGroup group;
-	private Problem problem1, problem2;
-	private GroupMember groupMember1, groupMember2, groupMember3, groupMember4;
-	private Ranking ranking1, ranking2, ranking3, ranking4;
+	private GroupMember groupMember1, groupMember2;
 	private final Long groupId = 10L;
 	@MockBean
 	private UserRepository userRepository;
@@ -81,53 +77,6 @@ public class RankingUpdateServiceAOPTest {
 			.user(user2)
 			.role(RoleOfGroupMember.PARTICIPANT)
 			.joinDate(LocalDate.now())
-			.build();
-		groupMember3 = GroupMember.builder()
-			.studyGroup(group)
-			.user(user3)
-			.role(RoleOfGroupMember.ADMIN)
-			.joinDate(LocalDate.now())
-			.build();
-		groupMember4 = GroupMember.builder()
-			.studyGroup(group)
-			.user(user4)
-			.role(RoleOfGroupMember.PARTICIPANT)
-			.joinDate(LocalDate.now())
-			.build();
-
-		problem1 = Problem.builder()
-			.studyGroup(group)
-			.build();
-		problem2 = Problem.builder()
-			.studyGroup(group)
-			.build();
-		ranking1 = Ranking.builder()
-			.member(groupMember1)
-			.solvedCount(1)
-			.currentRank(1)
-			.score(10)
-			.rankDiff("-")
-			.build();
-		ranking2 = Ranking.builder()
-			.member(groupMember2)
-			.solvedCount(1)
-			.currentRank(2)
-			.score(8)
-			.rankDiff("-")
-			.build();
-		ranking3 = Ranking.builder()
-			.member(groupMember3)
-			.solvedCount(1)
-			.currentRank(3)
-			.score(6)
-			.rankDiff("-")
-			.build();
-		ranking4 = Ranking.builder()
-			.member(groupMember4)
-			.solvedCount(1)
-			.currentRank(4)
-			.score(4)
-			.rankDiff("-")
 			.build();
 
 		Field userField = User.class.getDeclaredField("id");
