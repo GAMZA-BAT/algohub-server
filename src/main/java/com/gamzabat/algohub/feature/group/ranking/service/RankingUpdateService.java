@@ -32,7 +32,10 @@ public class RankingUpdateService {
 	public void updateRanking(StudyGroup studyGroup) {
 		List<Ranking> rankings = rankingRepository.findAllByStudyGroup(studyGroup);
 		rankings.sort((r1, r2) -> {
-			return r2.getSolvedCount() - r1.getSolvedCount(); // TODO : 2차로 score 비교 추가
+			int solvedCompare = r2.getSolvedCount() - r1.getSolvedCount();
+			if (solvedCompare == 0)
+				return (int)(r2.getScore() - r1.getScore());
+			return solvedCompare;
 		});
 		for (Ranking r : rankings) {
 			int originRank = r.getCurrentRank();
