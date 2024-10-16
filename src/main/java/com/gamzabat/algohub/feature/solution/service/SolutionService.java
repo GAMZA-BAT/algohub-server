@@ -17,6 +17,7 @@ import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.comment.repository.CommentRepository;
 import com.gamzabat.algohub.feature.group.ranking.service.RankingService;
+import com.gamzabat.algohub.feature.group.ranking.service.RankingUpdateService;
 import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
@@ -48,6 +49,7 @@ public class SolutionService {
 	private final UserRepository userRepository;
 	private final CommentRepository commentRepository;
 	private final RankingService rankingService;
+	private final RankingUpdateService rankingUpdateService;
 
 	public Page<GetSolutionResponse> getSolutionList(User user, Long problemId, String nickname,
 		String language, String result, Pageable pageable) {
@@ -126,8 +128,10 @@ public class SolutionService {
 				.build()
 			);
 
-			if (isFirstCorrectSolution)
-				rankingService.updateScoreAndRanking(member.get(), studyGroup, problem.getEndDate(), solvedDateTime);
+			if (isFirstCorrectSolution) {
+				rankingService.updateScore(member.get(), problem.getEndDate(), solvedDateTime);
+				rankingUpdateService.updateRanking(studyGroup);
+			}
 		}
 	}
 

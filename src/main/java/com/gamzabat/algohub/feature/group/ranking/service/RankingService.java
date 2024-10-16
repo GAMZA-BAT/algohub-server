@@ -87,15 +87,14 @@ public class RankingService {
 	}
 
 	@Transactional
-	public void updateScoreAndRanking(GroupMember member, StudyGroup studyGroup, LocalDate problemEndDate,
+	public void updateScore(GroupMember member, LocalDate problemEndDate,
 		LocalDateTime solvedDateTime) {
 		Ranking ranking = rankingRepository.findByMember(member)
 			.orElseThrow(() -> new CannotFoundRankingException("유저의 랭킹 정보를 조회할 수 없습니다."));
 
 		ranking.increaseSolvedCount();
 		ranking.updateScore(calculateNewScore(problemEndDate, solvedDateTime));
-
-		rankingUpdateService.updateRanking(studyGroup);
+		log.info("success to update ranking score");
 	}
 
 	private double calculateNewScore(LocalDate problemEndDate, LocalDateTime solvedDateTime) {
