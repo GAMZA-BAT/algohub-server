@@ -35,7 +35,7 @@ public class RankingService {
 	private final GroupMemberRepository groupMemberRepository;
 	private final RankingUpdateService rankingUpdateService;
 
-	private static final double SCORE_SCALING_FACTOR = 1e-4;
+	public static final double SCORE_SCALING_FACTOR = 1e-4;
 
 	@Transactional(readOnly = true)
 	public List<GetRankingResponse> getTopRank(User user, Long groupId) {
