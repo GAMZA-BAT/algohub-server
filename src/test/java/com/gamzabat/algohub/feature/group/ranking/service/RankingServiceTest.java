@@ -29,7 +29,6 @@ import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundGroupE
 import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
-import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.user.domain.User;
 
 @ExtendWith(MockitoExtension.class)
@@ -45,7 +44,6 @@ class RankingServiceTest {
 
 	private User user, owner, user2, user3, user4;
 	private StudyGroup group;
-	private Problem problem1, problem2;
 	private GroupMember groupMember1, groupMember2, groupMember3, groupMember4;
 	private Ranking ranking1, ranking2, ranking3, ranking4;
 	private final Long groupId = 10L;
@@ -94,12 +92,6 @@ class RankingServiceTest {
 			.joinDate(LocalDate.now())
 			.build();
 
-		problem1 = Problem.builder()
-			.studyGroup(group)
-			.build();
-		problem2 = Problem.builder()
-			.studyGroup(group)
-			.build();
 		ranking1 = Ranking.builder()
 			.member(groupMember1)
 			.solvedCount(3)
