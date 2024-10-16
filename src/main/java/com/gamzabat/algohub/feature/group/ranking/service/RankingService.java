@@ -1,5 +1,9 @@
 package com.gamzabat.algohub.feature.group.ranking.service;
 
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
 
@@ -9,7 +13,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.gamzabat.algohub.feature.group.ranking.domain.Ranking;
 import com.gamzabat.algohub.feature.group.ranking.dto.GetRankingResponse;
+import com.gamzabat.algohub.feature.group.ranking.exception.CannotFoundRankingException;
 import com.gamzabat.algohub.feature.group.ranking.repository.RankingRepository;
+import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundGroupException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
@@ -27,6 +33,9 @@ public class RankingService {
 	private final RankingRepository rankingRepository;
 	private final StudyGroupRepository groupRepository;
 	private final GroupMemberRepository groupMemberRepository;
+	private final RankingUpdateService rankingUpdateService;
+
+	private static final double SCORE_SCALING_FACTOR = 1e-4;
 
 	@Transactional(readOnly = true)
 	public List<GetRankingResponse> getTopRank(User user, Long groupId) {
@@ -75,5 +84,23 @@ public class RankingService {
 				(long)r.getSolvedCount(),
 				r.getRankDiff()))
 			.toList();
+	}
+
+	@Transactional
+	public void updateScoreAndRanking(GroupMember member, StudyGroup studyGroup, LocalDate problemEndDate,
+		LocalDateTime solvedDateTime) {
+		Ranking ranking = rankingRepository.findByMember(member)
+			.orElseThrow(() -> new CannotFoundRankingException("유저의 랭킹 정보를 조회할 수 없습니다."));
+
+		ranking.increaseSolvedCount();
+		ranking.updateScore(calculateNewScore(problemEndDate, solvedDateTime));
+
+		rankingUpdateService.updateRanking(studyGroup);
+	}
+
+	private double calculateNewScore(LocalDate problemEndDate, LocalDateTime solvedDateTime) {
+		LocalDateTime endDateTime = problemEndDate.atTime(LocalTime.MAX);
+		Duration duration = Duration.between(solvedDateTime, endDateTime);
+		return duration.getSeconds() * SCORE_SCALING_FACTOR;
 	}
 }
