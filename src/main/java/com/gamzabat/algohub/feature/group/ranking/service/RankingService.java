@@ -33,7 +33,6 @@ public class RankingService {
 	private final RankingRepository rankingRepository;
 	private final StudyGroupRepository groupRepository;
 	private final GroupMemberRepository groupMemberRepository;
-	private final RankingUpdateService rankingUpdateService;
 
 	public static final double SCORE_SCALING_FACTOR = 1e-4;
 
