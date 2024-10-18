@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -249,6 +250,21 @@ public class ProblemService {
 			.collect(Collectors.toList());
 
 		return responseList;
+	}
+
+	@Scheduled(cron = "0 0 0 * * *")
+	public void sendStartProblemNotification() {
+		LocalDate now = LocalDate.now();
+		List<Problem> problems = problemRepository.findAllByStartDate(now);
+		for (Problem problem : problems) {
+			List<GroupMember> members = groupMemberRepository.findAllByStudyGroup(problem.getStudyGroup());
+			List<String> users = members.stream().map(member -> member.getUser().getEmail()).toList();
+			try {
+				notificationService.sendList(users, "새로운 과제가 등록되었습니다.", problem.getStudyGroup(), null);
+			} catch (Exception e) {
+				log.info("failed to send notification", e);
+			}
+		}
 	}
 
 	private Problem getProblem(Long problemId) {
