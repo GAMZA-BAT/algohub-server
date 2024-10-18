@@ -1,7 +1,6 @@
 package com.gamzabat.algohub.feature.notification.dto;
 
-import java.time.LocalDateTime;
-
+import com.gamzabat.algohub.common.DateFormatUtil;
 import com.gamzabat.algohub.feature.notification.domain.Notification;
 
 public record GetNotificationResponse(Long id,
@@ -9,7 +8,7 @@ public record GetNotificationResponse(Long id,
 									  String groupImage,
 									  String message,
 									  String subContent,
-									  LocalDateTime createdAt,
+									  String createdAt,
 									  boolean isRead) {
 	public static GetNotificationResponse toDTO(Notification notification) {
 		return new GetNotificationResponse(
@@ -18,7 +17,7 @@ public record GetNotificationResponse(Long id,
 			notification.getStudyGroup().getGroupImage(),
 			notification.getMessage(),
 			notification.getSubContent(),
-			notification.getCreatedAt(),
+			DateFormatUtil.formatDate(notification.getCreatedAt().toLocalDate()),
 			notification.isRead()
 		);
 	}
