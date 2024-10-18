@@ -26,6 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
+import com.gamzabat.algohub.common.DateFormatUtil;
 import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.exception.ProblemValidationException;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
@@ -517,13 +518,15 @@ class ProblemServiceTest {
 			assertThat(inProgress.get(i).getProblemId()).isEqualTo(i);
 			assertThat(inProgress.get(i).getLink()).isEqualTo("https://www.acmicpc.net/problem/" + i);
 			assertThat(inProgress.get(i).getTitle()).isEqualTo("title" + i);
-			assertThat(inProgress.get(i).getEndDate()).isEqualTo(LocalDate.now().plusDays(i + 1));
+			assertThat(inProgress.get(i).getEndDate()).isEqualTo(
+				DateFormatUtil.formatDate(LocalDate.now().plusDays(i + 1)));
 		}
 		for (int i = 10; i < 20; i++) {
 			assertThat(expired.get(i - 10).getProblemId()).isEqualTo(i);
 			assertThat(expired.get(i - 10).getLink()).isEqualTo("https://www.acmicpc.net/problem/" + i);
 			assertThat(expired.get(i - 10).getTitle()).isEqualTo("title" + i);
-			assertThat(expired.get(i - 10).getEndDate()).isEqualTo(LocalDate.now().minusDays(i));
+			assertThat(expired.get(i - 10).getEndDate()).isEqualTo(
+				DateFormatUtil.formatDate(LocalDate.now().minusDays(i)));
 		}
 	}
 
@@ -636,8 +639,9 @@ class ProblemServiceTest {
 			assertThat(result.get(i).getProblemId()).isEqualTo(i);
 			assertThat(result.get(i).getLink()).isEqualTo("https://www.acmicpc.net/problem/" + i);
 			assertThat(result.get(i).getTitle()).isEqualTo("title" + i);
-			assertThat(result.get(i).getStartDate()).isEqualTo(LocalDate.now().plusDays(1));
-			assertThat(result.get(i).getEndDate()).isEqualTo(LocalDate.now().plusDays(i + 1));
+			assertThat(result.get(i).getStartDate()).isEqualTo(DateFormatUtil.formatDate(LocalDate.now().plusDays(1)));
+			assertThat(result.get(i).getEndDate()).isEqualTo(
+				DateFormatUtil.formatDate(LocalDate.now().plusDays(i + 1)));
 		}
 	}
 
@@ -675,8 +679,9 @@ class ProblemServiceTest {
 			assertThat(result.get(i).getProblemId()).isEqualTo(i);
 			assertThat(result.get(i).getLink()).isEqualTo("https://www.acmicpc.net/problem/" + i);
 			assertThat(result.get(i).getTitle()).isEqualTo("title" + i);
-			assertThat(result.get(i).getStartDate()).isEqualTo(LocalDate.now().plusDays(1));
-			assertThat(result.get(i).getEndDate()).isEqualTo(LocalDate.now().plusDays(i + 1));
+			assertThat(result.get(i).getStartDate()).isEqualTo(DateFormatUtil.formatDate(LocalDate.now().plusDays(1)));
+			assertThat(result.get(i).getEndDate()).isEqualTo(
+				DateFormatUtil.formatDate(LocalDate.now().plusDays(i + 1)));
 		}
 	}
 
