@@ -1,7 +1,6 @@
 package com.gamzabat.algohub.feature.board.dto;
 
-import java.time.LocalDateTime;
-
+import com.gamzabat.algohub.common.DateFormatUtil;
 import com.gamzabat.algohub.feature.board.domain.Board;
 
 import lombok.Builder;
@@ -11,7 +10,7 @@ public record GetBoardResponse(String author,
 							   Long boardId,
 							   String boardContent,
 							   String boardTitle,
-							   LocalDateTime createAt) {
+							   String createAt) {
 
 	public static GetBoardResponse toDTO(Board board) {
 		return GetBoardResponse.builder()
@@ -19,7 +18,7 @@ public record GetBoardResponse(String author,
 			.boardId(board.getId())
 			.boardTitle(board.getTitle())
 			.boardContent(board.getContent())
-			.createAt(board.getCreatedAt())
+			.createAt(DateFormatUtil.formatDate(board.getCreatedAt().toLocalDate()))
 			.build();
 
 	}
