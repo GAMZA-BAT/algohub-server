@@ -2,6 +2,8 @@ package com.gamzabat.algohub.feature.problem.dto;
 
 import java.time.LocalDate;
 
+import com.gamzabat.algohub.common.DateFormatUtil;
+
 import lombok.Getter;
 
 @Getter
@@ -9,8 +11,8 @@ public class GetProblemResponse {
 	private String title;
 	private Long problemId;
 	private String link;
-	private LocalDate startDate;
-	private LocalDate endDate;
+	private String startDate;
+	private String endDate;
 	private Integer level;
 	private boolean solved;
 	private Integer submitMemberCount;
@@ -24,8 +26,8 @@ public class GetProblemResponse {
 		this.title = title;
 		this.problemId = problemId;
 		this.link = link;
-		this.startDate = startDate;
-		this.endDate = endDate;
+		this.startDate = DateFormatUtil.formatDate(startDate);
+		this.endDate = DateFormatUtil.formatDate(endDate);
 		this.level = level;
 		this.solved = solved;
 		this.submitMemberCount = submissionCount;
@@ -34,21 +36,3 @@ public class GetProblemResponse {
 		this.inProgress = inProgress;
 	}
 }
-/*public record GetProblemResponse(Long problemId,
-								 String link,
-								 String title,
-								 LocalDate deadline,
-								 Integer level,
-								 Integer submissionCount,
-								 Integer memberCount,
-								 Integer accurancy) {
-	public static GetProblemResponse toDTO(Problem problem){
-		return GetProblemResponse.builder()
-			.problemId(problem.getId())
-			.link(problem.getLink())
-			.title(problem.getTitle())
-			.deadline(problem.getDeadline())
-			.level(problem.getLevel())
-			.build();
-	}
-}*/
