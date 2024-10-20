@@ -661,4 +661,40 @@ class StudyGroupServiceTest {
 			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
 			.hasFieldOrPropertyWithValue("error", "해당 스터디 그룹에 참여하지 않은 회원입니다.");
 	}
+
+	@Test
+	@DisplayName("그룹 내 회원 Role 조회 성공")
+	void getRoleInGroup() {
+		// given
+		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.of(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
+		// when
+		String result = studyGroupService.getRoleInGroup(user, groupId);
+		// then
+		assertThat(result).isEqualTo(RoleOfGroupMember.OWNER.getValue());
+	}
+
+	@Test
+	@DisplayName("그룹 내 회원 Role 조회 실패 : 존재하지 않는 그룹")
+	void getRoleInGroupFailed_1() {
+		// given
+		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.empty());
+		// when
+		assertThatThrownBy(() -> studyGroupService.getRoleInGroup(user, groupId))
+			.isInstanceOf(CannotFoundGroupException.class)
+			.hasFieldOrPropertyWithValue("errors", "존재하지 않는 그룹입니다.");
+	}
+
+	@Test
+	@DisplayName("그룹 내 회원 Role 조회 실패 : 참여하지 않은 그룹")
+	void getRoleInGroupFailed_2() {
+		// given
+		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.of(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.empty());
+		// when
+		assertThatThrownBy(() -> studyGroupService.getRoleInGroup(user, groupId))
+			.isInstanceOf(GroupMemberValidationException.class)
+			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹입니다.");
+	}
+
 }
