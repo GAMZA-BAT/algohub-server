@@ -101,8 +101,7 @@ class UserControllerTest {
 				.file(requestPart)
 				.file(profileImage)
 				.contentType(MediaType.MULTIPART_FORM_DATA))
-			.andExpect(status().isOk())
-			.andExpect(content().string("OK"));
+			.andExpect(status().isOk());
 
 		verify(userService, times(1)).register(any(RegisterRequest.class), any(MultipartFile.class));
 	}
@@ -121,8 +120,7 @@ class UserControllerTest {
 		mockMvc.perform(multipart("/api/user/sign-up")
 				.file(requestPart)
 				.contentType(MediaType.MULTIPART_FORM_DATA))
-			.andExpect(status().isOk())
-			.andExpect(content().string("OK"));
+			.andExpect(status().isOk());
 
 		verify(userService, times(1)).register(any(RegisterRequest.class), any());
 	}
@@ -266,8 +264,7 @@ class UserControllerTest {
 					return request1;
 				})
 				.contentType(MediaType.MULTIPART_FORM_DATA))
-			.andExpect(status().isOk())
-			.andExpect(content().string("OK"));
+			.andExpect(status().isOk());
 
 		verify(userService, times(1)).userUpdate(any(User.class), any(UpdateUserRequest.class),
 			any(MultipartFile.class));
@@ -301,8 +298,7 @@ class UserControllerTest {
 				.header("Authorization", token)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
-			.andExpect(status().isOk())
-			.andExpect(content().string("회원정보를 삭제했습니다."));
+			.andExpect(status().isOk());
 
 		verify(userService, times(1)).deleteUser(user, request);
 	}
@@ -348,8 +344,7 @@ class UserControllerTest {
 		// when, then
 		mockMvc.perform(get("/api/user/check-baekjoon-nickname")
 				.param("bjNickname", bjNickname))
-			.andExpect(status().isOk())
-			.andExpect(content().string("OK"));
+			.andExpect(status().isOk());
 		verify(userService, times(1)).checkBjNickname(bjNickname);
 	}
 
@@ -408,8 +403,7 @@ class UserControllerTest {
 		mockMvc.perform(post("/api/user/check-email")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
-			.andExpect(status().isOk())
-			.andExpect(content().string("OK"));
+			.andExpect(status().isOk());
 		verify(userService, times(1)).checkEmailDuplication(anyString());
 	}
 
@@ -456,8 +450,7 @@ class UserControllerTest {
 		mockMvc.perform(get("/api/user/check-nickname")
 				.header("Authorization", token)
 				.param("nickname", nickname))
-			.andExpect(status().isOk())
-			.andExpect(content().string("OK"));
+			.andExpect(status().isOk());
 		verify(userService, times(1)).checkNickname(nickname);
 	}
 

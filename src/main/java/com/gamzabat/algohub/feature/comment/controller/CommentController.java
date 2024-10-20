@@ -35,12 +35,12 @@ public class CommentController {
 
 	@PostMapping
 	@Operation(summary = "댓글 작성 API")
-	public ResponseEntity<Object> createComment(@AuthedUser User user,
+	public ResponseEntity<Void> createComment(@AuthedUser User user,
 		@Valid @RequestBody CreateCommentRequest request, Errors errors) {
 		if (errors.hasErrors())
 			throw new RequestException("댓글 작성 요청이 올바르지 않습니다.", errors);
 		commentService.createComment(user, request);
-		return ResponseEntity.ok().body("OK");
+		return ResponseEntity.ok().build();
 	}
 
 	@GetMapping
@@ -53,18 +53,18 @@ public class CommentController {
 
 	@DeleteMapping
 	@Operation(summary = "댓글 삭제 API")
-	public ResponseEntity<Object> deleteComment(@AuthedUser User user, @RequestParam Long commentId) {
+	public ResponseEntity<Void> deleteComment(@AuthedUser User user, @RequestParam Long commentId) {
 		commentService.deleteComment(user, commentId);
-		return ResponseEntity.ok().body("OK");
+		return ResponseEntity.ok().build();
 	}
 
 	@PutMapping
 	@Operation(summary = "댓글 수정 API")
-	public ResponseEntity<String> modifyComment(@AuthedUser User user,
+	public ResponseEntity<Void> modifyComment(@AuthedUser User user,
 		@Valid @RequestBody UpdateCommentRequest request, Errors errors) {
 		if (errors.hasErrors())
 			throw new RequestException("수정 요청이 올바르지 않습니다", errors);
 		commentService.updateComment(user, request);
-		return ResponseEntity.ok().body("OK");
+		return ResponseEntity.ok().build();
 	}
 }
