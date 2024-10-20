@@ -9,12 +9,12 @@ import lombok.Getter;
 @Getter
 public class GetGroupMemberResponse {
 
-	private String nickname;
-	private LocalDate joinDate;
-	private String achivement;
-	private RoleOfGroupMember role;
-	private String profileImage;
-	private Long memberId;
+	private final String nickname;
+	private final LocalDate joinDate;
+	private final String achivement;
+	private final RoleOfGroupMember role;
+	private final String profileImage;
+	private final Long memberId;
 
 	public GetGroupMemberResponse(String nickname, LocalDate joinDate, String achivement, RoleOfGroupMember role,
 		String profileImage, Long memberId) {
