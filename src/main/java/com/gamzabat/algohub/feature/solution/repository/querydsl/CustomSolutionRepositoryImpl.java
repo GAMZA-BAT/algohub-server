@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import com.gamzabat.algohub.constants.LanguageConstants;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.solution.domain.Solution;
+import com.gamzabat.algohub.feature.user.domain.User;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
@@ -20,6 +21,17 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class CustomSolutionRepositoryImpl implements CustomSolutionRepository {
 	private final JPAQueryFactory queryFactory;
+
+	@Override
+	public boolean existsByUserAndProblemAndResult(User user, Problem problem, String result) {
+		JPAQuery<Solution> query = queryFactory.selectFrom(solution)
+			.where(solution.user.eq(user))
+			.where(solution.problem.eq(problem));
+
+		addResultFilter(result, query);
+
+		return query.fetchFirst() != null;
+	}
 
 	@Override
 	public Page<Solution> findAllFilteredSolutions(Problem problem, String nickname, String language, String result,

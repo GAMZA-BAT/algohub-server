@@ -1,0 +1,28 @@
+package com.gamzabat.algohub.feature.group.studygroup.dto;
+
+import java.time.LocalDate;
+
+import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
+
+import lombok.Getter;
+
+@Getter
+public class GetGroupMemberResponse {
+
+	private String nickname;
+	private LocalDate joinDate;
+	private String achivement;
+	private RoleOfGroupMember role;
+	private String profileImage;
+	private Long memberId;
+
+	public GetGroupMemberResponse(String nickname, LocalDate joinDate, String achivement, RoleOfGroupMember role,
+		String profileImage, Long memberId) {
+		this.nickname = nickname;
+		this.joinDate = joinDate;
+		this.achivement = achivement;
+		this.role = role;
+		this.profileImage = profileImage;
+		this.memberId = memberId;
+	}
+}

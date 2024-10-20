@@ -7,7 +7,6 @@ import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -21,35 +20,35 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockMultipartFile;
 
-import com.gamzabat.algohub.constants.BOJResultConstants;
 import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.exception.UserValidationException;
+import com.gamzabat.algohub.feature.group.ranking.repository.RankingRepository;
+import com.gamzabat.algohub.feature.group.studygroup.domain.BookmarkedStudyGroup;
+import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
+import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
+import com.gamzabat.algohub.feature.group.studygroup.dto.CreateGroupRequest;
+import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupRequest;
+import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupMemberResponse;
+import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupListsResponse;
+import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupResponse;
+import com.gamzabat.algohub.feature.group.studygroup.dto.UpdateGroupMemberRoleRequest;
+import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
+import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundGroupException;
+import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
+import com.gamzabat.algohub.feature.group.studygroup.repository.BookmarkedStudyGroupRepository;
+import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
+import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
+import com.gamzabat.algohub.feature.group.studygroup.service.StudyGroupService;
 import com.gamzabat.algohub.feature.image.service.ImageService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.solution.domain.Solution;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
-import com.gamzabat.algohub.feature.studygroup.domain.BookmarkedStudyGroup;
-import com.gamzabat.algohub.feature.studygroup.domain.GroupMember;
-import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
-import com.gamzabat.algohub.feature.studygroup.dto.CreateGroupRequest;
-import com.gamzabat.algohub.feature.studygroup.dto.EditGroupRequest;
-import com.gamzabat.algohub.feature.studygroup.dto.GetGroupMemberResponse;
-import com.gamzabat.algohub.feature.studygroup.dto.GetRankingResponse;
-import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupListsResponse;
-import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupResponse;
-import com.gamzabat.algohub.feature.studygroup.dto.UpdateGroupMemberRoleRequest;
-import com.gamzabat.algohub.feature.studygroup.etc.RoleOfGroupMember;
-import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundGroupException;
-import com.gamzabat.algohub.feature.studygroup.exception.GroupMemberValidationException;
-import com.gamzabat.algohub.feature.studygroup.repository.BookmarkedStudyGroupRepository;
-import com.gamzabat.algohub.feature.studygroup.repository.GroupMemberRepository;
-import com.gamzabat.algohub.feature.studygroup.repository.StudyGroupRepository;
-import com.gamzabat.algohub.feature.studygroup.service.StudyGroupService;
 import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.repository.UserRepository;
 
@@ -70,22 +69,20 @@ class StudyGroupServiceTest {
 	@Mock
 	private UserRepository userRepository;
 	@Mock
+	private RankingRepository rankingRepository;
+	@Mock
+	private ObjectProvider<StudyGroupService> studyGroupServiceObjectProvider;
+	@InjectMocks
+	private StudyGroupService groupService = mock(StudyGroupService.class);
+	@Mock
 	private ImageService imageService;
-	private User user;
-	private User owner;
-	private User user2;
-	private User user3;
+	private User user, owner, user2, user3;
 	private StudyGroup group;
-	private Problem problem1;
-	private Problem problem2;
-	private Solution solution1;
-	private Solution solution2;
-	private Solution solution3;
+	private Problem problem1, problem2;
+	private Solution solution1, solution2, solution3;
+	private GroupMember groupMember1, groupMember2, groupMember3;
 	private final Long groupId = 10L;
 	private GroupMember ownerGroupmember;
-	private GroupMember groupMember1;
-	private GroupMember groupMember2;
-	private GroupMember groupMember3;
 	@Captor
 	private ArgumentCaptor<StudyGroup> groupCaptor;
 	@Captor
@@ -101,6 +98,7 @@ class StudyGroupServiceTest {
 			.role(Role.USER).profileImage("image2").build();
 		user3 = User.builder().email("email3").password("password").nickname("nickname3")
 			.role(Role.USER).profileImage("image3").build();
+
 		group = StudyGroup.builder()
 			.name("name")
 			.startDate(LocalDate.now())
@@ -112,21 +110,25 @@ class StudyGroupServiceTest {
 			.studyGroup(group)
 			.user(owner)
 			.role(RoleOfGroupMember.OWNER)
+			.joinDate(LocalDate.now())
 			.build();
 		groupMember1 = GroupMember.builder()
 			.studyGroup(group)
 			.user(user)
 			.role(RoleOfGroupMember.OWNER)
+			.joinDate(LocalDate.now())
 			.build();
 		groupMember2 = GroupMember.builder()
 			.studyGroup(group)
 			.user(user2)
 			.role(RoleOfGroupMember.PARTICIPANT)
+			.joinDate(LocalDate.now())
 			.build();
 		groupMember3 = GroupMember.builder()
 			.studyGroup(group)
 			.user(user3)
 			.role(RoleOfGroupMember.ADMIN)
+			.joinDate(LocalDate.now())
 			.build();
 
 		problem1 = Problem.builder()
@@ -256,15 +258,25 @@ class StudyGroupServiceTest {
 			.role(RoleOfGroupMember.ADMIN)
 			.joinDate(LocalDate.now())
 			.build();
-		when(studyGroupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+
+		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.ofNullable(group));
 		when(groupMemberRepository.findByUserAndStudyGroup(user2, group)).thenReturn(Optional.of(groupMember));
-		when(bookmarkedStudyGroupRepository.findByUserAndStudyGroup(user2, group)).thenReturn(
-			Optional.ofNullable(bookmark));
+
+		when(studyGroupServiceObjectProvider.getObject()).thenReturn(groupService);
+		doNothing().when(groupService).deleteMemberFromStudyGroup(user2, groupMember, group);
+		doAnswer(invocation -> {
+			groupMemberRepository.delete(groupMember);
+			bookmarkedStudyGroupRepository.delete(bookmark);
+			return null;
+		}).when(groupService).deleteMemberFromStudyGroup(user2, groupMember, group);
+
 		// when
-		studyGroupService.deleteGroup(user2, 10L);
+		studyGroupService.deleteGroup(user2, groupId);
 		// then
 		verify(groupMemberRepository, times(1)).delete(groupMember);
 		verify(bookmarkedStudyGroupRepository, times(1)).delete(Objects.requireNonNull(bookmark));
+		verify(groupService, times(1)).deleteMemberFromStudyGroup(user2, groupMember,
+			group);
 	}
 
 	@Test
@@ -535,58 +547,6 @@ class StudyGroupServiceTest {
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
 			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹 입니다.");
-	}
-
-	@Test
-	@DisplayName("전체랭킹 조회 성공")
-	void getAllRank_SuccessByOwner() {
-		//given
-		when(studyGroupRepository.findById(10L)).thenReturn(Optional.of(group));
-		when(groupMemberRepository.existsByUserAndStudyGroup(user2, group)).thenReturn(true);
-		List<GetRankingResponse> response = Arrays.asList(
-			new GetRankingResponse("nickname2", "image2", 1, 2L), // user2
-			new GetRankingResponse("nickname1", "image1", 2, 1L)  // user1
-		);
-		when(solutionRepository.findTopUsersByGroup(group, BOJResultConstants.CORRECT)).thenReturn(response);
-
-		//when
-		List<GetRankingResponse> result = studyGroupService.getAllRank(user2, 10L);
-
-		//then
-		assertThat(result.get(0).getProfileImage()).isEqualTo("image2");
-		assertThat(result.get(0).getSolvedCount()).isEqualTo(2L);
-		assertThat(result.get(0).getUserNickname()).isEqualTo("nickname2");
-		assertThat(result.get(0).getRank()).isEqualTo(1);
-
-		assertThat(result.get(1).getProfileImage()).isEqualTo("image1");
-		assertThat(result.get(1).getSolvedCount()).isEqualTo(1L);
-		assertThat(result.get(1).getUserNickname()).isEqualTo("nickname1");
-		assertThat((result.get(1).getRank())).isEqualTo(2);
-	}
-
-	@Test
-	@DisplayName("전체랭킹 조회 실패 : 그룹을 못 찾은 경우")
-	void getAllRank_FailedByCannotFoundGroup() {
-		//given
-		when(studyGroupRepository.findById(9L)).thenReturn(Optional.empty());
-
-		//then
-		assertThatThrownBy(() -> studyGroupService.getAllRank(user, 9L))
-			.isInstanceOf(CannotFoundGroupException.class)
-			.hasFieldOrPropertyWithValue("errors", "그룹을 찾을 수 없습니다.");
-	}
-
-	@Test
-	@DisplayName("전체랭킹 조회 실패 : 랭킹을 확인할 권한이 없는경우")
-	void getAllRank_FailedByAccess() {
-		//given
-		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.of(group));
-		when(groupMemberRepository.existsByUserAndStudyGroup(user2, group)).thenReturn(false);
-
-		//then
-		assertThatThrownBy(() -> studyGroupService.getAllRank(user2, groupId))
-			.isInstanceOf(UserValidationException.class)
-			.hasFieldOrPropertyWithValue("errors", "랭킹을 확인할 권한이 없습니다.");
 	}
 
 	@Test
