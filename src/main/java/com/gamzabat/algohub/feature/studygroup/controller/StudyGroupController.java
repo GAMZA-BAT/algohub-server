@@ -160,4 +160,11 @@ public class StudyGroupController {
 		studyGroupService.updateGroupMemberRole(user, request);
 		return ResponseEntity.ok().body("OK");
 	}
+
+	@GetMapping(value = "/role")
+	@Operation(summary = "스터디 그룹 내 유저의 Role 조회 API", description = "특정 스터디 그룹 내에서 유저의 Role을 조회하는 API")
+	public ResponseEntity<String> getGroupRole(@AuthedUser User user, @RequestParam Long groupId) {
+		String response = studyGroupService.getRoleInGroup(user, groupId);
+		return ResponseEntity.ok().body(response);
+	}
 }
