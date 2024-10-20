@@ -36,12 +36,14 @@ import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
 import com.gamzabat.algohub.feature.studygroup.domain.BookmarkedStudyGroup;
 import com.gamzabat.algohub.feature.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
+import com.gamzabat.algohub.feature.studygroup.dto.BookmarkStatus;
 import com.gamzabat.algohub.feature.studygroup.dto.CreateGroupRequest;
 import com.gamzabat.algohub.feature.studygroup.dto.EditGroupRequest;
 import com.gamzabat.algohub.feature.studygroup.dto.GetGroupMemberResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.GetRankingResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupListsResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupResponse;
+import com.gamzabat.algohub.feature.studygroup.dto.UpdateBookmarkResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.UpdateGroupMemberRoleRequest;
 import com.gamzabat.algohub.feature.studygroup.etc.RoleOfGroupMember;
 import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundGroupException;
@@ -491,9 +493,9 @@ class StudyGroupServiceTest {
 		when(bookmarkedStudyGroupRepository.findByUserAndStudyGroup(user2, group)).thenReturn(
 			Optional.empty());
 		// when
-		String response = studyGroupService.updateBookmarkGroup(user2, groupId);
+		UpdateBookmarkResponse response = studyGroupService.updateBookmarkGroup(user2, groupId);
 		// then
-		assertThat(response).isEqualTo("스터디 그룹 즐겨찾기 추가 성공");
+		assertThat(response.status()).isEqualTo(BookmarkStatus.BOOKMARKED);
 	}
 
 	@Test
@@ -509,9 +511,9 @@ class StudyGroupServiceTest {
 		when(bookmarkedStudyGroupRepository.findByUserAndStudyGroup(user2, group)).thenReturn(
 			Optional.of(bookmarkedStudyGroup));
 		// when
-		String response = studyGroupService.updateBookmarkGroup(user2, groupId);
+		UpdateBookmarkResponse response = studyGroupService.updateBookmarkGroup(user2, groupId);
 		// then
-		assertThat(response).isEqualTo("스터디 그룹 즐겨찾기 삭제 성공");
+		assertThat(response.status()).isEqualTo(BookmarkStatus.UNMARKED);
 	}
 
 	@Test
