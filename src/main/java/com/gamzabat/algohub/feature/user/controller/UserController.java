@@ -42,17 +42,17 @@ public class UserController {
 
 	@PostMapping(value = "/sign-up", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(summary = "회원 가입 API")
-	public ResponseEntity<Object> register(@Valid @RequestPart RegisterRequest request, Errors errors,
+	public ResponseEntity<Void> register(@Valid @RequestPart RegisterRequest request, Errors errors,
 		@RequestPart(required = false) MultipartFile profileImage) {
 		if (errors.hasErrors())
 			throw new RequestException("올바르지 않은 요청입니다.", errors);
 		userService.register(request, profileImage);
-		return ResponseEntity.ok().body("OK");
+		return ResponseEntity.ok().build();
 	}
 
 	@PostMapping(value = "/sign-in")
 	@Operation(summary = "로그인 API")
-	public ResponseEntity<Object> signIn(@Valid @RequestBody SignInRequest request, Errors errors) {
+	public ResponseEntity<SignInResponse> signIn(@Valid @RequestBody SignInRequest request, Errors errors) {
 		if (errors.hasErrors())
 			throw new RequestException("로그인 요청이 올바르지 않습니다.", errors);
 		SignInResponse response = userService.signIn(request);
@@ -68,63 +68,63 @@ public class UserController {
 
 	@PatchMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(summary = "회원정보수정 API")
-	public ResponseEntity<Object> updateInfo(@AuthedUser User user, @RequestPart UpdateUserRequest request,
+	public ResponseEntity<Void> updateInfo(@AuthedUser User user, @RequestPart UpdateUserRequest request,
 		@RequestPart(required = false) MultipartFile profileImage) {
 
 		userService.userUpdate(user, request, profileImage);
-		return ResponseEntity.ok().body("OK");
+		return ResponseEntity.ok().build();
 	}
 
 	@DeleteMapping()
 	@Operation(summary = "회원정보삭제 API")
-	public ResponseEntity<Object> deleteUser(@AuthedUser User user, @Valid @RequestBody DeleteUserRequest request,
+	public ResponseEntity<Void> deleteUser(@AuthedUser User user, @Valid @RequestBody DeleteUserRequest request,
 		Errors errors) {
 		if (errors.hasErrors()) {
 			throw new RequestException("올바르지 않은 요청입니다.", errors);
 		}
 		userService.deleteUser(user, request);
-		return ResponseEntity.ok().body("회원정보를 삭제했습니다.");
+		return ResponseEntity.ok().build();
 	}
 
 	@DeleteMapping("/logout")
 	@Operation(summary = "로그아웃 API")
-	public ResponseEntity<Object> logout(HttpServletRequest request) {
+	public ResponseEntity<Void> logout(HttpServletRequest request) {
 		userService.logout(request);
-		return ResponseEntity.ok().body("OK");
+		return ResponseEntity.ok().build();
 	}
 
 	@GetMapping("/check-baekjoon-nickname")
 	@Operation(summary = "백준 닉네임 유효성 검증 API", description = "회원가입 진행 시, 백준 닉네임이 유효한지 검증하는 API")
-	public ResponseEntity<String> checkBjNickname(@RequestParam String bjNickname) {
+	public ResponseEntity<Void> checkBjNickname(@RequestParam String bjNickname) {
 		userService.checkBjNickname(bjNickname);
-		return ResponseEntity.ok().body("OK");
+		return ResponseEntity.ok().build();
 	}
 
 	@PatchMapping("/edit-password")
 	@Operation(summary = "비밀번호 변경 API")
-	public ResponseEntity<Object> editPassword(@AuthedUser User user,
+	public ResponseEntity<Void> editPassword(@AuthedUser User user,
 		@Valid @RequestBody EditUserPasswordRequest request, Errors errors) {
 		if (errors.hasErrors()) {
 			throw new RequestException("올바르지 않은 요청입니다.", errors);
 		}
 		userService.editPassword(user, request);
-		return ResponseEntity.ok().body("OK");
+		return ResponseEntity.ok().build();
 	}
 
 	@PostMapping("/check-email")
 	@Operation(summary = "이메일 중복 검사 API", description = "회원가입 진행 시, 이메일 형태 및 중복을 검사하는 API")
-	public ResponseEntity<String> checkEmailDuplication(@Valid @RequestBody CheckEmailRequest request, Errors errors) {
+	public ResponseEntity<Void> checkEmailDuplication(@Valid @RequestBody CheckEmailRequest request, Errors errors) {
 		if (errors.hasErrors())
 			throw new RequestException("이메일 중복 검사 요청이 올바르지 않습니다.", errors);
 
 		userService.checkEmailDuplication(request.email());
-		return ResponseEntity.ok().body("OK");
+		return ResponseEntity.ok().build();
 	}
 
 	@GetMapping("/check-nickname")
 	@Operation(summary = "닉네임 중복 검사 API", description = "회원가입 진행 시, 닉네임 형식 및 중복을 검사하는 API")
-	public ResponseEntity<String> checkNickname(@RequestParam String nickname) {
+	public ResponseEntity<Void> checkNickname(@RequestParam String nickname) {
 		userService.checkNickname(nickname);
-		return ResponseEntity.ok().body("OK");
+		return ResponseEntity.ok().build();
 	}
 }

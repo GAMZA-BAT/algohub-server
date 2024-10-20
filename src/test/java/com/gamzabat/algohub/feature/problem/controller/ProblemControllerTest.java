@@ -95,8 +95,7 @@ class ProblemControllerTest {
 				.header("Authorization", token)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
-			.andExpect(status().isOk())
-			.andExpect(content().string("OK"));
+			.andExpect(status().isOk());
 		verify(problemService, times(1)).createProblem(user, request);
 	}
 
@@ -206,8 +205,7 @@ class ProblemControllerTest {
 				.header("Authorization", token)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
-			.andExpect(status().isOk())
-			.andExpect(content().string("OK"));
+			.andExpect(status().isOk());
 		verify(problemService, times(1)).editProblem(user, request);
 	}
 
@@ -370,8 +368,7 @@ class ProblemControllerTest {
 		mockMvc.perform(delete("/api/problem")
 				.header("Authorization", token)
 				.param("problemId", String.valueOf(problemId)))
-			.andExpect(status().isOk())
-			.andExpect(content().string("OK"));
+			.andExpect(status().isOk());
 		verify(problemService, times(1)).deleteProblem(user, problemId);
 	}
 

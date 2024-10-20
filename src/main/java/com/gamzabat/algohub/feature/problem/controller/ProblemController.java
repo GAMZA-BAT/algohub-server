@@ -39,22 +39,22 @@ public class ProblemController {
 
 	@PostMapping
 	@Operation(summary = "문제 생성 API")
-	public ResponseEntity<Object> createProblem(@AuthedUser User user,
+	public ResponseEntity<Void> createProblem(@AuthedUser User user,
 		@Valid @RequestBody CreateProblemRequest request, Errors errors) {
 		if (errors.hasErrors())
 			throw new RequestException("문제 생성 요청이 올바르지 않습니다.", errors);
 		problemService.createProblem(user, request);
-		return ResponseEntity.ok().body("OK");
+		return ResponseEntity.ok().build();
 	}
 
 	@PatchMapping
 	@Operation(summary = "문제 마감 기한 수정 API")
-	public ResponseEntity<Object> editProblemDeadline(@AuthedUser User user,
+	public ResponseEntity<Void> editProblemDeadline(@AuthedUser User user,
 		@Valid @RequestBody EditProblemRequest request, Errors errors) {
 		if (errors.hasErrors())
 			throw new RequestException("문제 마감 기한 수정 요청이 올바르지 않습니다.", errors);
 		problemService.editProblem(user, request);
-		return ResponseEntity.ok().body("OK");
+		return ResponseEntity.ok().build();
 	}
 
 	@GetMapping
@@ -84,8 +84,8 @@ public class ProblemController {
 
 	@DeleteMapping
 	@Operation(summary = "문제 삭제 API")
-	public ResponseEntity<Object> deleteProblem(@AuthedUser User user, @RequestParam Long problemId) {
+	public ResponseEntity<Void> deleteProblem(@AuthedUser User user, @RequestParam Long problemId) {
 		problemService.deleteProblem(user, problemId);
-		return ResponseEntity.ok().body("OK");
+		return ResponseEntity.ok().build();
 	}
 }
