@@ -2,6 +2,7 @@ package com.gamzabat.algohub.feature.studygroup.dto;
 
 import java.time.LocalDate;
 
+import com.gamzabat.algohub.common.DateFormatUtil;
 import com.gamzabat.algohub.feature.studygroup.etc.RoleOfGroupMember;
 
 import lombok.Getter;
@@ -10,7 +11,7 @@ import lombok.Getter;
 public class GetGroupMemberResponse {
 
 	private String nickname;
-	private LocalDate joinDate;
+	private String joinDate;
 	private String achivement;
 	private RoleOfGroupMember role;
 	private String profileImage;
@@ -19,7 +20,7 @@ public class GetGroupMemberResponse {
 	public GetGroupMemberResponse(String nickname, LocalDate joinDate, String achivement, RoleOfGroupMember role,
 		String profileImage, Long memberId) {
 		this.nickname = nickname;
-		this.joinDate = joinDate;
+		this.joinDate = DateFormatUtil.formatDate(joinDate);
 		this.achivement = achivement;
 		this.role = role;
 		this.profileImage = profileImage;

@@ -2,14 +2,16 @@ package com.gamzabat.algohub.feature.studygroup.dto;
 
 import java.time.LocalDate;
 
+import com.gamzabat.algohub.common.DateFormatUtil;
+
 import lombok.Getter;
 
 @Getter
 public class GetGroupResponse {
 	private Long id;
 	private String name;
-	private LocalDate startDate;
-	private LocalDate endDate;
+	private String startDate;
+	private String endDate;
 	private String introduction;
 	private String groupImage;
 	private Boolean isOwner;
@@ -19,8 +21,8 @@ public class GetGroupResponse {
 		String groupImage, Boolean isOwner, String ownerNickname) {
 		this.id = id;
 		this.name = name;
-		this.startDate = startDate;
-		this.endDate = endDate;
+		this.startDate = DateFormatUtil.formatDate(startDate);
+		this.endDate = DateFormatUtil.formatDate(endDate);
 		this.introduction = introduction;
 		this.groupImage = groupImage;
 		this.isOwner = isOwner;

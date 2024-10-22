@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Field;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -20,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
+import com.gamzabat.algohub.common.DateFormatUtil;
 import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.exception.UserValidationException;
@@ -67,7 +69,13 @@ public class BoardServiceTest {
 		studyGroup = StudyGroup.builder().build();
 		groupMember2 = GroupMember.builder().user(user2).studyGroup(studyGroup).role(ADMIN).build();
 		groupMember3 = GroupMember.builder().user(user3).studyGroup(studyGroup).role(PARTICIPANT).build();
-		board = Board.builder().studyGroup(studyGroup).title("title").content("content").author(user).build();
+		board = Board.builder()
+			.studyGroup(studyGroup)
+			.createdAt(LocalDateTime.now())
+			.title("title")
+			.content("content")
+			.author(user)
+			.build();
 
 		Field userField = User.class.getDeclaredField("id");
 		userField.setAccessible(true);
@@ -166,6 +174,7 @@ public class BoardServiceTest {
 		assertThat(response.author()).isEqualTo("nickname1");
 		assertThat(response.boardContent()).isEqualTo("content");
 		assertThat(response.boardTitle()).isEqualTo("title");
+		assertThat(response.createAt()).isEqualTo(DateFormatUtil.formatDate(LocalDateTime.now().toLocalDate()));
 		assertThat(response.boardId()).isEqualTo(1000L);
 	}
 
@@ -202,10 +211,22 @@ public class BoardServiceTest {
 		List<Board> boardList = new ArrayList<>(10);
 		for (int i = 0; i < 10; i++)
 			boardList.add(
-				board.builder().author(user).content("content" + i).title("title" + i).studyGroup(studyGroup).build());
+				board.builder()
+					.author(user)
+					.content("content" + i)
+					.title("title" + i)
+					.createdAt(LocalDateTime.now())
+					.studyGroup(studyGroup)
+					.build());
 		for (int i = 10; i < 20; i++)
 			boardList.add(
-				board.builder().author(user2).content("content" + i).title("title" + i).studyGroup(studyGroup).build());
+				board.builder()
+					.author(user2)
+					.content("content" + i)
+					.title("title" + i)
+					.createdAt(LocalDateTime.now())
+					.studyGroup(studyGroup)
+					.build());
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user, studyGroup)).thenReturn(true);
 		when(boardRepository.findAllByStudyGroup(studyGroup)).thenReturn(boardList);
