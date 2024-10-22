@@ -128,7 +128,7 @@ class SolutionServiceTest {
 			assertThat(compileErrorResult.getContent().get(i).nickname()).isEqualTo("nickname1");
 			assertThat(compileErrorResult.getContent().get(i).language()).isEqualTo("Java 11");
 			assertThat(compileErrorResult.getContent().get(i).solvedDateTime()).isEqualTo(
-				DateFormatUtil.formatDate(fixedDateTime.toLocalDate()));
+				DateFormatUtil.formatDateTime(fixedDateTime));
 		}
 		for (int i = 5; i < 10; i++) {
 			assertThat(compileErrorResult.getContent().get(i).content()).isEqualTo("content" + i);
@@ -138,7 +138,7 @@ class SolutionServiceTest {
 			assertThat(compileErrorResult.getContent().get(i).nickname()).isEqualTo("nickname2");
 			assertThat(compileErrorResult.getContent().get(i).language()).isEqualTo("C++17");
 			assertThat(compileErrorResult.getContent().get(i).solvedDateTime()).isEqualTo(
-				DateFormatUtil.formatDate(fixedDateTime.toLocalDate()));
+				DateFormatUtil.formatDateTime(fixedDateTime));
 		}
 		// 2) 맞았습니다!! 풀이 목록 조회
 		assertThat(correctResult.getContent().size()).isEqualTo(10);
@@ -151,7 +151,7 @@ class SolutionServiceTest {
 			assertThat(correctResult.getContent().get(i).nickname()).isEqualTo("nickname1");
 			assertThat(correctResult.getContent().get(i).language()).isEqualTo("Java 11");
 			assertThat(correctResult.getContent().get(i).solvedDateTime()).isEqualTo(
-				DateFormatUtil.formatDate(fixedDateTime.toLocalDate()));
+				DateFormatUtil.formatDateTime(fixedDateTime));
 		}
 		for (int i = 5; i < 10; i++) {
 			assertThat(correctResult.getContent().get(i).content()).isEqualTo("content" + (i + 10));
@@ -161,7 +161,7 @@ class SolutionServiceTest {
 			assertThat(correctResult.getContent().get(i).nickname()).isEqualTo("nickname2");
 			assertThat(correctResult.getContent().get(i).language()).isEqualTo("PyPy3");
 			assertThat(correctResult.getContent().get(i).solvedDateTime()).isEqualTo(
-				DateFormatUtil.formatDate(fixedDateTime.toLocalDate()));
+				DateFormatUtil.formatDateTime(fixedDateTime));
 		}
 	}
 
@@ -197,7 +197,7 @@ class SolutionServiceTest {
 			assertThat(result.getContent().get(i).nickname()).isEqualTo("nickname1");
 			assertThat(result.getContent().get(i).language()).isEqualTo("Java 11");
 			assertThat(result.getContent().get(i).solvedDateTime()).isEqualTo(
-				DateFormatUtil.formatDate(fixedDateTime.toLocalDate()));
+				DateFormatUtil.formatDateTime(fixedDateTime));
 		}
 	}
 
@@ -272,7 +272,7 @@ class SolutionServiceTest {
 		assertThat(response.language()).isEqualTo("Java");
 		assertThat(response.codeLength()).isEqualTo(10);
 		assertThat(response.commentCount()).isEqualTo(0);
-		assertThat(response.solvedDateTime()).isEqualTo(DateFormatUtil.formatDate(LocalDateTime.now().toLocalDate()));
+		assertThat(response.solvedDateTime()).isEqualTo(DateFormatUtil.formatDateTime(LocalDateTime.now()));
 	}
 
 	@Test
@@ -304,7 +304,7 @@ class SolutionServiceTest {
 		assertThat(response.language()).isEqualTo("Java");
 		assertThat(response.codeLength()).isEqualTo(10);
 		assertThat(response.commentCount()).isEqualTo(0);
-		assertThat(response.solvedDateTime()).isEqualTo(DateFormatUtil.formatDate(LocalDateTime.now().toLocalDate()));
+		assertThat(response.solvedDateTime()).isEqualTo(DateFormatUtil.formatDateTime(LocalDateTime.now()));
 	}
 
 	@Test
