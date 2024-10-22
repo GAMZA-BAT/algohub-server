@@ -22,7 +22,7 @@ public record GetSolutionResponse(Long solutionId,
 			.solutionId(solution.getId())
 			.nickname(solution.getUser().getNickname())
 			.profileImage(solution.getUser().getProfileImage())
-			.solvedDateTime(DateFormatUtil.formatDate(solution.getSolvedDateTime().toLocalDate()))
+			.solvedDateTime(DateFormatUtil.formatDateTime(solution.getSolvedDateTime()))
 			.content(solution.getContent())
 			.result(solution.getResult())
 			.memoryUsage(solution.getMemoryUsage())
