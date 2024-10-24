@@ -51,4 +51,10 @@ public class Board {
 		this.createdAt = createdAt;
 	}
 
+	public void updateBoard(String title, String content) {
+		this.title = title;
+		this.content = content;
+		this.updatedAt = LocalDateTime.now();
+	}
+
 }

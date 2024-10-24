@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,6 +16,7 @@ import com.gamzabat.algohub.common.annotation.AuthedUser;
 import com.gamzabat.algohub.exception.RequestException;
 import com.gamzabat.algohub.feature.board.dto.CreateBoardRequest;
 import com.gamzabat.algohub.feature.board.dto.GetBoardResponse;
+import com.gamzabat.algohub.feature.board.dto.UpdateBoardRequest;
 import com.gamzabat.algohub.feature.board.service.BoardService;
 import com.gamzabat.algohub.feature.user.domain.User;
 
@@ -53,5 +55,12 @@ public class BoardController {
 	public ResponseEntity<List<GetBoardResponse>> getBoardList(@AuthedUser User user, @RequestParam Long studyGroupId) {
 		List<GetBoardResponse> response = boardService.getBoardList(user, studyGroupId);
 		return ResponseEntity.ok().body(response);
+	}
+
+	@PatchMapping
+	@Operation(summary = "공지 수정 API")
+	public ResponseEntity<String> updateBoard(@AuthedUser User user, @Valid @RequestBody UpdateBoardRequest request) {
+		boardService.updateBoard(user, request);
+		return ResponseEntity.ok().body("OK");
 	}
 }

@@ -13,6 +13,7 @@ import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.board.domain.Board;
 import com.gamzabat.algohub.feature.board.dto.CreateBoardRequest;
 import com.gamzabat.algohub.feature.board.dto.GetBoardResponse;
+import com.gamzabat.algohub.feature.board.dto.UpdateBoardRequest;
 import com.gamzabat.algohub.feature.board.exception.BoardValidationExceoption;
 import com.gamzabat.algohub.feature.board.repository.BoardRepository;
 import com.gamzabat.algohub.feature.studygroup.domain.GroupMember;
@@ -86,6 +87,18 @@ public class BoardService {
 		List<GetBoardResponse> result = list.stream().map(GetBoardResponse::toDTO).toList();
 		log.info("success to get board list");
 		return result;
+	}
+
+	@Transactional
+	public void updateBoard(User user, UpdateBoardRequest reqeust) {
+		Board board = boardRepository.findById(reqeust.boardId())
+			.orElseThrow(() -> new BoardValidationExceoption("존재하지 않는 게시글입니다"));
+		StudyGroup studyGroup = studyGroupRepository.findById(board.getStudyGroup().getId())
+			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.BAD_REQUEST.value(), "존재하지 않는 스터디 그룹입니다"));
+		if (!groupMemberRepository.existsByUserAndStudyGroup(user, studyGroup))
+			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 스터디 그룹입니다");
+
+		board.updateBoard(reqeust.title(), reqeust.content());
 	}
 
 }
