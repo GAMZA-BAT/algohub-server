@@ -724,4 +724,42 @@ class ProblemServiceTest {
 			.hasFieldOrPropertyWithValue("error", "예정 문제를 조회할 권한이 없습니다. : 그룹의 방장과 부방장만 볼 수 있습니다.");
 	}
 
+	@Test
+	@DisplayName("문제 시작 날짜가 오늘일 시 그룹 멤버들에게 알림 전송")
+	void sendProblemStartedNotification() {
+		// given
+		StudyGroup group2 = StudyGroup.builder().name("group2").build();
+		User user11 = User.builder().email("email1").build();
+		GroupMember groupMember11 = GroupMember.builder().user(user11).studyGroup(group2).build();
+
+		List<GroupMember> group1Members = List.of(groupMember1, groupMember3, groupMember4);
+		List<GroupMember> group2Members = List.of(groupMember11);
+
+		List<Problem> problems = new ArrayList<>();
+		for (int i = 0; i < 5; i++) {
+			problems.add(Problem.builder()
+				.studyGroup(group)
+				.startDate(LocalDate.now())
+				.endDate(LocalDate.now().plusDays(30))
+				.title("started problem")
+				.build());
+		}
+		for (int i = 5; i < 10; i++) {
+			problems.add(Problem.builder()
+				.studyGroup(group2)
+				.startDate(LocalDate.now())
+				.endDate(LocalDate.now().plusDays(30))
+				.title("started problem")
+				.build());
+		}
+
+		when(problemRepository.findAllByStartDate(LocalDate.now())).thenReturn(problems);
+		when(groupMemberRepository.findAllByStudyGroup(group)).thenReturn(group1Members);
+		when(groupMemberRepository.findAllByStudyGroup(group2)).thenReturn(group2Members);
+		// when
+		problemService.dailyProblemScheduler();
+		// then
+		verify(notificationService, times(10)).sendList(anyList(), anyString(), any(StudyGroup.class), eq(null));
+	}
+
 }
