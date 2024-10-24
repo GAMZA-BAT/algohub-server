@@ -124,8 +124,8 @@ class ProblemServiceTest {
 		CreateProblemRequest request = CreateProblemRequest.builder()
 			.groupId(10L)
 			.link("https://www.acmicpc.net/problem/1000")
-			.startDate(LocalDate.now().minusDays(7))
-			.endDate(LocalDate.now())
+			.startDate(LocalDate.now().plusDays(3))
+			.endDate(LocalDate.now().plusDays(10))
 			.build();
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
 		String apiResult = "[{\"titleKo\":\"A+B\",\"level\":1}]";
@@ -142,9 +142,8 @@ class ProblemServiceTest {
 		assertThat(result.getNumber()).isEqualTo(1000);
 		assertThat(result.getTitle()).isEqualTo("A+B");
 		assertThat(result.getLevel()).isEqualTo(1);
-		assertThat(result.getStartDate()).isEqualTo(LocalDate.now().minusDays(7));
-		assertThat(result.getEndDate()).isEqualTo(LocalDate.now());
-		verify(notificationService, times(1)).sendList(any(), any(), any(), any());
+		assertThat(result.getStartDate()).isEqualTo(LocalDate.now().plusDays(3));
+		assertThat(result.getEndDate()).isEqualTo(LocalDate.now().plusDays(10));
 	}
 
 	@Test
@@ -154,8 +153,8 @@ class ProblemServiceTest {
 		CreateProblemRequest request = CreateProblemRequest.builder()
 			.groupId(10L)
 			.link("https://www.acmicpc.net/problem/1000")
-			.startDate(LocalDate.now().minusDays(7))
-			.endDate(LocalDate.now())
+			.startDate(LocalDate.now())
+			.endDate(LocalDate.now().plusDays(10))
 			.build();
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
 		when(groupMemberRepository.findByUserAndStudyGroup(user3, group)).thenReturn(Optional.of(groupMember3));
@@ -172,8 +171,8 @@ class ProblemServiceTest {
 		assertThat(result.getNumber()).isEqualTo(1000);
 		assertThat(result.getTitle()).isEqualTo("A+B");
 		assertThat(result.getLevel()).isEqualTo(1);
-		assertThat(result.getStartDate()).isEqualTo(LocalDate.now().minusDays(7));
-		assertThat(result.getEndDate()).isEqualTo(LocalDate.now());
+		assertThat(result.getStartDate()).isEqualTo(LocalDate.now());
+		assertThat(result.getEndDate()).isEqualTo(LocalDate.now().plusDays(10));
 		verify(notificationService, times(1)).sendList(any(), any(), any(), any());
 	}
 
@@ -283,8 +282,8 @@ class ProblemServiceTest {
 		CreateProblemRequest request = CreateProblemRequest.builder()
 			.groupId(10L)
 			.link("https://www.acmicpc.net/problem/1000")
-			.startDate(LocalDate.now().minusDays(7))
-			.endDate(LocalDate.now())
+			.startDate(LocalDate.now())
+			.endDate(LocalDate.now().plusDays(10))
 			.build();
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
 		String apiResult = "[{\"titleKo\":\"A+B\",\"level\":1}]";
@@ -722,6 +721,44 @@ class ProblemServiceTest {
 			.isInstanceOf(ProblemValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "예정 문제를 조회할 권한이 없습니다. : 그룹의 방장과 부방장만 볼 수 있습니다.");
+	}
+
+	@Test
+	@DisplayName("문제 시작 날짜가 오늘일 시 그룹 멤버들에게 알림 전송")
+	void sendProblemStartedNotification() {
+		// given
+		StudyGroup group2 = StudyGroup.builder().name("group2").build();
+		User user11 = User.builder().email("email1").build();
+		GroupMember groupMember11 = GroupMember.builder().user(user11).studyGroup(group2).build();
+
+		List<GroupMember> group1Members = List.of(groupMember1, groupMember3, groupMember4);
+		List<GroupMember> group2Members = List.of(groupMember11);
+
+		List<Problem> problems = new ArrayList<>();
+		for (int i = 0; i < 5; i++) {
+			problems.add(Problem.builder()
+				.studyGroup(group)
+				.startDate(LocalDate.now())
+				.endDate(LocalDate.now().plusDays(30))
+				.title("started problem")
+				.build());
+		}
+		for (int i = 5; i < 10; i++) {
+			problems.add(Problem.builder()
+				.studyGroup(group2)
+				.startDate(LocalDate.now())
+				.endDate(LocalDate.now().plusDays(30))
+				.title("started problem")
+				.build());
+		}
+
+		when(problemRepository.findAllByStartDate(LocalDate.now())).thenReturn(problems);
+		when(groupMemberRepository.findAllByStudyGroup(group)).thenReturn(group1Members);
+		when(groupMemberRepository.findAllByStudyGroup(group2)).thenReturn(group2Members);
+		// when
+		problemService.dailyProblemScheduler();
+		// then
+		verify(notificationService, times(10)).sendList(anyList(), anyString(), any(StudyGroup.class), eq(null));
 	}
 
 }

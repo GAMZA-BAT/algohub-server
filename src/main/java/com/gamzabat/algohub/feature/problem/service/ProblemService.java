@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -22,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gamzabat.algohub.constants.BOJResultConstants;
 import com.gamzabat.algohub.exception.ProblemValidationException;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
+import com.gamzabat.algohub.feature.notification.enums.NotificationMessage;
 import com.gamzabat.algohub.feature.notification.service.NotificationService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.dto.CreateProblemRequest;
@@ -80,13 +82,9 @@ public class ProblemService {
 			.endDate(request.endDate())
 			.build());
 
-		List<GroupMember> members = groupMemberRepository.findAllByStudyGroup(group);
-		List<String> users = members.stream().map(member -> member.getUser().getEmail()).toList();
-		try {
-			notificationService.sendList(users, "새로운 과제가 등록되었습니다.", group, null);
-		} catch (Exception e) {
-			log.info("failed to send notification", e);
-		}
+		if (request.startDate().equals(LocalDate.now()))
+			sendProblemStartedNotification(group, title);
+
 		log.info("success to create problem");
 	}
 
@@ -251,6 +249,15 @@ public class ProblemService {
 		return responseList;
 	}
 
+	@Scheduled(cron = "0 0 0 * * *")
+	public void dailyProblemScheduler() {
+		LocalDate now = LocalDate.now();
+		List<Problem> problems = problemRepository.findAllByStartDate(now);
+		for (Problem problem : problems) {
+			sendProblemStartedNotification(problem.getStudyGroup(), problem.getTitle());
+		}
+	}
+
 	private Problem getProblem(Long problemId) {
 		return problemRepository.findById(problemId)
 			.orElseThrow(() -> new ProblemValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 문제 입니다."));
@@ -320,5 +327,16 @@ public class ProblemService {
 
 	private Boolean isInProgress(Problem problem) {
 		return problem.getEndDate() != null && !LocalDate.now().isAfter(problem.getEndDate());
+	}
+
+	private void sendProblemStartedNotification(StudyGroup group, String title) {
+		List<GroupMember> members = groupMemberRepository.findAllByStudyGroup(group);
+		List<String> users = members.stream().map(member -> member.getUser().getEmail()).toList();
+		try {
+			String message = NotificationMessage.PROBLEM_STARTED.format(title);
+			notificationService.sendList(users, message, group, null);
+		} catch (Exception e) {
+			log.info("failed to send notification", e);
+		}
 	}
 }
