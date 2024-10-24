@@ -124,8 +124,8 @@ class ProblemServiceTest {
 		CreateProblemRequest request = CreateProblemRequest.builder()
 			.groupId(10L)
 			.link("https://www.acmicpc.net/problem/1000")
-			.startDate(LocalDate.now().minusDays(7))
-			.endDate(LocalDate.now())
+			.startDate(LocalDate.now().plusDays(3))
+			.endDate(LocalDate.now().plusDays(10))
 			.build();
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
 		String apiResult = "[{\"titleKo\":\"A+B\",\"level\":1}]";
@@ -142,9 +142,8 @@ class ProblemServiceTest {
 		assertThat(result.getNumber()).isEqualTo(1000);
 		assertThat(result.getTitle()).isEqualTo("A+B");
 		assertThat(result.getLevel()).isEqualTo(1);
-		assertThat(result.getStartDate()).isEqualTo(LocalDate.now().minusDays(7));
-		assertThat(result.getEndDate()).isEqualTo(LocalDate.now());
-		verify(notificationService, times(1)).sendList(any(), any(), any(), any());
+		assertThat(result.getStartDate()).isEqualTo(LocalDate.now().plusDays(3));
+		assertThat(result.getEndDate()).isEqualTo(LocalDate.now().plusDays(10));
 	}
 
 	@Test
@@ -154,8 +153,8 @@ class ProblemServiceTest {
 		CreateProblemRequest request = CreateProblemRequest.builder()
 			.groupId(10L)
 			.link("https://www.acmicpc.net/problem/1000")
-			.startDate(LocalDate.now().minusDays(7))
-			.endDate(LocalDate.now())
+			.startDate(LocalDate.now())
+			.endDate(LocalDate.now().plusDays(10))
 			.build();
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
 		when(groupMemberRepository.findByUserAndStudyGroup(user3, group)).thenReturn(Optional.of(groupMember3));
@@ -172,8 +171,8 @@ class ProblemServiceTest {
 		assertThat(result.getNumber()).isEqualTo(1000);
 		assertThat(result.getTitle()).isEqualTo("A+B");
 		assertThat(result.getLevel()).isEqualTo(1);
-		assertThat(result.getStartDate()).isEqualTo(LocalDate.now().minusDays(7));
-		assertThat(result.getEndDate()).isEqualTo(LocalDate.now());
+		assertThat(result.getStartDate()).isEqualTo(LocalDate.now());
+		assertThat(result.getEndDate()).isEqualTo(LocalDate.now().plusDays(10));
 		verify(notificationService, times(1)).sendList(any(), any(), any(), any());
 	}
 
@@ -283,8 +282,8 @@ class ProblemServiceTest {
 		CreateProblemRequest request = CreateProblemRequest.builder()
 			.groupId(10L)
 			.link("https://www.acmicpc.net/problem/1000")
-			.startDate(LocalDate.now().minusDays(7))
-			.endDate(LocalDate.now())
+			.startDate(LocalDate.now())
+			.endDate(LocalDate.now().plusDays(10))
 			.build();
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
 		String apiResult = "[{\"titleKo\":\"A+B\",\"level\":1}]";
