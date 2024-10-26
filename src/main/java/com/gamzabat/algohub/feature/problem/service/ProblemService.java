@@ -336,7 +336,7 @@ public class ProblemService {
 			String message = NotificationMessage.PROBLEM_STARTED.format(title);
 			notificationService.sendList(users, message, group, null);
 		} catch (Exception e) {
-			log.info("failed to send notification", e);
+			log.warn("failed to send notification", e);
 		}
 	}
 }
