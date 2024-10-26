@@ -50,10 +50,8 @@ public class RankingService {
 			.stream()
 			.filter(r -> r.getSolvedCount() != 0)
 			.sorted(Comparator.comparing(Ranking::getCurrentRank))
+			.limit(3)
 			.toList();
-
-		if (ranking.size() >= 3)
-			ranking.subList(0, 3);
 
 		return getRankingResponse(ranking);
 	}
@@ -80,7 +78,7 @@ public class RankingService {
 				r.getMember().getUser().getNickname(),
 				r.getMember().getUser().getProfileImage(),
 				r.getCurrentRank(),
-				(long)r.getSolvedCount(),
+				r.getSolvedCount(),
 				r.getRankDiff()))
 			.toList();
 	}
@@ -92,7 +90,7 @@ public class RankingService {
 			.orElseThrow(() -> new CannotFoundRankingException("유저의 랭킹 정보를 조회할 수 없습니다."));
 
 		ranking.increaseSolvedCount();
-		ranking.updateScore(calculateNewScore(problemEndDate, solvedDateTime));
+		ranking.increaseScore(calculateNewScore(problemEndDate, solvedDateTime));
 		log.info("success to update ranking score");
 	}
 

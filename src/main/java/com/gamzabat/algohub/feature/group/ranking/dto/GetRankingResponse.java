@@ -9,10 +9,10 @@ public class GetRankingResponse {
 	private String userNickname;
 	private String profileImage;
 	private Integer rank;
-	private Long solvedCount;
+	private Integer solvedCount;
 	private String rankDiff;
 
-	public GetRankingResponse(String userNickname, String profileImage, Integer rank, Long solvedCount,
+	public GetRankingResponse(String userNickname, String profileImage, Integer rank, Integer solvedCount,
 		String rankDiff) {
 		this.userNickname = userNickname;
 		this.profileImage = profileImage;

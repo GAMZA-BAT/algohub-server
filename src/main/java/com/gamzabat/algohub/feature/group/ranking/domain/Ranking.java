@@ -51,7 +51,7 @@ public class Ranking {
 		this.rankDiff = newRankDiff;
 	}
 
-	public void updateScore(double newScore) {
-		this.score += newScore;
+	public void increaseScore(double addedScore) {
+		this.score += addedScore;
 	}
 }

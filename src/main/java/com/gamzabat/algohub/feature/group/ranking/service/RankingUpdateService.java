@@ -37,11 +37,11 @@ public class RankingUpdateService {
 				return (int)(r2.getScore() - r1.getScore());
 			return solvedCompare;
 		});
-		for (Ranking r : rankings) {
-			int originRank = r.getCurrentRank();
-			int newRank = rankings.indexOf(r) + 1;
-			r.updateRank(newRank);
-			r.updateRankDiff(generateRankDiffString(originRank, newRank));
+		for (int i = 0; i < rankings.size(); i++) {
+			int originRank = rankings.get(i).getCurrentRank();
+			int newRank = i + 1;
+			rankings.get(i).updateRank(newRank);
+			rankings.get(i).updateRankDiff(generateRankDiffString(originRank, newRank));
 		}
 		log.info("success to update ranking");
 	}

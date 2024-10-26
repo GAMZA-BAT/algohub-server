@@ -118,7 +118,7 @@ public class CustomExceptionHandler {
 	}
 
 	@ExceptionHandler(CannotFoundRankingException.class)
-	protected ResponseEntity<Object> handler(CannotFoundRankingException e) {
+	protected ResponseEntity<ErrorResponse> handler(CannotFoundRankingException e) {
 		return ResponseEntity.badRequest().body(new ErrorResponse(HttpStatus.NOT_FOUND.value(), e.getError(), null));
 	}
 }
