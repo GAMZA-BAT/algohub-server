@@ -25,20 +25,20 @@ public class NotificationSetting {
 	@JoinColumn(name = "member_id")
 	private GroupMember member;
 
-	private boolean all;
+	private boolean allNotifications;
 	private boolean newProblem;
 	private boolean newSolution;
-	private boolean comment;
+	private boolean newComment;
 	private boolean newMember;
 	private boolean deadlineReached;
 
 	@Builder
 	public NotificationSetting(GroupMember member) {
 		this.member = member;
-		this.all = true;
+		this.allNotifications = true;
 		this.newProblem = true;
 		this.newSolution = true;
-		this.comment = true;
+		this.newComment = true;
 		this.newMember = true;
 		this.deadlineReached = true;
 	}
