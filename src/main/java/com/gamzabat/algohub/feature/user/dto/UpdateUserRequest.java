@@ -4,8 +4,8 @@ import lombok.Getter;
 
 @Getter
 public class UpdateUserRequest {
-	private String nickname;
-	private String bjNickname;
+	private final String nickname;
+	private final String bjNickname;
 
 	public UpdateUserRequest(String nickname, String bjNickname) {
 		this.nickname = nickname;

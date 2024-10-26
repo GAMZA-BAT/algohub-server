@@ -97,7 +97,7 @@ class UserControllerTest {
 
 		doNothing().when(userService).register(any(RegisterRequest.class), any(MultipartFile.class));
 		// when, then
-		mockMvc.perform(multipart("/api/user/register")
+		mockMvc.perform(multipart("/api/user/sign-up")
 				.file(requestPart)
 				.file(profileImage)
 				.contentType(MediaType.MULTIPART_FORM_DATA))
@@ -118,7 +118,7 @@ class UserControllerTest {
 
 		doNothing().when(userService).register(any(RegisterRequest.class), any());
 		// when, then
-		mockMvc.perform(multipart("/api/user/register")
+		mockMvc.perform(multipart("/api/user/sign-up")
 				.file(requestPart)
 				.contentType(MediaType.MULTIPART_FORM_DATA))
 			.andExpect(status().isOk())
@@ -145,7 +145,7 @@ class UserControllerTest {
 		MockMultipartFile profileImage = new MockMultipartFile("profileImage", "profile.jpg", "image/jpeg",
 			"image".getBytes());
 		// when, then
-		mockMvc.perform(multipart("/api/user/register")
+		mockMvc.perform(multipart("/api/user/sign-up")
 				.file(requestPart)
 				.file(profileImage)
 				.contentType(MediaType.MULTIPART_FORM_DATA))
@@ -168,7 +168,7 @@ class UserControllerTest {
 		doThrow(new UserValidationException("이미 사용 중인 이메일 입니다.")).when(userService)
 			.register(any(RegisterRequest.class), any(MultipartFile.class));
 		// when, then
-		mockMvc.perform(multipart("/api/user/register")
+		mockMvc.perform(multipart("/api/user/sign-up")
 				.file(requestPart)
 				.file(profileImage)
 				.contentType(MediaType.MULTIPART_FORM_DATA))

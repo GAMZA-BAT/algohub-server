@@ -4,10 +4,10 @@ import lombok.Getter;
 
 @Getter
 public class CheckSolvedProblemResponse {
-	private Long id;
-	private String nickname;
-	private String profileImage;
-	private Boolean solved;
+	private final Long id;
+	private final String nickname;
+	private final String profileImage;
+	private final Boolean solved;
 
 	public CheckSolvedProblemResponse(Long id, String profileImage, String nickname, Boolean solved) {
 		this.id = id;

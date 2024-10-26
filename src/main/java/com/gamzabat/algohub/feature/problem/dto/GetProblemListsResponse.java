@@ -6,11 +6,11 @@ import lombok.Getter;
 
 @Getter
 public class GetProblemListsResponse {
-	private List<GetProblemResponse> inProgressProblems;
-	private List<GetProblemResponse> expiredProblems;
-	private int currentPage;
-	private int totalPages;
-	private long totalItems;
+	private final List<GetProblemResponse> inProgressProblems;
+	private final List<GetProblemResponse> expiredProblems;
+	private final int currentPage;
+	private final int totalPages;
+	private final long totalItems;
 
 	public GetProblemListsResponse(List<GetProblemResponse> inProgressProblems,
 		List<GetProblemResponse> completedProblems, int currentPage, int totalPages, long totalItems) {
