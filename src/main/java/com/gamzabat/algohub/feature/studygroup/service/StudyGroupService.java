@@ -20,6 +20,8 @@ import com.gamzabat.algohub.constants.BOJResultConstants;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.image.service.ImageService;
+import com.gamzabat.algohub.feature.notification.domain.NotificationSetting;
+import com.gamzabat.algohub.feature.notification.repository.NotificationSettingRepository;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
@@ -63,6 +65,7 @@ public class StudyGroupService {
 	private final UserRepository userRepository;
 	private final StudyGroupRepository studyGroupRepository;
 	private final BookmarkedStudyGroupRepository bookmarkedStudyGroupRepository;
+	private final NotificationSettingRepository notificationSettingRepository;
 
 	@Transactional
 	public CreateGroupResponse createGroup(User user, CreateGroupRequest request, MultipartFile profileImage) {
@@ -76,14 +79,18 @@ public class StudyGroupService {
 			.groupImage(imageUrl)
 			.groupCode(inviteCode)
 			.build();
-
 		groupRepository.save(group);
-		groupMemberRepository.save(GroupMember.builder()
+
+		GroupMember member = GroupMember.builder()
 			.studyGroup(group)
 			.user(user)
 			.role(RoleOfGroupMember.OWNER)
 			.joinDate(LocalDate.now())
-			.build()
+			.build();
+		groupMemberRepository.save(member);
+
+		notificationSettingRepository.save(
+			NotificationSetting.builder().member(member).build()
 		);
 		log.info("success to save study group");
 		return new CreateGroupResponse(inviteCode);
@@ -97,14 +104,18 @@ public class StudyGroupService {
 		if (groupMemberRepository.existsByUserAndStudyGroup(user, studyGroup))
 			throw new StudyGroupValidationException(HttpStatus.BAD_REQUEST.value(), "이미 참여한 그룹 입니다.");
 
-		groupMemberRepository.save(
-			GroupMember.builder()
-				.studyGroup(studyGroup)
-				.user(user)
-				.role(RoleOfGroupMember.PARTICIPANT)
-				.joinDate(LocalDate.now())
-				.build()
+		GroupMember member = GroupMember.builder()
+			.studyGroup(studyGroup)
+			.user(user)
+			.role(RoleOfGroupMember.PARTICIPANT)
+			.joinDate(LocalDate.now())
+			.build();
+		groupMemberRepository.save(member);
+
+		notificationSettingRepository.save(
+			NotificationSetting.builder().member(member).build()
 		);
+
 		log.info("success to join study group");
 	}
 
