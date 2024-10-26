@@ -29,6 +29,8 @@ import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.image.service.ImageService;
+import com.gamzabat.algohub.feature.notification.domain.NotificationSetting;
+import com.gamzabat.algohub.feature.notification.repository.NotificationSettingRepository;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.solution.domain.Solution;
@@ -69,6 +71,8 @@ class StudyGroupServiceTest {
 	private ProblemRepository problemRepository;
 	@Mock
 	private UserRepository userRepository;
+	@Mock
+	private NotificationSettingRepository notificationSettingRepository;
 	@Mock
 	private ImageService imageService;
 	private User user;
@@ -186,6 +190,8 @@ class StudyGroupServiceTest {
 		assertThat(result.getEndDate()).isEqualTo(LocalDate.now().plusDays(5));
 		assertThat(result.getIntroduction()).isEqualTo("introduction");
 		assertThat(result.getGroupImage()).isEqualTo(imageUrl);
+		verify(groupMemberRepository, times(1)).save(any(GroupMember.class));
+		verify(notificationSettingRepository, times(1)).save(any(NotificationSetting.class));
 	}
 
 	@Test
@@ -200,6 +206,8 @@ class StudyGroupServiceTest {
 		GroupMember result = memberCaptor.getValue();
 		assertThat(result.getStudyGroup()).isEqualTo(group);
 		assertThat(result.getUser()).isEqualTo(user2);
+		verify(groupMemberRepository, times(1)).save(any(GroupMember.class));
+		verify(notificationSettingRepository, times(1)).save(any(NotificationSetting.class));
 	}
 
 	@Test
