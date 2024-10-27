@@ -8,14 +8,14 @@ import lombok.Getter;
 
 @Getter
 public class GetGroupResponse {
-	private Long id;
-	private String name;
-	private String startDate;
-	private String endDate;
-	private String introduction;
-	private String groupImage;
-	private Boolean isOwner;
-	private String ownerNickname;
+	private final Long id;
+	private final String name;
+	private final String startDate;
+	private final String endDate;
+	private final String introduction;
+	private final String groupImage;
+	private final Boolean isOwner;
+	private final String ownerNickname;
 
 	public GetGroupResponse(Long id, String name, LocalDate startDate, LocalDate endDate, String introduction,
 		String groupImage, Boolean isOwner, String ownerNickname) {

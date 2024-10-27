@@ -10,18 +10,18 @@ import lombok.Getter;
 @Getter
 public class GetGroupMemberResponse {
 
-	private String nickname;
-	private String joinDate;
-	private String achivement;
-	private RoleOfGroupMember role;
-	private String profileImage;
-	private Long memberId;
+	private final String nickname;
+	private final String joinDate;
+	private final String achievement;
+	private final RoleOfGroupMember role;
+	private final String profileImage;
+	private final Long memberId;
 
-	public GetGroupMemberResponse(String nickname, LocalDate joinDate, String achivement, RoleOfGroupMember role,
+	public GetGroupMemberResponse(String nickname, LocalDate joinDate, String achievement, RoleOfGroupMember role,
 		String profileImage, Long memberId) {
 		this.nickname = nickname;
 		this.joinDate = DateFormatUtil.formatDate(joinDate);
-		this.achivement = achivement;
+		this.achievement = achievement;
 		this.role = role;
 		this.profileImage = profileImage;
 		this.memberId = memberId;
