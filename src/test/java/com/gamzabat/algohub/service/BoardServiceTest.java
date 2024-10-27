@@ -51,7 +51,7 @@ public class BoardServiceTest {
 
 	private User user, user2, user3, user4;
 	private StudyGroup studyGroup;
-	private GroupMember groupMember, groupMember2, groupMember3;
+	private GroupMember groupMember2, groupMember3;
 	private Board board;
 
 	@BeforeEach
@@ -202,10 +202,10 @@ public class BoardServiceTest {
 		List<Board> boardList = new ArrayList<>(10);
 		for (int i = 0; i < 10; i++)
 			boardList.add(
-				board.builder().author(user).content("content" + i).title("title" + i).studyGroup(studyGroup).build());
+				Board.builder().author(user).content("content" + i).title("title" + i).studyGroup(studyGroup).build());
 		for (int i = 10; i < 20; i++)
 			boardList.add(
-				board.builder().author(user2).content("content" + i).title("title" + i).studyGroup(studyGroup).build());
+				Board.builder().author(user2).content("content" + i).title("title" + i).studyGroup(studyGroup).build());
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user, studyGroup)).thenReturn(true);
 		when(boardRepository.findAllByStudyGroup(studyGroup)).thenReturn(boardList);
