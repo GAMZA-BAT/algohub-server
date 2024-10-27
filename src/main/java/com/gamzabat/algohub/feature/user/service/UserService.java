@@ -82,7 +82,7 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public UserInfoResponse userInfo(User user) {
-        return new UserInfoResponse(user.getEmail(), user.getNickname(), user.getProfileImage(), user.getBjNickname());
+        return new UserInfoResponse(user.getEmail(), user.getNickname(), user.getProfileImage(), user.getBjNickname(), user.getDesc());
     }
 
     @Transactional

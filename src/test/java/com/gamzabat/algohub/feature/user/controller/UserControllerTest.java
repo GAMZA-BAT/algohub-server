@@ -269,7 +269,7 @@ class UserControllerTest {
     @DisplayName("회원 정보 조회 성공")
     void getUserInfo() throws Exception {
         // given
-        UserInfoResponse response = new UserInfoResponse("email", "nickname", "profileImage", "bjNickname");
+        UserInfoResponse response = new UserInfoResponse("email", "nickname", "profileImage", "bjNickname", "");
         when(userService.userInfo(user)).thenReturn(response);
         // when, then
         mockMvc.perform(get("/api/user")
@@ -278,7 +278,8 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.email").value("email"))
                 .andExpect(jsonPath("$.nickname").value("nickname"))
                 .andExpect(jsonPath("$.profileImage").value("profileImage"))
-                .andExpect(jsonPath("$.bjNickname").value("bjNickname"));
+                .andExpect(jsonPath("$.bjNickname").value("bjNickname"))
+                .andExpect(jsonPath("$.desc").value(""));
 
         verify(userService, times(1)).userInfo(any(User.class));
     }

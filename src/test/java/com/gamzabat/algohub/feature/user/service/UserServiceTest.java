@@ -75,7 +75,6 @@ class UserServiceTest {
     private final String encoded = "encoded";
     private final String imageUrl = "imageUrl";
     private final String bjNickname = "bjNickname";
-
     private User user;
 
     @BeforeEach
@@ -108,6 +107,7 @@ class UserServiceTest {
         assertThat(user.getProfileImage()).isEqualTo(imageUrl);
         assertThat(user.getRole()).isEqualTo(Role.USER);
         assertThat(user.getBjNickname()).isEqualTo(bjNickname);
+        assertThat(user.getDesc()).isEqualTo("");
     }
 
     @Test
@@ -183,7 +183,9 @@ class UserServiceTest {
         assertThat(response.getNickname()).isEqualTo(nickname);
         assertThat(response.getProfileImage()).isEqualTo(imageUrl);
         assertThat(response.getBjNickname()).isEqualTo(bjNickname);
+        assertThat(response.getDesc()).isEqualTo("");
     }
+
 
     @Test
     @DisplayName("회원 정보 수정 성공")

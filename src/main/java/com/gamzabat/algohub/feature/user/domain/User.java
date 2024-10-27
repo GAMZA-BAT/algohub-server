@@ -25,7 +25,7 @@ public class User {
     private String nickname;
     private String bjNickname;
     private String profileImage;
-    private String desc;
+    private String desc = "";
 
     private LocalDateTime deletedAt;
 
@@ -41,7 +41,6 @@ public class User {
         this.profileImage = profileImage;
         this.role = role;
         this.deletedAt = null;
-        this.desc = null;
     }
 
     public void editDesc(String description) {
