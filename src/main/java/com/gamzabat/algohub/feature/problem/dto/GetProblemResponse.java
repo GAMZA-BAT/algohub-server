@@ -6,17 +6,17 @@ import lombok.Getter;
 
 @Getter
 public class GetProblemResponse {
-	private String title;
-	private Long problemId;
-	private String link;
-	private LocalDate startDate;
-	private LocalDate endDate;
-	private Integer level;
-	private boolean solved;
-	private Integer submitMemberCount;
-	private Integer memberCount;
-	private Integer accurancy;
-	private boolean inProgress;
+	private final String title;
+	private final Long problemId;
+	private final String link;
+	private final LocalDate startDate;
+	private final LocalDate endDate;
+	private final Integer level;
+	private final boolean solved;
+	private final Integer submitMemberCount;
+	private final Integer memberCount;
+	private final Integer accurancy;
+	private final boolean inProgress;
 
 	public GetProblemResponse(String title, Long problemId, String link, LocalDate startDate, LocalDate endDate,
 		Integer level, boolean solved, Integer submissionCount, Integer memberCount, Integer accurancy,
