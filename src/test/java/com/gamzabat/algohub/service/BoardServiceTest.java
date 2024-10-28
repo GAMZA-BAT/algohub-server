@@ -252,7 +252,6 @@ public class BoardServiceTest {
 		UpdateBoardRequest updateBoardRequest = new UpdateBoardRequest(1000L, "updateTitle", "updateContent");
 		when(boardRepository.findById(1000L)).thenReturn(Optional.ofNullable(board));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
-		when(groupMemberRepository.existsByUserAndStudyGroup(user, studyGroup)).thenReturn(true);
 		//when
 		boardService.updateBoard(user, updateBoardRequest);
 		//then
@@ -287,23 +286,17 @@ public class BoardServiceTest {
 
 	}
 
-	/*
-	user1 이 그룹 1 과 그룹2 에 참여한 경우
-	내가 실수로 그룹 2 의 게시글을 수정해달라고 요청할 수 있으니... 참여하지 않은 스터디 그룹..
-	 */
 	@Test
-	@DisplayName("공지 수정 실패(참여하지 않은 스터디 그룹)")
+	@DisplayName("공지 수정 실패(게시글 작성자가 아님)")
 	void updateBoardFailed_3() {
 		//given
 		UpdateBoardRequest updateBoardRequest = new UpdateBoardRequest(1000L, "updateTitle", "updateContent");
 		when(boardRepository.findById(1000L)).thenReturn(Optional.ofNullable(board));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
-		when(groupMemberRepository.existsByUserAndStudyGroup(user4, studyGroup)).thenReturn(false);
 		//when, then
 		assertThatThrownBy(() -> boardService.updateBoard(user4, updateBoardRequest))
-			.isInstanceOf(GroupMemberValidationException.class)
-			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
-			.hasFieldOrPropertyWithValue("error", "참여하지 않은 스터디 그룹입니다");
+			.isInstanceOf(UserValidationException.class)
+			.hasFieldOrPropertyWithValue("errors", "문제를 수정할 수 있는 권한이 없습니다");
 	}
 
 }

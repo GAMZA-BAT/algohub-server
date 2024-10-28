@@ -90,15 +90,15 @@ public class BoardService {
 	}
 
 	@Transactional
-	public void updateBoard(User user, UpdateBoardRequest reqeust) {
-		Board board = boardRepository.findById(reqeust.boardId())
+	public void updateBoard(User user, UpdateBoardRequest request) {
+		Board board = boardRepository.findById(request.boardId())
 			.orElseThrow(() -> new BoardValidationExceoption("존재하지 않는 게시글입니다"));
 		StudyGroup studyGroup = studyGroupRepository.findById(board.getStudyGroup().getId())
 			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.BAD_REQUEST.value(), "존재하지 않는 스터디 그룹입니다"));
-		if (!groupMemberRepository.existsByUserAndStudyGroup(user, studyGroup))
-			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 스터디 그룹입니다");
+		if (!user.getId().equals(board.getAuthor().getId()))
+			throw new UserValidationException("문제를 수정할 수 있는 권한이 없습니다");
 
-		board.updateBoard(reqeust.title(), reqeust.content());
+		board.updateBoard(request.title(), request.content());
 	}
 
 }
