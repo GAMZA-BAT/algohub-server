@@ -1,7 +1,6 @@
 package com.gamzabat.algohub.feature.solution.dto;
 
-import java.time.format.DateTimeFormatter;
-
+import com.gamzabat.algohub.common.DateFormatUtil;
 import com.gamzabat.algohub.feature.solution.domain.Solution;
 
 import lombok.Builder;
@@ -19,14 +18,11 @@ public record GetSolutionResponse(Long solutionId,
 								  Integer codeLength,
 								  Long commentCount) {
 	public static GetSolutionResponse toDTO(Solution solution, Long commentCount) {
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-		String solvedDateTime = solution.getSolvedDateTime().format(formatter);
-
 		return GetSolutionResponse.builder()
 			.solutionId(solution.getId())
 			.nickname(solution.getUser().getNickname())
 			.profileImage(solution.getUser().getProfileImage())
-			.solvedDateTime(solvedDateTime)
+			.solvedDateTime(DateFormatUtil.formatDateTime(solution.getSolvedDateTime()))
 			.content(solution.getContent())
 			.result(solution.getResult())
 			.memoryUsage(solution.getMemoryUsage())

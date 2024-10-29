@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.gamzabat.algohub.common.DateFormatUtil;
 import com.gamzabat.algohub.common.annotation.AuthedUser;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.exception.UserValidationException;
@@ -71,7 +72,7 @@ public class BoardService {
 			.boardId(board.getId())
 			.boardTitle(board.getTitle())
 			.boardContent(board.getContent())
-			.createAt(board.getCreatedAt())
+			.createAt(DateFormatUtil.formatDate(board.getCreatedAt().toLocalDate()))
 			.build();
 	}
 

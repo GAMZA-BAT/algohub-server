@@ -57,11 +57,11 @@ public class SolutionController {
 
 	@PostMapping
 	@Operation(summary = "풀이 생성 API")
-	public ResponseEntity<Object> createSolution(@Valid @RequestBody CreateSolutionRequest request, Errors errors) {
+	public ResponseEntity<Void> createSolution(@Valid @RequestBody CreateSolutionRequest request, Errors errors) {
 		if (errors.hasErrors())
 			throw new RequestException("풀이 생성 요청이 올바르지 않습니다.", errors);
 		solutionService.createSolution(request);
-		return ResponseEntity.ok().body("OK");
+		return ResponseEntity.ok().build();
 	}
 
 }

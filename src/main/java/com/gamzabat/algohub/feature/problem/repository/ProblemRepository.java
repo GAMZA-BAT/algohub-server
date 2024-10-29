@@ -21,6 +21,8 @@ public interface ProblemRepository extends JpaRepository<Problem, Long> {
 
 	List<Problem> findAllByStudyGroupAndStartDateAfter(StudyGroup studyGroup, LocalDate startDate);
 
+	List<Problem> findAllByStartDate(LocalDate startDate);
+
 	@Query("SELECT COUNT(p) FROM Problem p WHERE p.studyGroup.id = :groupId")
 	Long countProblemsByGroupId(@Param("groupId") Long groupId);
 }
