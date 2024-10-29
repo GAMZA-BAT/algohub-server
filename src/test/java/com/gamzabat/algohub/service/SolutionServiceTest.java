@@ -155,7 +155,7 @@ class SolutionServiceTest {
 		}
 		for (int i = 5; i < 10; i++) {
 			assertThat(correctResult.getContent().get(i).content()).isEqualTo("content" + (i + 10));
-			assertThat(correctResult.getContent().get(i).result()).isEqualTo((i + 10) + "점");
+			assertThat(correctResult.getContent().get(i).result()).isEqualTo("맞았습니다!!");
 			assertThat(correctResult.getContent().get(i).memoryUsage()).isEqualTo(i + 10);
 			assertThat(correctResult.getContent().get(i).executionTime()).isEqualTo(i + 10);
 			assertThat(correctResult.getContent().get(i).nickname()).isEqualTo("nickname2");
@@ -349,7 +349,7 @@ class SolutionServiceTest {
 				.user(user)
 				.memoryUsage(i)
 				.executionTime(i)
-				.result("컴파일 에러")
+				.result("컴파일 에러 (IndexError)")
 				.language("Java 11")
 				.codeLength(i)
 				.solvedDateTime(fixedDateTime)
