@@ -287,7 +287,7 @@ class UserControllerTest {
 			.andExpect(jsonPath("$.nickname").value("nickname"))
 			.andExpect(jsonPath("$.profileImage").value("profileImage"))
 			.andExpect(jsonPath("$.bjNickname").value("bjNickname"))
-			.andExpect(jsonPath("$.desc").value(""));
+			.andExpect(jsonPath("$.description").value(""));
 
 		verify(userService, times(1)).userInfo(any(User.class));
 	}

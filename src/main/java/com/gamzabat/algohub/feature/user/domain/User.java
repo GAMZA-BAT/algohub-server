@@ -50,7 +50,7 @@ public class User {
 		this.deletedAt = null;
 	}
 
-	public void editDesc(String description) {
+	public void editDescription(String description) {
 		this.description = description;
 	}
 

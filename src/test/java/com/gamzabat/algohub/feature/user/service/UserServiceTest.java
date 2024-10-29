@@ -190,7 +190,7 @@ class UserServiceTest {
 		assertThat(response.getNickname()).isEqualTo(nickname);
 		assertThat(response.getProfileImage()).isEqualTo(imageUrl);
 		assertThat(response.getBjNickname()).isEqualTo(bjNickname);
-		assertThat(response.getDesc()).isEqualTo("");
+		assertThat(response.getDescription()).isEqualTo("");
 	}
 
 	@Test

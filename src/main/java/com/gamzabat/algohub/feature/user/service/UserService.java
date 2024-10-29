@@ -110,7 +110,7 @@ public class UserService {
 			user.editBjNickname(updateUserRequest.getBjNickname());
 		}
 		if (updateUserRequest.getDescription() != null && !updateUserRequest.getDescription().isEmpty()) {
-			user.editDesc(updateUserRequest.getDescription());
+			user.editDescription(updateUserRequest.getDescription());
 		}
 
 		userRepository.save(user);
