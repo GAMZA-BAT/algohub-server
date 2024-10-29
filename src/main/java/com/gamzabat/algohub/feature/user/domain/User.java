@@ -1,14 +1,21 @@
 package com.gamzabat.algohub.feature.user.domain;
 
-import com.gamzabat.algohub.enums.Role;
-import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import java.time.LocalDateTime;
+
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
-import java.time.LocalDateTime;
+import com.gamzabat.algohub.enums.Role;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
@@ -16,50 +23,50 @@ import java.time.LocalDateTime;
 @SQLRestriction("deleted_at IS NULL")
 @SQLDelete(sql = "UPDATE user SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
 public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    private String email;
-    private String password;
-    private String nickname;
-    private String bjNickname;
-    private String profileImage;
-    private String desc = "";
+	private String email;
+	private String password;
+	private String nickname;
+	private String bjNickname;
+	private String profileImage;
+	private String description = "";
 
-    private LocalDateTime deletedAt;
+	private LocalDateTime deletedAt;
 
-    @Enumerated(EnumType.STRING)
-    private Role role;
+	@Enumerated(EnumType.STRING)
+	private Role role;
 
-    @Builder
-    public User(String email, String password, String nickname, String bjNickname, String profileImage, Role role) {
-        this.email = email;
-        this.password = password;
-        this.nickname = nickname;
-        this.bjNickname = bjNickname;
-        this.profileImage = profileImage;
-        this.role = role;
-        this.deletedAt = null;
-    }
+	@Builder
+	public User(String email, String password, String nickname, String bjNickname, String profileImage, Role role) {
+		this.email = email;
+		this.password = password;
+		this.nickname = nickname;
+		this.bjNickname = bjNickname;
+		this.profileImage = profileImage;
+		this.role = role;
+		this.deletedAt = null;
+	}
 
-    public void editDesc(String description) {
-        this.desc = description;
-    }
+	public void editDesc(String description) {
+		this.description = description;
+	}
 
-    public void editNickname(String nickname) {
-        this.nickname = nickname;
-    }
+	public void editNickname(String nickname) {
+		this.nickname = nickname;
+	}
 
-    public void editBjNickname(String bjNickname) {
-        this.bjNickname = bjNickname;
-    }
+	public void editBjNickname(String bjNickname) {
+		this.bjNickname = bjNickname;
+	}
 
-    public void editProfileImage(String profileImage) {
-        this.profileImage = profileImage;
-    }
+	public void editProfileImage(String profileImage) {
+		this.profileImage = profileImage;
+	}
 
-    public void editPassword(String password) {
-        this.password = password;
-    }
+	public void editPassword(String password) {
+		this.password = password;
+	}
 }
