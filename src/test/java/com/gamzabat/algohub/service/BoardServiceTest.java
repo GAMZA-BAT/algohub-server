@@ -296,7 +296,7 @@ public class BoardServiceTest {
 		//when, then
 		assertThatThrownBy(() -> boardService.updateBoard(user4, updateBoardRequest))
 			.isInstanceOf(UserValidationException.class)
-			.hasFieldOrPropertyWithValue("errors", "문제를 수정할 수 있는 권한이 없습니다");
+			.hasFieldOrPropertyWithValue("errors", "공지를 수정할 수 있는 권한이 없습니다");
 	}
 
 }

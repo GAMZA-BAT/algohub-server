@@ -59,11 +59,11 @@ public class BoardController {
 
 	@PatchMapping
 	@Operation(summary = "공지 수정 API")
-	public ResponseEntity<String> updateBoard(@AuthedUser User user, @Valid @RequestBody UpdateBoardRequest request,
+	public ResponseEntity<Void> updateBoard(@AuthedUser User user, @Valid @RequestBody UpdateBoardRequest request,
 		Errors errors) {
 		if (errors.hasErrors())
 			throw new RequestException("올바르지 않은 수정 요청입니다", errors);
 		boardService.updateBoard(user, request);
-		return ResponseEntity.ok().body("OK");
+		return ResponseEntity.ok().build();
 	}
 }

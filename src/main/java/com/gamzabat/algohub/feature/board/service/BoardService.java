@@ -96,7 +96,7 @@ public class BoardService {
 		StudyGroup studyGroup = studyGroupRepository.findById(board.getStudyGroup().getId())
 			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.BAD_REQUEST.value(), "존재하지 않는 스터디 그룹입니다"));
 		if (!user.getId().equals(board.getAuthor().getId()))
-			throw new UserValidationException("문제를 수정할 수 있는 권한이 없습니다");
+			throw new UserValidationException("공지를 수정할 수 있는 권한이 없습니다");
 
 		board.updateBoard(request.title(), request.content());
 	}
