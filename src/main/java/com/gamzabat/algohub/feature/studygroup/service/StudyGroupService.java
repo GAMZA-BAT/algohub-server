@@ -29,7 +29,6 @@ import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.studygroup.dto.BookmarkStatus;
 import com.gamzabat.algohub.feature.studygroup.dto.CheckSolvedProblemResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.CreateGroupRequest;
-import com.gamzabat.algohub.feature.studygroup.dto.CreateGroupResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.EditGroupRequest;
 import com.gamzabat.algohub.feature.studygroup.dto.GetGroupMemberResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.GetGroupResponse;
@@ -38,6 +37,7 @@ import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupListsResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupWithCodeResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.UpdateBookmarkResponse;
+import com.gamzabat.algohub.feature.studygroup.dto.GroupCodeResponse;
 import com.gamzabat.algohub.feature.studygroup.dto.UpdateGroupMemberRoleRequest;
 import com.gamzabat.algohub.feature.studygroup.etc.RoleOfGroupMember;
 import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundGroupException;
@@ -67,7 +67,7 @@ public class StudyGroupService {
 	private final BookmarkedStudyGroupRepository bookmarkedStudyGroupRepository;
 
 	@Transactional
-	public CreateGroupResponse createGroup(User user, CreateGroupRequest request, MultipartFile profileImage) {
+	public GroupCodeResponse createGroup(User user, CreateGroupRequest request, MultipartFile profileImage) {
 		String imageUrl = imageService.saveImage(profileImage);
 		String inviteCode = NanoIdUtils.randomNanoId();
 		StudyGroup group = StudyGroup.builder()
@@ -88,7 +88,7 @@ public class StudyGroupService {
 			.build()
 		);
 		log.info("success to save study group");
-		return new CreateGroupResponse(inviteCode);
+		return new GroupCodeResponse(inviteCode);
 	}
 
 	@Transactional
@@ -288,7 +288,7 @@ public class StudyGroupService {
 	}
 
 	@Transactional(readOnly = true)
-	public String getGroupCode(User user, Long groupId) {
+	public GroupCodeResponse getGroupCode(User user, Long groupId) {
 		StudyGroup studyGroup = groupRepository.findById(groupId)
 			.orElseThrow(() -> new CannotFoundGroupException("그룹을 찾지 못했습니다."));
 		GroupMember owner = groupMemberRepository.findByUserAndStudyGroup(user, studyGroup)
@@ -296,7 +296,7 @@ public class StudyGroupService {
 				() -> new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(), "참여하지 않은 그룹 입니다."));
 
 		if (RoleOfGroupMember.isOwner(owner))
-			return studyGroup.getGroupCode();
+			return new GroupCodeResponse(studyGroup.getGroupCode());
 		else
 			throw new UserValidationException("초대 코드를 조회할 권한이 없습니다.");
 	}
@@ -425,5 +425,16 @@ public class StudyGroupService {
 
 		member.updateRole(RoleOfGroupMember.fromValue(request.role()));
 		log.info("success to update group member role");
+	}
+
+	@Transactional(readOnly = true)
+	public String getRoleInGroup(User user, Long groupId) {
+		StudyGroup group = groupRepository.findById(groupId)
+			.orElseThrow(() -> new CannotFoundGroupException("존재하지 않는 그룹입니다."));
+
+		GroupMember member = groupMemberRepository.findByUserAndStudyGroup(user, group)
+			.orElseThrow(() -> new GroupMemberValidationException(HttpStatus.NOT_FOUND.value(), "참여하지 않은 그룹입니다."));
+
+		return member.getRole().getValue();
 	}
 }

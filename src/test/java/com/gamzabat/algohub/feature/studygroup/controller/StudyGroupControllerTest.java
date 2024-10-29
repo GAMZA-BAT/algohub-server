@@ -1,17 +1,33 @@
 package com.gamzabat.algohub.feature.studygroup.controller;
 
-import static org.hamcrest.Matchers.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.anyLong;
-import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gamzabat.algohub.common.DateFormatUtil;
+import com.gamzabat.algohub.common.jwt.TokenProvider;
+import com.gamzabat.algohub.config.SpringSecurityConfig;
+import com.gamzabat.algohub.exception.StudyGroupValidationException;
+import com.gamzabat.algohub.exception.UserValidationException;
+import com.gamzabat.algohub.feature.image.service.ImageService;
+import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
+import com.gamzabat.algohub.feature.solution.exception.CannotFoundSolutionException;
+import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
+import com.gamzabat.algohub.feature.studygroup.dto.BookmarkStatus;
+import com.gamzabat.algohub.feature.studygroup.dto.CheckSolvedProblemResponse;
+import com.gamzabat.algohub.feature.studygroup.dto.CreateGroupRequest;
+import com.gamzabat.algohub.feature.studygroup.dto.EditGroupRequest;
+import com.gamzabat.algohub.feature.studygroup.dto.GetGroupMemberResponse;
+import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupListsResponse;
+import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupResponse;
+import com.gamzabat.algohub.feature.studygroup.dto.UpdateBookmarkResponse;
+import com.gamzabat.algohub.feature.studygroup.dto.GroupCodeResponse;
+import com.gamzabat.algohub.feature.studygroup.dto.UpdateGroupMemberRoleRequest;
+import com.gamzabat.algohub.feature.studygroup.etc.RoleOfGroupMember;
+import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundGroupException;
+import com.gamzabat.algohub.feature.studygroup.exception.GroupMemberValidationException;
+import com.gamzabat.algohub.feature.studygroup.repository.GroupMemberRepository;
+import com.gamzabat.algohub.feature.studygroup.repository.StudyGroupRepository;
+import com.gamzabat.algohub.feature.studygroup.service.StudyGroupService;
+import com.gamzabat.algohub.feature.user.domain.User;
+import com.gamzabat.algohub.feature.user.repository.UserRepository;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -29,33 +45,16 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.gamzabat.algohub.common.jwt.TokenProvider;
-import com.gamzabat.algohub.config.SpringSecurityConfig;
-import com.gamzabat.algohub.exception.StudyGroupValidationException;
-import com.gamzabat.algohub.exception.UserValidationException;
-import com.gamzabat.algohub.feature.image.service.ImageService;
-import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
-import com.gamzabat.algohub.feature.solution.exception.CannotFoundSolutionException;
-import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
-import com.gamzabat.algohub.feature.studygroup.dto.BookmarkStatus;
-import com.gamzabat.algohub.feature.studygroup.dto.CheckSolvedProblemResponse;
-import com.gamzabat.algohub.feature.studygroup.dto.CreateGroupRequest;
-import com.gamzabat.algohub.feature.studygroup.dto.CreateGroupResponse;
-import com.gamzabat.algohub.feature.studygroup.dto.EditGroupRequest;
-import com.gamzabat.algohub.feature.studygroup.dto.GetGroupMemberResponse;
-import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupListsResponse;
-import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupResponse;
-import com.gamzabat.algohub.feature.studygroup.dto.UpdateBookmarkResponse;
-import com.gamzabat.algohub.feature.studygroup.dto.UpdateGroupMemberRoleRequest;
-import com.gamzabat.algohub.feature.studygroup.etc.RoleOfGroupMember;
-import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundGroupException;
-import com.gamzabat.algohub.feature.studygroup.exception.GroupMemberValidationException;
-import com.gamzabat.algohub.feature.studygroup.repository.GroupMemberRepository;
-import com.gamzabat.algohub.feature.studygroup.repository.StudyGroupRepository;
-import com.gamzabat.algohub.feature.studygroup.service.StudyGroupService;
-import com.gamzabat.algohub.feature.user.domain.User;
-import com.gamzabat.algohub.feature.user.repository.UserRepository;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import static org.hamcrest.Matchers.hasItems;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(StudyGroupController.class)
 @WithMockUser
@@ -101,7 +100,7 @@ class StudyGroupControllerTest {
 		// given
 		CreateGroupRequest request = new CreateGroupRequest("name", LocalDate.now(), LocalDate.now().plusDays(30),
 			"introduction");
-		CreateGroupResponse response = new CreateGroupResponse("inviteCode");
+		GroupCodeResponse response = new GroupCodeResponse("inviteCode");
 		MockMultipartFile requestPart = new MockMultipartFile("request", "", "application/json",
 			objectMapper.writeValueAsString(request).getBytes());
 		MockMultipartFile profileImage = new MockMultipartFile("profileImage", "profile.jpg", "image/jpeg",
@@ -163,8 +162,7 @@ class StudyGroupControllerTest {
 		mockMvc.perform(post("/api/group/{code}/join", code)
 				.header("Authorization", token)
 				.contentType(MediaType.APPLICATION_JSON))
-			.andExpect(status().isOk())
-			.andExpect(content().string("OK"));
+			.andExpect(status().isOk());
 
 		verify(studyGroupService, times(1)).joinGroupWithCode(user, code);
 	}
@@ -213,7 +211,7 @@ class StudyGroupControllerTest {
 		for (int i = 0; i < 10; i++) {
 			bookmarked.add(new GetStudyGroupResponse(
 				(long)i, "name" + i, "groupImage" + 1,
-				LocalDate.now(), LocalDate.now().plusDays(i),
+				DateFormatUtil.formatDate(LocalDate.now()), DateFormatUtil.formatDate(LocalDate.now().plusDays(i)),
 				"introduction" + 1, "nickname", true, true
 			));
 		}
@@ -221,21 +219,21 @@ class StudyGroupControllerTest {
 		for (int i = 0; i < 10; i++) {
 			done.add(new GetStudyGroupResponse(
 				(long)i, "name" + i, "groupImage" + 1,
-				LocalDate.now(), LocalDate.now().plusDays(i),
+				DateFormatUtil.formatDate(LocalDate.now()), DateFormatUtil.formatDate(LocalDate.now().plusDays(i)),
 				"introduction" + 1, "nickname", true, true
 			));
 		}
 		for (int i = 0; i < 10; i++) {
 			inProgress.add(new GetStudyGroupResponse(
 				(long)i, "name" + i, "groupImage" + 1,
-				LocalDate.now(), LocalDate.now().plusDays(i),
+				DateFormatUtil.formatDate(LocalDate.now()), DateFormatUtil.formatDate(LocalDate.now().plusDays(i)),
 				"introduction" + 1, "nickname", true, true
 			));
 		}
 		for (int i = 0; i < 10; i++) {
 			queued.add(new GetStudyGroupResponse(
 				(long)i, "name" + i, "groupImage" + 1,
-				LocalDate.now(), LocalDate.now().plusDays(i),
+				DateFormatUtil.formatDate(LocalDate.now()), DateFormatUtil.formatDate(LocalDate.now().plusDays(i)),
 				"introduction" + 1, "nickname", true, true
 			));
 		}
@@ -261,8 +259,7 @@ class StudyGroupControllerTest {
 				.header("Authorization", token)
 				.param("groupId", String.valueOf(groupId))
 				.contentType(MediaType.APPLICATION_JSON))
-			.andExpect(status().isOk())
-			.andExpect(content().string("OK"));
+			.andExpect(status().isOk());
 
 		verify(studyGroupService, times(1)).deleteGroup(any(User.class), anyLong());
 	}
@@ -312,8 +309,7 @@ class StudyGroupControllerTest {
 				.param("userId", String.valueOf(userId))
 				.param("groupId", String.valueOf(groupId))
 				.contentType(MediaType.APPLICATION_JSON))
-			.andExpect(status().isOk())
-			.andExpect(content().string("OK"));
+			.andExpect(status().isOk());
 		verify(studyGroupService, times(1)).deleteMember(user, userId, groupId);
 	}
 
@@ -370,8 +366,7 @@ class StudyGroupControllerTest {
 					request1.setMethod("PATCH");
 					return request1;
 				}))
-			.andExpect(status().isOk())
-			.andExpect(content().string("OK"));
+			.andExpect(status().isOk());
 
 		verify(studyGroupService, times(1)).editGroup(any(User.class), any(EditGroupRequest.class),
 			any(MultipartFile.class));
@@ -593,14 +588,15 @@ class StudyGroupControllerTest {
 	@Test
 	@DisplayName("그룹 초대 코드 조회 성공")
 	void getGroupCode() throws Exception {
+		GroupCodeResponse groupCodeResponse = new GroupCodeResponse(code);
 		// given
-		when(studyGroupService.getGroupCode(user, groupId)).thenReturn(code);
+		when(studyGroupService.getGroupCode(user, groupId)).thenReturn(groupCodeResponse);
 		// when, then
 		mockMvc.perform(get("/api/group/group-code")
 				.header("Authorization", token)
 				.param("groupId", String.valueOf(groupId)))
 			.andExpect(status().isOk())
-			.andExpect(content().string(code));
+			.andExpect(jsonPath("$.inviteCode").value(code));
 		verify(studyGroupService, times(1)).getGroupCode(any(User.class), anyLong());
 	}
 
@@ -703,8 +699,7 @@ class StudyGroupControllerTest {
 		mockMvc.perform(patch("/api/group/role")
 				.header("Authorization", token)
 				.content(objectMapper.writeValueAsString(request)))
-			.andExpect(status().isOk())
-			.andExpect(content().string("OK"));
+			.andExpect(status().isOk());
 		verify(studyGroupService, times(1)).updateGroupMemberRole(user, request);
 	}
 
@@ -770,5 +765,49 @@ class StudyGroupControllerTest {
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.error").value("해당 스터디 그룹에 참여하지 않은 회원입니다."));
 		verify(studyGroupService, times(1)).updateGroupMemberRole(user, request);
+	}
+
+	@Test
+	@DisplayName("그룹 내 회원 Role 조회 성공")
+	void getRoleInGroup() throws Exception {
+		// given
+		when(studyGroupService.getRoleInGroup(user, groupId)).thenReturn(RoleOfGroupMember.OWNER.getValue());
+		// when, then
+		mockMvc.perform(get("/api/group/role")
+				.header("Authorization", token)
+				.param("groupId", String.valueOf(groupId)))
+			.andExpect(status().isOk())
+			.andExpect(content().string(RoleOfGroupMember.OWNER.getValue()));
+		verify(studyGroupService, times(1)).getRoleInGroup(user, groupId);
+	}
+
+	@Test
+	@DisplayName("스터디 그룹 멤버 역할 수정 실패 : 스터디 그룹에 참여하지 않은 회원")
+	void getRoleInGroupFailed_1() throws Exception {
+		// given
+		when(studyGroupService.getRoleInGroup(user, groupId)).thenThrow(
+			new CannotFoundGroupException("존재하지 않는 그룹입니다."));
+		// when, then
+		mockMvc.perform(get("/api/group/role")
+				.header("Authorization", token)
+				.param("groupId", String.valueOf(groupId)))
+			.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.error").value("존재하지 않는 그룹입니다."));
+		verify(studyGroupService, times(1)).getRoleInGroup(user, groupId);
+	}
+
+	@Test
+	@DisplayName("스터디 그룹 멤버 역할 수정 실패 : 참여하지 않은 그룹")
+	void getRoleInGroupFailed_2() throws Exception {
+		// given
+		when(studyGroupService.getRoleInGroup(user, groupId)).thenThrow(
+			new GroupMemberValidationException(HttpStatus.NOT_FOUND.value(), "참여하지 않은 그룹입니다."));
+		// when, then
+		mockMvc.perform(get("/api/group/role")
+				.header("Authorization", token)
+				.param("groupId", String.valueOf(groupId)))
+			.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.error").value("참여하지 않은 그룹입니다."));
+		verify(studyGroupService, times(1)).getRoleInGroup(user, groupId);
 	}
 }

@@ -212,7 +212,12 @@ class CommentServiceTest {
 		// given
 		List<Comment> list = new ArrayList<>(30);
 		for (int i = 0; i < 30; i++)
-			list.add(Comment.builder().solution(solution).user(user).content("content" + i).build());
+			list.add(Comment.builder()
+				.solution(solution)
+				.createdAt(LocalDateTime.now())
+				.user(user)
+				.content("content" + i)
+				.build());
 		when(solutionRepository.findById(10L)).thenReturn(Optional.ofNullable(solution));
 		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
