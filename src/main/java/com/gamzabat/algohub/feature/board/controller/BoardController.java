@@ -33,12 +33,12 @@ public class BoardController {
 
 	@PostMapping
 	@Operation(summary = "공지 작성API")
-	public ResponseEntity<String> createBoard(@AuthedUser User user, @Valid @RequestBody CreateBoardRequest request,
+	public ResponseEntity<Void> createBoard(@AuthedUser User user, @Valid @RequestBody CreateBoardRequest request,
 		Errors errors) {
 		if (errors.hasErrors())
 			throw new RequestException("올바르지 않은 공지 생성 요청입니다", errors);
 		boardService.createBoard(user, request);
-		return ResponseEntity.ok().body("OK");
+		return ResponseEntity.ok().build();
 	}
 
 	@GetMapping

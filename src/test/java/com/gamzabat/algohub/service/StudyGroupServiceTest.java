@@ -7,6 +7,7 @@ import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -24,6 +25,8 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockMultipartFile;
 
+import com.gamzabat.algohub.common.DateFormatUtil;
+import com.gamzabat.algohub.constants.BOJResultConstants;
 import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.exception.UserValidationException;
@@ -363,32 +366,34 @@ class StudyGroupServiceTest {
 		for (int i = 0; i < 10; i++) {
 			assertThat(done.get(i).name()).isEqualTo("name" + i);
 			assertThat(done.get(i).ownerNickname()).isEqualTo("nickname1");
-			assertThat(done.get(i).startDate()).isEqualTo(LocalDate.now().minusDays(i + 30));
-			assertThat(done.get(i).endDate()).isEqualTo(LocalDate.now().minusDays(30));
+			assertThat(done.get(i).startDate()).isEqualTo(DateFormatUtil.formatDate(LocalDate.now().minusDays(i + 30)));
+			assertThat(done.get(i).endDate()).isEqualTo(DateFormatUtil.formatDate(LocalDate.now().minusDays(30)));
 			assertThat(done.get(i).isBookmarked()).isTrue();
 			assertThat(done.get(i).isOwner()).isTrue();
 		}
 		for (int i = 0; i < 10; i++) {
 			assertThat(inProgress.get(i).name()).isEqualTo("name" + i);
 			assertThat(inProgress.get(i).ownerNickname()).isEqualTo("nickname1");
-			assertThat(inProgress.get(i).startDate()).isEqualTo(LocalDate.now().minusDays(i));
-			assertThat(inProgress.get(i).endDate()).isEqualTo(LocalDate.now().plusDays(i));
+			assertThat(inProgress.get(i).startDate()).isEqualTo(
+				DateFormatUtil.formatDate(LocalDate.now().minusDays(i)));
+			assertThat(inProgress.get(i).endDate()).isEqualTo(DateFormatUtil.formatDate(LocalDate.now().plusDays(i)));
 			assertThat(inProgress.get(i).isBookmarked()).isFalse();
 			assertThat(inProgress.get(i).isOwner()).isTrue();
 		}
 		for (int i = 0; i < 10; i++) {
 			assertThat(queued.get(i).name()).isEqualTo("name" + i);
 			assertThat(queued.get(i).ownerNickname()).isEqualTo("nickname2");
-			assertThat(queued.get(i).startDate()).isEqualTo(LocalDate.now().plusDays(30));
-			assertThat(queued.get(i).endDate()).isEqualTo(LocalDate.now().plusDays(i + 30));
+			assertThat(queued.get(i).startDate()).isEqualTo(DateFormatUtil.formatDate(LocalDate.now().plusDays(30)));
+			assertThat(queued.get(i).endDate()).isEqualTo(DateFormatUtil.formatDate(LocalDate.now().plusDays(i + 30)));
 			assertThat(queued.get(i).isBookmarked()).isFalse();
 			assertThat(queued.get(i).isOwner()).isFalse();
 		}
 		for (int i = 0; i < 10; i++) {
 			assertThat(bookmarked.get(i).name()).isEqualTo("name" + i);
 			assertThat(bookmarked.get(i).ownerNickname()).isEqualTo("nickname1");
-			assertThat(bookmarked.get(i).startDate()).isEqualTo(LocalDate.now().minusDays(i + 30));
-			assertThat(bookmarked.get(i).endDate()).isEqualTo(LocalDate.now().minusDays(30));
+			assertThat(bookmarked.get(i).startDate()).isEqualTo(
+				DateFormatUtil.formatDate(LocalDate.now().minusDays(i + 30)));
+			assertThat(bookmarked.get(i).endDate()).isEqualTo(DateFormatUtil.formatDate(LocalDate.now().minusDays(30)));
 			assertThat(bookmarked.get(i).isBookmarked()).isTrue();
 			assertThat(bookmarked.get(i).isOwner()).isTrue();
 		}
@@ -621,4 +626,40 @@ class StudyGroupServiceTest {
 			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
 			.hasFieldOrPropertyWithValue("error", "해당 스터디 그룹에 참여하지 않은 회원입니다.");
 	}
+
+	@Test
+	@DisplayName("그룹 내 회원 Role 조회 성공")
+	void getRoleInGroup() {
+		// given
+		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.of(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
+		// when
+		String result = studyGroupService.getRoleInGroup(user, groupId);
+		// then
+		assertThat(result).isEqualTo(RoleOfGroupMember.OWNER.getValue());
+	}
+
+	@Test
+	@DisplayName("그룹 내 회원 Role 조회 실패 : 존재하지 않는 그룹")
+	void getRoleInGroupFailed_1() {
+		// given
+		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.empty());
+		// when
+		assertThatThrownBy(() -> studyGroupService.getRoleInGroup(user, groupId))
+			.isInstanceOf(CannotFoundGroupException.class)
+			.hasFieldOrPropertyWithValue("errors", "존재하지 않는 그룹입니다.");
+	}
+
+	@Test
+	@DisplayName("그룹 내 회원 Role 조회 실패 : 참여하지 않은 그룹")
+	void getRoleInGroupFailed_2() {
+		// given
+		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.of(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.empty());
+		// when
+		assertThatThrownBy(() -> studyGroupService.getRoleInGroup(user, groupId))
+			.isInstanceOf(GroupMemberValidationException.class)
+			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹입니다.");
+	}
+
 }

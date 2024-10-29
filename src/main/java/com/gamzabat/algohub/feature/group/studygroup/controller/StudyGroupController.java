@@ -21,12 +21,12 @@ import com.gamzabat.algohub.common.annotation.AuthedUser;
 import com.gamzabat.algohub.exception.RequestException;
 import com.gamzabat.algohub.feature.group.studygroup.dto.CheckSolvedProblemResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.CreateGroupRequest;
-import com.gamzabat.algohub.feature.group.studygroup.dto.CreateGroupResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupMemberResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupListsResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupWithCodeResponse;
+import com.gamzabat.algohub.feature.group.studygroup.dto.GroupCodeResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.UpdateGroupMemberRoleRequest;
 import com.gamzabat.algohub.feature.group.studygroup.service.StudyGroupService;
 import com.gamzabat.algohub.feature.user.domain.User;
@@ -45,20 +45,20 @@ public class StudyGroupController {
 
 	@PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(summary = "그룹 생성 API")
-	public ResponseEntity<CreateGroupResponse> createGroup(@AuthedUser User user,
+	public ResponseEntity<GroupCodeResponse> createGroup(@AuthedUser User user,
 		@Valid @RequestPart CreateGroupRequest request, Errors errors,
 		@RequestPart(required = false) MultipartFile profileImage) {
 		if (errors.hasErrors())
 			throw new RequestException("그룹 생성 요청이 올바르지 않습니다.", errors);
-		CreateGroupResponse inviteCode = studyGroupService.createGroup(user, request, profileImage);
+		GroupCodeResponse inviteCode = studyGroupService.createGroup(user, request, profileImage);
 		return ResponseEntity.ok().body(inviteCode);
 	}
 
 	@PostMapping(value = "/{code}/join")
 	@Operation(summary = "그룹 코드를 사용한 그룹 참여 API")
-	public ResponseEntity<Object> joinGroupWithCode(@AuthedUser User user, @PathVariable String code) {
+	public ResponseEntity<Void> joinGroupWithCode(@AuthedUser User user, @PathVariable String code) {
 		studyGroupService.joinGroupWithCode(user, code);
-		return ResponseEntity.ok().body("OK");
+		return ResponseEntity.ok().build();
 	}
 
 	@GetMapping(value = "list")
@@ -70,33 +70,34 @@ public class StudyGroupController {
 
 	@DeleteMapping(value = "leave")
 	@Operation(summary = "그룹 탈퇴 API", description = "방장,멤버 상관 없이 해당 그룹을 삭제,탈퇴하는 API")
-	public ResponseEntity<Object> deleteGroup(@AuthedUser User user, @RequestParam Long groupId) {
+	public ResponseEntity<Void> deleteGroup(@AuthedUser User user, @RequestParam Long groupId) {
 		studyGroupService.deleteGroup(user, groupId);
-		return ResponseEntity.ok().body("OK");
+		return ResponseEntity.ok().build();
 	}
 
 	@DeleteMapping(value = "delete")
 	@Operation(summary = "그룹 멤버 삭제", description = "방장만 가능한 그룹 멤버를 삭제하는 API")
-	public ResponseEntity<Object> deleteUser(@AuthedUser User user, @RequestParam Long userId,
+	public ResponseEntity<Void> deleteUser(@AuthedUser User user, @RequestParam Long userId,
 		@RequestParam Long groupId) {
 		studyGroupService.deleteMember(user, userId, groupId);
-		return ResponseEntity.ok().body("OK");
+		return ResponseEntity.ok().build();
 	}
 
 	@PatchMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(summary = "그룹 정보 수정 API")
-	public ResponseEntity<Object> editGroup(@AuthedUser User user,
+	public ResponseEntity<Void> editGroup(@AuthedUser User user,
 		@Valid @RequestPart EditGroupRequest request, Errors errors,
 		@RequestPart(required = false) MultipartFile groupImage) {
 		if (errors.hasErrors())
 			throw new RequestException("그룹 정보 수정 요청이 올바르지 않습니다.", errors);
 		studyGroupService.editGroup(user, request, groupImage);
-		return ResponseEntity.ok().body("OK");
+		return ResponseEntity.ok().build();
 	}
 
 	@GetMapping(value = "member-list")
 	@Operation(summary = "그룹 회원 목록 조회")
-	public ResponseEntity<Object> getGroupInfo(@AuthedUser User user, @RequestParam Long groupId) {
+	public ResponseEntity<List<GetGroupMemberResponse>> getGroupInfo(@AuthedUser User user,
+		@RequestParam Long groupId) {
 
 		List<GetGroupMemberResponse> members = studyGroupService.getGroupMemberList(user, groupId);
 		return ResponseEntity.ok().body(members);
@@ -104,7 +105,8 @@ public class StudyGroupController {
 
 	@GetMapping(value = "problem-solving")
 	@Operation(summary = "문제 별 회원 풀이 여부 조회")
-	public ResponseEntity<Object> getCheckingSolvedProblem(@AuthedUser User user, @RequestParam Long problemId) {
+	public ResponseEntity<List<CheckSolvedProblemResponse>> getCheckingSolvedProblem(@AuthedUser User user,
+		@RequestParam Long problemId) {
 		List<CheckSolvedProblemResponse> responseList = studyGroupService.getCheckingSolvedProblem(user, problemId);
 		return ResponseEntity.ok().body(responseList);
 	}
@@ -137,12 +139,19 @@ public class StudyGroupController {
 
 	@PatchMapping(value = "/role")
 	@Operation(summary = "스터디 그룹 멤버 역할 수정 API", description = "스터디 그룹 멤버 역할을 ADMIN/PARTICIPANT 로 수정하는 API")
-	public ResponseEntity<String> updateMemberRole(@AuthedUser User user, @Valid @RequestBody
+	public ResponseEntity<Void> updateMemberRole(@AuthedUser User user, @Valid @RequestBody
 	UpdateGroupMemberRoleRequest request, Errors errors) {
 		if (errors.hasErrors())
 			throw new RequestException("스터디 그룹 멤버 역할 수정 요청이 올바르지 않습니다.", errors);
 
 		studyGroupService.updateGroupMemberRole(user, request);
-		return ResponseEntity.ok().body("OK");
+		return ResponseEntity.ok().build();
+	}
+
+	@GetMapping(value = "/role")
+	@Operation(summary = "스터디 그룹 내 유저의 Role 조회 API", description = "특정 스터디 그룹 내에서 유저의 Role을 조회하는 API")
+	public ResponseEntity<String> getGroupRole(@AuthedUser User user, @RequestParam Long groupId) {
+		String response = studyGroupService.getRoleInGroup(user, groupId);
+		return ResponseEntity.ok().body(response);
 	}
 }
