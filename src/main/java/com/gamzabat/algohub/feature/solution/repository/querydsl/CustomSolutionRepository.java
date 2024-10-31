@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.solution.domain.Solution;
+import com.gamzabat.algohub.feature.user.domain.User;
 
 public interface CustomSolutionRepository {
 	Page<Solution> findAllFilteredSolutions(
@@ -13,4 +14,6 @@ public interface CustomSolutionRepository {
 		String language,
 		String result,
 		Pageable pageable);
+
+	boolean existsByUserAndProblemAndResult(User user, Problem problem, String result);
 }

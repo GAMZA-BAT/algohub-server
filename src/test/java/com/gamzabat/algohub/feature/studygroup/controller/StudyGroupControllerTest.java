@@ -1,33 +1,17 @@
 package com.gamzabat.algohub.feature.studygroup.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.gamzabat.algohub.common.DateFormatUtil;
-import com.gamzabat.algohub.common.jwt.TokenProvider;
-import com.gamzabat.algohub.config.SpringSecurityConfig;
-import com.gamzabat.algohub.exception.StudyGroupValidationException;
-import com.gamzabat.algohub.exception.UserValidationException;
-import com.gamzabat.algohub.feature.image.service.ImageService;
-import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
-import com.gamzabat.algohub.feature.solution.exception.CannotFoundSolutionException;
-import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
-import com.gamzabat.algohub.feature.studygroup.dto.BookmarkStatus;
-import com.gamzabat.algohub.feature.studygroup.dto.CheckSolvedProblemResponse;
-import com.gamzabat.algohub.feature.studygroup.dto.CreateGroupRequest;
-import com.gamzabat.algohub.feature.studygroup.dto.EditGroupRequest;
-import com.gamzabat.algohub.feature.studygroup.dto.GetGroupMemberResponse;
-import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupListsResponse;
-import com.gamzabat.algohub.feature.studygroup.dto.GetStudyGroupResponse;
-import com.gamzabat.algohub.feature.studygroup.dto.UpdateBookmarkResponse;
-import com.gamzabat.algohub.feature.studygroup.dto.GroupCodeResponse;
-import com.gamzabat.algohub.feature.studygroup.dto.UpdateGroupMemberRoleRequest;
-import com.gamzabat.algohub.feature.studygroup.etc.RoleOfGroupMember;
-import com.gamzabat.algohub.feature.studygroup.exception.CannotFoundGroupException;
-import com.gamzabat.algohub.feature.studygroup.exception.GroupMemberValidationException;
-import com.gamzabat.algohub.feature.studygroup.repository.GroupMemberRepository;
-import com.gamzabat.algohub.feature.studygroup.repository.StudyGroupRepository;
-import com.gamzabat.algohub.feature.studygroup.service.StudyGroupService;
-import com.gamzabat.algohub.feature.user.domain.User;
-import com.gamzabat.algohub.feature.user.repository.UserRepository;
+import static org.hamcrest.Matchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.anyLong;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -45,16 +29,35 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-import static org.hamcrest.Matchers.hasItems;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gamzabat.algohub.common.DateFormatUtil;
+import com.gamzabat.algohub.common.jwt.TokenProvider;
+import com.gamzabat.algohub.config.SpringSecurityConfig;
+import com.gamzabat.algohub.exception.StudyGroupValidationException;
+import com.gamzabat.algohub.exception.UserValidationException;
+import com.gamzabat.algohub.feature.group.studygroup.controller.StudyGroupController;
+import com.gamzabat.algohub.feature.group.studygroup.dto.BookmarkStatus;
+import com.gamzabat.algohub.feature.group.studygroup.dto.CheckSolvedProblemResponse;
+import com.gamzabat.algohub.feature.group.studygroup.dto.CreateGroupRequest;
+import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupRequest;
+import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupMemberResponse;
+import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupListsResponse;
+import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupResponse;
+import com.gamzabat.algohub.feature.group.studygroup.dto.GroupCodeResponse;
+import com.gamzabat.algohub.feature.group.studygroup.dto.UpdateBookmarkResponse;
+import com.gamzabat.algohub.feature.group.studygroup.dto.UpdateGroupMemberRoleRequest;
+import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
+import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundGroupException;
+import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
+import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
+import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
+import com.gamzabat.algohub.feature.group.studygroup.service.StudyGroupService;
+import com.gamzabat.algohub.feature.image.service.ImageService;
+import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
+import com.gamzabat.algohub.feature.solution.exception.CannotFoundSolutionException;
+import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
+import com.gamzabat.algohub.feature.user.domain.User;
+import com.gamzabat.algohub.feature.user.repository.UserRepository;
 
 @WebMvcTest(StudyGroupController.class)
 @WithMockUser

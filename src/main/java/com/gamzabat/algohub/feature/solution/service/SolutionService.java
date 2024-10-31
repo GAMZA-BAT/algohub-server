@@ -4,16 +4,25 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import com.gamzabat.algohub.constants.BOJResultConstants;
 import com.gamzabat.algohub.exception.ProblemValidationException;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.comment.repository.CommentRepository;
+import com.gamzabat.algohub.feature.group.ranking.service.RankingService;
+import com.gamzabat.algohub.feature.group.ranking.service.RankingUpdateService;
+import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
+import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
+import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
+import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
+import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.solution.domain.Solution;
@@ -21,10 +30,6 @@ import com.gamzabat.algohub.feature.solution.dto.CreateSolutionRequest;
 import com.gamzabat.algohub.feature.solution.dto.GetSolutionResponse;
 import com.gamzabat.algohub.feature.solution.exception.CannotFoundSolutionException;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
-import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
-import com.gamzabat.algohub.feature.studygroup.exception.GroupMemberValidationException;
-import com.gamzabat.algohub.feature.studygroup.repository.GroupMemberRepository;
-import com.gamzabat.algohub.feature.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.repository.UserRepository;
 
@@ -43,6 +48,8 @@ public class SolutionService {
 	private final GroupMemberRepository groupMemberRepository;
 	private final UserRepository userRepository;
 	private final CommentRepository commentRepository;
+	private final RankingService rankingService;
+	private final RankingUpdateService rankingUpdateService;
 
 	public Page<GetSolutionResponse> getSolutionList(User user, Long problemId, String nickname,
 		String language, String result, Pageable pageable) {
@@ -93,15 +100,21 @@ public class SolutionService {
 		while (iterator.hasNext()) {
 			Problem problem = iterator.next();
 			StudyGroup studyGroup = problem.getStudyGroup(); // problem에 딸린 그룹 고유id 로 studyGroup 가져오기
-
+			Optional<GroupMember> member = groupMemberRepository.findByUserAndStudyGroup(user, studyGroup);
 			LocalDate endDate = problem.getEndDate();
 			LocalDate now = LocalDate.now();
+			LocalDateTime solvedDateTime = LocalDateTime.now();
+			boolean isFirstCorrectSolution = true;
 
-			if (!groupMemberRepository.existsByUserAndStudyGroup(user, studyGroup) || endDate == null || now.isAfter(
-				endDate)) {
+			if (member.isEmpty() || endDate == null || now.isAfter(endDate)) {
 				iterator.remove();
 				continue;
 			}
+
+			if (!isCorrect(request.result()) || solutionRepository.existsByUserAndProblemAndResult(user, problem,
+				BOJResultConstants.CORRECT))
+				isFirstCorrectSolution = false;
+
 			solutionRepository.save(Solution.builder()
 				.problem(problem)
 				.user(user)
@@ -111,10 +124,18 @@ public class SolutionService {
 				.language(request.codeType())
 				.codeLength(request.codeLength())
 				.result(request.result())
-				.solvedDateTime(LocalDateTime.now())
+				.solvedDateTime(solvedDateTime)
 				.build()
 			);
-		}
 
+			if (isFirstCorrectSolution) {
+				rankingService.updateScore(member.get(), problem.getEndDate(), solvedDateTime);
+				rankingUpdateService.updateRanking(studyGroup);
+			}
+		}
+	}
+
+	private boolean isCorrect(String result) {
+		return result.equals(BOJResultConstants.CORRECT) || result.endsWith("점");
 	}
 }

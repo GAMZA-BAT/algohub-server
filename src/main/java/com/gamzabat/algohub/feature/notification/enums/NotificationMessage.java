@@ -9,7 +9,7 @@ public enum NotificationMessage {
 		this.message = message;
 	}
 
-	public String format(String... args) {
+	public String format(Object... args) {
 		return String.format(message, args);
 	}
 }

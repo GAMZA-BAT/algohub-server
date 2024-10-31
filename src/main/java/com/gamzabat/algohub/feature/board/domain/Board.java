@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 import org.hibernate.annotations.DynamicUpdate;
 
-import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
+import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.user.domain.User;
 
 import jakarta.persistence.Column;
@@ -49,6 +49,12 @@ public class Board {
 		this.studyGroup = studyGroup;
 		this.content = content;
 		this.createdAt = createdAt;
+	}
+
+	public void updateBoard(String title, String content) {
+		this.title = title;
+		this.content = content;
+		this.updatedAt = LocalDateTime.now();
 	}
 
 }

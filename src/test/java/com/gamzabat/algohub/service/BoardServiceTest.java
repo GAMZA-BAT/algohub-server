@@ -1,6 +1,6 @@
 package com.gamzabat.algohub.service;
 
-import static com.gamzabat.algohub.feature.studygroup.etc.RoleOfGroupMember.*;
+import static com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -28,14 +28,15 @@ import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.board.domain.Board;
 import com.gamzabat.algohub.feature.board.dto.CreateBoardRequest;
 import com.gamzabat.algohub.feature.board.dto.GetBoardResponse;
+import com.gamzabat.algohub.feature.board.dto.UpdateBoardRequest;
 import com.gamzabat.algohub.feature.board.exception.BoardValidationExceoption;
 import com.gamzabat.algohub.feature.board.repository.BoardRepository;
 import com.gamzabat.algohub.feature.board.service.BoardService;
-import com.gamzabat.algohub.feature.studygroup.domain.GroupMember;
-import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
-import com.gamzabat.algohub.feature.studygroup.exception.GroupMemberValidationException;
-import com.gamzabat.algohub.feature.studygroup.repository.GroupMemberRepository;
-import com.gamzabat.algohub.feature.studygroup.repository.StudyGroupRepository;
+import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
+import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
+import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
+import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
+import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
 
 @ExtendWith(MockitoExtension.class)
@@ -263,6 +264,60 @@ public class BoardServiceTest {
 			.isInstanceOf(GroupMemberValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "참여하지 않은 스터디 그룹입니다");
+	}
+
+	@Test
+	@DisplayName("공지 수정 성공")
+	void updateBoardSuccess() {
+		//given
+		UpdateBoardRequest updateBoardRequest = new UpdateBoardRequest(1000L, "updateTitle", "updateContent");
+		when(boardRepository.findById(1000L)).thenReturn(Optional.ofNullable(board));
+		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
+		//when
+		boardService.updateBoard(user, updateBoardRequest);
+		//then
+		assertThat(board.getContent()).isEqualTo("updateContent");
+		assertThat(board.getTitle()).isEqualTo("updateTitle");
+	}
+
+	@Test
+	@DisplayName("공지 수정 실패(존재하지 않는 게시글)")
+	void updateBoardFailed_1() {
+		//given
+		UpdateBoardRequest updateBoardRequest = new UpdateBoardRequest(1001L, "updateTitle", "updateContent");
+		when(boardRepository.findById(1001L)).thenReturn(Optional.empty());
+		//when,then
+		assertThatThrownBy(() -> boardService.updateBoard(user, updateBoardRequest))
+			.isInstanceOf(BoardValidationExceoption.class)
+			.hasFieldOrPropertyWithValue("error", "존재하지 않는 게시글입니다");
+	}
+
+	@Test
+	@DisplayName("공시 수정 실패(존재하지 않는 스터디 그룹)")
+	void updateBoardFailed_2() {
+		//given
+		UpdateBoardRequest updateBoardRequest = new UpdateBoardRequest(1000L, "updateTitle", "updateContent");
+		when(boardRepository.findById(1000L)).thenReturn(Optional.ofNullable(board));
+		when(studyGroupRepository.findById(30L)).thenReturn(Optional.empty());
+		//when,then
+		assertThatThrownBy(() -> boardService.updateBoard(user, updateBoardRequest))
+			.isInstanceOf(StudyGroupValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
+			.hasFieldOrPropertyWithValue("error", "존재하지 않는 스터디 그룹입니다");
+
+	}
+
+	@Test
+	@DisplayName("공지 수정 실패(게시글 작성자가 아님)")
+	void updateBoardFailed_3() {
+		//given
+		UpdateBoardRequest updateBoardRequest = new UpdateBoardRequest(1000L, "updateTitle", "updateContent");
+		when(boardRepository.findById(1000L)).thenReturn(Optional.ofNullable(board));
+		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
+		//when, then
+		assertThatThrownBy(() -> boardService.updateBoard(user4, updateBoardRequest))
+			.isInstanceOf(UserValidationException.class)
+			.hasFieldOrPropertyWithValue("errors", "공지를 수정할 수 있는 권한이 없습니다");
 	}
 
 }
