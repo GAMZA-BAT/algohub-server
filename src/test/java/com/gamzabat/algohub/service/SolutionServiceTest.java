@@ -29,24 +29,31 @@ import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.exception.ProblemValidationException;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.exception.UserValidationException;
-import com.gamzabat.algohub.feature.comment.repository.CommentRepository;
-import com.gamzabat.algohub.feature.problem.domain.Problem;
-import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
-import com.gamzabat.algohub.feature.solution.domain.Solution;
-import com.gamzabat.algohub.feature.solution.dto.GetSolutionResponse;
-import com.gamzabat.algohub.feature.solution.exception.CannotFoundSolutionException;
-import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
-import com.gamzabat.algohub.feature.solution.service.SolutionService;
+import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
+import com.gamzabat.algohub.feature.notification.domain.NotificationSetting;
+import com.gamzabat.algohub.feature.notification.repository.NotificationSettingRepository;
+import com.gamzabat.algohub.feature.notification.service.NotificationService;
+import com.gamzabat.algohub.feature.problem.domain.Problem;
+import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
+import com.gamzabat.algohub.feature.solution.domain.Solution;
+import com.gamzabat.algohub.feature.solution.dto.CreateSolutionRequest;
+import com.gamzabat.algohub.feature.solution.dto.GetSolutionResponse;
+import com.gamzabat.algohub.feature.solution.exception.CannotFoundSolutionException;
+import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
+import com.gamzabat.algohub.feature.solution.service.SolutionService;
 import com.gamzabat.algohub.feature.user.domain.User;
+import com.gamzabat.algohub.feature.user.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 class SolutionServiceTest {
 	@InjectMocks
 	private SolutionService solutionService;
+	@Mock
+	private NotificationService notificationService;
 	@Mock
 	private SolutionRepository solutionRepository;
 	@Mock
@@ -56,7 +63,9 @@ class SolutionServiceTest {
 	@Mock
 	private GroupMemberRepository groupMemberRepository;
 	@Mock
-	private CommentRepository commentRepository;
+	private UserRepository userRepository;
+	@Mock
+	private NotificationSettingRepository notificationSettingRepository;
 	private User user, user2;
 	private Problem problem;
 	private StudyGroup group;
@@ -65,9 +74,9 @@ class SolutionServiceTest {
 	@BeforeEach
 	void setUp() throws NoSuchFieldException, IllegalAccessException {
 		formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-		user = User.builder().email("email1").password("password").nickname("nickname1")
+		user = User.builder().email("email1").password("password").nickname("nickname1").bjNickname("bjNickname1")
 			.role(Role.USER).profileImage("profileImage").build();
-		user2 = User.builder().email("email2").password("password").nickname("nickname2")
+		user2 = User.builder().email("email2").password("password").nickname("nickname2").bjNickname("bjNickname2")
 			.role(Role.USER).profileImage("profileImage").build();
 		group = StudyGroup.builder().name("name").groupImage("imageUrl").groupCode("code").build();
 		problem = Problem.builder()
@@ -394,5 +403,53 @@ class SolutionServiceTest {
 				.solvedDateTime(fixedDateTime)
 				.build());
 		}
+	}
+
+	@Test
+	@DisplayName("풀이 추가 성공")
+	void createSolution() {
+		// given
+		CreateSolutionRequest request = new CreateSolutionRequest(
+			"bjNickname",
+			"code",
+			"Java",
+			"result",
+			80,
+			100,
+			100,
+			300
+		);
+
+		GroupMember member1 = GroupMember.builder()
+			.studyGroup(group)
+			.user(user)
+			.build();
+		GroupMember member2 = GroupMember.builder()
+			.studyGroup(group)
+			.user(user2)
+			.build();
+
+		Problem problem = Problem.builder()
+			.number(300)
+			.studyGroup(group)
+			.endDate(LocalDate.now().plusDays(30))
+			.build();
+
+		NotificationSetting setting2 = NotificationSetting.builder().member(member2).build();
+
+		List<GroupMember> members = List.of(member1, member2);
+		when(problemRepository.findAllByNumber(300)).thenReturn(List.of(problem));
+		when(userRepository.findByBjNickname("bjNickname")).thenReturn(Optional.of(user));
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.of(member1));
+		when(groupMemberRepository.findAllByStudyGroup(group)).thenReturn(members);
+		when(notificationSettingRepository.findByMember(member2)).thenReturn(Optional.of(setting2));
+		List<String> users = List.of(user2.getEmail());
+
+		// when
+		solutionService.createSolution(request);
+
+		// then
+		verify(solutionRepository, times(1)).save(any(Solution.class));
+		verify(notificationService, times(1)).sendList(eq(users), anyString(), eq(group), eq(null));
 	}
 }
