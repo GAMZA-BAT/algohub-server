@@ -17,6 +17,7 @@ import com.gamzabat.algohub.feature.comment.dto.UpdateCommentRequest;
 import com.gamzabat.algohub.feature.comment.exception.CommentValidationException;
 import com.gamzabat.algohub.feature.comment.exception.SolutionValidationException;
 import com.gamzabat.algohub.feature.comment.repository.CommentRepository;
+import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
@@ -109,8 +110,10 @@ public class CommentService {
 	}
 
 	private void sendNotification(User commenter, CreateCommentRequest request, Solution solution) {
-		NotificationSetting setting = notificationSettingRepository.findByUserAndGroup(
-				solution.getUser(), solution.getProblem().getStudyGroup())
+		GroupMember member = groupMemberRepository.findByUserAndStudyGroup(solution.getUser(),
+				solution.getProblem().getStudyGroup())
+			.orElseThrow(() -> new GroupMemberValidationException(HttpStatus.NOT_FOUND.value(), "참여하지 않은 스터디 그룹입니다."));
+		NotificationSetting setting = notificationSettingRepository.findByMember(member)
 			.orElseThrow(() -> new CannotFoundNotificationSettingException("그룹 멤버의 알림 정보를 조회할 수 없습니다."));
 
 		if (!setting.isAllNotifications() || !setting.isNewComment())

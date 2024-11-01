@@ -129,7 +129,8 @@ class CommentServiceTest {
 		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user2, studyGroup)).thenReturn(true);
-		when(notificationSettingRepository.findByUserAndGroup(user, studyGroup)).thenReturn(Optional.of(setting));
+		when(groupMemberRepository.findByUserAndStudyGroup(user, studyGroup)).thenReturn(Optional.ofNullable(member));
+		when(notificationSettingRepository.findByMember(member)).thenReturn(Optional.of(setting));
 		// when
 		commentService.createComment(user2, request);
 		// then
