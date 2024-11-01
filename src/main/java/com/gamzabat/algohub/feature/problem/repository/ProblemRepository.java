@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.gamzabat.algohub.feature.problem.domain.Problem;
-import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
+import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 
 public interface ProblemRepository extends JpaRepository<Problem, Long> {
 	Page<Problem> findAllByStudyGroup(StudyGroup studyGroup, Pageable pageable);

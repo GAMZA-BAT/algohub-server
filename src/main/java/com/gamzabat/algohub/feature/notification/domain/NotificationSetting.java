@@ -1,6 +1,6 @@
 package com.gamzabat.algohub.feature.notification.domain;
 
-import com.gamzabat.algohub.feature.studygroup.domain.GroupMember;
+import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;

@@ -14,14 +14,15 @@ import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.board.domain.Board;
 import com.gamzabat.algohub.feature.board.dto.CreateBoardRequest;
 import com.gamzabat.algohub.feature.board.dto.GetBoardResponse;
+import com.gamzabat.algohub.feature.board.dto.UpdateBoardRequest;
 import com.gamzabat.algohub.feature.board.exception.BoardValidationExceoption;
 import com.gamzabat.algohub.feature.board.repository.BoardRepository;
-import com.gamzabat.algohub.feature.studygroup.domain.GroupMember;
-import com.gamzabat.algohub.feature.studygroup.domain.StudyGroup;
-import com.gamzabat.algohub.feature.studygroup.etc.RoleOfGroupMember;
-import com.gamzabat.algohub.feature.studygroup.exception.GroupMemberValidationException;
-import com.gamzabat.algohub.feature.studygroup.repository.GroupMemberRepository;
-import com.gamzabat.algohub.feature.studygroup.repository.StudyGroupRepository;
+import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
+import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
+import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
+import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
+import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
+import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.repository.UserRepository;
 
@@ -87,6 +88,18 @@ public class BoardService {
 		List<GetBoardResponse> result = list.stream().map(GetBoardResponse::toDTO).toList();
 		log.info("success to get board list");
 		return result;
+	}
+
+	@Transactional
+	public void updateBoard(User user, UpdateBoardRequest request) {
+		Board board = boardRepository.findById(request.boardId())
+			.orElseThrow(() -> new BoardValidationExceoption("존재하지 않는 게시글입니다"));
+		StudyGroup studyGroup = studyGroupRepository.findById(board.getStudyGroup().getId())
+			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.BAD_REQUEST.value(), "존재하지 않는 스터디 그룹입니다"));
+		if (!user.getId().equals(board.getAuthor().getId()))
+			throw new UserValidationException("공지를 수정할 수 있는 권한이 없습니다");
+
+		board.updateBoard(request.title(), request.content());
 	}
 
 }
