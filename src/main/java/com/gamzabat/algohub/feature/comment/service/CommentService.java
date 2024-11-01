@@ -17,15 +17,18 @@ import com.gamzabat.algohub.feature.comment.dto.UpdateCommentRequest;
 import com.gamzabat.algohub.feature.comment.exception.CommentValidationException;
 import com.gamzabat.algohub.feature.comment.exception.SolutionValidationException;
 import com.gamzabat.algohub.feature.comment.repository.CommentRepository;
+import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
+import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
+import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
+import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
+import com.gamzabat.algohub.feature.notification.domain.NotificationSetting;
+import com.gamzabat.algohub.feature.notification.exception.CannotFoundNotificationSettingException;
+import com.gamzabat.algohub.feature.notification.repository.NotificationSettingRepository;
 import com.gamzabat.algohub.feature.notification.service.NotificationService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.solution.domain.Solution;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
-import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
-import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
-import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
-import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
 
 import lombok.RequiredArgsConstructor;
@@ -41,6 +44,7 @@ public class CommentService {
 	private final StudyGroupRepository studyGroupRepository;
 	private final GroupMemberRepository groupMemberRepository;
 	private final NotificationService notificationService;
+	private final NotificationSettingRepository notificationSettingRepository;
 
 	@Transactional
 	public void createComment(User user, CreateCommentRequest request) {
@@ -53,20 +57,7 @@ public class CommentService {
 			.createdAt(LocalDateTime.now())
 			.build());
 
-		String message;
-		if (request.content().length() < 35)
-			message = request.content();
-		else
-			message = request.content().substring(0, 35) + "...";
-
-		try {
-			notificationService.send(solution.getUser().getEmail(),
-				user.getNickname() + "님이 코멘트를 남겼습니다.",
-				solution.getProblem().getStudyGroup(),
-				message);
-		} catch (Exception e) {
-			log.info("failed to send comment notification", e);
-		}
+		sendNotification(user, request, solution);
 		log.info("success to create comment");
 	}
 
@@ -115,6 +106,27 @@ public class CommentService {
 			throw new UserValidationException("댓글 작성자가 아닙니다.");
 
 		comment.upadateComment(request.content());
+	}
+
+	private void sendNotification(User commenter, CreateCommentRequest request, Solution solution) {
+		NotificationSetting setting = notificationSettingRepository.findByUserAndGroup(
+				solution.getUser(), solution.getProblem().getStudyGroup())
+			.orElseThrow(() -> new CannotFoundNotificationSettingException("그룹 멤버의 알림 정보를 조회할 수 없습니다."));
+
+		if (!setting.isAllNotifications() || !setting.isNewComment())
+			return;
+
+		String message =
+			request.content().length() < 35 ? request.content() : request.content().substring(0, 35) + "...";
+
+		try {
+			notificationService.send(solution.getUser().getEmail(),
+				commenter.getNickname() + "님이 코멘트를 남겼습니다.",
+				solution.getProblem().getStudyGroup(),
+				message);
+		} catch (Exception e) {
+			log.info("failed to send comment notification", e);
+		}
 	}
 
 }
