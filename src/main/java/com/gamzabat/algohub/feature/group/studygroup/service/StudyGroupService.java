@@ -45,7 +45,10 @@ import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepos
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.image.service.ImageService;
 import com.gamzabat.algohub.feature.notification.domain.NotificationSetting;
+import com.gamzabat.algohub.feature.notification.enums.NotificationMessage;
+import com.gamzabat.algohub.feature.notification.exception.CannotFoundNotificationSettingException;
 import com.gamzabat.algohub.feature.notification.repository.NotificationSettingRepository;
+import com.gamzabat.algohub.feature.notification.service.NotificationService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
@@ -71,6 +74,7 @@ public class StudyGroupService {
 
 	private final ObjectProvider<StudyGroupService> studyGroupServiceProvider;
 	private final NotificationSettingRepository notificationSettingRepository;
+	private final NotificationService notificationService;
 
 	@Transactional
 	public GroupCodeResponse createGroup(User user, CreateGroupRequest request, MultipartFile profileImage) {
@@ -136,6 +140,8 @@ public class StudyGroupService {
 			.rankDiff("-")
 			.build()
 		);
+
+		sendNotification(studyGroup, member);
 
 		log.info("success to join study group");
 	}
@@ -426,5 +432,29 @@ public class StudyGroupService {
 			.orElseThrow(() -> new GroupMemberValidationException(HttpStatus.NOT_FOUND.value(), "참여하지 않은 그룹입니다."));
 
 		return member.getRole().getValue();
+	}
+
+	private void sendNotification(StudyGroup studyGroup, GroupMember newMember) {
+		List<GroupMember> members = groupMemberRepository.findAllByStudyGroup(studyGroup);
+
+		List<String> users = new ArrayList<>();
+		for (GroupMember member : members) {
+			if (member.getUser().getId().equals(newMember.getUser().getId()))
+				continue;
+
+			NotificationSetting setting = notificationSettingRepository.findByMember(member)
+				.orElseThrow(() -> new CannotFoundNotificationSettingException("그룹 멤버의 알림 정보를 조회할 수 없습니다."));
+
+			if (setting.isAllNotifications() && setting.isNewMember())
+				users.add(member.getUser().getEmail());
+		}
+
+		try {
+			String message = NotificationMessage.NEW_MEMBER_JOINED.format(newMember.getUser().getNickname(),
+				studyGroup.getName());
+			notificationService.sendList(users, message, studyGroup, null);
+		} catch (Exception e) {
+			log.warn("failed to send notification", e);
+		}
 	}
 }
