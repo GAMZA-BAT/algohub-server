@@ -23,8 +23,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gamzabat.algohub.constants.BOJResultConstants;
 import com.gamzabat.algohub.exception.ProblemValidationException;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
+import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
+import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
+import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
+import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
+import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
+import com.gamzabat.algohub.feature.notification.domain.NotificationSetting;
 import com.gamzabat.algohub.feature.notification.enums.NotificationMessage;
+import com.gamzabat.algohub.feature.notification.exception.CannotFoundNotificationSettingException;
+import com.gamzabat.algohub.feature.notification.repository.NotificationSettingRepository;
 import com.gamzabat.algohub.feature.notification.service.NotificationService;
+import com.gamzabat.algohub.feature.notification.service.NotificationSettingService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.dto.CreateProblemRequest;
 import com.gamzabat.algohub.feature.problem.dto.EditProblemRequest;
@@ -34,11 +43,6 @@ import com.gamzabat.algohub.feature.problem.exception.NotBojLinkException;
 import com.gamzabat.algohub.feature.problem.exception.SolvedAcApiErrorException;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
-import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
-import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
-import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
-import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
-import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
 
 import lombok.RequiredArgsConstructor;
@@ -54,6 +58,8 @@ public class ProblemService {
 	private final GroupMemberRepository groupMemberRepository;
 	private final NotificationService notificationService;
 	private final RestTemplate restTemplate;
+	private final NotificationSettingService notificationSettingService;
+	private final NotificationSettingRepository notificationSettingRepository;
 
 	@Transactional
 	public void createProblem(User user, CreateProblemRequest request) {
@@ -331,7 +337,16 @@ public class ProblemService {
 
 	private void sendProblemStartedNotification(StudyGroup group, String title) {
 		List<GroupMember> members = groupMemberRepository.findAllByStudyGroup(group);
-		List<String> users = members.stream().map(member -> member.getUser().getEmail()).toList();
+
+		List<String> users = new ArrayList<>();
+		for (GroupMember member : members) {
+			NotificationSetting setting = notificationSettingRepository.findByMember(member)
+				.orElseThrow(() -> new CannotFoundNotificationSettingException("그룹 멤버의 알림 정보를 조회할 수 없습니다."));
+
+			if (setting.isAllNotifications() && setting.isNewProblem())
+				users.add(member.getUser().getEmail());
+		}
+
 		try {
 			String message = NotificationMessage.PROBLEM_STARTED.format(title);
 			notificationService.sendList(users, message, group, null);
