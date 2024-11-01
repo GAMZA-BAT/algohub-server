@@ -2,6 +2,7 @@ package com.gamzabat.algohub.feature.solution.service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -23,6 +24,11 @@ import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
+import com.gamzabat.algohub.feature.notification.domain.NotificationSetting;
+import com.gamzabat.algohub.feature.notification.enums.NotificationMessage;
+import com.gamzabat.algohub.feature.notification.exception.CannotFoundNotificationSettingException;
+import com.gamzabat.algohub.feature.notification.repository.NotificationSettingRepository;
+import com.gamzabat.algohub.feature.notification.service.NotificationService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.solution.domain.Solution;
@@ -48,8 +54,10 @@ public class SolutionService {
 	private final GroupMemberRepository groupMemberRepository;
 	private final UserRepository userRepository;
 	private final CommentRepository commentRepository;
+	private final NotificationService notificationService;
 	private final RankingService rankingService;
 	private final RankingUpdateService rankingUpdateService;
+	private final NotificationSettingRepository notificationSettingRepository;
 
 	public Page<GetSolutionResponse> getSolutionList(User user, Long problemId, String nickname,
 		String language, String result, Pageable pageable) {
@@ -132,6 +140,31 @@ public class SolutionService {
 				rankingService.updateScore(member.get(), problem.getEndDate(), solvedDateTime);
 				rankingUpdateService.updateRanking(studyGroup);
 			}
+
+			sendNotification(studyGroup, member.get());
+		}
+	}
+
+	private void sendNotification(StudyGroup group, GroupMember solver) {
+		List<GroupMember> members = groupMemberRepository.findAllByStudyGroup(group);
+
+		List<String> users = new ArrayList<>();
+		for (GroupMember member : members) {
+			if (member.getUser().getId().equals(solver.getUser().getId()))
+				continue;
+
+			NotificationSetting setting = notificationSettingRepository.findByMember(member)
+				.orElseThrow(() -> new CannotFoundNotificationSettingException("그룹 멤버의 알림 정보를 조회할 수 없습니다."));
+
+			if (setting.isAllNotifications() && setting.isNewSolution())
+				users.add(member.getUser().getEmail());
+		}
+
+		try {
+			String message = NotificationMessage.NEW_SOLUTION_POSTED.format(solver.getUser().getNickname());
+			notificationService.sendList(users, message, group, null);
+		} catch (Exception e) {
+			log.warn("failed to send notification", e);
 		}
 	}
 
