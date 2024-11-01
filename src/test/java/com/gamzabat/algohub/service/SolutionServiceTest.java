@@ -29,6 +29,7 @@ import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.exception.ProblemValidationException;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.exception.UserValidationException;
+import com.gamzabat.algohub.feature.comment.repository.CommentRepository;
 import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
@@ -66,6 +67,8 @@ class SolutionServiceTest {
 	private UserRepository userRepository;
 	@Mock
 	private NotificationSettingRepository notificationSettingRepository;
+	@Mock
+	private CommentRepository commentRepository;
 	private User user, user2;
 	private Problem problem;
 	private StudyGroup group;
