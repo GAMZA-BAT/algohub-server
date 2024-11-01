@@ -7,6 +7,7 @@ import org.hibernate.annotations.SQLRestriction;
 
 import com.gamzabat.algohub.enums.Role;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -32,6 +33,7 @@ public class User {
 	private String nickname;
 	private String bjNickname;
 	private String profileImage;
+	@Column
 	private String description = "";
 
 	private LocalDateTime deletedAt;
