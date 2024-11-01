@@ -34,16 +34,20 @@ import com.gamzabat.algohub.feature.comment.exception.CommentValidationException
 import com.gamzabat.algohub.feature.comment.exception.SolutionValidationException;
 import com.gamzabat.algohub.feature.comment.repository.CommentRepository;
 import com.gamzabat.algohub.feature.comment.service.CommentService;
+import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
+import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
+import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
+import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
+import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
+import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
+import com.gamzabat.algohub.feature.notification.domain.NotificationSetting;
 import com.gamzabat.algohub.feature.notification.repository.NotificationRepository;
+import com.gamzabat.algohub.feature.notification.repository.NotificationSettingRepository;
 import com.gamzabat.algohub.feature.notification.service.NotificationService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.solution.domain.Solution;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
-import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
-import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
-import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
-import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
 
 @ExtendWith(MockitoExtension.class)
@@ -64,6 +68,8 @@ class CommentServiceTest {
 	private ProblemRepository problemRepository;
 	@Mock
 	private NotificationRepository notificationRepository;
+	@Mock
+	private NotificationSettingRepository notificationSettingRepository;
 	private User user, user2;
 	private Comment comment, comment2;
 	private Solution solution;
@@ -112,10 +118,18 @@ class CommentServiceTest {
 	void createComment_1() {
 		// given
 		CreateCommentRequest request = CreateCommentRequest.builder().solutionId(10L).content("content").build();
+		GroupMember member = GroupMember.builder()
+			.user(user)
+			.studyGroup(studyGroup)
+			.role(RoleOfGroupMember.PARTICIPANT)
+			.build();
+		NotificationSetting setting = new NotificationSetting(member);
+
 		when(solutionRepository.findById(10L)).thenReturn(Optional.ofNullable(solution));
 		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user2, studyGroup)).thenReturn(true);
+		when(notificationSettingRepository.findByUserAndGroup(user, studyGroup)).thenReturn(Optional.of(setting));
 		// when
 		commentService.createComment(user2, request);
 		// then
