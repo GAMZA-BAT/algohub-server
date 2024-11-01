@@ -30,8 +30,15 @@ import com.gamzabat.algohub.common.DateFormatUtil;
 import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.exception.ProblemValidationException;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
+import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
+import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
+import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
+import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
+import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.notification.domain.Notification;
+import com.gamzabat.algohub.feature.notification.domain.NotificationSetting;
 import com.gamzabat.algohub.feature.notification.repository.NotificationRepository;
+import com.gamzabat.algohub.feature.notification.repository.NotificationSettingRepository;
 import com.gamzabat.algohub.feature.notification.service.NotificationService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.dto.CreateProblemRequest;
@@ -42,11 +49,6 @@ import com.gamzabat.algohub.feature.problem.exception.SolvedAcApiErrorException;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.problem.service.ProblemService;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
-import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
-import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
-import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
-import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
-import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
 
 @ExtendWith(MockitoExtension.class)
@@ -65,6 +67,8 @@ class ProblemServiceTest {
 	private SolutionRepository solutionRepository;
 	@Mock
 	private NotificationRepository notificationRepository;
+	@Mock
+	private NotificationSettingRepository notificationSettingRepository;
 	@Mock
 	private RestTemplate restTemplate;
 
@@ -757,9 +761,18 @@ class ProblemServiceTest {
 				.build());
 		}
 
+		NotificationSetting setting1 = NotificationSetting.builder().member(groupMember1).build();
+		NotificationSetting setting3 = NotificationSetting.builder().member(groupMember3).build();
+		NotificationSetting setting4 = NotificationSetting.builder().member(groupMember4).build();
+		NotificationSetting setting11 = NotificationSetting.builder().member(groupMember11).build();
+
 		when(problemRepository.findAllByStartDate(LocalDate.now())).thenReturn(problems);
 		when(groupMemberRepository.findAllByStudyGroup(group)).thenReturn(group1Members);
 		when(groupMemberRepository.findAllByStudyGroup(group2)).thenReturn(group2Members);
+		when(notificationSettingRepository.findByMember(groupMember1)).thenReturn(Optional.ofNullable(setting1));
+		when(notificationSettingRepository.findByMember(groupMember3)).thenReturn(Optional.ofNullable(setting3));
+		when(notificationSettingRepository.findByMember(groupMember4)).thenReturn(Optional.ofNullable(setting4));
+		when(notificationSettingRepository.findByMember(groupMember11)).thenReturn(Optional.ofNullable(setting11));
 		// when
 		problemService.dailyProblemScheduler();
 		// then
