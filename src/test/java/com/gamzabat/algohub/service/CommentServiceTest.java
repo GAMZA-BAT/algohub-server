@@ -207,11 +207,20 @@ class CommentServiceTest {
 	@DisplayName("댓글 작성 성공, 알림 전송 실패")
 	void createCommentSuccess_NotificationFailed() {
 		// given
+		GroupMember member = GroupMember.builder()
+			.user(user)
+			.studyGroup(studyGroup)
+			.role(RoleOfGroupMember.PARTICIPANT)
+			.build();
+		NotificationSetting setting = new NotificationSetting(member);
+
 		CreateCommentRequest request = CreateCommentRequest.builder().solutionId(10L).content("content").build();
 		when(solutionRepository.findById(10L)).thenReturn(Optional.ofNullable(solution));
 		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user2, studyGroup)).thenReturn(true);
+		when(groupMemberRepository.findByUserAndStudyGroup(user, studyGroup)).thenReturn(Optional.ofNullable(member));
+		when(notificationSettingRepository.findByMember(member)).thenReturn(Optional.of(setting));
 		doThrow(new RuntimeException()).when(notificationService).send(any(), any(), any(), any());
 		// when
 		commentService.createComment(user2, request);
