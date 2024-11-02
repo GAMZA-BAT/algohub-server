@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import com.gamzabat.algohub.feature.board.exception.BoardValidationExceoption;
 import com.gamzabat.algohub.feature.comment.exception.CommentValidationException;
-import com.gamzabat.algohub.feature.comment.exception.SolutionValidationException;
 import com.gamzabat.algohub.feature.group.ranking.exception.CannotFoundRankingException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundGroupException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundProblemException;
@@ -16,6 +15,7 @@ import com.gamzabat.algohub.feature.group.studygroup.exception.InvalidRoleExcept
 import com.gamzabat.algohub.feature.problem.exception.NotBojLinkException;
 import com.gamzabat.algohub.feature.problem.exception.SolvedAcApiErrorException;
 import com.gamzabat.algohub.feature.solution.exception.CannotFoundSolutionException;
+import com.gamzabat.algohub.feature.solution.exception.SolutionValidationException;
 import com.gamzabat.algohub.feature.user.exception.BOJServerErrorException;
 import com.gamzabat.algohub.feature.user.exception.CheckBjNicknameValidationException;
 import com.gamzabat.algohub.feature.user.exception.CheckNicknameValidationException;

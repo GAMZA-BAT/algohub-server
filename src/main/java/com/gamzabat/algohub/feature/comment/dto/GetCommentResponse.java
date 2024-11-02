@@ -11,6 +11,7 @@ public record GetCommentResponse(Long commentId,
 								 String writerProfileImage,
 								 String content,
 								 String createdAt) {
+	
 	public static GetCommentResponse toDTO(Comment comment) {
 		return GetCommentResponse.builder()
 			.commentId(comment.getId())
