@@ -734,7 +734,7 @@ class ProblemServiceTest {
 
 	@Test
 	@DisplayName("문제 시작 날짜가 오늘일 시 그룹 멤버들에게 알림 전송")
-	void sendProblemStartedNotification() {
+	void sendProblemNotification() {
 		// given
 		StudyGroup group2 = StudyGroup.builder().name("group2").build();
 		User user11 = User.builder().email("email1").build();
@@ -743,9 +743,9 @@ class ProblemServiceTest {
 		List<GroupMember> group1Members = List.of(groupMember1, groupMember3, groupMember4);
 		List<GroupMember> group2Members = List.of(groupMember11);
 
-		List<Problem> problems = new ArrayList<>();
+		List<Problem> startProblems = new ArrayList<>();
 		for (int i = 0; i < 5; i++) {
-			problems.add(Problem.builder()
+			startProblems.add(Problem.builder()
 				.studyGroup(group)
 				.startDate(LocalDate.now())
 				.endDate(LocalDate.now().plusDays(30))
@@ -753,10 +753,28 @@ class ProblemServiceTest {
 				.build());
 		}
 		for (int i = 5; i < 10; i++) {
-			problems.add(Problem.builder()
+			startProblems.add(Problem.builder()
 				.studyGroup(group2)
 				.startDate(LocalDate.now())
 				.endDate(LocalDate.now().plusDays(30))
+				.title("started problem")
+				.build());
+		}
+
+		List<Problem> endProblems = new ArrayList<>();
+		for (int i = 0; i < 5; i++) {
+			endProblems.add(Problem.builder()
+				.studyGroup(group)
+				.startDate(LocalDate.now().minusDays(30))
+				.endDate(LocalDate.now())
+				.title("started problem")
+				.build());
+		}
+		for (int i = 5; i < 10; i++) {
+			endProblems.add(Problem.builder()
+				.studyGroup(group2)
+				.startDate(LocalDate.now().minusDays(30))
+				.endDate(LocalDate.now())
 				.title("started problem")
 				.build());
 		}
@@ -766,7 +784,8 @@ class ProblemServiceTest {
 		NotificationSetting setting4 = NotificationSetting.builder().member(groupMember4).build();
 		NotificationSetting setting11 = NotificationSetting.builder().member(groupMember11).build();
 
-		when(problemRepository.findAllByStartDate(LocalDate.now())).thenReturn(problems);
+		when(problemRepository.findAllByStartDate(LocalDate.now())).thenReturn(startProblems);
+		when(problemRepository.findAllByEndDate(LocalDate.now())).thenReturn(endProblems);
 		when(groupMemberRepository.findAllByStudyGroup(group)).thenReturn(group1Members);
 		when(groupMemberRepository.findAllByStudyGroup(group2)).thenReturn(group2Members);
 		when(notificationSettingRepository.findByMember(groupMember1)).thenReturn(Optional.ofNullable(setting1));
@@ -776,7 +795,7 @@ class ProblemServiceTest {
 		// when
 		problemService.dailyProblemScheduler();
 		// then
-		verify(notificationService, times(10)).sendList(anyList(), anyString(), any(StudyGroup.class), eq(null));
+		verify(notificationService, times(20)).sendList(anyList(), anyString(), any(StudyGroup.class), eq(null));
 	}
 
 }
