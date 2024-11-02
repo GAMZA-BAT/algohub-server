@@ -262,11 +262,12 @@ class StudyGroupServiceTest {
 		when(studyGroupRepository.findById(10L)).thenReturn(Optional.of(group));
 		when(bookmarkedStudyGroupRepository.findAllByStudyGroup(group)).thenReturn(bookmarks);
 		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
+		when(groupMemberRepository.findAllByStudyGroup(group)).thenReturn(List.of(groupMember1));
 		// when
 		studyGroupService.deleteGroup(user, 10L);
 		// then
 		verify(studyGroupRepository, times(1)).delete(group);
-		verify(groupMemberRepository, times(1)).delete(groupMember1);
+		verify(groupMemberRepository, times(1)).deleteAll(List.of(groupMember1));
 		verify(bookmarkedStudyGroupRepository, times(1)).deleteAll(bookmarks);
 	}
 
