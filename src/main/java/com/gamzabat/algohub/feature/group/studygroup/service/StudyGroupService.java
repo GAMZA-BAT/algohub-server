@@ -158,7 +158,8 @@ public class StudyGroupService {
 		if (RoleOfGroupMember.isOwner(groupMember)) { // owner
 			bookmarkedStudyGroupRepository.deleteAll(bookmarkedStudyGroupRepository.findAllByStudyGroup(studyGroup));
 			rankingRepository.deleteAll(rankingRepository.findAllByStudyGroup(studyGroup));
-			groupMemberRepository.delete(groupMember);
+			notificationSettingRepository.deleteAll(notificationSettingRepository.findAllByStudyGroup(studyGroup));
+			groupMemberRepository.deleteAll(groupMemberRepository.findAllByStudyGroup(studyGroup));
 			groupRepository.delete(studyGroup);
 		} else { // member
 			studyGroupServiceProvider.getObject().deleteMemberFromStudyGroup(user, groupMember, studyGroup);
@@ -193,6 +194,7 @@ public class StudyGroupService {
 		bookmarkedStudyGroupRepository.findByUserAndStudyGroup(user, studyGroup)
 			.ifPresent(bookmarkedStudyGroupRepository::delete);
 		rankingRepository.deleteByMember(groupMember);
+		notificationSettingRepository.deleteByMember(groupMember);
 		groupMemberRepository.delete(groupMember);
 		log.info("success to delete group member");
 	}

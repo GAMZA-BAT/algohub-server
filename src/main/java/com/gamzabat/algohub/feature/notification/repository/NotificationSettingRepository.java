@@ -12,4 +12,6 @@ public interface NotificationSettingRepository extends JpaRepository<Notificatio
 	CustomNotificationSettingRepository {
 
 	Optional<NotificationSetting> findByMember(GroupMember member);
+
+	void deleteByMember(GroupMember member);
 }
