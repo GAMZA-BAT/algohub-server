@@ -23,12 +23,14 @@ import com.gamzabat.algohub.feature.comment.dto.UpdateCommentRequest;
 import com.gamzabat.algohub.feature.user.domain.User;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/board/comment")
+@Tag(name = "공지 댓글 API", description = "공지에 대한 댓글 관련 API")
 public class BoardCommentController implements CommentController<CreateBoardCommentRequest> {
 	private final BoardCommentService commentService;
 

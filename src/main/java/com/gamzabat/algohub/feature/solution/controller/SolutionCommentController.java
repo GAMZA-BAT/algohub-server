@@ -22,7 +22,6 @@ import com.gamzabat.algohub.feature.solution.dto.CreateSolutionCommentRequest;
 import com.gamzabat.algohub.feature.solution.service.SolutionCommentService;
 import com.gamzabat.algohub.feature.user.domain.User;
 
-import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,13 +29,12 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/solution/comment")
-@Tag(name = "댓글 API", description = "풀이에 대한 댓글 관련 API")
+@Tag(name = "풀이 댓글 API", description = "풀이에 대한 댓글 관련 API")
 public class SolutionCommentController implements CommentController<CreateSolutionCommentRequest> {
 	private final SolutionCommentService commentService;
 
 	@Override
 	@PostMapping
-	@Operation(summary = "댓글 작성 API")
 	public ResponseEntity<Void> createComment(@AuthedUser User user,
 		@Valid @RequestBody CreateSolutionCommentRequest request, Errors errors) {
 		if (errors.hasErrors())
@@ -47,7 +45,6 @@ public class SolutionCommentController implements CommentController<CreateSoluti
 
 	@Override
 	@GetMapping
-	@Operation(summary = "댓글 목록 조회 API", description = "풀이 하나에 대한 댓글 전체 조회")
 	public ResponseEntity<List<GetCommentResponse>> getCommentList(@AuthedUser User user,
 		@RequestParam Long solutionId) {
 		List<GetCommentResponse> response = commentService.getCommentList(user, solutionId);
@@ -56,7 +53,6 @@ public class SolutionCommentController implements CommentController<CreateSoluti
 
 	@Override
 	@DeleteMapping
-	@Operation(summary = "댓글 삭제 API")
 	public ResponseEntity<Void> deleteComment(@AuthedUser User user, @RequestParam Long commentId) {
 		commentService.deleteComment(user, commentId);
 		return ResponseEntity.ok().build();
@@ -64,7 +60,6 @@ public class SolutionCommentController implements CommentController<CreateSoluti
 
 	@Override
 	@PutMapping
-	@Operation(summary = "댓글 수정 API")
 	public ResponseEntity<Void> modifyComment(@AuthedUser User user,
 		@Valid @RequestBody UpdateCommentRequest request, Errors errors) {
 		if (errors.hasErrors())
