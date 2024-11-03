@@ -42,4 +42,14 @@ public class NotificationSetting {
 		this.newMember = true;
 		this.deadlineReached = true;
 	}
+
+	public void editSettings(boolean all, boolean newProblem, boolean newSolution, boolean newComment,
+		boolean newMember, boolean deadlineReached) {
+		this.allNotifications = all;
+		this.newProblem = newProblem;
+		this.newSolution = newSolution;
+		this.newComment = newComment;
+		this.newMember = newMember;
+		this.deadlineReached = deadlineReached;
+	}
 }
