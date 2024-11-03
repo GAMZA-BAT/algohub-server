@@ -17,7 +17,7 @@ public interface CommentController<T extends CreateCommentRequest> {
 	ResponseEntity<Void> createComment(User user,
 		T request, Errors errors);
 
-	@Operation(summary = "댓글 목록 조회 API", description = "풀이 하나에 대한 댓글 전체 조회")
+	@Operation(summary = "댓글 목록 조회 API", description = "대상 하나에 대한 댓글 전체 조회")
 	ResponseEntity<List<GetCommentResponse>> getCommentList(User user,
 		Long baseId);
 

@@ -43,14 +43,14 @@ public class BoardCommentService implements CommentService<CreateBoardCommentReq
 	public void createComment(User user, CreateBoardCommentRequest request) {
 		Board board = validateBoard(user, request.boardId());
 
-		boardCommentRepository.save(BoardComment.builder()
+		BoardComment comment = boardCommentRepository.save(BoardComment.builder()
 			.user(user)
 			.board(board)
 			.content(request.content())
 			.build());
 
 		sendCommentNotification(board, user, request.content());
-
+		log.info("success to create board comment. commentId: {}, boardId: {}", comment.getId(), board.getId());
 	}
 
 	private void sendCommentNotification(Board board, User user, String content) {
@@ -61,9 +61,9 @@ public class BoardCommentService implements CommentService<CreateBoardCommentReq
 				board.getStudyGroup(),
 				message);
 		} catch (Exception e) {
-			log.info("failed to send comment notification", e);
+			log.info("failed to send comment board notification. boardId: {}, userId: {}, error: {}",
+				board.getId(), user.getId(), e.getMessage());
 		}
-		log.info("success to create comment");
 	}
 
 	@Override
@@ -71,6 +71,7 @@ public class BoardCommentService implements CommentService<CreateBoardCommentReq
 	public List<GetCommentResponse> getCommentList(User user, Long boardId) {
 		Board board = validateBoard(user, boardId);
 		List<BoardComment> boards = boardCommentRepository.findAllByBoard(board);
+		log.info("success to get board comment list. boardId: {}", boardId);
 		return boards.stream().map(GetCommentResponse::toDTO).toList();
 	}
 
@@ -84,6 +85,7 @@ public class BoardCommentService implements CommentService<CreateBoardCommentReq
 			throw new UserValidationException("댓글 작성자만 수정할 수 있습니다.");
 
 		comment.updateComment(request.content());
+		log.info("success to update board comment. commentId: {}", comment.getId());
 
 	}
 
@@ -98,6 +100,7 @@ public class BoardCommentService implements CommentService<CreateBoardCommentReq
 
 		validateBoard(user, comment.getBoard().getId());
 		boardCommentRepository.delete(comment);
+		log.info("success to delete board comment. commentId: {}", commentId);
 
 	}
 

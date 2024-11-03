@@ -48,28 +48,29 @@ public class SolutionCommentService implements CommentService<CreateSolutionComm
 	public void createComment(User user, CreateSolutionCommentRequest request) {
 		Solution solution = checkSolutionValidation(user, request.solutionId());
 
-		commentRepository.save(SolutionComment.builder()
+		SolutionComment comment = commentRepository.save(SolutionComment.builder()
 			.user(user)
 			.solution(solution)
 			.content(request.content())
 			.createdAt(LocalDateTime.now())
 			.build());
 
-		String message;
-		if (request.content().length() < 35)
-			message = request.content();
-		else
-			message = request.content().substring(0, 35) + "...";
+		sendCommentNotification(solution, user, request.content());
+		log.info("success to create solution comment. commentId: {}, solutionId: {}", comment.getId(),
+			solution.getId());
+	}
 
+	private void sendCommentNotification(Solution solution, User user, String content) {
+		String message = content.length() <= 35 ? content : content.substring(0, 35) + "...";
 		try {
 			notificationService.send(solution.getUser().getEmail(),
 				user.getNickname() + "님이 코멘트를 남겼습니다.",
 				solution.getProblem().getStudyGroup(),
 				message);
 		} catch (Exception e) {
-			log.info("failed to send comment notification", e);
+			log.info("failed to send solution comment notification. solutionId: {},  userId: {}, error: {}",
+				solution.getId(), user.getId(), e.getMessage());
 		}
-		log.info("success to create comment");
 	}
 
 	@Override
@@ -78,8 +79,20 @@ public class SolutionCommentService implements CommentService<CreateSolutionComm
 		Solution solution = checkSolutionValidation(user, solutionId);
 		List<SolutionComment> list = commentRepository.findAllBySolution(solution);
 		List<GetCommentResponse> result = list.stream().map(GetCommentResponse::toDTO).toList();
-		log.info("success to get comment list");
+		log.info("success to get solution comment list. solutionId: {}", solutionId);
 		return result;
+	}
+
+	@Override
+	@Transactional
+	public void updateComment(User user, UpdateCommentRequest request) {
+		SolutionComment comment = commentRepository.findById(request.commentId())
+			.orElseThrow(() -> new CommentValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 댓글 입니다."));
+		if (!comment.getUser().getId().equals(user.getId()))
+			throw new UserValidationException("댓글 작성자가 아닙니다.");
+
+		comment.updateComment(request.content());
+		log.info("success to update solution comment. commentId: {}", request.commentId());
 	}
 
 	@Override
@@ -92,7 +105,7 @@ public class SolutionCommentService implements CommentService<CreateSolutionComm
 
 		checkSolutionValidation(user, comment.getSolution().getId());
 		commentRepository.delete(comment);
-		log.info("success to delete comment");
+		log.info("success to delete solution comment. commentId: {}", commentId);
 	}
 
 	private Solution checkSolutionValidation(User user, Long solutionId) {
@@ -109,17 +122,6 @@ public class SolutionCommentService implements CommentService<CreateSolutionComm
 			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹 입니다.");
 
 		return solution;
-	}
-
-	@Override
-	@Transactional
-	public void updateComment(User user, UpdateCommentRequest request) {
-		SolutionComment comment = commentRepository.findById(request.commentId())
-			.orElseThrow(() -> new CommentValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 댓글 입니다."));
-		if (!comment.getUser().getId().equals(user.getId()))
-			throw new UserValidationException("댓글 작성자가 아닙니다.");
-
-		comment.updateComment(request.content());
 	}
 
 }
