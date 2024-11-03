@@ -152,6 +152,7 @@ class SolutionCommentServiceTest {
 		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user2, studyGroup)).thenReturn(true);
+		when(commentRepository.save(any(SolutionComment.class))).thenReturn(comment);
 		// when
 		commentService.createComment(user2, request);
 		// then
@@ -248,6 +249,7 @@ class SolutionCommentServiceTest {
 		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user2, studyGroup)).thenReturn(true);
+		when(commentRepository.save(any(SolutionComment.class))).thenReturn(comment);
 		doThrow(new RuntimeException()).when(notificationService).send(any(), any(), any(), any());
 		// when
 		commentService.createComment(user2, request);
