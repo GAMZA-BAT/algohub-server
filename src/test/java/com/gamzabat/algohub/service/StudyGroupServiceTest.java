@@ -35,6 +35,7 @@ import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.group.studygroup.dto.BookmarkStatus;
 import com.gamzabat.algohub.feature.group.studygroup.dto.CreateGroupRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupRequest;
+import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupVisibilityRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupMemberResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupListsResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupResponse;
@@ -662,4 +663,42 @@ class StudyGroupServiceTest {
 			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹입니다.");
 	}
 
+	@Test
+	@DisplayName("스터디 그룹 공개 여부 수정 성공")
+	void editGroupVisibility() {
+		// given
+		EditGroupVisibilityRequest request = new EditGroupVisibilityRequest(groupId, false);
+		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.of(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.of(groupMember1));
+		// when
+		studyGroupService.editStudyGroupVisibility(user, request);
+		// then
+		assertThat(groupMember1.isPublic()).isFalse();
+	}
+
+	@Test
+	@DisplayName("스터디 그룹 공개 여부 수정 실패 : 존재하지 않는 그룹")
+	void editGroupVisibilityFailed_1() {
+		// given
+		EditGroupVisibilityRequest request = new EditGroupVisibilityRequest(groupId, false);
+		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.empty());
+		// when, then
+		assertThatThrownBy(() -> studyGroupService.editStudyGroupVisibility(user, request))
+			.isInstanceOf(CannotFoundGroupException.class)
+			.hasFieldOrPropertyWithValue("errors", "존재하지 않는 그룹입니다.");
+	}
+
+	@Test
+	@DisplayName("스터디 그룹 공개 여부 수정 실패 : 참여하지 않은 그룹")
+	void editGroupVisibilityFailed_2() {
+		// given
+		EditGroupVisibilityRequest request = new EditGroupVisibilityRequest(groupId, false);
+		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.of(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.empty());
+		// when, then
+		assertThatThrownBy(() -> studyGroupService.editStudyGroupVisibility(user, request))
+			.isInstanceOf(GroupMemberValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
+			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹입니다.");
+	}
 }
