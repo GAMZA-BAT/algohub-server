@@ -186,36 +186,39 @@ public class StudyGroupService {
 		List<StudyGroup> groups = groupRepository.findAllByUser(user);
 
 		List<GetStudyGroupResponse> bookmarked = bookmarkedStudyGroupRepository.findAllByUser(user).stream()
-			.map(bookmark -> GetStudyGroupResponse.toDTO(bookmark.getStudyGroup(), user, true,
-				getStudyGroupOwner(bookmark.getStudyGroup())))
+			.map(bookmark -> getStudyGroupResponseDTO(user, bookmark.getStudyGroup()))
 			.toList();
 
 		LocalDate today = LocalDate.now();
 
 		List<GetStudyGroupResponse> done = groups.stream()
 			.filter(group -> group.getEndDate() != null && group.getEndDate().isBefore(today))
-			.map(
-				group -> GetStudyGroupResponse.toDTO(group, user, isBookmarked(user, group), getStudyGroupOwner(group)))
+			.map(group -> getStudyGroupResponseDTO(user, group))
 			.toList();
 
 		List<GetStudyGroupResponse> inProgress = groups.stream()
 			.filter(
 				group -> !(group.getStartDate() == null || group.getStartDate().isAfter(today))
 					&& !(group.getEndDate() == null || group.getEndDate().isBefore(today)))
-			.map(
-				group -> GetStudyGroupResponse.toDTO(group, user, isBookmarked(user, group), getStudyGroupOwner(group)))
+			.map(group -> getStudyGroupResponseDTO(user, group))
 			.toList();
 
 		List<GetStudyGroupResponse> queued = groups.stream()
 			.filter(group -> group.getStartDate() != null && group.getStartDate().isAfter(today))
-			.map(
-				group -> GetStudyGroupResponse.toDTO(group, user, isBookmarked(user, group), getStudyGroupOwner(group)))
+			.map(group -> getStudyGroupResponseDTO(user, group))
 			.toList();
 
 		GetStudyGroupListsResponse response = new GetStudyGroupListsResponse(bookmarked, done, inProgress, queued);
 
 		log.info("success to get study group list");
 		return response;
+	}
+
+	private GetStudyGroupResponse getStudyGroupResponseDTO(User user, StudyGroup group) {
+		GroupMember member = groupMemberRepository.findByUserAndStudyGroup(user, group)
+			.orElseThrow(() -> new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 스터디 그룹입니다."));
+		return GetStudyGroupResponse.toDTO(group, user, isBookmarked(user, group), getStudyGroupOwner(group),
+			member.isPublic());
 	}
 
 	private User getStudyGroupOwner(StudyGroup group) {
