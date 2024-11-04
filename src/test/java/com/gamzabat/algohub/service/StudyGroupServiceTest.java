@@ -322,6 +322,8 @@ class StudyGroupServiceTest {
 			groups.add(group);
 			when(groupMemberRepository.findByStudyGroupAndRole(group, RoleOfGroupMember.OWNER)).thenReturn(
 				ownerGroupmember);
+			when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(
+				Optional.ofNullable(groupMember1));
 		}
 		for (int i = 0; i < 10; i++) {
 			StudyGroup group = StudyGroup.builder()
@@ -332,6 +334,8 @@ class StudyGroupServiceTest {
 			groups.add(group);
 			when(groupMemberRepository.findByStudyGroupAndRole(group, RoleOfGroupMember.OWNER)).thenReturn(
 				ownerGroupmember);
+			when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(
+				Optional.ofNullable(groupMember1));
 		}
 		for (int i = 0; i < 10; i++) {
 			StudyGroup group = StudyGroup.builder()
@@ -342,6 +346,8 @@ class StudyGroupServiceTest {
 			groups.add(group);
 			when(groupMemberRepository.findByStudyGroupAndRole(group, RoleOfGroupMember.OWNER)).thenReturn(
 				groupMember2);
+			when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(
+				Optional.ofNullable(groupMember1));
 		}
 		List<BookmarkedStudyGroup> bookmarks = new ArrayList<>(10);
 		for (int i = 0; i < 10; i++) {
