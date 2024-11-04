@@ -22,6 +22,7 @@ import com.gamzabat.algohub.exception.RequestException;
 import com.gamzabat.algohub.feature.group.studygroup.dto.CheckSolvedProblemResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.CreateGroupRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupRequest;
+import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupVisibilityRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupMemberResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupListsResponse;
@@ -155,5 +156,15 @@ public class StudyGroupController {
 	public ResponseEntity<String> getGroupRole(@AuthedUser User user, @RequestParam Long groupId) {
 		String response = studyGroupService.getRoleInGroup(user, groupId);
 		return ResponseEntity.ok().body(response);
+	}
+
+	@PatchMapping(value = "/visibility")
+	@Operation(summary = "스터디 그룹 공개 여부 수정 API")
+	public ResponseEntity<Void> editStudyGroupVisibility(@AuthedUser User user,
+		@Valid @RequestBody EditGroupVisibilityRequest request, Errors errors) {
+		if (errors.hasErrors())
+			throw new RequestException("스터디 그룹 공개 수정 요청이 올바르지 않습니다.", errors);
+		studyGroupService.editStudyGroupVisibility(user, request);
+		return ResponseEntity.ok().build();
 	}
 }

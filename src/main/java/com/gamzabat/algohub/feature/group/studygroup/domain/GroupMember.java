@@ -34,6 +34,7 @@ public class GroupMember {
 	private LocalDate joinDate;
 	@Enumerated(EnumType.STRING)
 	private RoleOfGroupMember role;
+	private boolean isPublic;
 
 	@Builder
 	public GroupMember(User user, StudyGroup studyGroup, LocalDate joinDate, RoleOfGroupMember role) {
@@ -41,9 +42,14 @@ public class GroupMember {
 		this.studyGroup = studyGroup;
 		this.joinDate = joinDate;
 		this.role = role;
+		this.isPublic = true;
 	}
 
 	public void updateRole(RoleOfGroupMember role) {
 		this.role = role;
+	}
+
+	public void updateVisibility(boolean isPublic) {
+		this.isPublic = isPublic;
 	}
 }

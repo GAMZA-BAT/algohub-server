@@ -27,6 +27,7 @@ import com.gamzabat.algohub.feature.group.studygroup.dto.BookmarkStatus;
 import com.gamzabat.algohub.feature.group.studygroup.dto.CheckSolvedProblemResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.CreateGroupRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupRequest;
+import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupVisibilityRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupMemberResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupListsResponse;
@@ -415,5 +416,17 @@ public class StudyGroupService {
 			.orElseThrow(() -> new GroupMemberValidationException(HttpStatus.NOT_FOUND.value(), "참여하지 않은 그룹입니다."));
 
 		return member.getRole().getValue();
+	}
+
+	@Transactional
+	public void editStudyGroupVisibility(User user, EditGroupVisibilityRequest request) {
+		StudyGroup group = groupRepository.findById(request.groupId())
+			.orElseThrow(() -> new CannotFoundGroupException("존재하지 않는 그룹입니다."));
+
+		GroupMember member = groupMemberRepository.findByUserAndStudyGroup(user, group)
+			.orElseThrow(() -> new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹입니다."));
+
+		member.updateVisibility(request.isPublic());
+		log.info("success to update group visibility");
 	}
 }
