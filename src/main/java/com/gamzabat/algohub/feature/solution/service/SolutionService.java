@@ -15,7 +15,6 @@ import com.gamzabat.algohub.constants.BOJResultConstants;
 import com.gamzabat.algohub.exception.ProblemValidationException;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.exception.UserValidationException;
-import com.gamzabat.algohub.feature.comment.repository.CommentRepository;
 import com.gamzabat.algohub.feature.group.ranking.service.RankingService;
 import com.gamzabat.algohub.feature.group.ranking.service.RankingUpdateService;
 import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
@@ -29,6 +28,7 @@ import com.gamzabat.algohub.feature.solution.domain.Solution;
 import com.gamzabat.algohub.feature.solution.dto.CreateSolutionRequest;
 import com.gamzabat.algohub.feature.solution.dto.GetSolutionResponse;
 import com.gamzabat.algohub.feature.solution.exception.CannotFoundSolutionException;
+import com.gamzabat.algohub.feature.solution.repository.SolutionCommentRepository;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.repository.UserRepository;
@@ -47,7 +47,7 @@ public class SolutionService {
 	private final StudyGroupRepository studyGroupRepository;
 	private final GroupMemberRepository groupMemberRepository;
 	private final UserRepository userRepository;
-	private final CommentRepository commentRepository;
+	private final SolutionCommentRepository commentRepository;
 	private final RankingService rankingService;
 	private final RankingUpdateService rankingUpdateService;
 

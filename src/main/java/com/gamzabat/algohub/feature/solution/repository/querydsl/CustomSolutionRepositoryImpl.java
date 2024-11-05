@@ -57,10 +57,10 @@ public class CustomSolutionRepositoryImpl implements CustomSolutionRepository {
 			if (result.equals(CORRECT))
 				query.where(solution.result.eq(result)
 					.or(solution.result.endsWith("점")));
-			else if (result.equals(RUNTIME_ERROR))
-				query.where(solution.result.startsWith(RUNTIME_ERROR));
+			else if (result.equals(WRONG_OUTPUT_FORMAT_CUSTOM))
+				query.where(solution.result.eq(WRONG_OUTPUT_FORMAT));
 			else
-				query.where(solution.result.eq(result));
+				query.where(solution.result.startsWith(result));
 		}
 	}
 

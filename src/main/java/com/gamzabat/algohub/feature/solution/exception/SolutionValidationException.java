@@ -1,4 +1,4 @@
-package com.gamzabat.algohub.feature.comment.exception;
+package com.gamzabat.algohub.feature.solution.exception;
 
 import lombok.Getter;
 
