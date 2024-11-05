@@ -679,7 +679,7 @@ class StudyGroupServiceTest {
 		// when
 		studyGroupService.editStudyGroupVisibility(user, request);
 		// then
-		assertThat(groupMember1.isVisible()).isFalse();
+		assertThat(groupMember1.getIsVisible()).isFalse();
 	}
 
 	@Test

@@ -218,7 +218,7 @@ public class StudyGroupService {
 		GroupMember member = groupMemberRepository.findByUserAndStudyGroup(user, group)
 			.orElseThrow(() -> new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 스터디 그룹입니다."));
 		return GetStudyGroupResponse.toDTO(group, user, isBookmarked(user, group), getStudyGroupOwner(group),
-			member.isVisible());
+			member.getIsVisible());
 	}
 
 	private User getStudyGroupOwner(StudyGroup group) {
