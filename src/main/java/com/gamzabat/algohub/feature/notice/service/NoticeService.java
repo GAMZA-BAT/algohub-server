@@ -79,6 +79,7 @@ public class NoticeService {
 			.noticeTitle(notice.getTitle())
 			.noticeContent(notice.getContent())
 			.createAt(DateFormatUtil.formatDate(notice.getCreatedAt().toLocalDate()))
+			.isRead(noticeReadRepository.existsByNoticeAndUser(notice, user))
 			.build();
 	}
 
@@ -90,7 +91,9 @@ public class NoticeService {
 			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 스터디 그룹입니다");
 
 		List<Notice> list = noticeRepository.findAllByStudyGroup(studyGroup);
-		List<GetNoticeResponse> result = list.stream().map(GetNoticeResponse::toDTO).toList();
+		List<GetNoticeResponse> result = list.stream().map(
+			notice -> GetNoticeResponse.toDTO(notice, noticeReadRepository.existsByNoticeAndUser(notice, user))
+		).toList();
 		log.info("success to get notice list");
 		return result;
 	}

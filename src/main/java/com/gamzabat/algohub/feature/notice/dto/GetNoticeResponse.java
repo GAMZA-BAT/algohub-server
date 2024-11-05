@@ -10,16 +10,17 @@ public record GetNoticeResponse(String author,
 								Long noticeId,
 								String noticeContent,
 								String noticeTitle,
-								String createAt) {
+								String createAt,
+								boolean isRead) {
 
-	public static GetNoticeResponse toDTO(Notice notice) {
+	public static GetNoticeResponse toDTO(Notice notice, boolean isRead) {
 		return GetNoticeResponse.builder()
 			.author(notice.getAuthor().getNickname())
 			.noticeId(notice.getId())
 			.noticeTitle(notice.getTitle())
 			.noticeContent(notice.getContent())
 			.createAt(DateFormatUtil.formatDate(notice.getCreatedAt().toLocalDate()))
+			.isRead(isRead)
 			.build();
-
 	}
 }

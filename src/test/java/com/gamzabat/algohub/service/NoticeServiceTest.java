@@ -31,11 +31,13 @@ import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValida
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.notice.domain.Notice;
+import com.gamzabat.algohub.feature.notice.domain.NoticeRead;
 import com.gamzabat.algohub.feature.notice.dto.CreateNoticeRequest;
 import com.gamzabat.algohub.feature.notice.dto.GetNoticeResponse;
 import com.gamzabat.algohub.feature.notice.dto.UpdateNoticeRequest;
 import com.gamzabat.algohub.feature.notice.exception.NoticeValidationException;
 import com.gamzabat.algohub.feature.notice.repository.NoticeCommentRepository;
+import com.gamzabat.algohub.feature.notice.repository.NoticeReadRepository;
 import com.gamzabat.algohub.feature.notice.repository.NoticeRepository;
 import com.gamzabat.algohub.feature.notice.service.NoticeService;
 import com.gamzabat.algohub.feature.user.domain.User;
@@ -52,6 +54,8 @@ public class NoticeServiceTest {
 	GroupMemberRepository groupMemberRepository;
 	@Mock
 	private NoticeCommentRepository noticeCommentRepository;
+	@Mock
+	private NoticeReadRepository noticeReadRepository;
 	@Captor
 	private ArgumentCaptor<Notice> noticeCaptor;
 
@@ -180,6 +184,7 @@ public class NoticeServiceTest {
 		assertThat(response.noticeTitle()).isEqualTo("title");
 		assertThat(response.createAt()).isEqualTo(DateFormatUtil.formatDate(LocalDateTime.now().toLocalDate()));
 		assertThat(response.noticeId()).isEqualTo(1000L);
+		verify(noticeReadRepository, times(1)).save(any(NoticeRead.class));
 	}
 
 	@Test
@@ -241,6 +246,7 @@ public class NoticeServiceTest {
 		for (int i = 0; i < 20; i++) {
 			assertThat(result.get(i).noticeContent()).isEqualTo("content" + i);
 			assertThat(result.get(i).noticeTitle()).isEqualTo("title" + i);
+			assertThat(result.get(i).isRead()).isFalse();
 		}
 	}
 
