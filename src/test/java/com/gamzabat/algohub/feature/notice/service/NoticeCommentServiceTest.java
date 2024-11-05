@@ -1,4 +1,4 @@
-package com.gamzabat.algohub.feature.board.service;
+package com.gamzabat.algohub.feature.notice.service;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -26,12 +26,6 @@ import org.springframework.http.HttpStatus;
 import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.exception.UserValidationException;
-import com.gamzabat.algohub.feature.board.domain.Board;
-import com.gamzabat.algohub.feature.board.domain.BoardComment;
-import com.gamzabat.algohub.feature.board.dto.CreateBoardCommentRequest;
-import com.gamzabat.algohub.feature.board.exception.BoardValidationException;
-import com.gamzabat.algohub.feature.board.repository.BoardCommentRepository;
-import com.gamzabat.algohub.feature.board.repository.BoardRepository;
 import com.gamzabat.algohub.feature.comment.domain.Comment;
 import com.gamzabat.algohub.feature.comment.dto.GetCommentResponse;
 import com.gamzabat.algohub.feature.comment.dto.UpdateCommentRequest;
@@ -40,32 +34,38 @@ import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
+import com.gamzabat.algohub.feature.notice.domain.Notice;
+import com.gamzabat.algohub.feature.notice.domain.NoticeComment;
+import com.gamzabat.algohub.feature.notice.dto.CreateNoticeCommentRequest;
+import com.gamzabat.algohub.feature.notice.exception.NoticeValidationException;
+import com.gamzabat.algohub.feature.notice.repository.NoticeCommentRepository;
+import com.gamzabat.algohub.feature.notice.repository.NoticeRepository;
 import com.gamzabat.algohub.feature.notification.repository.NotificationRepository;
 import com.gamzabat.algohub.feature.notification.service.NotificationService;
 import com.gamzabat.algohub.feature.user.domain.User;
 
 @ExtendWith(MockitoExtension.class)
-class BoardCommentServiceTest {
+class NoticeCommentServiceTest {
 	@InjectMocks
-	private BoardCommentService commentService;
+	private NoticeCommentService commentService;
 	@Mock
 	private NotificationService notificationService;
 	@Mock
-	private BoardCommentRepository commentRepository;
+	private NoticeCommentRepository commentRepository;
 	@Mock
 	private StudyGroupRepository studyGroupRepository;
 	@Mock
 	private GroupMemberRepository groupMemberRepository;
 	@Mock
-	private BoardRepository boardRepository;
+	private NoticeRepository noticeRepository;
 	@Mock
 	private NotificationRepository notificationRepository;
 	private User user, user2;
-	private BoardComment comment, comment2;
-	private Board board;
+	private NoticeComment comment, comment2;
+	private Notice notice;
 	private StudyGroup studyGroup;
 	@Captor
-	private ArgumentCaptor<BoardComment> commentCaptor;
+	private ArgumentCaptor<NoticeComment> commentCaptor;
 
 	@BeforeEach
 	void setUp() throws NoSuchFieldException, IllegalAccessException {
@@ -74,18 +74,18 @@ class BoardCommentServiceTest {
 		user2 = User.builder().email("email2").password("password").nickname("nickname")
 			.role(Role.USER).profileImage("image").build();
 		studyGroup = StudyGroup.builder().build();
-		board = Board.builder().author(user).studyGroup(studyGroup).content("board content.").build();
-		comment = BoardComment.builder().user(user).content("content").board(board).build();
-		comment2 = BoardComment.builder().user(user2).content("content").board(board).build();
+		notice = Notice.builder().author(user).studyGroup(studyGroup).content("notice content.").build();
+		comment = NoticeComment.builder().user(user).content("content").notice(notice).build();
+		comment2 = NoticeComment.builder().user(user2).content("content").notice(notice).build();
 
 		Field userField = User.class.getDeclaredField("id");
 		userField.setAccessible(true);
 		userField.set(user, 1L);
 		userField.set(user2, 2L);
 
-		Field boardField = Board.class.getDeclaredField("id");
-		boardField.setAccessible(true);
-		boardField.set(board, 10L);
+		Field noticeField = Notice.class.getDeclaredField("id");
+		noticeField.setAccessible(true);
+		noticeField.set(notice, 10L);
 
 		Field groupField = StudyGroup.class.getDeclaredField("id");
 		groupField.setAccessible(true);
@@ -101,23 +101,23 @@ class BoardCommentServiceTest {
 	@DisplayName("댓글 작성 성공")
 	void createComment_1() {
 
-		CreateBoardCommentRequest request = CreateBoardCommentRequest.builder()
-			.boardId(10L)
+		CreateNoticeCommentRequest request = CreateNoticeCommentRequest.builder()
+			.noticeId(10L)
 			.content("content")
 			.build();
-		when(boardRepository.findById(10L)).thenReturn(Optional.ofNullable(board));
+		when(noticeRepository.findById(10L)).thenReturn(Optional.ofNullable(notice));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user2, studyGroup)).thenReturn(true);
-		when(commentRepository.save(any(BoardComment.class))).thenReturn(comment);
+		when(commentRepository.save(any(NoticeComment.class))).thenReturn(comment);
 
 		// when
 		commentService.createComment(user2, request);
 		// then
 		verify(commentRepository, times(1)).save(commentCaptor.capture());
-		BoardComment result = commentCaptor.getValue();
+		NoticeComment result = commentCaptor.getValue();
 		assertThat(result.getContent()).isEqualTo("content");
 		assertThat(result.getUser()).isEqualTo(user2);
-		assertThat(result.getBoard()).isEqualTo(board);
+		assertThat(result.getNotice()).isEqualTo(notice);
 		verify(notificationService, times(1)).send(any(), any(), any(), any());
 	}
 
@@ -125,14 +125,14 @@ class BoardCommentServiceTest {
 	@DisplayName("댓글 작성 실패 : 존재하지 않는 공지")
 	void createCommentFailed_1() {
 		// given
-		CreateBoardCommentRequest request = CreateBoardCommentRequest.builder()
-			.boardId(10L)
+		CreateNoticeCommentRequest request = CreateNoticeCommentRequest.builder()
+			.noticeId(10L)
 			.content("content")
 			.build();
-		when(boardRepository.findById(10L)).thenReturn(Optional.empty());
+		when(noticeRepository.findById(10L)).thenReturn(Optional.empty());
 		// when, then
 		assertThatThrownBy(() -> commentService.createComment(user, request))
-			.isInstanceOf(BoardValidationException.class)
+			.isInstanceOf(NoticeValidationException.class)
 			.hasFieldOrPropertyWithValue("error", "공지사항이 존재하지 않습니다.");
 		verify(notificationService, never()).send(any(), any(), any(), any());
 	}
@@ -141,11 +141,11 @@ class BoardCommentServiceTest {
 	@DisplayName("댓글 작성 실패 : 존재하지 않는 그룹")
 	void createCommentFailed_2() {
 		// given
-		CreateBoardCommentRequest request = CreateBoardCommentRequest.builder()
-			.boardId(10L)
+		CreateNoticeCommentRequest request = CreateNoticeCommentRequest.builder()
+			.noticeId(10L)
 			.content("content")
 			.build();
-		when(boardRepository.findById(10L)).thenReturn(Optional.ofNullable(board));
+		when(noticeRepository.findById(10L)).thenReturn(Optional.ofNullable(notice));
 		// when, then
 		assertThatThrownBy(() -> commentService.createComment(user, request))
 			.isInstanceOf(StudyGroupValidationException.class)
@@ -158,11 +158,11 @@ class BoardCommentServiceTest {
 	@DisplayName("댓글 작성 실패 : 참여하지 않은 그룹")
 	void createCommentFailed_3() {
 		// given
-		CreateBoardCommentRequest request = CreateBoardCommentRequest.builder()
-			.boardId(10L)
+		CreateNoticeCommentRequest request = CreateNoticeCommentRequest.builder()
+			.noticeId(10L)
 			.content("content")
 			.build();
-		when(boardRepository.findById(10L)).thenReturn(Optional.ofNullable(board));
+		when(noticeRepository.findById(10L)).thenReturn(Optional.ofNullable(notice));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user2, studyGroup)).thenReturn(false);
 		// when, then
@@ -177,19 +177,19 @@ class BoardCommentServiceTest {
 	@DisplayName("댓글 작성 성공, 알림 전송 실패")
 	void createCommentSuccess_NotificationFailed() {
 		// given
-		CreateBoardCommentRequest request = CreateBoardCommentRequest.builder()
-			.boardId(10L)
+		CreateNoticeCommentRequest request = CreateNoticeCommentRequest.builder()
+			.noticeId(10L)
 			.content("content")
 			.build();
-		when(boardRepository.findById(10L)).thenReturn(Optional.ofNullable(board));
+		when(noticeRepository.findById(10L)).thenReturn(Optional.ofNullable(notice));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user2, studyGroup)).thenReturn(true);
-		when(commentRepository.save(any(BoardComment.class))).thenReturn(comment);
+		when(commentRepository.save(any(NoticeComment.class))).thenReturn(comment);
 		doThrow(new RuntimeException()).when(notificationService).send(any(), any(), any(), any());
 		// when
 		commentService.createComment(user2, request);
 		// then
-		verify(commentRepository, times(1)).save(any(BoardComment.class));
+		verify(commentRepository, times(1)).save(any(NoticeComment.class));
 		verify(notificationService, times(1)).send(any(), any(), any(), any());
 		verify(notificationRepository, never()).save(any());
 	}
@@ -198,18 +198,18 @@ class BoardCommentServiceTest {
 	@DisplayName("댓글 조회 성공")
 	void getComment_1() {
 		// given
-		List<BoardComment> list = new ArrayList<>(30);
+		List<NoticeComment> list = new ArrayList<>(30);
 		for (int i = 0; i < 30; i++)
-			list.add(BoardComment.builder()
-				.board(board)
+			list.add(NoticeComment.builder()
+				.notice(notice)
 				.createdAt(LocalDateTime.now())
 				.user(user)
 				.content("content" + i)
 				.build());
-		when(boardRepository.findById(10L)).thenReturn(Optional.ofNullable(board));
+		when(noticeRepository.findById(10L)).thenReturn(Optional.ofNullable(notice));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user2, studyGroup)).thenReturn(true);
-		when(commentRepository.findAllByBoard(board)).thenReturn(list);
+		when(commentRepository.findAllByNotice(notice)).thenReturn(list);
 		// when
 		List<GetCommentResponse> result = commentService.getCommentList(user2, 10L);
 		// then
@@ -222,10 +222,10 @@ class BoardCommentServiceTest {
 	@DisplayName("댓글 조회 실패 : 존재하지 않는 공지")
 	void getCommentListFailed_1() {
 		// given
-		when(boardRepository.findById(10L)).thenReturn(Optional.empty());
+		when(noticeRepository.findById(10L)).thenReturn(Optional.empty());
 		// when, then
 		assertThatThrownBy(() -> commentService.getCommentList(user, 10L))
-			.isInstanceOf(BoardValidationException.class)
+			.isInstanceOf(NoticeValidationException.class)
 			.hasFieldOrPropertyWithValue("error", "공지사항이 존재하지 않습니다.");
 	}
 
@@ -233,7 +233,7 @@ class BoardCommentServiceTest {
 	@DisplayName("댓글 조회 실패 : 존재하지 않는 그룹")
 	void getCommentListFailed_2() {
 		// given
-		when(boardRepository.findById(10L)).thenReturn(Optional.ofNullable(board));
+		when(noticeRepository.findById(10L)).thenReturn(Optional.ofNullable(notice));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.empty());
 		// when, then
 		assertThatThrownBy(() -> commentService.getCommentList(user, 10L))
@@ -246,7 +246,7 @@ class BoardCommentServiceTest {
 	@DisplayName("댓글 조회 실패 : 참여하지 않은 그룹")
 	void getCommentListFailed_3() {
 		// given
-		when(boardRepository.findById(10L)).thenReturn(Optional.ofNullable(board));
+		when(noticeRepository.findById(10L)).thenReturn(Optional.ofNullable(notice));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user2, studyGroup)).thenReturn(false);
 		// when, then
@@ -260,7 +260,7 @@ class BoardCommentServiceTest {
 	@DisplayName("댓글 삭제 성공")
 	void deleteComment_1() {
 		// given
-		when(boardRepository.findById(10L)).thenReturn(Optional.ofNullable(board));
+		when(noticeRepository.findById(10L)).thenReturn(Optional.ofNullable(notice));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user2, studyGroup)).thenReturn(true);
 		when(commentRepository.findById(41L)).thenReturn(Optional.ofNullable(comment2));
@@ -300,7 +300,7 @@ class BoardCommentServiceTest {
 		when(commentRepository.findById(40L)).thenReturn(Optional.ofNullable(comment));
 		// when, then
 		assertThatThrownBy(() -> commentService.deleteComment(user, 40L))
-			.isInstanceOf(BoardValidationException.class)
+			.isInstanceOf(NoticeValidationException.class)
 			.hasFieldOrPropertyWithValue("error", "공지사항이 존재하지 않습니다.");
 	}
 
@@ -309,7 +309,7 @@ class BoardCommentServiceTest {
 	void deleteCommentFailed_4() {
 		// given
 		when(commentRepository.findById(40L)).thenReturn(Optional.ofNullable(comment));
-		when(boardRepository.findById(10L)).thenReturn(Optional.ofNullable(board));
+		when(noticeRepository.findById(10L)).thenReturn(Optional.ofNullable(notice));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.empty());
 		// when, then
 		assertThatThrownBy(() -> commentService.deleteComment(user, 40L))
@@ -323,7 +323,7 @@ class BoardCommentServiceTest {
 	void deleteCommentFailed_5() {
 		// given
 		when(commentRepository.findById(41L)).thenReturn(Optional.ofNullable(comment2));
-		when(boardRepository.findById(10L)).thenReturn(Optional.ofNullable(board));
+		when(noticeRepository.findById(10L)).thenReturn(Optional.ofNullable(notice));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user2, studyGroup)).thenReturn(false);
 		// when, then

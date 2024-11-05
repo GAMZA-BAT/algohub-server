@@ -1,4 +1,4 @@
-package com.gamzabat.algohub.feature.board.controller;
+package com.gamzabat.algohub.feature.notice.controller;
 
 import java.util.List;
 
@@ -15,11 +15,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.gamzabat.algohub.common.annotation.AuthedUser;
 import com.gamzabat.algohub.exception.RequestException;
-import com.gamzabat.algohub.feature.board.dto.CreateBoardCommentRequest;
-import com.gamzabat.algohub.feature.board.service.BoardCommentService;
 import com.gamzabat.algohub.feature.comment.controller.CommentController;
 import com.gamzabat.algohub.feature.comment.dto.GetCommentResponse;
 import com.gamzabat.algohub.feature.comment.dto.UpdateCommentRequest;
+import com.gamzabat.algohub.feature.notice.dto.CreateNoticeCommentRequest;
+import com.gamzabat.algohub.feature.notice.service.NoticeCommentService;
 import com.gamzabat.algohub.feature.user.domain.User;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,15 +28,15 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/board/comment")
+@RequestMapping("/api/notice/comment")
 @Tag(name = "공지 댓글 API", description = "공지에 대한 댓글 관련 API")
-public class BoardCommentController implements CommentController<CreateBoardCommentRequest> {
-	private final BoardCommentService commentService;
+public class NoticeCommentController implements CommentController<CreateNoticeCommentRequest> {
+	private final NoticeCommentService commentService;
 
 	@Override
 	@PostMapping
 	public ResponseEntity<Void> createComment(@AuthedUser User user,
-		@Valid @RequestBody CreateBoardCommentRequest request, Errors errors) {
+		@Valid @RequestBody CreateNoticeCommentRequest request, Errors errors) {
 		if (errors.hasErrors())
 			throw new RequestException("댓글 작성 요청이 올바르지 않습니다.", errors);
 		commentService.createComment(user, request);

@@ -1,4 +1,4 @@
-package com.gamzabat.algohub.feature.board.domain;
+package com.gamzabat.algohub.feature.notice.domain;
 
 import java.time.LocalDateTime;
 
@@ -19,16 +19,16 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @DynamicUpdate
-public class BoardComment extends Comment {
-	
+public class NoticeComment extends Comment {
+
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "board_id")
-	private Board board;
+	@JoinColumn(name = "notice_id")
+	private Notice notice;
 
 	@Builder
-	public BoardComment(User user, String content,
-		LocalDateTime createdAt, Board board) {
+	public NoticeComment(User user, String content,
+		LocalDateTime createdAt, Notice notice) {
 		super(user, content, createdAt);
-		this.board = board;
+		this.notice = notice;
 	}
 }
