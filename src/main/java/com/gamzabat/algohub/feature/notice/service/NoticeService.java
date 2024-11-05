@@ -18,11 +18,13 @@ import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValida
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.notice.domain.Notice;
+import com.gamzabat.algohub.feature.notice.domain.NoticeRead;
 import com.gamzabat.algohub.feature.notice.dto.CreateNoticeRequest;
 import com.gamzabat.algohub.feature.notice.dto.GetNoticeResponse;
 import com.gamzabat.algohub.feature.notice.dto.UpdateNoticeRequest;
 import com.gamzabat.algohub.feature.notice.exception.NoticeValidationException;
 import com.gamzabat.algohub.feature.notice.repository.NoticeCommentRepository;
+import com.gamzabat.algohub.feature.notice.repository.NoticeReadRepository;
 import com.gamzabat.algohub.feature.notice.repository.NoticeRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
 
@@ -38,6 +40,7 @@ public class NoticeService {
 	private final NoticeCommentRepository noticeCommentRepository;
 	private final StudyGroupRepository studyGroupRepository;
 	private final GroupMemberRepository groupMemberRepository;
+	private final NoticeReadRepository noticeReadRepository;
 
 	@Transactional
 	public void createNotice(@AuthedUser User user, CreateNoticeRequest request) {
@@ -66,6 +69,8 @@ public class NoticeService {
 			.orElseThrow(() -> new NoticeValidationException("존재하지 않는 게시글입니다"));
 		if (!groupMemberRepository.existsByUserAndStudyGroup(user, notice.getStudyGroup()))
 			throw new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 스터디 그룹 입니다.");
+
+		readNotice(user, notice);
 
 		log.info("success to get notice");
 		return GetNoticeResponse.builder()
@@ -121,4 +126,12 @@ public class NoticeService {
 			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.BAD_REQUEST.value(), "존재하지 않는 스터디 그룹입니다"));
 	}
 
+	private void readNotice(User user, Notice notice) {
+		if (!noticeReadRepository.existsByNoticeAndUser(notice, user)) {
+			noticeReadRepository.save(
+				NoticeRead.builder().notice(notice).user(user).build()
+			);
+		}
+		log.info("success to read notice. userId: {}, noticeId: {}", user.getId(), notice.getId());
+	}
 }
