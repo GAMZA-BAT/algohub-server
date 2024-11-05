@@ -8,18 +8,16 @@ import lombok.Builder;
 @Builder
 public record GetNoticeResponse(String author,
 								Long noticeId,
-								String content,
-								String title,
-								String category,
+								String noticeContent,
+								String noticeTitle,
 								String createAt) {
 
 	public static GetNoticeResponse toDTO(Notice notice) {
 		return GetNoticeResponse.builder()
 			.author(notice.getAuthor().getNickname())
 			.noticeId(notice.getId())
-			.title(notice.getTitle())
-			.content(notice.getContent())
-			.category(notice.getCategory())
+			.noticeTitle(notice.getTitle())
+			.noticeContent(notice.getContent())
 			.createAt(DateFormatUtil.formatDate(notice.getCreatedAt().toLocalDate()))
 			.build();
 

@@ -55,7 +55,6 @@ public class NoticeService {
 			.studyGroup(studyGroup)
 			.title(request.title())
 			.content(request.content())
-			.category(request.category())
 			.createdAt(LocalDateTime.now())
 			.build());
 		log.info("success to create notice");
@@ -72,9 +71,8 @@ public class NoticeService {
 		return GetNoticeResponse.builder()
 			.author(notice.getAuthor().getNickname())
 			.noticeId(notice.getId())
-			.title(notice.getTitle())
-			.content(notice.getContent())
-			.category(notice.getCategory())
+			.noticeTitle(notice.getTitle())
+			.noticeContent(notice.getContent())
 			.createAt(DateFormatUtil.formatDate(notice.getCreatedAt().toLocalDate()))
 			.build();
 	}
@@ -100,7 +98,7 @@ public class NoticeService {
 		if (!user.getId().equals(notice.getAuthor().getId()))
 			throw new UserValidationException("공지를 수정할 수 있는 권한이 없습니다");
 
-		notice.updateNotice(request.title(), request.content(), request.category());
+		notice.updateNotice(request.title(), request.content());
 	}
 
 	@Transactional
