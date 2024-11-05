@@ -430,6 +430,6 @@ public class StudyGroupService {
 			.orElseThrow(() -> new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹입니다."));
 
 		member.updateVisibility(request.isVisible());
-		log.info("success to update group visibility");
+		log.info("success to update group visibility ( userId : {} )", user.getId());
 	}
 }
