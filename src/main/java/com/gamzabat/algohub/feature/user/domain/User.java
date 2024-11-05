@@ -14,6 +14,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -33,7 +34,8 @@ public class User {
 	private String nickname;
 	private String bjNickname;
 	private String profileImage;
-	@Column
+	@Column(nullable = false)
+	@NotNull
 	private String description = "";
 
 	private LocalDateTime deletedAt;
