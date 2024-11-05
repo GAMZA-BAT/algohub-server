@@ -15,7 +15,8 @@ import com.gamzabat.algohub.feature.board.domain.Board;
 import com.gamzabat.algohub.feature.board.dto.CreateBoardRequest;
 import com.gamzabat.algohub.feature.board.dto.GetBoardResponse;
 import com.gamzabat.algohub.feature.board.dto.UpdateBoardRequest;
-import com.gamzabat.algohub.feature.board.exception.BoardValidationExceoption;
+import com.gamzabat.algohub.feature.board.exception.BoardValidationException;
+import com.gamzabat.algohub.feature.board.repository.BoardCommentRepository;
 import com.gamzabat.algohub.feature.board.repository.BoardRepository;
 import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
@@ -24,7 +25,6 @@ import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValida
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
-import com.gamzabat.algohub.feature.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 
 public class BoardService {
 	private final BoardRepository boardRepository;
-	private final UserRepository userRepository;
+	private final BoardCommentRepository boardCommentRepository;
 	private final StudyGroupRepository studyGroupRepository;
 	private final GroupMemberRepository groupMemberRepository;
 
@@ -63,7 +63,7 @@ public class BoardService {
 	@Transactional(readOnly = true)
 	public GetBoardResponse getBoard(@AuthedUser User user, Long boardId) {
 		Board board = boardRepository.findById(boardId)
-			.orElseThrow(() -> new BoardValidationExceoption("존재하지 않는 공지입니다"));
+			.orElseThrow(() -> new BoardValidationException("존재하지 않는 게시글입니다"));
 		if (!groupMemberRepository.existsByUserAndStudyGroup(user, board.getStudyGroup()))
 			throw new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 스터디 그룹 입니다.");
 
@@ -93,13 +93,32 @@ public class BoardService {
 	@Transactional
 	public void updateBoard(User user, UpdateBoardRequest request) {
 		Board board = boardRepository.findById(request.boardId())
-			.orElseThrow(() -> new BoardValidationExceoption("존재하지 않는 게시글입니다"));
-		StudyGroup studyGroup = studyGroupRepository.findById(board.getStudyGroup().getId())
-			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.BAD_REQUEST.value(), "존재하지 않는 스터디 그룹입니다"));
+			.orElseThrow(() -> new BoardValidationException("존재하지 않는 게시글입니다"));
+		validateStudyGroupExists(board);
 		if (!user.getId().equals(board.getAuthor().getId()))
 			throw new UserValidationException("공지를 수정할 수 있는 권한이 없습니다");
 
 		board.updateBoard(request.title(), request.content());
+	}
+
+	@Transactional
+	public void deleteBoard(User user, Long boardId) {
+		Board board = boardRepository.findById(boardId)
+			.orElseThrow(() -> new BoardValidationException("존재하지 않는 게시글입니다"));
+		validateStudyGroupExists(board);
+
+		if (!user.getId().equals(board.getAuthor().getId()))
+			throw new UserValidationException("공지를 삭제할 수 있는 권한이 없습니다");
+
+		boardCommentRepository.deleteAllCommentByBoard(board);
+		boardRepository.delete(board);
+
+		log.info("success to delete board. userId: {}, boardId: {}", user.getId(), boardId);
+	}
+
+	private void validateStudyGroupExists(Board board) {
+		studyGroupRepository.findById(board.getStudyGroup().getId())
+			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.BAD_REQUEST.value(), "존재하지 않는 스터디 그룹입니다"));
 	}
 
 }

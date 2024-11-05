@@ -29,7 +29,7 @@ import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.board.domain.Board;
 import com.gamzabat.algohub.feature.board.domain.BoardComment;
 import com.gamzabat.algohub.feature.board.dto.CreateBoardCommentRequest;
-import com.gamzabat.algohub.feature.board.exception.BoardValidationExceoption;
+import com.gamzabat.algohub.feature.board.exception.BoardValidationException;
 import com.gamzabat.algohub.feature.board.repository.BoardCommentRepository;
 import com.gamzabat.algohub.feature.board.repository.BoardRepository;
 import com.gamzabat.algohub.feature.comment.domain.Comment;
@@ -109,7 +109,7 @@ class BoardCommentServiceTest {
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user2, studyGroup)).thenReturn(true);
 		when(commentRepository.save(any(BoardComment.class))).thenReturn(comment);
-		
+
 		// when
 		commentService.createComment(user2, request);
 		// then
@@ -132,7 +132,7 @@ class BoardCommentServiceTest {
 		when(boardRepository.findById(10L)).thenReturn(Optional.empty());
 		// when, then
 		assertThatThrownBy(() -> commentService.createComment(user, request))
-			.isInstanceOf(BoardValidationExceoption.class)
+			.isInstanceOf(BoardValidationException.class)
 			.hasFieldOrPropertyWithValue("error", "공지사항이 존재하지 않습니다.");
 		verify(notificationService, never()).send(any(), any(), any(), any());
 	}
@@ -225,7 +225,7 @@ class BoardCommentServiceTest {
 		when(boardRepository.findById(10L)).thenReturn(Optional.empty());
 		// when, then
 		assertThatThrownBy(() -> commentService.getCommentList(user, 10L))
-			.isInstanceOf(BoardValidationExceoption.class)
+			.isInstanceOf(BoardValidationException.class)
 			.hasFieldOrPropertyWithValue("error", "공지사항이 존재하지 않습니다.");
 	}
 
@@ -300,7 +300,7 @@ class BoardCommentServiceTest {
 		when(commentRepository.findById(40L)).thenReturn(Optional.ofNullable(comment));
 		// when, then
 		assertThatThrownBy(() -> commentService.deleteComment(user, 40L))
-			.isInstanceOf(BoardValidationExceoption.class)
+			.isInstanceOf(BoardValidationException.class)
 			.hasFieldOrPropertyWithValue("error", "공지사항이 존재하지 않습니다.");
 	}
 

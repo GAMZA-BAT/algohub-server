@@ -3,10 +3,10 @@ package com.gamzabat.algohub.feature.board.exception;
 import lombok.Getter;
 
 @Getter
-public class BoardValidationExceoption extends RuntimeException {
+public class BoardValidationException extends RuntimeException {
 	private final String error;
 
-	public BoardValidationExceoption(String error) {
+	public BoardValidationException(String error) {
 		this.error = error;
 	}
 }

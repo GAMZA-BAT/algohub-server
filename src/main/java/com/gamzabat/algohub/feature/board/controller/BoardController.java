@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -64,6 +65,13 @@ public class BoardController {
 		if (errors.hasErrors())
 			throw new RequestException("올바르지 않은 수정 요청입니다", errors);
 		boardService.updateBoard(user, request);
+		return ResponseEntity.ok().build();
+	}
+
+	@DeleteMapping
+	@Operation(summary = "공지 삭제 API")
+	public ResponseEntity<Void> deleteBoard(@AuthedUser User user, @RequestParam Long boardId) {
+		boardService.deleteBoard(user, boardId);
 		return ResponseEntity.ok().build();
 	}
 }

@@ -11,7 +11,7 @@ import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.board.domain.Board;
 import com.gamzabat.algohub.feature.board.domain.BoardComment;
 import com.gamzabat.algohub.feature.board.dto.CreateBoardCommentRequest;
-import com.gamzabat.algohub.feature.board.exception.BoardValidationExceoption;
+import com.gamzabat.algohub.feature.board.exception.BoardValidationException;
 import com.gamzabat.algohub.feature.board.repository.BoardCommentRepository;
 import com.gamzabat.algohub.feature.board.repository.BoardRepository;
 import com.gamzabat.algohub.feature.comment.dto.GetCommentResponse;
@@ -106,7 +106,7 @@ public class BoardCommentService implements CommentService<CreateBoardCommentReq
 
 	private Board validateBoard(User user, Long boardId) {
 		Board board = boardRepository.findById(boardId)
-			.orElseThrow(() -> new BoardValidationExceoption("공지사항이 존재하지 않습니다."));
+			.orElseThrow(() -> new BoardValidationException("공지사항이 존재하지 않습니다."));
 
 		StudyGroup group = studyGroupRepository.findById(board.getStudyGroup().getId())
 			.orElseThrow(() -> new StudyGroupValidationException(
