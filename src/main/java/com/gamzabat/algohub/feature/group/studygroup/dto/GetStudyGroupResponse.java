@@ -13,9 +13,9 @@ public record GetStudyGroupResponse(Long id,
 									String ownerNickname,
 									boolean isOwner,
 									boolean isBookmarked,
-									boolean isPublic) {
+									boolean isVisible) {
 	public static GetStudyGroupResponse toDTO(StudyGroup group, User user, boolean isBookmarked, User owner,
-		boolean isPublic) {
+		boolean isVisible) {
 		return new GetStudyGroupResponse(
 			group.getId(),
 			group.getName(),
@@ -26,7 +26,7 @@ public record GetStudyGroupResponse(Long id,
 			owner.getNickname(),
 			owner.getId().equals(user.getId()),
 			isBookmarked,
-			isPublic
+			isVisible
 		);
 	}
 }
