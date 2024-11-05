@@ -31,6 +31,7 @@ public class Notice {
 	private String title;
 	@Column(columnDefinition = "TEXT")
 	private String content;
+	private String category;
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
 
@@ -43,17 +44,20 @@ public class Notice {
 	private StudyGroup studyGroup;
 
 	@Builder
-	public Notice(User author, StudyGroup studyGroup, String title, String content, LocalDateTime createdAt) {
+	public Notice(User author, StudyGroup studyGroup, String title, String content, String category,
+		LocalDateTime createdAt) {
 		this.author = author;
 		this.title = title;
 		this.studyGroup = studyGroup;
 		this.content = content;
+		this.category = category;
 		this.createdAt = createdAt;
 	}
 
-	public void updateNotice(String title, String content) {
+	public void updateNotice(String title, String content, String category) {
 		this.title = title;
 		this.content = content;
+		this.category = category;
 		this.updatedAt = LocalDateTime.now();
 	}
 
