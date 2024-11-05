@@ -30,15 +30,15 @@ import com.gamzabat.algohub.config.SpringSecurityConfig;
 import com.gamzabat.algohub.exception.ProblemValidationException;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.exception.UserValidationException;
-import com.gamzabat.algohub.feature.comment.repository.CommentRepository;
-import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
-import com.gamzabat.algohub.feature.solution.dto.GetSolutionResponse;
-import com.gamzabat.algohub.feature.solution.exception.CannotFoundSolutionException;
-import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
-import com.gamzabat.algohub.feature.solution.service.SolutionService;
 import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
+import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
+import com.gamzabat.algohub.feature.solution.dto.GetSolutionResponse;
+import com.gamzabat.algohub.feature.solution.exception.CannotFoundSolutionException;
+import com.gamzabat.algohub.feature.solution.repository.SolutionCommentRepository;
+import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
+import com.gamzabat.algohub.feature.solution.service.SolutionService;
 import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.repository.UserRepository;
 
@@ -61,7 +61,7 @@ class SolutionControllerTest {
 	@MockBean
 	private UserRepository userRepository;
 	@MockBean
-	private CommentRepository commentRepository;
+	private SolutionCommentRepository commentRepository;
 	@MockBean
 	private TokenProvider tokenProvider;
 	@MockBean

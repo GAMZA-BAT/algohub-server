@@ -4,31 +4,27 @@ import java.time.LocalDateTime;
 
 import org.hibernate.annotations.DynamicUpdate;
 
-import com.gamzabat.algohub.feature.solution.domain.Solution;
 import com.gamzabat.algohub.feature.user.domain.User;
 
-import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import lombok.Builder;
+import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Entity
-@Getter
-@NoArgsConstructor
+@MappedSuperclass
 @DynamicUpdate
-public class Comment {
+@NoArgsConstructor
+@Getter
+public abstract class Comment {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "solution_id")
-	private Solution solution;
+
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id")
 	private User user;
@@ -37,17 +33,14 @@ public class Comment {
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
 
-	@Builder
-	public Comment(Solution solution, User user, String content, LocalDateTime createdAt) {
-		this.solution = solution;
-		this.user = user;
-		this.content = content;
-		this.createdAt = createdAt;
-	}
-
-	public void upadateComment(String content) {
+	public void updateComment(String content) {
 		this.content = content;
 		this.updatedAt = LocalDateTime.now();
 	}
 
+	public Comment(User user, String content, LocalDateTime createdAt) {
+		this.user = user;
+		this.content = content;
+		this.createdAt = createdAt;
+	}
 }

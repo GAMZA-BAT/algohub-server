@@ -29,7 +29,8 @@ import com.gamzabat.algohub.feature.board.domain.Board;
 import com.gamzabat.algohub.feature.board.dto.CreateBoardRequest;
 import com.gamzabat.algohub.feature.board.dto.GetBoardResponse;
 import com.gamzabat.algohub.feature.board.dto.UpdateBoardRequest;
-import com.gamzabat.algohub.feature.board.exception.BoardValidationExceoption;
+import com.gamzabat.algohub.feature.board.exception.BoardValidationException;
+import com.gamzabat.algohub.feature.board.repository.BoardCommentRepository;
 import com.gamzabat.algohub.feature.board.repository.BoardRepository;
 import com.gamzabat.algohub.feature.board.service.BoardService;
 import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
@@ -49,6 +50,8 @@ public class BoardServiceTest {
 	private BoardRepository boardRepository;
 	@Mock
 	GroupMemberRepository groupMemberRepository;
+	@Mock
+	private BoardCommentRepository boardCommentRepository;
 	@Captor
 	private ArgumentCaptor<Board> boardCaptor;
 
@@ -187,8 +190,8 @@ public class BoardServiceTest {
 
 		//when, then
 		assertThatThrownBy(() -> boardService.getBoard(user, 1001L))
-			.isInstanceOf(BoardValidationExceoption.class)
-			.hasFieldOrPropertyWithValue("error", "존재하지 않는 공지입니다");
+			.isInstanceOf(BoardValidationException.class)
+			.hasFieldOrPropertyWithValue("error", "존재하지 않는 게시글입니다");
 
 	}
 
@@ -288,7 +291,7 @@ public class BoardServiceTest {
 		when(boardRepository.findById(1001L)).thenReturn(Optional.empty());
 		//when,then
 		assertThatThrownBy(() -> boardService.updateBoard(user, updateBoardRequest))
-			.isInstanceOf(BoardValidationExceoption.class)
+			.isInstanceOf(BoardValidationException.class)
 			.hasFieldOrPropertyWithValue("error", "존재하지 않는 게시글입니다");
 	}
 
@@ -318,6 +321,55 @@ public class BoardServiceTest {
 		assertThatThrownBy(() -> boardService.updateBoard(user4, updateBoardRequest))
 			.isInstanceOf(UserValidationException.class)
 			.hasFieldOrPropertyWithValue("errors", "공지를 수정할 수 있는 권한이 없습니다");
+	}
+
+	@Test
+	@DisplayName("공지 삭제 성공")
+	void deleteBoardSuccess() {
+		//given
+		when(boardRepository.findById(1000L)).thenReturn(Optional.ofNullable(board));
+		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
+		doNothing().when(boardCommentRepository).deleteAllCommentByBoard(board);
+		//when
+		boardService.deleteBoard(user, 1000L);
+		//then
+		verify(boardRepository, times(1)).delete(board);
+	}
+
+	@Test
+	@DisplayName("공지 삭제 실패(존재하지 않는 게시글)")
+	void deleteBoardFailed_1() {
+		//given
+		when(boardRepository.findById(1001L)).thenReturn(Optional.empty());
+		//when,then
+		assertThatThrownBy(() -> boardService.deleteBoard(user, 1001L))
+			.isInstanceOf(BoardValidationException.class)
+			.hasFieldOrPropertyWithValue("error", "존재하지 않는 게시글입니다");
+	}
+
+	@Test
+	@DisplayName("공지 삭제 실패(존재하지 않는 스터디 그룹)")
+	void deleteBoardFailed_2() {
+		//given
+		when(boardRepository.findById(1000L)).thenReturn(Optional.ofNullable(board));
+		when(studyGroupRepository.findById(30L)).thenReturn(Optional.empty());
+		//when,then
+		assertThatThrownBy(() -> boardService.deleteBoard(user, 1000L))
+			.isInstanceOf(StudyGroupValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
+			.hasFieldOrPropertyWithValue("error", "존재하지 않는 스터디 그룹입니다");
+	}
+
+	@Test
+	@DisplayName("공지 삭제 실패(게시글 작성자가 아님)")
+	void deleteBoardFailed_3() {
+		//given
+		when(boardRepository.findById(1000L)).thenReturn(Optional.ofNullable(board));
+		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
+		//when, then
+		assertThatThrownBy(() -> boardService.deleteBoard(user4, 1000L))
+			.isInstanceOf(UserValidationException.class)
+			.hasFieldOrPropertyWithValue("errors", "공지를 삭제할 수 있는 권한이 없습니다");
 	}
 
 }
