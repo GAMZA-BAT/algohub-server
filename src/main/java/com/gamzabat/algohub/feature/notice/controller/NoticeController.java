@@ -1,4 +1,4 @@
-package com.gamzabat.algohub.feature.board.controller;
+package com.gamzabat.algohub.feature.notice.controller;
 
 import java.util.List;
 
@@ -15,10 +15,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.gamzabat.algohub.common.annotation.AuthedUser;
 import com.gamzabat.algohub.exception.RequestException;
-import com.gamzabat.algohub.feature.board.dto.CreateBoardRequest;
-import com.gamzabat.algohub.feature.board.dto.GetBoardResponse;
-import com.gamzabat.algohub.feature.board.dto.UpdateBoardRequest;
-import com.gamzabat.algohub.feature.board.service.BoardService;
+import com.gamzabat.algohub.feature.notice.dto.CreateNoticeRequest;
+import com.gamzabat.algohub.feature.notice.dto.GetNoticeResponse;
+import com.gamzabat.algohub.feature.notice.dto.UpdateNoticeRequest;
+import com.gamzabat.algohub.feature.notice.service.NoticeService;
 import com.gamzabat.algohub.feature.user.domain.User;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,50 +28,51 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/board")
-@Tag(name = "게시판 API", description = "게시판 관련 API")
+@RequestMapping("/api/notice")
+@Tag(name = "공지 API", description = "공지 관련 API")
 
-public class BoardController {
-	private final BoardService boardService;
+public class NoticeController {
+	private final NoticeService noticeService;
 
 	@PostMapping
-	@Operation(summary = "공지 작성API")
-	public ResponseEntity<Void> createBoard(@AuthedUser User user, @Valid @RequestBody CreateBoardRequest request,
+	@Operation(summary = "공지 작성 API")
+	public ResponseEntity<Void> createNotice(@AuthedUser User user, @Valid @RequestBody CreateNoticeRequest request,
 		Errors errors) {
 		if (errors.hasErrors())
 			throw new RequestException("올바르지 않은 공지 생성 요청입니다", errors);
-		boardService.createBoard(user, request);
+		noticeService.createNotice(user, request);
 		return ResponseEntity.ok().build();
 	}
 
 	@GetMapping
 	@Operation(summary = "공지 하나 조회 API")
-	public ResponseEntity<GetBoardResponse> getBoard(@AuthedUser User user, @RequestParam Long boardId) {
-		GetBoardResponse response = boardService.getBoard(user, boardId);
+	public ResponseEntity<GetNoticeResponse> getNotice(@AuthedUser User user, @RequestParam Long noticeId) {
+		GetNoticeResponse response = noticeService.getNotice(user, noticeId);
 		return ResponseEntity.ok().body(response);
 	}
 
-	@GetMapping(value = "/board-list")
+	@GetMapping(value = "/notice-list")
 	@Operation(summary = "공지 목록 조회 API")
-	public ResponseEntity<List<GetBoardResponse>> getBoardList(@AuthedUser User user, @RequestParam Long studyGroupId) {
-		List<GetBoardResponse> response = boardService.getBoardList(user, studyGroupId);
+	public ResponseEntity<List<GetNoticeResponse>> getNoticeList(@AuthedUser User user,
+		@RequestParam Long studyGroupId) {
+		List<GetNoticeResponse> response = noticeService.getNoticeList(user, studyGroupId);
 		return ResponseEntity.ok().body(response);
 	}
 
 	@PatchMapping
 	@Operation(summary = "공지 수정 API")
-	public ResponseEntity<Void> updateBoard(@AuthedUser User user, @Valid @RequestBody UpdateBoardRequest request,
+	public ResponseEntity<Void> updateNotice(@AuthedUser User user, @Valid @RequestBody UpdateNoticeRequest request,
 		Errors errors) {
 		if (errors.hasErrors())
 			throw new RequestException("올바르지 않은 수정 요청입니다", errors);
-		boardService.updateBoard(user, request);
+		noticeService.updateNotice(user, request);
 		return ResponseEntity.ok().build();
 	}
 
 	@DeleteMapping
 	@Operation(summary = "공지 삭제 API")
-	public ResponseEntity<Void> deleteBoard(@AuthedUser User user, @RequestParam Long boardId) {
-		boardService.deleteBoard(user, boardId);
+	public ResponseEntity<Void> deleteNotice(@AuthedUser User user, @RequestParam Long noticeId) {
+		noticeService.deleteNotice(user, noticeId);
 		return ResponseEntity.ok().build();
 	}
 }

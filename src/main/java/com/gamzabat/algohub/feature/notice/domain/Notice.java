@@ -1,4 +1,4 @@
-package com.gamzabat.algohub.feature.board.domain;
+package com.gamzabat.algohub.feature.notice.domain;
 
 import java.time.LocalDateTime;
 
@@ -23,7 +23,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @DynamicUpdate
-public class Board {
+public class Notice {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
@@ -43,7 +43,7 @@ public class Board {
 	private StudyGroup studyGroup;
 
 	@Builder
-	public Board(User author, StudyGroup studyGroup, String title, String content, LocalDateTime createdAt) {
+	public Notice(User author, StudyGroup studyGroup, String title, String content, LocalDateTime createdAt) {
 		this.author = author;
 		this.title = title;
 		this.studyGroup = studyGroup;
@@ -51,7 +51,7 @@ public class Board {
 		this.createdAt = createdAt;
 	}
 
-	public void updateBoard(String title, String content) {
+	public void updateNotice(String title, String content) {
 		this.title = title;
 		this.content = content;
 		this.updatedAt = LocalDateTime.now();

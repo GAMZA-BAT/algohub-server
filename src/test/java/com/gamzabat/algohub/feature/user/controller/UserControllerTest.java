@@ -249,7 +249,7 @@ class UserControllerTest {
 	@DisplayName("회원 정보 수정 성공")
 	void updateUser() throws Exception {
 		// given
-		UpdateUserRequest request = new UpdateUserRequest("newNickname", "newBjNickname");
+		UpdateUserRequest request = new UpdateUserRequest("newNickname", "newBjNickname", "I am Superman");
 		MockMultipartFile requestPart = new MockMultipartFile("request", "", "application/json",
 			objectMapper.writeValueAsString(request).getBytes());
 		MockMultipartFile profileImage = new MockMultipartFile("profileImage", "profile.jpg", "image/jpeg",
@@ -274,7 +274,7 @@ class UserControllerTest {
 	@DisplayName("회원 정보 조회 성공")
 	void getUserInfo() throws Exception {
 		// given
-		UserInfoResponse response = new UserInfoResponse("email", "nickname", "profileImage", "bjNickname");
+		UserInfoResponse response = new UserInfoResponse("email", "nickname", "profileImage", "bjNickname", "");
 		when(userService.userInfo(user)).thenReturn(response);
 		// when, then
 		mockMvc.perform(get("/api/user")
@@ -283,7 +283,8 @@ class UserControllerTest {
 			.andExpect(jsonPath("$.email").value("email"))
 			.andExpect(jsonPath("$.nickname").value("nickname"))
 			.andExpect(jsonPath("$.profileImage").value("profileImage"))
-			.andExpect(jsonPath("$.bjNickname").value("bjNickname"));
+			.andExpect(jsonPath("$.bjNickname").value("bjNickname"))
+			.andExpect(jsonPath("$.description").value(""));
 
 		verify(userService, times(1)).userInfo(any(User.class));
 	}

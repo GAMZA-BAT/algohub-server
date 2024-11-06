@@ -25,40 +25,40 @@ import com.gamzabat.algohub.common.DateFormatUtil;
 import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.exception.UserValidationException;
-import com.gamzabat.algohub.feature.board.domain.Board;
-import com.gamzabat.algohub.feature.board.dto.CreateBoardRequest;
-import com.gamzabat.algohub.feature.board.dto.GetBoardResponse;
-import com.gamzabat.algohub.feature.board.dto.UpdateBoardRequest;
-import com.gamzabat.algohub.feature.board.exception.BoardValidationException;
-import com.gamzabat.algohub.feature.board.repository.BoardCommentRepository;
-import com.gamzabat.algohub.feature.board.repository.BoardRepository;
-import com.gamzabat.algohub.feature.board.service.BoardService;
 import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
+import com.gamzabat.algohub.feature.notice.domain.Notice;
+import com.gamzabat.algohub.feature.notice.dto.CreateNoticeRequest;
+import com.gamzabat.algohub.feature.notice.dto.GetNoticeResponse;
+import com.gamzabat.algohub.feature.notice.dto.UpdateNoticeRequest;
+import com.gamzabat.algohub.feature.notice.exception.NoticeValidationException;
+import com.gamzabat.algohub.feature.notice.repository.NoticeCommentRepository;
+import com.gamzabat.algohub.feature.notice.repository.NoticeRepository;
+import com.gamzabat.algohub.feature.notice.service.NoticeService;
 import com.gamzabat.algohub.feature.user.domain.User;
 
 @ExtendWith(MockitoExtension.class)
-public class BoardServiceTest {
+public class NoticeServiceTest {
 	@InjectMocks
-	private BoardService boardService;
+	private NoticeService noticeService;
 	@Mock
 	private StudyGroupRepository studyGroupRepository;
 	@Mock
-	private BoardRepository boardRepository;
+	private NoticeRepository noticeRepository;
 	@Mock
 	GroupMemberRepository groupMemberRepository;
 	@Mock
-	private BoardCommentRepository boardCommentRepository;
+	private NoticeCommentRepository noticeCommentRepository;
 	@Captor
-	private ArgumentCaptor<Board> boardCaptor;
+	private ArgumentCaptor<Notice> noticeCaptor;
 
 	private User user, user2, user3, user4;
 	private StudyGroup studyGroup;
 	private GroupMember groupMember2, groupMember3;
-	private Board board;
+	private Notice notice;
 
 	@BeforeEach
 	void setUp() throws NoSuchFieldException, IllegalAccessException {
@@ -73,7 +73,7 @@ public class BoardServiceTest {
 		studyGroup = StudyGroup.builder().build();
 		groupMember2 = GroupMember.builder().user(user2).studyGroup(studyGroup).role(ADMIN).build();
 		groupMember3 = GroupMember.builder().user(user3).studyGroup(studyGroup).role(PARTICIPANT).build();
-		board = Board.builder()
+		notice = Notice.builder()
 			.studyGroup(studyGroup)
 			.createdAt(LocalDateTime.now())
 			.title("title")
@@ -97,25 +97,25 @@ public class BoardServiceTest {
 		groupMemberField.set(groupMember2, 200L);
 		groupMemberField.set(groupMember3, 300L);
 
-		Field boardField = Board.class.getDeclaredField("id");
-		boardField.setAccessible(true);
-		boardField.set(board, 1000L);
+		Field noticeField = Notice.class.getDeclaredField("id");
+		noticeField.setAccessible(true);
+		noticeField.set(notice, 1000L);
 
 	}
 
 	@Test
 	@DisplayName("공지 작성 성공")
-	void createBoardSuccess_1() {
+	void createNoticeSuccess_1() {
 		//given
-		CreateBoardRequest request = new CreateBoardRequest(30L, "title", "content");
+		CreateNoticeRequest request = new CreateNoticeRequest(30L, "title", "content");
 		when(studyGroupRepository.findById(request.studyGroupId())).thenReturn(Optional.ofNullable(studyGroup));
 		when(groupMemberRepository.findByUserAndStudyGroup(user2, studyGroup)).thenReturn(
 			Optional.ofNullable(groupMember2));
 		//when
-		boardService.createBoard(user2, request);
+		noticeService.createNotice(user2, request);
 		//then
-		verify(boardRepository, times(1)).save(boardCaptor.capture());
-		Board result = boardCaptor.getValue();
+		verify(noticeRepository, times(1)).save(noticeCaptor.capture());
+		Notice result = noticeCaptor.getValue();
 		assertThat(result.getAuthor()).isEqualTo(user2);
 		assertThat(result.getContent()).isEqualTo("content");
 		assertThat(result.getTitle()).isEqualTo("title");
@@ -125,14 +125,14 @@ public class BoardServiceTest {
 
 	@Test
 	@DisplayName("공지 작성 실패 그룹장or부방장이 아님")
-	void createBoardFail_1() {
+	void createNoticeFail_1() {
 		//given
-		CreateBoardRequest request = new CreateBoardRequest(30L, "title", "content");
+		CreateNoticeRequest request = new CreateNoticeRequest(30L, "title", "content");
 		when(studyGroupRepository.findById(request.studyGroupId())).thenReturn(Optional.ofNullable(studyGroup));
 		when(groupMemberRepository.findByUserAndStudyGroup(user3, studyGroup)).thenReturn(
 			Optional.ofNullable(groupMember3));
 		//when,then
-		assertThatThrownBy(() -> boardService.createBoard(user3, request))
+		assertThatThrownBy(() -> noticeService.createNotice(user3, request))
 			.isInstanceOf(UserValidationException.class)
 			.hasFieldOrPropertyWithValue("errors", "공지 작성 권한이 없습니다");
 
@@ -140,12 +140,12 @@ public class BoardServiceTest {
 
 	@Test
 	@DisplayName("공지 작성 실패 존재하지 않는 그룹")
-	void createBoardFail_2() {
+	void createNoticeFail_2() {
 		//given
-		CreateBoardRequest request = new CreateBoardRequest(31L, "title", "content");
+		CreateNoticeRequest request = new CreateNoticeRequest(31L, "title", "content");
 		when(studyGroupRepository.findById(request.studyGroupId())).thenReturn(Optional.empty());
 		//when,then
-		assertThatThrownBy(() -> boardService.createBoard(user, request))
+		assertThatThrownBy(() -> noticeService.createNotice(user, request))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.extracting("code", "error")
 			.containsExactly(HttpStatus.BAD_REQUEST.value(), "존재하지 않는 스터디 그룹입니다");
@@ -153,13 +153,13 @@ public class BoardServiceTest {
 
 	@Test
 	@DisplayName("공지 작성 실패 존재하지 않는 멤버")
-	void createBoardFail_3() {
+	void createNoticeFail_3() {
 		//given
-		CreateBoardRequest request = new CreateBoardRequest(30L, "title", "content");
+		CreateNoticeRequest request = new CreateNoticeRequest(30L, "title", "content");
 		when(studyGroupRepository.findById(request.studyGroupId())).thenReturn(Optional.ofNullable(studyGroup));
 		when(groupMemberRepository.findByUserAndStudyGroup(user4, studyGroup)).thenReturn(Optional.empty());
 		//when,then
-		assertThatThrownBy(() -> boardService.createBoard(user4, request))
+		assertThatThrownBy(() -> noticeService.createNotice(user4, request))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹 입니다.");
@@ -167,42 +167,42 @@ public class BoardServiceTest {
 
 	@Test
 	@DisplayName("공지 조회 성공")
-	void getBoardSuccess_1() {
+	void getNoticeSuccess_1() {
 		//given
-		when(boardRepository.findById(1000L)).thenReturn(Optional.ofNullable(board));
+		when(noticeRepository.findById(1000L)).thenReturn(Optional.ofNullable(notice));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user2, studyGroup)).thenReturn(
 			true);
 		//when
-		GetBoardResponse response = boardService.getBoard(user2, 1000L);
+		GetNoticeResponse response = noticeService.getNotice(user2, 1000L);
 		//then
 		assertThat(response.author()).isEqualTo("nickname1");
-		assertThat(response.boardContent()).isEqualTo("content");
-		assertThat(response.boardTitle()).isEqualTo("title");
+		assertThat(response.noticeContent()).isEqualTo("content");
+		assertThat(response.noticeTitle()).isEqualTo("title");
 		assertThat(response.createAt()).isEqualTo(DateFormatUtil.formatDate(LocalDateTime.now().toLocalDate()));
-		assertThat(response.boardId()).isEqualTo(1000L);
+		assertThat(response.noticeId()).isEqualTo(1000L);
 	}
 
 	@Test
 	@DisplayName("공지 조회 실패(존재하지 않는 공지)")
-	void getBoardFailed_1() {
+	void getNoticeFailed_1() {
 		//given
-		when(boardRepository.findById(1001L)).thenReturn(Optional.empty());
+		when(noticeRepository.findById(1001L)).thenReturn(Optional.empty());
 
 		//when, then
-		assertThatThrownBy(() -> boardService.getBoard(user, 1001L))
-			.isInstanceOf(BoardValidationException.class)
+		assertThatThrownBy(() -> noticeService.getNotice(user, 1001L))
+			.isInstanceOf(NoticeValidationException.class)
 			.hasFieldOrPropertyWithValue("error", "존재하지 않는 게시글입니다");
 
 	}
 
 	@Test
 	@DisplayName("공지 조회 실패(그룹에 참여하지 않은 유저)")
-	void getBoardFailed_2() {
+	void getNoticeFailed_2() {
 		//given
-		when(boardRepository.findById(1000L)).thenReturn(Optional.ofNullable(board));
-		when(groupMemberRepository.existsByUserAndStudyGroup(user4, board.getStudyGroup())).thenReturn(false);
+		when(noticeRepository.findById(1000L)).thenReturn(Optional.ofNullable(notice));
+		when(groupMemberRepository.existsByUserAndStudyGroup(user4, notice.getStudyGroup())).thenReturn(false);
 		//when
-		assertThatThrownBy(() -> boardService.getBoard(user4, 1000L))
+		assertThatThrownBy(() -> noticeService.getNotice(user4, 1000L))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "참여하지 않은 스터디 그룹 입니다.");
@@ -210,12 +210,12 @@ public class BoardServiceTest {
 
 	@Test
 	@DisplayName("공지 목록 조회 성공")
-	void getBoardListSuccess_1() {
+	void getNoticeListSuccess_1() {
 		//given
-		List<Board> boardList = new ArrayList<>(10);
+		List<Notice> noticeList = new ArrayList<>(10);
 		for (int i = 0; i < 10; i++)
-			boardList.add(
-				board.builder()
+			noticeList.add(
+				notice.builder()
 					.author(user)
 					.content("content" + i)
 					.title("title" + i)
@@ -223,8 +223,8 @@ public class BoardServiceTest {
 					.studyGroup(studyGroup)
 					.build());
 		for (int i = 10; i < 20; i++)
-			boardList.add(
-				board.builder()
+			noticeList.add(
+				notice.builder()
 					.author(user2)
 					.content("content" + i)
 					.title("title" + i)
@@ -233,24 +233,24 @@ public class BoardServiceTest {
 					.build());
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user, studyGroup)).thenReturn(true);
-		when(boardRepository.findAllByStudyGroup(studyGroup)).thenReturn(boardList);
+		when(noticeRepository.findAllByStudyGroup(studyGroup)).thenReturn(noticeList);
 		//when
-		List<GetBoardResponse> result = boardService.getBoardList(user, 30L);
+		List<GetNoticeResponse> result = noticeService.getNoticeList(user, 30L);
 		//then
 		assertThat(result.size()).isEqualTo(20);
 		for (int i = 0; i < 20; i++) {
-			assertThat(result.get(i).boardContent()).isEqualTo("content" + i);
-			assertThat(result.get(i).boardTitle()).isEqualTo("title" + i);
+			assertThat(result.get(i).noticeContent()).isEqualTo("content" + i);
+			assertThat(result.get(i).noticeTitle()).isEqualTo("title" + i);
 		}
 	}
 
 	@Test
 	@DisplayName("공지 목록 조회 실패 (존재하지 않는 스터디 그룹임)")
-	void getBoardListFailed_1() {
+	void getNoticeListFailed_1() {
 		//given
 		when(studyGroupRepository.findById(31L)).thenReturn(Optional.empty());
 		//when,then
-		assertThatThrownBy(() -> boardService.getBoardList(user, 31L))
+		assertThatThrownBy(() -> noticeService.getNoticeList(user, 31L))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
 			.hasFieldOrPropertyWithValue("error", "존재하지 않는 스터디 그룹입니다");
@@ -258,12 +258,12 @@ public class BoardServiceTest {
 
 	@Test
 	@DisplayName("공지 목록 조회 실패(참여하지 않은 스터디 그룹)")
-	void getBoardListFailed_2() {
+	void getNoticeListFailed_2() {
 		//given
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user4, studyGroup)).thenReturn(false);
 		//when, then
-		assertThatThrownBy(() -> boardService.getBoardList(user4, 30L))
+		assertThatThrownBy(() -> noticeService.getNoticeList(user4, 30L))
 			.isInstanceOf(GroupMemberValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "참여하지 않은 스터디 그룹입니다");
@@ -271,39 +271,39 @@ public class BoardServiceTest {
 
 	@Test
 	@DisplayName("공지 수정 성공")
-	void updateBoardSuccess() {
+	void updateNoticeSuccess() {
 		//given
-		UpdateBoardRequest updateBoardRequest = new UpdateBoardRequest(1000L, "updateTitle", "updateContent");
-		when(boardRepository.findById(1000L)).thenReturn(Optional.ofNullable(board));
+		UpdateNoticeRequest updateNoticeRequest = new UpdateNoticeRequest(1000L, "updateTitle", "updateContent");
+		when(noticeRepository.findById(1000L)).thenReturn(Optional.ofNullable(notice));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
 		//when
-		boardService.updateBoard(user, updateBoardRequest);
+		noticeService.updateNotice(user, updateNoticeRequest);
 		//then
-		assertThat(board.getContent()).isEqualTo("updateContent");
-		assertThat(board.getTitle()).isEqualTo("updateTitle");
+		assertThat(notice.getContent()).isEqualTo("updateContent");
+		assertThat(notice.getTitle()).isEqualTo("updateTitle");
 	}
 
 	@Test
 	@DisplayName("공지 수정 실패(존재하지 않는 게시글)")
-	void updateBoardFailed_1() {
+	void updateNoticeFailed_1() {
 		//given
-		UpdateBoardRequest updateBoardRequest = new UpdateBoardRequest(1001L, "updateTitle", "updateContent");
-		when(boardRepository.findById(1001L)).thenReturn(Optional.empty());
+		UpdateNoticeRequest updateNoticeRequest = new UpdateNoticeRequest(1001L, "updateTitle", "updateContent");
+		when(noticeRepository.findById(1001L)).thenReturn(Optional.empty());
 		//when,then
-		assertThatThrownBy(() -> boardService.updateBoard(user, updateBoardRequest))
-			.isInstanceOf(BoardValidationException.class)
+		assertThatThrownBy(() -> noticeService.updateNotice(user, updateNoticeRequest))
+			.isInstanceOf(NoticeValidationException.class)
 			.hasFieldOrPropertyWithValue("error", "존재하지 않는 게시글입니다");
 	}
 
 	@Test
 	@DisplayName("공시 수정 실패(존재하지 않는 스터디 그룹)")
-	void updateBoardFailed_2() {
+	void updateNoticeFailed_2() {
 		//given
-		UpdateBoardRequest updateBoardRequest = new UpdateBoardRequest(1000L, "updateTitle", "updateContent");
-		when(boardRepository.findById(1000L)).thenReturn(Optional.ofNullable(board));
+		UpdateNoticeRequest updateNoticeRequest = new UpdateNoticeRequest(1000L, "updateTitle", "updateContent");
+		when(noticeRepository.findById(1000L)).thenReturn(Optional.ofNullable(notice));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.empty());
 		//when,then
-		assertThatThrownBy(() -> boardService.updateBoard(user, updateBoardRequest))
+		assertThatThrownBy(() -> noticeService.updateNotice(user, updateNoticeRequest))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
 			.hasFieldOrPropertyWithValue("error", "존재하지 않는 스터디 그룹입니다");
@@ -312,49 +312,49 @@ public class BoardServiceTest {
 
 	@Test
 	@DisplayName("공지 수정 실패(게시글 작성자가 아님)")
-	void updateBoardFailed_3() {
+	void updateNoticeFailed_3() {
 		//given
-		UpdateBoardRequest updateBoardRequest = new UpdateBoardRequest(1000L, "updateTitle", "updateContent");
-		when(boardRepository.findById(1000L)).thenReturn(Optional.ofNullable(board));
+		UpdateNoticeRequest updateNoticeRequest = new UpdateNoticeRequest(1000L, "updateTitle", "updateContent");
+		when(noticeRepository.findById(1000L)).thenReturn(Optional.ofNullable(notice));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
 		//when, then
-		assertThatThrownBy(() -> boardService.updateBoard(user4, updateBoardRequest))
+		assertThatThrownBy(() -> noticeService.updateNotice(user4, updateNoticeRequest))
 			.isInstanceOf(UserValidationException.class)
 			.hasFieldOrPropertyWithValue("errors", "공지를 수정할 수 있는 권한이 없습니다");
 	}
 
 	@Test
 	@DisplayName("공지 삭제 성공")
-	void deleteBoardSuccess() {
+	void deleteNoticeSuccess() {
 		//given
-		when(boardRepository.findById(1000L)).thenReturn(Optional.ofNullable(board));
+		when(noticeRepository.findById(1000L)).thenReturn(Optional.ofNullable(notice));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
-		doNothing().when(boardCommentRepository).deleteAllCommentByBoard(board);
+		doNothing().when(noticeCommentRepository).deleteAllCommentByNotice(notice);
 		//when
-		boardService.deleteBoard(user, 1000L);
+		noticeService.deleteNotice(user, 1000L);
 		//then
-		verify(boardRepository, times(1)).delete(board);
+		verify(noticeRepository, times(1)).delete(notice);
 	}
 
 	@Test
 	@DisplayName("공지 삭제 실패(존재하지 않는 게시글)")
-	void deleteBoardFailed_1() {
+	void deleteNoticeFailed_1() {
 		//given
-		when(boardRepository.findById(1001L)).thenReturn(Optional.empty());
+		when(noticeRepository.findById(1001L)).thenReturn(Optional.empty());
 		//when,then
-		assertThatThrownBy(() -> boardService.deleteBoard(user, 1001L))
-			.isInstanceOf(BoardValidationException.class)
+		assertThatThrownBy(() -> noticeService.deleteNotice(user, 1001L))
+			.isInstanceOf(NoticeValidationException.class)
 			.hasFieldOrPropertyWithValue("error", "존재하지 않는 게시글입니다");
 	}
 
 	@Test
 	@DisplayName("공지 삭제 실패(존재하지 않는 스터디 그룹)")
-	void deleteBoardFailed_2() {
+	void deleteNoticeFailed_2() {
 		//given
-		when(boardRepository.findById(1000L)).thenReturn(Optional.ofNullable(board));
+		when(noticeRepository.findById(1000L)).thenReturn(Optional.ofNullable(notice));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.empty());
 		//when,then
-		assertThatThrownBy(() -> boardService.deleteBoard(user, 1000L))
+		assertThatThrownBy(() -> noticeService.deleteNotice(user, 1000L))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
 			.hasFieldOrPropertyWithValue("error", "존재하지 않는 스터디 그룹입니다");
@@ -362,12 +362,12 @@ public class BoardServiceTest {
 
 	@Test
 	@DisplayName("공지 삭제 실패(게시글 작성자가 아님)")
-	void deleteBoardFailed_3() {
+	void deleteNoticeFailed_3() {
 		//given
-		when(boardRepository.findById(1000L)).thenReturn(Optional.ofNullable(board));
+		when(noticeRepository.findById(1000L)).thenReturn(Optional.ofNullable(notice));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
 		//when, then
-		assertThatThrownBy(() -> boardService.deleteBoard(user4, 1000L))
+		assertThatThrownBy(() -> noticeService.deleteNotice(user4, 1000L))
 			.isInstanceOf(UserValidationException.class)
 			.hasFieldOrPropertyWithValue("errors", "공지를 삭제할 수 있는 권한이 없습니다");
 	}

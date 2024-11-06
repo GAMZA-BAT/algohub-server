@@ -27,6 +27,7 @@ import com.gamzabat.algohub.feature.group.studygroup.dto.BookmarkStatus;
 import com.gamzabat.algohub.feature.group.studygroup.dto.CheckSolvedProblemResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.CreateGroupRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupRequest;
+import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupVisibilityRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupMemberResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupListsResponse;
@@ -204,36 +205,39 @@ public class StudyGroupService {
 		List<StudyGroup> groups = groupRepository.findAllByUser(user);
 
 		List<GetStudyGroupResponse> bookmarked = bookmarkedStudyGroupRepository.findAllByUser(user).stream()
-			.map(bookmark -> GetStudyGroupResponse.toDTO(bookmark.getStudyGroup(), user, true,
-				getStudyGroupOwner(bookmark.getStudyGroup())))
+			.map(bookmark -> getStudyGroupResponseDTO(user, bookmark.getStudyGroup()))
 			.toList();
 
 		LocalDate today = LocalDate.now();
 
 		List<GetStudyGroupResponse> done = groups.stream()
 			.filter(group -> group.getEndDate() != null && group.getEndDate().isBefore(today))
-			.map(
-				group -> GetStudyGroupResponse.toDTO(group, user, isBookmarked(user, group), getStudyGroupOwner(group)))
+			.map(group -> getStudyGroupResponseDTO(user, group))
 			.toList();
 
 		List<GetStudyGroupResponse> inProgress = groups.stream()
 			.filter(
 				group -> !(group.getStartDate() == null || group.getStartDate().isAfter(today))
 					&& !(group.getEndDate() == null || group.getEndDate().isBefore(today)))
-			.map(
-				group -> GetStudyGroupResponse.toDTO(group, user, isBookmarked(user, group), getStudyGroupOwner(group)))
+			.map(group -> getStudyGroupResponseDTO(user, group))
 			.toList();
 
 		List<GetStudyGroupResponse> queued = groups.stream()
 			.filter(group -> group.getStartDate() != null && group.getStartDate().isAfter(today))
-			.map(
-				group -> GetStudyGroupResponse.toDTO(group, user, isBookmarked(user, group), getStudyGroupOwner(group)))
+			.map(group -> getStudyGroupResponseDTO(user, group))
 			.toList();
 
 		GetStudyGroupListsResponse response = new GetStudyGroupListsResponse(bookmarked, done, inProgress, queued);
 
 		log.info("success to get study group list");
 		return response;
+	}
+
+	private GetStudyGroupResponse getStudyGroupResponseDTO(User user, StudyGroup group) {
+		GroupMember member = groupMemberRepository.findByUserAndStudyGroup(user, group)
+			.orElseThrow(() -> new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 스터디 그룹입니다."));
+		return GetStudyGroupResponse.toDTO(group, user, isBookmarked(user, group), getStudyGroupOwner(group),
+			member.getIsVisible());
 	}
 
 	private User getStudyGroupOwner(StudyGroup group) {
@@ -434,6 +438,18 @@ public class StudyGroupService {
 			.orElseThrow(() -> new GroupMemberValidationException(HttpStatus.NOT_FOUND.value(), "참여하지 않은 그룹입니다."));
 
 		return member.getRole().getValue();
+	}
+
+	@Transactional
+	public void editStudyGroupVisibility(User user, EditGroupVisibilityRequest request) {
+		StudyGroup group = groupRepository.findById(request.groupId())
+			.orElseThrow(() -> new CannotFoundGroupException("존재하지 않는 그룹입니다."));
+
+		GroupMember member = groupMemberRepository.findByUserAndStudyGroup(user, group)
+			.orElseThrow(() -> new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹입니다."));
+
+		member.updateVisibility(request.isVisible());
+		log.info("success to update group visibility ( userId : {} )", user.getId());
 	}
 
 	private void sendNotification(StudyGroup studyGroup, GroupMember newMember) {

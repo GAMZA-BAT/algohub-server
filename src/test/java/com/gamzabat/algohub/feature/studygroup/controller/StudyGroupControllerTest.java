@@ -40,6 +40,7 @@ import com.gamzabat.algohub.feature.group.studygroup.dto.BookmarkStatus;
 import com.gamzabat.algohub.feature.group.studygroup.dto.CheckSolvedProblemResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.CreateGroupRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupRequest;
+import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupVisibilityRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupMemberResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupListsResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupResponse;
@@ -215,7 +216,7 @@ class StudyGroupControllerTest {
 			bookmarked.add(new GetStudyGroupResponse(
 				(long)i, "name" + i, "groupImage" + 1,
 				DateFormatUtil.formatDate(LocalDate.now()), DateFormatUtil.formatDate(LocalDate.now().plusDays(i)),
-				"introduction" + 1, "nickname", true, true
+				"introduction" + 1, "nickname", true, true, true
 			));
 		}
 
@@ -223,21 +224,21 @@ class StudyGroupControllerTest {
 			done.add(new GetStudyGroupResponse(
 				(long)i, "name" + i, "groupImage" + 1,
 				DateFormatUtil.formatDate(LocalDate.now()), DateFormatUtil.formatDate(LocalDate.now().plusDays(i)),
-				"introduction" + 1, "nickname", true, true
+				"introduction" + 1, "nickname", true, true, true
 			));
 		}
 		for (int i = 0; i < 10; i++) {
 			inProgress.add(new GetStudyGroupResponse(
 				(long)i, "name" + i, "groupImage" + 1,
 				DateFormatUtil.formatDate(LocalDate.now()), DateFormatUtil.formatDate(LocalDate.now().plusDays(i)),
-				"introduction" + 1, "nickname", true, true
+				"introduction" + 1, "nickname", true, true, true
 			));
 		}
 		for (int i = 0; i < 10; i++) {
 			queued.add(new GetStudyGroupResponse(
 				(long)i, "name" + i, "groupImage" + 1,
 				DateFormatUtil.formatDate(LocalDate.now()), DateFormatUtil.formatDate(LocalDate.now().plusDays(i)),
-				"introduction" + 1, "nickname", true, true
+				"introduction" + 1, "nickname", true, true, true
 			));
 		}
 		GetStudyGroupListsResponse response = new GetStudyGroupListsResponse(bookmarked, done, inProgress, queued);
@@ -812,5 +813,51 @@ class StudyGroupControllerTest {
 			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.error").value("참여하지 않은 그룹입니다."));
 		verify(studyGroupService, times(1)).getRoleInGroup(user, groupId);
+	}
+
+	@Test
+	@DisplayName("스터디 그룹 공개 여부 수정 성공")
+	void editGroupVisibility() throws Exception {
+		// given
+		EditGroupVisibilityRequest request = new EditGroupVisibilityRequest(groupId, false);
+		// when, then
+		mockMvc.perform(patch("/api/group/visibility")
+				.header("Authorization", token)
+				.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isOk());
+		verify(studyGroupService, times(1)).editStudyGroupVisibility(user, request);
+	}
+
+	@Test
+	@DisplayName("스터디 그룹 공개 여부 수정 실패 : 존재하지 않는 스터디 그룹")
+	void editGroupVisibilityFailed_1() throws Exception {
+		// given
+		EditGroupVisibilityRequest request = new EditGroupVisibilityRequest(groupId, false);
+		doThrow(new CannotFoundGroupException("존재하지 않는 그룹입니다.")).when(studyGroupService)
+			.editStudyGroupVisibility(user, request);
+		// when, then
+		mockMvc.perform(patch("/api/group/visibility")
+				.header("Authorization", token)
+				.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.error").value("존재하지 않는 그룹입니다."));
+		verify(studyGroupService, times(1)).editStudyGroupVisibility(user, request);
+	}
+
+	@Test
+	@DisplayName("스터디 그룹 공개 여부 수정 실패 : 참여하지 않은 그룹")
+	void editGroupVisibilityFailed_2() throws Exception {
+		// given
+		EditGroupVisibilityRequest request = new EditGroupVisibilityRequest(groupId, false);
+		doThrow(new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹입니다.")).when(
+				studyGroupService)
+			.editStudyGroupVisibility(user, request);
+		// when, then
+		mockMvc.perform(patch("/api/group/visibility")
+				.header("Authorization", token)
+				.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isForbidden())
+			.andExpect(jsonPath("$.error").value("참여하지 않은 그룹입니다."));
+		verify(studyGroupService, times(1)).editStudyGroupVisibility(user, request);
 	}
 }

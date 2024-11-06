@@ -60,6 +60,11 @@ dependencies {
     // Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 }
+
+clean {
+    delete file('src/main/generated')
+}
+
 tasks.named('test') {
     useJUnitPlatform()
 }

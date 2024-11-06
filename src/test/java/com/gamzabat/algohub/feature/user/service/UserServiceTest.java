@@ -82,7 +82,6 @@ class UserServiceTest {
 	private final String encoded = "encoded";
 	private final String imageUrl = "imageUrl";
 	private final String bjNickname = "bjNickname";
-
 	private User user;
 
 	@BeforeEach
@@ -115,6 +114,7 @@ class UserServiceTest {
 		assertThat(user.getProfileImage()).isEqualTo(imageUrl);
 		assertThat(user.getRole()).isEqualTo(Role.USER);
 		assertThat(user.getBjNickname()).isEqualTo(bjNickname);
+		assertThat(user.getDescription()).isEqualTo("");
 	}
 
 	@Test
@@ -190,13 +190,14 @@ class UserServiceTest {
 		assertThat(response.getNickname()).isEqualTo(nickname);
 		assertThat(response.getProfileImage()).isEqualTo(imageUrl);
 		assertThat(response.getBjNickname()).isEqualTo(bjNickname);
+		assertThat(response.getDescription()).isEqualTo("");
 	}
 
 	@Test
 	@DisplayName("회원 정보 수정 성공")
 	void userUpdate() {
 		// given
-		UpdateUserRequest request = new UpdateUserRequest("newNickname", "newBjNickname");
+		UpdateUserRequest request = new UpdateUserRequest("newNickname", "newBjNickname", "I am Batman");
 		MockMultipartFile newProfileImage = new MockMultipartFile("newImage", "image.jpg", "image/jpeg",
 			"test".getBytes());
 		when(imageService.saveImage(newProfileImage)).thenReturn("newProfileImageUrl");
@@ -207,6 +208,7 @@ class UserServiceTest {
 		assertThat(user.getNickname()).isEqualTo("newNickname");
 		assertThat(user.getBjNickname()).isEqualTo("newBjNickname");
 		assertThat(user.getProfileImage()).isEqualTo("newProfileImageUrl");
+		assertThat(user.getDescription()).isEqualTo("I am Batman");
 	}
 
 	@Test

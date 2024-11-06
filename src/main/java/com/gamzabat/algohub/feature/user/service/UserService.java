@@ -90,7 +90,8 @@ public class UserService {
 
 	@Transactional(readOnly = true)
 	public UserInfoResponse userInfo(User user) {
-		return new UserInfoResponse(user.getEmail(), user.getNickname(), user.getProfileImage(), user.getBjNickname());
+		return new UserInfoResponse(user.getEmail(), user.getNickname(), user.getProfileImage(), user.getBjNickname(),
+			user.getDescription());
 	}
 
 	@Transactional
@@ -107,6 +108,9 @@ public class UserService {
 		}
 		if (updateUserRequest.getBjNickname() != null && !updateUserRequest.getBjNickname().isEmpty()) {
 			user.editBjNickname(updateUserRequest.getBjNickname());
+		}
+		if (updateUserRequest.getDescription() != null && !updateUserRequest.getDescription().isEmpty()) {
+			user.editDescription(updateUserRequest.getDescription());
 		}
 
 		userRepository.save(user);
