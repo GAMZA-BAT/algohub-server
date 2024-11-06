@@ -34,8 +34,6 @@ import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
-import com.gamzabat.algohub.feature.notification.domain.NotificationSetting;
-import com.gamzabat.algohub.feature.notification.repository.NotificationSettingRepository;
 import com.gamzabat.algohub.feature.notification.service.NotificationService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
@@ -64,11 +62,9 @@ class SolutionServiceTest {
 	@Mock
 	private GroupMemberRepository groupMemberRepository;
 	@Mock
-	private SolutionCommentRepository commentRepository;
+	private SolutionCommentRepository solutionCommentRepository;
 	@Mock
 	private UserRepository userRepository;
-	@Mock
-	private NotificationSettingRepository notificationSettingRepository;
 	private User user, user2;
 	private Problem problem;
 	private StudyGroup group;
@@ -438,21 +434,17 @@ class SolutionServiceTest {
 			.endDate(LocalDate.now().plusDays(30))
 			.build();
 
-		NotificationSetting setting2 = NotificationSetting.builder().member(member2).build();
-
 		List<GroupMember> members = List.of(member1, member2);
 		when(problemRepository.findAllByNumber(300)).thenReturn(List.of(problem));
 		when(userRepository.findByBjNickname("bjNickname")).thenReturn(Optional.of(user));
 		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.of(member1));
 		when(groupMemberRepository.findAllByStudyGroup(group)).thenReturn(members);
-		when(notificationSettingRepository.findByMember(member2)).thenReturn(Optional.of(setting2));
-		List<String> users = List.of(user2.getEmail());
 
 		// when
 		solutionService.createSolution(request);
 
 		// then
 		verify(solutionRepository, times(1)).save(any(Solution.class));
-		verify(notificationService, times(1)).sendList(eq(users), anyString(), eq(group), eq(null));
+		verify(notificationService, times(1)).sendNotificationToMembers(any(), any(), any(), any());
 	}
 }

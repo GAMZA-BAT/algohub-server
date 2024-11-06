@@ -2,7 +2,6 @@ package com.gamzabat.algohub.feature.solution.service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -23,9 +22,7 @@ import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
-import com.gamzabat.algohub.feature.notification.domain.NotificationSetting;
-import com.gamzabat.algohub.feature.notification.enums.NotificationMessage;
-import com.gamzabat.algohub.feature.notification.exception.CannotFoundNotificationSettingException;
+import com.gamzabat.algohub.feature.notification.enums.NotificationCategory;
 import com.gamzabat.algohub.feature.notification.repository.NotificationSettingRepository;
 import com.gamzabat.algohub.feature.notification.service.NotificationService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
@@ -141,31 +138,17 @@ public class SolutionService {
 				rankingUpdateService.updateRanking(studyGroup);
 			}
 
-			sendNotification(studyGroup, member.get());
+			sendNewSolutionNotification(studyGroup, member.get());
 		}
 	}
 
-	private void sendNotification(StudyGroup group, GroupMember solver) {
-		List<GroupMember> members = groupMemberRepository.findAllByStudyGroup(group);
-
-		List<String> users = new ArrayList<>();
-		for (GroupMember member : members) {
-			if (member.getUser().getId().equals(solver.getUser().getId()))
-				continue;
-
-			NotificationSetting setting = notificationSettingRepository.findByMember(member)
-				.orElseThrow(() -> new CannotFoundNotificationSettingException("그룹 멤버의 알림 정보를 조회할 수 없습니다."));
-
-			if (setting.isAllNotifications() && setting.isNewSolution())
-				users.add(member.getUser().getEmail());
-		}
-
-		try {
-			String message = NotificationMessage.NEW_SOLUTION_POSTED.format(solver.getUser().getNickname());
-			notificationService.sendList(users, message, group, null);
-		} catch (Exception e) {
-			log.warn("failed to send notification", e);
-		}
+	private void sendNewSolutionNotification(StudyGroup group, GroupMember solver) {
+		notificationService.sendNotificationToMembers(
+			group,
+			groupMemberRepository.findAllByStudyGroup(group),
+			NotificationCategory.NEW_SOLUTION_POSTED,
+			NotificationCategory.NEW_SOLUTION_POSTED.getMessage(solver.getUser().getNickname())
+		);
 	}
 
 	private boolean isCorrect(String result) {

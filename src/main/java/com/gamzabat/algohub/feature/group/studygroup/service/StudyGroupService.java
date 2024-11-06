@@ -46,8 +46,7 @@ import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepos
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.image.service.ImageService;
 import com.gamzabat.algohub.feature.notification.domain.NotificationSetting;
-import com.gamzabat.algohub.feature.notification.enums.NotificationMessage;
-import com.gamzabat.algohub.feature.notification.exception.CannotFoundNotificationSettingException;
+import com.gamzabat.algohub.feature.notification.enums.NotificationCategory;
 import com.gamzabat.algohub.feature.notification.repository.NotificationSettingRepository;
 import com.gamzabat.algohub.feature.notification.service.NotificationService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
@@ -142,7 +141,7 @@ public class StudyGroupService {
 			.build()
 		);
 
-		sendNotification(studyGroup, member);
+		sendNewMemberNotification(studyGroup, member);
 
 		log.info("success to join study group");
 	}
@@ -452,27 +451,17 @@ public class StudyGroupService {
 		log.info("success to update group visibility ( userId : {} )", user.getId());
 	}
 
-	private void sendNotification(StudyGroup studyGroup, GroupMember newMember) {
-		List<GroupMember> members = groupMemberRepository.findAllByStudyGroup(studyGroup);
+	private void sendNewMemberNotification(StudyGroup studyGroup, GroupMember newMember) {
+		List<GroupMember> members = groupMemberRepository.findAllByStudyGroup(studyGroup)
+			.stream()
+			.filter(member -> !member.getId().equals(newMember.getId()))
+			.toList();
 
-		List<String> users = new ArrayList<>();
-		for (GroupMember member : members) {
-			if (member.getUser().getId().equals(newMember.getUser().getId()))
-				continue;
-
-			NotificationSetting setting = notificationSettingRepository.findByMember(member)
-				.orElseThrow(() -> new CannotFoundNotificationSettingException("그룹 멤버의 알림 정보를 조회할 수 없습니다."));
-
-			if (setting.isAllNotifications() && setting.isNewMember())
-				users.add(member.getUser().getEmail());
-		}
-
-		try {
-			String message = NotificationMessage.NEW_MEMBER_JOINED.format(newMember.getUser().getNickname(),
-				studyGroup.getName());
-			notificationService.sendList(users, message, studyGroup, null);
-		} catch (Exception e) {
-			log.warn("failed to send notification", e);
-		}
+		notificationService.sendNotificationToMembers(
+			studyGroup,
+			members,
+			NotificationCategory.NEW_MEMBER_JOINED,
+			NotificationCategory.NEW_MEMBER_JOINED.getMessage(newMember.getUser().getNickname())
+		);
 	}
 }

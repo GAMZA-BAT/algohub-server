@@ -35,8 +35,6 @@ import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
-import com.gamzabat.algohub.feature.notification.domain.Notification;
-import com.gamzabat.algohub.feature.notification.domain.NotificationSetting;
 import com.gamzabat.algohub.feature.notification.repository.NotificationRepository;
 import com.gamzabat.algohub.feature.notification.repository.NotificationSettingRepository;
 import com.gamzabat.algohub.feature.notification.service.NotificationService;
@@ -178,7 +176,7 @@ class ProblemServiceTest {
 		assertThat(result.getLevel()).isEqualTo(1);
 		assertThat(result.getStartDate()).isEqualTo(LocalDate.now());
 		assertThat(result.getEndDate()).isEqualTo(LocalDate.now().plusDays(10));
-		verify(notificationService, times(1)).sendList(any(), any(), any(), any());
+		verify(notificationService, times(1)).sendNotificationToMembers(any(), any(), any(), any());
 	}
 
 	@Test
@@ -278,30 +276,6 @@ class ProblemServiceTest {
 			.isInstanceOf(SolvedAcApiErrorException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.SERVICE_UNAVAILABLE.value())
 			.hasFieldOrPropertyWithValue("error", "solved.ac API로부터 예상치 못한 응답을 받았습니다.");
-	}
-
-	@Test
-	@DisplayName("문제 생성 성공, 알림 전송 실패")
-	void createProblemSuccess_NotificationFailed() {
-		// given
-		CreateProblemRequest request = CreateProblemRequest.builder()
-			.groupId(10L)
-			.link("https://www.acmicpc.net/problem/1000")
-			.startDate(LocalDate.now())
-			.endDate(LocalDate.now().plusDays(10))
-			.build();
-		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
-		String apiResult = "[{\"titleKo\":\"A+B\",\"level\":1}]";
-		ResponseEntity<String> responseEntity = new ResponseEntity<>(apiResult, HttpStatus.OK);
-		when(restTemplate.getForEntity(anyString(), eq(String.class))).thenReturn(responseEntity);
-		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
-		doThrow(new RuntimeException()).when(notificationService).sendList(any(), any(), any(), any());
-		// when
-		problemService.createProblem(user, request);
-		// then
-		verify(problemRepository, times(1)).save(any(Problem.class));
-		verify(notificationService, times(1)).sendList(any(), any(), any(), any());
-		verify(notificationRepository, never()).save(any(Notification.class));
 	}
 
 	@Test
@@ -779,23 +753,14 @@ class ProblemServiceTest {
 				.build());
 		}
 
-		NotificationSetting setting1 = NotificationSetting.builder().member(groupMember1).build();
-		NotificationSetting setting3 = NotificationSetting.builder().member(groupMember3).build();
-		NotificationSetting setting4 = NotificationSetting.builder().member(groupMember4).build();
-		NotificationSetting setting11 = NotificationSetting.builder().member(groupMember11).build();
-
 		when(problemRepository.findAllByStartDate(LocalDate.now())).thenReturn(startProblems);
 		when(problemRepository.findAllByEndDate(LocalDate.now())).thenReturn(endProblems);
 		when(groupMemberRepository.findAllByStudyGroup(group)).thenReturn(group1Members);
 		when(groupMemberRepository.findAllByStudyGroup(group2)).thenReturn(group2Members);
-		when(notificationSettingRepository.findByMember(groupMember1)).thenReturn(Optional.ofNullable(setting1));
-		when(notificationSettingRepository.findByMember(groupMember3)).thenReturn(Optional.ofNullable(setting3));
-		when(notificationSettingRepository.findByMember(groupMember4)).thenReturn(Optional.ofNullable(setting4));
-		when(notificationSettingRepository.findByMember(groupMember11)).thenReturn(Optional.ofNullable(setting11));
 		// when
 		problemService.dailyProblemScheduler();
 		// then
-		verify(notificationService, times(20)).sendList(anyList(), anyString(), any(StudyGroup.class), eq(null));
+		verify(notificationService, times(20)).sendNotificationToMembers(any(), any(), any(), any());
 	}
 
 }

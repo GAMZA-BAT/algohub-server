@@ -28,10 +28,7 @@ import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
-import com.gamzabat.algohub.feature.notification.domain.NotificationSetting;
-import com.gamzabat.algohub.feature.notification.enums.NotificationMessage;
-import com.gamzabat.algohub.feature.notification.exception.CannotFoundNotificationSettingException;
-import com.gamzabat.algohub.feature.notification.repository.NotificationSettingRepository;
+import com.gamzabat.algohub.feature.notification.enums.NotificationCategory;
 import com.gamzabat.algohub.feature.notification.service.NotificationService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.dto.CreateProblemRequest;
@@ -57,7 +54,6 @@ public class ProblemService {
 	private final GroupMemberRepository groupMemberRepository;
 	private final NotificationService notificationService;
 	private final RestTemplate restTemplate;
-	private final NotificationSettingRepository notificationSettingRepository;
 
 	@Transactional
 	public void createProblem(User user, CreateProblemRequest request) {
@@ -87,7 +83,12 @@ public class ProblemService {
 			.build());
 
 		if (request.startDate().equals(LocalDate.now()))
-			sendProblemNotification(group, title, NotificationMessage.PROBLEM_STARTED);
+			notificationService.sendNotificationToMembers(
+				group,
+				groupMemberRepository.findAllByStudyGroup(group),
+				NotificationCategory.PROBLEM_STARTED,
+				NotificationCategory.PROBLEM_STARTED.getMessage(title)
+			);
 
 		log.info("success to create problem");
 	}
@@ -263,16 +264,24 @@ public class ProblemService {
 	private void notifyProblemStartsToday(LocalDate now) {
 		List<Problem> problems = problemRepository.findAllByStartDate(now);
 		for (Problem problem : problems) {
-			sendProblemNotification(problem.getStudyGroup(), problem.getTitle(),
-				NotificationMessage.PROBLEM_STARTED);
+			notificationService.sendNotificationToMembers(
+				problem.getStudyGroup(),
+				groupMemberRepository.findAllByStudyGroup(problem.getStudyGroup()),
+				NotificationCategory.PROBLEM_STARTED,
+				NotificationCategory.PROBLEM_STARTED.getMessage(problem.getTitle())
+			);
 		}
 	}
 
 	private void notifyProblemEndsToday(LocalDate now) {
 		List<Problem> problems = problemRepository.findAllByEndDate(now);
 		for (Problem problem : problems) {
-			sendProblemNotification(problem.getStudyGroup(), problem.getTitle(),
-				NotificationMessage.PROBLEM_DEADLINE_REACHED);
+			notificationService.sendNotificationToMembers(
+				problem.getStudyGroup(),
+				groupMemberRepository.findAllByStudyGroup(problem.getStudyGroup()),
+				NotificationCategory.PROBLEM_DEADLINE_REACHED,
+				NotificationCategory.PROBLEM_DEADLINE_REACHED.getMessage(problem.getTitle())
+			);
 		}
 	}
 
@@ -345,38 +354,5 @@ public class ProblemService {
 
 	private Boolean isInProgress(Problem problem) {
 		return problem.getEndDate() != null && !LocalDate.now().isAfter(problem.getEndDate());
-	}
-
-	private void sendProblemNotification(StudyGroup group, String title, NotificationMessage problemMessage) {
-		List<GroupMember> members = groupMemberRepository.findAllByStudyGroup(group);
-
-		List<String> users = getMembersEmails(members, problemMessage);
-
-		try {
-			String message = problemMessage.format(title);
-			notificationService.sendList(users, message, group, null);
-		} catch (Exception e) {
-			log.warn("failed to send notification", e);
-		}
-	}
-
-	private List<String> getMembersEmails(List<GroupMember> members, NotificationMessage notificationMessage) {
-		List<String> users = new ArrayList<>();
-		for (GroupMember member : members) {
-			NotificationSetting setting = notificationSettingRepository.findByMember(member)
-				.orElseThrow(() -> new CannotFoundNotificationSettingException("그룹 멤버의 알림 정보를 조회할 수 없습니다."));
-
-			if (setting.isAllNotifications() && isSettingOn(setting, notificationMessage))
-				users.add(member.getUser().getEmail());
-		}
-		return users;
-	}
-
-	private static boolean isSettingOn(NotificationSetting setting, NotificationMessage message) {
-		return switch (message) {
-			case NotificationMessage.PROBLEM_STARTED -> setting.isNewProblem();
-			case NotificationMessage.PROBLEM_DEADLINE_REACHED -> setting.isDeadlineReached();
-			default -> false;
-		};
 	}
 }

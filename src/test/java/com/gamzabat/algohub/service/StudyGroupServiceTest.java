@@ -177,6 +177,12 @@ class StudyGroupServiceTest {
 		Field groupId = StudyGroup.class.getDeclaredField("id");
 		groupId.setAccessible(true);
 		groupId.set(group, 10L);
+
+		Field memberId = GroupMember.class.getDeclaredField("id");
+		memberId.setAccessible(true);
+		memberId.set(groupMember1, 100L);
+		memberId.set(groupMember2, 200L);
+		memberId.set(groupMember3, 300L);
 	}
 
 	@Test
@@ -208,15 +214,9 @@ class StudyGroupServiceTest {
 	void joinGroupWithCode() {
 		// given
 		List<GroupMember> members = List.of(groupMember1, groupMember2, groupMember3);
-		NotificationSetting setting1 = new NotificationSetting(groupMember1);
-		NotificationSetting setting3 = new NotificationSetting(groupMember3);
 
 		when(studyGroupRepository.findByGroupCode("code")).thenReturn(Optional.ofNullable(group));
 		when(groupMemberRepository.findAllByStudyGroup(group)).thenReturn(members);
-		when(notificationSettingRepository.findByMember(groupMember1)).thenReturn(Optional.of(setting1));
-		when(notificationSettingRepository.findByMember(groupMember3)).thenReturn(Optional.of(setting3));
-
-		List<String> users = List.of(user.getEmail(), user3.getEmail());
 		// when
 		studyGroupService.joinGroupWithCode(user2, "code");
 		// then
@@ -225,8 +225,7 @@ class StudyGroupServiceTest {
 		assertThat(result.getStudyGroup()).isEqualTo(group);
 		assertThat(result.getUser()).isEqualTo(user2);
 		verify(groupMemberRepository, times(1)).save(any(GroupMember.class));
-		verify(notificationSettingRepository, times(1)).save(any(NotificationSetting.class));
-		verify(notificationService, times(1)).sendList(eq(users), anyString(), eq(group), eq(null));
+		verify(notificationService, times(1)).sendNotificationToMembers(any(), any(), any(), any());
 	}
 
 	@Test

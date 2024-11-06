@@ -19,9 +19,7 @@ import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
-import com.gamzabat.algohub.feature.notification.domain.NotificationSetting;
-import com.gamzabat.algohub.feature.notification.exception.CannotFoundNotificationSettingException;
-import com.gamzabat.algohub.feature.notification.repository.NotificationSettingRepository;
+import com.gamzabat.algohub.feature.notification.enums.NotificationCategory;
 import com.gamzabat.algohub.feature.notification.service.NotificationService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
@@ -46,7 +44,6 @@ public class SolutionCommentService implements CommentService<CreateSolutionComm
 	private final StudyGroupRepository studyGroupRepository;
 	private final GroupMemberRepository groupMemberRepository;
 	private final NotificationService notificationService;
-	private final NotificationSettingRepository notificationSettingRepository;
 
 	@Override
 	@Transactional
@@ -60,31 +57,22 @@ public class SolutionCommentService implements CommentService<CreateSolutionComm
 			.createdAt(LocalDateTime.now())
 			.build());
 
-		sendNotification(user, request.content(), solution);
+		sendCommentNotification(user, solution);
 		log.info("success to create solution comment. commentId: {}, solutionId: {}", comment.getId(),
 			solution.getId());
 	}
 
-	private void sendNotification(User commenter, String content, Solution solution) {
+	private void sendCommentNotification(User commenter, Solution solution) {
 		GroupMember member = groupMemberRepository.findByUserAndStudyGroup(solution.getUser(),
 				solution.getProblem().getStudyGroup())
 			.orElseThrow(() -> new GroupMemberValidationException(HttpStatus.NOT_FOUND.value(), "참여하지 않은 스터디 그룹입니다."));
-		NotificationSetting setting = notificationSettingRepository.findByMember(member)
-			.orElseThrow(() -> new CannotFoundNotificationSettingException("그룹 멤버의 알림 정보를 조회할 수 없습니다."));
 
-		if (!setting.isAllNotifications() || !setting.isNewComment())
-			return;
-
-		String message = content.length() < 35 ? content : content.substring(0, 35) + "...";
-
-		try {
-			notificationService.send(solution.getUser().getEmail(),
-				commenter.getNickname() + "님이 코멘트를 남겼습니다.",
-				solution.getProblem().getStudyGroup(),
-				message);
-		} catch (Exception e) {
-			log.info("failed to send comment notification", e);
-		}
+		notificationService.sendNotificationToMembers(
+			solution.getProblem().getStudyGroup(),
+			List.of(member),
+			NotificationCategory.NEW_COMMENT_POSTED,
+			NotificationCategory.NEW_COMMENT_POSTED.getMessage(commenter.getNickname())
+		);
 	}
 
 	@Override

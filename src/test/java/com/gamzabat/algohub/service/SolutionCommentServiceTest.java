@@ -118,7 +118,10 @@ class SolutionCommentServiceTest {
 	@DisplayName("댓글 작성 성공")
 	void createComment_1() {
 		// given
-		CreateSolutionCommentRequest request = CreateSolutionCommentRequest.builder().solutionId(10L).content("content").build();
+		CreateSolutionCommentRequest request = CreateSolutionCommentRequest.builder()
+			.solutionId(10L)
+			.content("content")
+			.build();
 		GroupMember member = GroupMember.builder()
 			.user(user)
 			.studyGroup(studyGroup)
@@ -132,7 +135,6 @@ class SolutionCommentServiceTest {
 		when(groupMemberRepository.existsByUserAndStudyGroup(user2, studyGroup)).thenReturn(true);
 		when(commentRepository.save(any(SolutionComment.class))).thenReturn(comment);
 		when(groupMemberRepository.findByUserAndStudyGroup(user, studyGroup)).thenReturn(Optional.ofNullable(member));
-		when(notificationSettingRepository.findByMember(member)).thenReturn(Optional.of(setting));
 		// when
 		commentService.createComment(user2, request);
 		// then
@@ -141,7 +143,7 @@ class SolutionCommentServiceTest {
 		assertThat(result.getContent()).isEqualTo("content");
 		assertThat(result.getUser()).isEqualTo(user2);
 		assertThat(result.getSolution()).isEqualTo(solution);
-		verify(notificationService, times(1)).send(any(), any(), any(), any());
+		verify(notificationService, times(1)).sendNotificationToMembers(any(), any(), any(), any());
 	}
 
 	@Test
@@ -215,37 +217,6 @@ class SolutionCommentServiceTest {
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹 입니다.");
 		verify(notificationService, never()).send(any(), any(), any(), any());
-	}
-
-	@Test
-	@DisplayName("댓글 작성 성공, 알림 전송 실패")
-	void createCommentSuccess_NotificationFailed() {
-		// given
-		CreateSolutionCommentRequest request = CreateSolutionCommentRequest.builder()
-			.solutionId(10L)
-			.content("content")
-			.build();
-		GroupMember member = GroupMember.builder()
-			.user(user)
-			.studyGroup(studyGroup)
-			.role(RoleOfGroupMember.PARTICIPANT)
-			.build();
-		NotificationSetting setting = new NotificationSetting(member);
-
-		when(solutionRepository.findById(10L)).thenReturn(Optional.ofNullable(solution));
-		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
-		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
-		when(groupMemberRepository.existsByUserAndStudyGroup(user2, studyGroup)).thenReturn(true);
-		when(commentRepository.save(any(SolutionComment.class))).thenReturn(comment);
-		when(groupMemberRepository.findByUserAndStudyGroup(user, studyGroup)).thenReturn(Optional.ofNullable(member));
-		when(notificationSettingRepository.findByMember(member)).thenReturn(Optional.of(setting));
-		doThrow(new RuntimeException()).when(notificationService).send(any(), any(), any(), any());
-		// when
-		commentService.createComment(user2, request);
-		// then
-		verify(commentRepository, times(1)).save(any(SolutionComment.class));
-		verify(notificationService, times(1)).send(any(), any(), any(), any());
-		verify(notificationRepository, never()).save(any());
 	}
 
 	@Test
