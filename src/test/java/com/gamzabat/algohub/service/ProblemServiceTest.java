@@ -30,8 +30,13 @@ import com.gamzabat.algohub.common.DateFormatUtil;
 import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.exception.ProblemValidationException;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
-import com.gamzabat.algohub.feature.notification.domain.Notification;
+import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
+import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
+import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
+import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
+import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.notification.repository.NotificationRepository;
+import com.gamzabat.algohub.feature.notification.repository.NotificationSettingRepository;
 import com.gamzabat.algohub.feature.notification.service.NotificationService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.dto.CreateProblemRequest;
@@ -42,11 +47,6 @@ import com.gamzabat.algohub.feature.problem.exception.SolvedAcApiErrorException;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.problem.service.ProblemService;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
-import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
-import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
-import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
-import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
-import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
 
 @ExtendWith(MockitoExtension.class)
@@ -65,6 +65,8 @@ class ProblemServiceTest {
 	private SolutionRepository solutionRepository;
 	@Mock
 	private NotificationRepository notificationRepository;
+	@Mock
+	private NotificationSettingRepository notificationSettingRepository;
 	@Mock
 	private RestTemplate restTemplate;
 
@@ -174,7 +176,7 @@ class ProblemServiceTest {
 		assertThat(result.getLevel()).isEqualTo(1);
 		assertThat(result.getStartDate()).isEqualTo(LocalDate.now());
 		assertThat(result.getEndDate()).isEqualTo(LocalDate.now().plusDays(10));
-		verify(notificationService, times(1)).sendList(any(), any(), any(), any());
+		verify(notificationService, times(1)).sendNotificationToMembers(any(), any(), any(), any());
 	}
 
 	@Test
@@ -274,30 +276,6 @@ class ProblemServiceTest {
 			.isInstanceOf(SolvedAcApiErrorException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.SERVICE_UNAVAILABLE.value())
 			.hasFieldOrPropertyWithValue("error", "solved.ac API로부터 예상치 못한 응답을 받았습니다.");
-	}
-
-	@Test
-	@DisplayName("문제 생성 성공, 알림 전송 실패")
-	void createProblemSuccess_NotificationFailed() {
-		// given
-		CreateProblemRequest request = CreateProblemRequest.builder()
-			.groupId(10L)
-			.link("https://www.acmicpc.net/problem/1000")
-			.startDate(LocalDate.now())
-			.endDate(LocalDate.now().plusDays(10))
-			.build();
-		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
-		String apiResult = "[{\"titleKo\":\"A+B\",\"level\":1}]";
-		ResponseEntity<String> responseEntity = new ResponseEntity<>(apiResult, HttpStatus.OK);
-		when(restTemplate.getForEntity(anyString(), eq(String.class))).thenReturn(responseEntity);
-		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
-		doThrow(new RuntimeException()).when(notificationService).sendList(any(), any(), any(), any());
-		// when
-		problemService.createProblem(user, request);
-		// then
-		verify(problemRepository, times(1)).save(any(Problem.class));
-		verify(notificationService, times(1)).sendList(any(), any(), any(), any());
-		verify(notificationRepository, never()).save(any(Notification.class));
 	}
 
 	@Test
@@ -730,7 +708,7 @@ class ProblemServiceTest {
 
 	@Test
 	@DisplayName("문제 시작 날짜가 오늘일 시 그룹 멤버들에게 알림 전송")
-	void sendProblemStartedNotification() {
+	void sendProblemNotification() {
 		// given
 		StudyGroup group2 = StudyGroup.builder().name("group2").build();
 		User user11 = User.builder().email("email1").build();
@@ -739,9 +717,9 @@ class ProblemServiceTest {
 		List<GroupMember> group1Members = List.of(groupMember1, groupMember3, groupMember4);
 		List<GroupMember> group2Members = List.of(groupMember11);
 
-		List<Problem> problems = new ArrayList<>();
+		List<Problem> startProblems = new ArrayList<>();
 		for (int i = 0; i < 5; i++) {
-			problems.add(Problem.builder()
+			startProblems.add(Problem.builder()
 				.studyGroup(group)
 				.startDate(LocalDate.now())
 				.endDate(LocalDate.now().plusDays(30))
@@ -749,7 +727,7 @@ class ProblemServiceTest {
 				.build());
 		}
 		for (int i = 5; i < 10; i++) {
-			problems.add(Problem.builder()
+			startProblems.add(Problem.builder()
 				.studyGroup(group2)
 				.startDate(LocalDate.now())
 				.endDate(LocalDate.now().plusDays(30))
@@ -757,13 +735,32 @@ class ProblemServiceTest {
 				.build());
 		}
 
-		when(problemRepository.findAllByStartDate(LocalDate.now())).thenReturn(problems);
+		List<Problem> endProblems = new ArrayList<>();
+		for (int i = 0; i < 5; i++) {
+			endProblems.add(Problem.builder()
+				.studyGroup(group)
+				.startDate(LocalDate.now().minusDays(30))
+				.endDate(LocalDate.now())
+				.title("started problem")
+				.build());
+		}
+		for (int i = 5; i < 10; i++) {
+			endProblems.add(Problem.builder()
+				.studyGroup(group2)
+				.startDate(LocalDate.now().minusDays(30))
+				.endDate(LocalDate.now())
+				.title("started problem")
+				.build());
+		}
+
+		when(problemRepository.findAllByStartDate(LocalDate.now())).thenReturn(startProblems);
+		when(problemRepository.findAllByEndDate(LocalDate.now())).thenReturn(endProblems);
 		when(groupMemberRepository.findAllByStudyGroup(group)).thenReturn(group1Members);
 		when(groupMemberRepository.findAllByStudyGroup(group2)).thenReturn(group2Members);
 		// when
 		problemService.dailyProblemScheduler();
 		// then
-		verify(notificationService, times(10)).sendList(anyList(), anyString(), any(StudyGroup.class), eq(null));
+		verify(notificationService, times(20)).sendNotificationToMembers(any(), any(), any(), any());
 	}
 
 }

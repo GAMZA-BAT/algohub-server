@@ -13,11 +13,18 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.gamzabat.algohub.exception.UserValidationException;
+import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
+import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
+import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
+import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.notification.domain.Notification;
+import com.gamzabat.algohub.feature.notification.domain.NotificationSetting;
 import com.gamzabat.algohub.feature.notification.dto.GetNotificationResponse;
+import com.gamzabat.algohub.feature.notification.enums.NotificationCategory;
+import com.gamzabat.algohub.feature.notification.exception.CannotFoundNotificationSettingException;
 import com.gamzabat.algohub.feature.notification.repository.EmitterRepositoryImpl;
 import com.gamzabat.algohub.feature.notification.repository.NotificationRepository;
-import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
+import com.gamzabat.algohub.feature.notification.repository.NotificationSettingRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.repository.UserRepository;
 
@@ -30,6 +37,9 @@ import lombok.extern.slf4j.Slf4j;
 public class NotificationService {
 	private final EmitterRepositoryImpl emitterRepository;
 	private final NotificationRepository notificationRepository;
+	private final NotificationSettingRepository notificationSettingRepository;
+	private final StudyGroupRepository studyGroupRepository;
+	private final GroupMemberRepository groupMemberRepository;
 	private final UserRepository userRepository;
 
 	@Transactional
@@ -98,8 +108,7 @@ public class NotificationService {
 		);
 	}
 
-	@Transactional
-	public void sendList(List receiverList, String message, StudyGroup studyGroup, String subContent) {
+	private void sendList(List receiverList, String message, StudyGroup studyGroup, String subContent) {
 		List<Notification> notifications = new ArrayList<>();
 		Map<String, SseEmitter> sseEmitters;
 		for (int i = 0; i < receiverList.size(); i++) {
@@ -156,5 +165,38 @@ public class NotificationService {
 			notificationRepository.save(notification);
 		});
 		log.info("success to read status");
+	}
+
+	@Transactional
+	public void sendNotificationToMembers(StudyGroup group, List<GroupMember> receiver,
+		NotificationCategory category, String message) {
+		List<String> users = new ArrayList<>();
+		for (GroupMember member : receiver) {
+			NotificationSetting setting = notificationSettingRepository.findByMember(member)
+				.orElseThrow(() -> {
+					log.error("cannot find notification setting for member. userId : {}, groupId : {}",
+						member.getUser().getId(), group.getId());
+					return new CannotFoundNotificationSettingException("해당 그룹에 가입 되지 않은 유저입니다.");
+				});
+
+			if (setting.isAllNotifications() && isSettingOn(setting, category))
+				users.add(member.getUser().getEmail());
+		}
+
+		try {
+			sendList(users, message, group, null);
+		} catch (Exception e) {
+			log.warn("failed to send notification", e);
+		}
+	}
+
+	private boolean isSettingOn(NotificationSetting setting, NotificationCategory category) {
+		return switch (category) {
+			case NotificationCategory.PROBLEM_STARTED -> setting.isNewProblem();
+			case NotificationCategory.PROBLEM_DEADLINE_REACHED -> setting.isDeadlineReached();
+			case NotificationCategory.NEW_COMMENT_POSTED -> setting.isNewComment();
+			case NotificationCategory.NEW_MEMBER_JOINED -> setting.isNewMember();
+			case NotificationCategory.NEW_SOLUTION_POSTED -> setting.isNewSolution();
+		};
 	}
 }

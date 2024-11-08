@@ -45,6 +45,10 @@ import com.gamzabat.algohub.feature.group.studygroup.repository.BookmarkedStudyG
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.image.service.ImageService;
+import com.gamzabat.algohub.feature.notification.domain.NotificationSetting;
+import com.gamzabat.algohub.feature.notification.enums.NotificationCategory;
+import com.gamzabat.algohub.feature.notification.repository.NotificationSettingRepository;
+import com.gamzabat.algohub.feature.notification.service.NotificationService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
@@ -69,6 +73,8 @@ public class StudyGroupService {
 	private final RankingRepository rankingRepository;
 
 	private final ObjectProvider<StudyGroupService> studyGroupServiceProvider;
+	private final NotificationSettingRepository notificationSettingRepository;
+	private final NotificationService notificationService;
 
 	@Transactional
 	public GroupCodeResponse createGroup(User user, CreateGroupRequest request, MultipartFile profileImage) {
@@ -99,6 +105,10 @@ public class StudyGroupService {
 			.currentRank(1)
 			.rankDiff("-")
 			.build());
+
+		notificationSettingRepository.save(
+			NotificationSetting.builder().member(member).build()
+		);
 		log.info("success to save study group");
 		return new GroupCodeResponse(inviteCode);
 	}
@@ -119,6 +129,10 @@ public class StudyGroupService {
 			.build();
 		groupMemberRepository.save(member);
 
+		notificationSettingRepository.save(
+			NotificationSetting.builder().member(member).build()
+		);
+
 		rankingRepository.save(Ranking.builder()
 			.member(member)
 			.currentRank(groupMemberRepository.countByStudyGroup(studyGroup))
@@ -126,6 +140,8 @@ public class StudyGroupService {
 			.rankDiff("-")
 			.build()
 		);
+
+		sendNewMemberNotification(studyGroup, member);
 
 		log.info("success to join study group");
 	}
@@ -142,7 +158,8 @@ public class StudyGroupService {
 		if (RoleOfGroupMember.isOwner(groupMember)) { // owner
 			bookmarkedStudyGroupRepository.deleteAll(bookmarkedStudyGroupRepository.findAllByStudyGroup(studyGroup));
 			rankingRepository.deleteAll(rankingRepository.findAllByStudyGroup(studyGroup));
-			groupMemberRepository.delete(groupMember);
+			notificationSettingRepository.deleteAll(notificationSettingRepository.findAllByStudyGroup(studyGroup));
+			groupMemberRepository.deleteAll(groupMemberRepository.findAllByStudyGroup(studyGroup));
 			groupRepository.delete(studyGroup);
 		} else { // member
 			studyGroupServiceProvider.getObject().deleteMemberFromStudyGroup(user, groupMember, studyGroup);
@@ -177,6 +194,7 @@ public class StudyGroupService {
 		bookmarkedStudyGroupRepository.findByUserAndStudyGroup(user, studyGroup)
 			.ifPresent(bookmarkedStudyGroupRepository::delete);
 		rankingRepository.deleteByMember(groupMember);
+		notificationSettingRepository.deleteByMember(groupMember);
 		groupMemberRepository.delete(groupMember);
 		log.info("success to delete group member");
 	}
@@ -431,5 +449,19 @@ public class StudyGroupService {
 
 		member.updateVisibility(request.isVisible());
 		log.info("success to update group visibility ( userId : {} )", user.getId());
+	}
+
+	private void sendNewMemberNotification(StudyGroup studyGroup, GroupMember newMember) {
+		List<GroupMember> members = groupMemberRepository.findAllByStudyGroup(studyGroup)
+			.stream()
+			.filter(member -> !member.getId().equals(newMember.getId()))
+			.toList();
+
+		notificationService.sendNotificationToMembers(
+			studyGroup,
+			members,
+			NotificationCategory.NEW_MEMBER_JOINED,
+			NotificationCategory.NEW_MEMBER_JOINED.getMessage(newMember.getUser().getNickname())
+		);
 	}
 }

@@ -23,7 +23,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gamzabat.algohub.constants.BOJResultConstants;
 import com.gamzabat.algohub.exception.ProblemValidationException;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
-import com.gamzabat.algohub.feature.notification.enums.NotificationMessage;
+import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
+import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
+import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
+import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
+import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
+import com.gamzabat.algohub.feature.notification.enums.NotificationCategory;
 import com.gamzabat.algohub.feature.notification.service.NotificationService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.dto.CreateProblemRequest;
@@ -34,11 +39,6 @@ import com.gamzabat.algohub.feature.problem.exception.NotBojLinkException;
 import com.gamzabat.algohub.feature.problem.exception.SolvedAcApiErrorException;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
-import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
-import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
-import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
-import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
-import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
 
 import lombok.RequiredArgsConstructor;
@@ -83,7 +83,12 @@ public class ProblemService {
 			.build());
 
 		if (request.startDate().equals(LocalDate.now()))
-			sendProblemStartedNotification(group, title);
+			notificationService.sendNotificationToMembers(
+				group,
+				groupMemberRepository.findAllByStudyGroup(group),
+				NotificationCategory.PROBLEM_STARTED,
+				NotificationCategory.PROBLEM_STARTED.getMessage(title)
+			);
 
 		log.info("success to create problem");
 	}
@@ -252,9 +257,31 @@ public class ProblemService {
 	@Scheduled(cron = "0 0 0 * * *")
 	public void dailyProblemScheduler() {
 		LocalDate now = LocalDate.now();
+		notifyProblemStartsToday(now);
+		notifyProblemEndsToday(now);
+	}
+
+	private void notifyProblemStartsToday(LocalDate now) {
 		List<Problem> problems = problemRepository.findAllByStartDate(now);
 		for (Problem problem : problems) {
-			sendProblemStartedNotification(problem.getStudyGroup(), problem.getTitle());
+			notificationService.sendNotificationToMembers(
+				problem.getStudyGroup(),
+				groupMemberRepository.findAllByStudyGroup(problem.getStudyGroup()),
+				NotificationCategory.PROBLEM_STARTED,
+				NotificationCategory.PROBLEM_STARTED.getMessage(problem.getTitle())
+			);
+		}
+	}
+
+	private void notifyProblemEndsToday(LocalDate now) {
+		List<Problem> problems = problemRepository.findAllByEndDate(now);
+		for (Problem problem : problems) {
+			notificationService.sendNotificationToMembers(
+				problem.getStudyGroup(),
+				groupMemberRepository.findAllByStudyGroup(problem.getStudyGroup()),
+				NotificationCategory.PROBLEM_DEADLINE_REACHED,
+				NotificationCategory.PROBLEM_DEADLINE_REACHED.getMessage(problem.getTitle())
+			);
 		}
 	}
 
@@ -327,16 +354,5 @@ public class ProblemService {
 
 	private Boolean isInProgress(Problem problem) {
 		return problem.getEndDate() != null && !LocalDate.now().isAfter(problem.getEndDate());
-	}
-
-	private void sendProblemStartedNotification(StudyGroup group, String title) {
-		List<GroupMember> members = groupMemberRepository.findAllByStudyGroup(group);
-		List<String> users = members.stream().map(member -> member.getUser().getEmail()).toList();
-		try {
-			String message = NotificationMessage.PROBLEM_STARTED.format(title);
-			notificationService.sendList(users, message, group, null);
-		} catch (Exception e) {
-			log.warn("failed to send notification", e);
-		}
 	}
 }

@@ -22,6 +22,9 @@ import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
+import com.gamzabat.algohub.feature.notification.enums.NotificationCategory;
+import com.gamzabat.algohub.feature.notification.repository.NotificationSettingRepository;
+import com.gamzabat.algohub.feature.notification.service.NotificationService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.solution.domain.Solution;
@@ -47,9 +50,11 @@ public class SolutionService {
 	private final StudyGroupRepository studyGroupRepository;
 	private final GroupMemberRepository groupMemberRepository;
 	private final UserRepository userRepository;
+	private final NotificationService notificationService;
 	private final SolutionCommentRepository commentRepository;
 	private final RankingService rankingService;
 	private final RankingUpdateService rankingUpdateService;
+	private final NotificationSettingRepository notificationSettingRepository;
 
 	public Page<GetSolutionResponse> getSolutionList(User user, Long problemId, String nickname,
 		String language, String result, Pageable pageable) {
@@ -132,7 +137,18 @@ public class SolutionService {
 				rankingService.updateScore(member.get(), problem.getEndDate(), solvedDateTime);
 				rankingUpdateService.updateRanking(studyGroup);
 			}
+
+			sendNewSolutionNotification(studyGroup, member.get());
 		}
+	}
+
+	private void sendNewSolutionNotification(StudyGroup group, GroupMember solver) {
+		notificationService.sendNotificationToMembers(
+			group,
+			groupMemberRepository.findAllByStudyGroup(group),
+			NotificationCategory.NEW_SOLUTION_POSTED,
+			NotificationCategory.NEW_SOLUTION_POSTED.getMessage(solver.getUser().getNickname())
+		);
 	}
 
 	private boolean isCorrect(String result) {
