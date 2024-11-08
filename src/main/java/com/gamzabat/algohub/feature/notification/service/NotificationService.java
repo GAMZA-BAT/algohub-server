@@ -173,7 +173,11 @@ public class NotificationService {
 		List<String> users = new ArrayList<>();
 		for (GroupMember member : receiver) {
 			NotificationSetting setting = notificationSettingRepository.findByMember(member)
-				.orElseThrow(() -> new CannotFoundNotificationSettingException("그룹 멤버의 알림 정보를 조회할 수 없습니다."));
+				.orElseThrow(() -> {
+					log.error("cannot find notification setting for member. userId : {}, groupId : {}",
+						member.getUser().getId(), group.getId());
+					return new CannotFoundNotificationSettingException("해당 그룹에 가입 되지 않은 유저입니다.");
+				});
 
 			if (setting.isAllNotifications() && isSettingOn(setting, category))
 				users.add(member.getUser().getEmail());
