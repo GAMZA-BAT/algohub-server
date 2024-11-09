@@ -90,7 +90,7 @@ class SolutionControllerTest {
 		when(solutionService.getSolutionList(any(User.class), anyLong(), isNull(), isNull(), isNull(),
 			any(Pageable.class))).thenReturn(pagedResponse);
 		// when, then
-		mockMvc.perform(get("/api/solution")
+		mockMvc.perform(get("/api/solutions")
 				.header("Authorization", token)
 				.param("problemId", String.valueOf(problemId)))
 			.andExpect(status().isOk())
@@ -107,7 +107,7 @@ class SolutionControllerTest {
 			any(Pageable.class)))
 			.thenThrow(new ProblemValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 문제 입니다."));
 		// when, then
-		mockMvc.perform(get("/api/solution")
+		mockMvc.perform(get("/api/solutions")
 				.header("Authorization", token)
 				.param("problemId", String.valueOf(problemId)))
 			.andExpect(status().isNotFound())
@@ -124,7 +124,7 @@ class SolutionControllerTest {
 			any(Pageable.class)))
 			.thenThrow(new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다."));
 		// when, then
-		mockMvc.perform(get("/api/solution")
+		mockMvc.perform(get("/api/solutions")
 				.header("Authorization", token)
 				.param("problemId", String.valueOf(problemId)))
 			.andExpect(status().isNotFound())
@@ -141,7 +141,7 @@ class SolutionControllerTest {
 			any(Pageable.class)))
 			.thenThrow(new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹 입니다."));
 		// when, then
-		mockMvc.perform(get("/api/solution")
+		mockMvc.perform(get("/api/solutions")
 				.header("Authorization", token)
 				.param("problemId", String.valueOf(problemId)))
 			.andExpect(status().isForbidden())
@@ -156,7 +156,7 @@ class SolutionControllerTest {
 		GetSolutionResponse response = GetSolutionResponse.builder().build();
 		when(solutionService.getSolution(any(User.class), anyLong())).thenReturn(response);
 		// when, then
-		mockMvc.perform(get("/api/solution/{solutionId}", solutionId)
+		mockMvc.perform(get("/api/solutions/{solutionId}", solutionId)
 				.header("Authorization", token))
 			.andExpect(status().isOk())
 			.andExpect(content().string(objectMapper.writeValueAsString(response)));
@@ -170,7 +170,7 @@ class SolutionControllerTest {
 		when(solutionService.getSolution(any(User.class), eq(solutionId)))
 			.thenThrow(new CannotFoundSolutionException("존재하지 않는 풀이 입니다."));
 		// when, then
-		mockMvc.perform(get("/api/solution/{solutionId}", solutionId)
+		mockMvc.perform(get("/api/solutions/{solutionId}", solutionId)
 				.header("Authorization", token))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.error").value("존재하지 않는 풀이 입니다."));
@@ -184,7 +184,7 @@ class SolutionControllerTest {
 		when(solutionService.getSolution(any(User.class), eq(solutionId)))
 			.thenThrow(new CannotFoundSolutionException("존재하지 않는 풀이 입니다."));
 		// when, then
-		mockMvc.perform(get("/api/solution/{solutionId}", solutionId)
+		mockMvc.perform(get("/api/solutions/{solutionId}", solutionId)
 				.header("Authorization", token))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.error").value("존재하지 않는 풀이 입니다."));
@@ -198,7 +198,7 @@ class SolutionControllerTest {
 		when(solutionService.getSolution(any(User.class), eq(solutionId)))
 			.thenThrow(new UserValidationException("해당 풀이를 확인 할 권한이 없습니다."));
 		// when, then
-		mockMvc.perform(get("/api/solution/{solutionId}", solutionId)
+		mockMvc.perform(get("/api/solutions/{solutionId}", solutionId)
 				.header("Authorization", token))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.error").value("해당 풀이를 확인 할 권한이 없습니다."));
