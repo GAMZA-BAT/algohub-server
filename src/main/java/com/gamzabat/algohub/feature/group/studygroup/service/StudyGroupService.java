@@ -28,10 +28,12 @@ import com.gamzabat.algohub.feature.group.studygroup.dto.CheckSolvedProblemRespo
 import com.gamzabat.algohub.feature.group.studygroup.dto.CreateGroupRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupVisibilityRequest;
+import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupMemberInfoResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupMemberResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupListsResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupResponse;
+import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupToOtherUserResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupWithCodeResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GroupCodeResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.UpdateBookmarkResponse;
@@ -431,5 +433,62 @@ public class StudyGroupService {
 
 		member.updateVisibility(request.isVisible());
 		log.info("success to update group visibility ( userId : {} )", user.getId());
+	}
+
+	@Transactional
+	public GetGroupMemberInfoResponse getGroupMemberInfoResponse(User user, Long groupId, Long targetUserId) {
+		User targetUser = userRepository.findById(targetUserId)
+			.orElseThrow(() -> new CannotFoundUserException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 유저입니다."));
+		StudyGroup group = groupRepository.findById(groupId)
+			.orElseThrow(() -> new CannotFoundGroupException("해당 그룹이 존재하지 않습니다."));
+
+		if (!(groupMemberRepository.existsByUserAndStudyGroup(user, group)
+			&& groupMemberRepository.existsByUserAndStudyGroup(targetUser, group)))
+			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "해당 유저를 조회할 권한이 없습니다.");
+
+		List<StudyGroup> groups = groupRepository.findAllByUser(targetUser);
+
+		List<GetStudyGroupToOtherUserResponse> done = new ArrayList<>();
+		List<GetStudyGroupToOtherUserResponse> inProgress = new ArrayList<>();
+		List<GetStudyGroupToOtherUserResponse> queued = new ArrayList<>();
+		List<GetStudyGroupToOtherUserResponse> bookmarked = new ArrayList<>();
+
+		LocalDate today = LocalDate.now();
+
+		for (StudyGroup targetGroup : groups) {
+			GroupMember targetGroupMember = groupMemberRepository.findByUserAndStudyGroupAndIsVisible(targetUser,
+					targetGroup,
+					true)
+				.orElse(null);
+
+			if (targetGroupMember == null)
+				continue;
+			GroupMember groupOwner = groupMemberRepository.findByStudyGroupAndRole(targetGroup,
+				RoleOfGroupMember.OWNER);
+
+			BookmarkedStudyGroup bookmarkedStudyGroup = bookmarkedStudyGroupRepository.findByUserAndStudyGroup(
+					targetUser, targetGroup)
+				.orElse(null);
+
+			if (bookmarkedStudyGroup != null) {
+				bookmarked.add(
+					GetStudyGroupToOtherUserResponse.toDTO(targetGroup, targetGroupMember, groupOwner.getUser()));
+			}
+
+			if (targetGroup.getEndDate() != null && targetGroup.getEndDate().isBefore(today)) {
+				done.add(GetStudyGroupToOtherUserResponse.toDTO(targetGroup, targetGroupMember, groupOwner.getUser()));
+			} else if (!(targetGroup.getStartDate() == null || targetGroup.getStartDate().isAfter(today))
+				&& !(targetGroup.getEndDate() == null || targetGroup.getEndDate().isBefore(today))) {
+				inProgress.add(
+					GetStudyGroupToOtherUserResponse.toDTO(targetGroup, targetGroupMember, groupOwner.getUser()));
+			} else if (targetGroup.getStartDate() != null && targetGroup.getStartDate().isAfter(today)) {
+				queued.add(
+					GetStudyGroupToOtherUserResponse.toDTO(targetGroup, targetGroupMember, groupOwner.getUser()));
+			}
+		}
+
+		return new GetGroupMemberInfoResponse
+			(targetUser.getEmail(), targetUser.getNickname(), targetUser.getProfileImage(), targetUser.getBjNickname(),
+				targetUser.getDescription(), done, inProgress, queued, bookmarked);
 	}
 }
