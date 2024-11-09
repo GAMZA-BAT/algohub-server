@@ -18,7 +18,7 @@ public record GetNoticeResponse(String author,
 			.noticeId(notice.getId())
 			.noticeTitle(notice.getTitle())
 			.noticeContent(notice.getContent())
-			.createAt(DateFormatUtil.formatDate(notice.getCreatedAt().toLocalDate()))
+			.createAt(DateFormatUtil.formatDateTimeForNotice(notice.getCreatedAt()))
 			.build();
 
 	}

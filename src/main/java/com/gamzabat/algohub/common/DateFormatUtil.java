@@ -14,4 +14,9 @@ public final class DateFormatUtil {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss");
 		return dateTime.format(formatter);
 	}
+
+	public static String formatDateTimeForNotice(LocalDateTime dateTime) {
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yy/MM.dd HH:mm");
+		return dateTime.format(formatter);
+	}
 }
