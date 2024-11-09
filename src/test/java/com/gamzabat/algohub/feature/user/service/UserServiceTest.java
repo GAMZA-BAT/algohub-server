@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -38,6 +39,7 @@ import com.gamzabat.algohub.common.redis.RedisService;
 import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.exception.JwtRequestException;
 import com.gamzabat.algohub.exception.UserValidationException;
+import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundUserException;
 import com.gamzabat.algohub.feature.image.service.ImageService;
 import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.dto.DeleteUserRequest;
@@ -385,4 +387,43 @@ class UserServiceTest {
 			.hasFieldOrPropertyWithValue("code", HttpStatus.CONFLICT.value())
 			.hasFieldOrPropertyWithValue("error", "이미 사용 중인 닉네임입니다.");
 	}
+
+	@Test
+	@DisplayName("타회원 정보 조회 성공")
+	void otherUserInfo_success() {
+		// given
+		User user2 = User.builder()
+			.email("otherUserEmail")
+			.nickname("otherUserNickname")
+			.bjNickname("otherUserBjNickname")
+			.profileImage("otherUserProfileImage")
+			.role(Role.USER)
+			.build();
+		// when
+		when(userRepository.findById(user2.getId())).thenReturn(Optional.of(user2));
+		UserInfoResponse response = userService.otherUserInfo(user, user2.getId());
+		// then
+		assertThat(response.getEmail()).isEqualTo("otherUserEmail");
+		assertThat(response.getNickname()).isEqualTo("otherUserNickname");
+		assertThat(response.getProfileImage()).isEqualTo("otherUserProfileImage");
+		assertThat(response.getBjNickname()).isEqualTo("otherUserBjNickname");
+		assertThat(response.getDescription()).isEqualTo("");
+	}
+
+	@Test
+	@DisplayName("타회원 정보 조회 실패")
+	void otherUserInfo_failed() {
+		// given
+		when(userRepository.findById(1L)).thenReturn(Optional.empty());
+
+		// then
+		assertThatThrownBy(() -> userService.otherUserInfo(user, 1L))
+			.isInstanceOf(CannotFoundUserException.class)
+			.satisfies(exception -> {
+				CannotFoundUserException ex = (CannotFoundUserException)exception;
+				assertThat(ex.getCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
+				assertThat(ex.getError()).isEqualTo("해당 유저는 존재하지 않습니다.");
+			});
+	}
+
 }

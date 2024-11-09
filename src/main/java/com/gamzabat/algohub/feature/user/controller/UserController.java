@@ -131,7 +131,7 @@ public class UserController {
 	@GetMapping(value = "otheruser-info")
 	@Operation(summary = "타회원정보조회 API")
 	public ResponseEntity<UserInfoResponse> OtherUserInfo(@AuthedUser User user, @RequestParam Long targetUserId) {
-		UserInfoResponse userInfo = userService.OtherUserInfo(user, targetUserId);
+		UserInfoResponse userInfo = userService.otherUserInfo(user, targetUserId);
 		return ResponseEntity.ok().body(userInfo);
 	}
 }

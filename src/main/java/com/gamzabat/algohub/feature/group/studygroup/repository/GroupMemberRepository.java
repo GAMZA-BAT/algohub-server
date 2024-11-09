@@ -17,7 +17,7 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> 
 
 	Optional<GroupMember> findByUserAndStudyGroup(User user, StudyGroup studyGroup);
 
-	Optional<GroupMember> findByUserAndStudyGroupAndIsVisible(User user, StudyGroup studyGroup, Boolean isVisible);
+	boolean existsByUserAndStudyGroupAndIsVisible(User user, StudyGroup studyGroup, Boolean isVisible);
 
 	List<GroupMember> findAllByStudyGroup(StudyGroup studyGroup);
 

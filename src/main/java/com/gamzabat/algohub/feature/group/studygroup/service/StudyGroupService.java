@@ -455,12 +455,14 @@ public class StudyGroupService {
 		List<GetStudyGroupResponse> inProgress = groups.stream()
 			.filter(
 				group -> !(group.getStartDate() == null || group.getStartDate().isAfter(today))
-					&& !(group.getEndDate() == null || group.getEndDate().isBefore(today)))
+					&& !(group.getEndDate() == null || group.getEndDate().isBefore(today)) && isVisible(group,
+					targetUser))
 			.map(group -> getStudyGroupResponseDTO(targetUser, group))
 			.toList();
 
 		List<GetStudyGroupResponse> queued = groups.stream()
-			.filter(group -> group.getStartDate() != null && group.getStartDate().isAfter(today))
+			.filter(group -> group.getStartDate() != null && group.getStartDate().isAfter(today) && isVisible(group,
+				targetUser))
 			.map(group -> getStudyGroupResponseDTO(targetUser, group))
 			.toList();
 
@@ -471,12 +473,6 @@ public class StudyGroupService {
 	}
 
 	private boolean isVisible(StudyGroup group, User user) {
-		GroupMember targetMember = groupMemberRepository.findByUserAndStudyGroupAndIsVisible(user, group, true)
-			.orElse(null);
-
-		if (targetMember == null)
-			return false;
-
-		return true;
+		return groupMemberRepository.existsByUserAndStudyGroupAndIsVisible(user, group, true);
 	}
 }
