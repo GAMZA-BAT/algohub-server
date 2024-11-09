@@ -127,4 +127,11 @@ public class UserController {
 		userService.checkNickname(nickname);
 		return ResponseEntity.ok().build();
 	}
+
+	@GetMapping(value = "otheruser-info")
+	@Operation(summary = "타회원정보조회 API")
+	public ResponseEntity<UserInfoResponse> OtherUserInfo(@AuthedUser User user, @RequestParam Long targetUserId) {
+		UserInfoResponse userInfo = userService.OtherUserInfo(user, targetUserId);
+		return ResponseEntity.ok().body(userInfo);
+	}
 }

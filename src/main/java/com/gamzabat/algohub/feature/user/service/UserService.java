@@ -27,6 +27,7 @@ import com.gamzabat.algohub.common.redis.RedisService;
 import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.exception.JwtRequestException;
 import com.gamzabat.algohub.exception.UserValidationException;
+import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundUserException;
 import com.gamzabat.algohub.feature.image.service.ImageService;
 import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.dto.DeleteUserRequest;
@@ -187,6 +188,16 @@ public class UserService {
 			throw new CheckNicknameValidationException(HttpStatus.CONFLICT.value(), "이미 사용 중인 닉네임입니다.");
 
 		log.info("success to check nickname validity");
+	}
+
+	@Transactional(readOnly = true)
+	public UserInfoResponse OtherUserInfo(User user, Long targetUserId) {
+		User targetUser = userRepository.findById(targetUserId)
+			.orElseThrow(() -> new CannotFoundUserException(HttpStatus.NOT_FOUND.value(), "해당 유저는 존재하지 않습니다."));
+
+		return new UserInfoResponse(targetUser.getEmail(), targetUser.getNickname(), targetUser.getProfileImage(),
+			targetUser.getBjNickname(),
+			targetUser.getDescription());
 	}
 
 	private boolean isInvalidNicknameForm(String nickname) {

@@ -13,11 +13,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.gamzabat.algohub.exception.UserValidationException;
+import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.notification.domain.Notification;
 import com.gamzabat.algohub.feature.notification.dto.GetNotificationResponse;
 import com.gamzabat.algohub.feature.notification.repository.EmitterRepositoryImpl;
 import com.gamzabat.algohub.feature.notification.repository.NotificationRepository;
-import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.repository.UserRepository;
 

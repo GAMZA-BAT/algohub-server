@@ -23,7 +23,6 @@ import com.gamzabat.algohub.feature.group.studygroup.dto.CheckSolvedProblemRespo
 import com.gamzabat.algohub.feature.group.studygroup.dto.CreateGroupRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupVisibilityRequest;
-import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupMemberInfoResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupMemberResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupListsResponse;
@@ -169,12 +168,11 @@ public class StudyGroupController {
 		return ResponseEntity.ok().build();
 	}
 
-	@PatchMapping(value = "/otherUserInfo")
-	@Operation(summary = "그룹 내 타 그룹원 정보조회")
-	public ResponseEntity<GetGroupMemberInfoResponse> getGroupMemberInfoResponse(@AuthedUser User user,
-		@RequestParam Long groupId, @RequestParam Long targetUserId) {
-		GetGroupMemberInfoResponse response = studyGroupService.getGroupMemberInfoResponse(user, groupId, targetUserId);
-
+	@GetMapping(value = "other-user-group_list")
+	@Operation(summary = "그룹 목록 조회 API", description = "방장 여부 상관 없이 유저가 참여하고 있는 그룹 모두 조회")
+	public ResponseEntity<GetStudyGroupListsResponse> getOtherUserStudyGroupList(@AuthedUser User user,
+		@RequestParam Long targetUserId) {
+		GetStudyGroupListsResponse response = studyGroupService.getOtherStudyGroupList(targetUserId);
 		return ResponseEntity.ok().body(response);
 	}
 }

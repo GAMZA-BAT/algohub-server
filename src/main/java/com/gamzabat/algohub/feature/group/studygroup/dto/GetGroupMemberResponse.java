@@ -2,8 +2,8 @@ package com.gamzabat.algohub.feature.group.studygroup.dto;
 
 import java.time.LocalDate;
 
-import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
 import com.gamzabat.algohub.common.DateFormatUtil;
+import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
 
 import lombok.Getter;
 

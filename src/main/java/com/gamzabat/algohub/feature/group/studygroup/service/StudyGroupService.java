@@ -28,12 +28,10 @@ import com.gamzabat.algohub.feature.group.studygroup.dto.CheckSolvedProblemRespo
 import com.gamzabat.algohub.feature.group.studygroup.dto.CreateGroupRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupVisibilityRequest;
-import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupMemberInfoResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupMemberResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupListsResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupResponse;
-import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupToOtherUserResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupWithCodeResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GroupCodeResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.UpdateBookmarkResponse;
@@ -435,60 +433,50 @@ public class StudyGroupService {
 		log.info("success to update group visibility ( userId : {} )", user.getId());
 	}
 
-	@Transactional
-	public GetGroupMemberInfoResponse getGroupMemberInfoResponse(User user, Long groupId, Long targetUserId) {
+	@Transactional(readOnly = true)
+	public GetStudyGroupListsResponse getOtherStudyGroupList(Long targetUserId) {
 		User targetUser = userRepository.findById(targetUserId)
 			.orElseThrow(() -> new CannotFoundUserException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 유저입니다."));
-		StudyGroup group = groupRepository.findById(groupId)
-			.orElseThrow(() -> new CannotFoundGroupException("해당 그룹이 존재하지 않습니다."));
-
-		if (!(groupMemberRepository.existsByUserAndStudyGroup(user, group)
-			&& groupMemberRepository.existsByUserAndStudyGroup(targetUser, group)))
-			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "해당 유저를 조회할 권한이 없습니다.");
-
 		List<StudyGroup> groups = groupRepository.findAllByUser(targetUser);
 
-		List<GetStudyGroupToOtherUserResponse> done = new ArrayList<>();
-		List<GetStudyGroupToOtherUserResponse> inProgress = new ArrayList<>();
-		List<GetStudyGroupToOtherUserResponse> queued = new ArrayList<>();
-		List<GetStudyGroupToOtherUserResponse> bookmarked = new ArrayList<>();
+		List<GetStudyGroupResponse> bookmarked = bookmarkedStudyGroupRepository.findAllByUser(targetUser).stream()
+			.filter(group -> isVisible(group.getStudyGroup(), targetUser))
+			.map(bookmark -> getStudyGroupResponseDTO(targetUser, bookmark.getStudyGroup()))
+			.toList();
 
 		LocalDate today = LocalDate.now();
 
-		for (StudyGroup targetGroup : groups) {
-			GroupMember targetGroupMember = groupMemberRepository.findByUserAndStudyGroupAndIsVisible(targetUser,
-					targetGroup,
-					true)
-				.orElse(null);
+		List<GetStudyGroupResponse> done = groups.stream()
+			.filter(group -> group.getEndDate() != null && group.getEndDate().isBefore(today) && isVisible(group,
+				targetUser))
+			.map(group -> getStudyGroupResponseDTO(targetUser, group))
+			.toList();
 
-			if (targetGroupMember == null)
-				continue;
-			GroupMember groupOwner = groupMemberRepository.findByStudyGroupAndRole(targetGroup,
-				RoleOfGroupMember.OWNER);
+		List<GetStudyGroupResponse> inProgress = groups.stream()
+			.filter(
+				group -> !(group.getStartDate() == null || group.getStartDate().isAfter(today))
+					&& !(group.getEndDate() == null || group.getEndDate().isBefore(today)))
+			.map(group -> getStudyGroupResponseDTO(targetUser, group))
+			.toList();
 
-			BookmarkedStudyGroup bookmarkedStudyGroup = bookmarkedStudyGroupRepository.findByUserAndStudyGroup(
-					targetUser, targetGroup)
-				.orElse(null);
+		List<GetStudyGroupResponse> queued = groups.stream()
+			.filter(group -> group.getStartDate() != null && group.getStartDate().isAfter(today))
+			.map(group -> getStudyGroupResponseDTO(targetUser, group))
+			.toList();
 
-			if (bookmarkedStudyGroup != null) {
-				bookmarked.add(
-					GetStudyGroupToOtherUserResponse.toDTO(targetGroup, targetGroupMember, groupOwner.getUser()));
-			}
+		GetStudyGroupListsResponse response = new GetStudyGroupListsResponse(bookmarked, done, inProgress, queued);
 
-			if (targetGroup.getEndDate() != null && targetGroup.getEndDate().isBefore(today)) {
-				done.add(GetStudyGroupToOtherUserResponse.toDTO(targetGroup, targetGroupMember, groupOwner.getUser()));
-			} else if (!(targetGroup.getStartDate() == null || targetGroup.getStartDate().isAfter(today))
-				&& !(targetGroup.getEndDate() == null || targetGroup.getEndDate().isBefore(today))) {
-				inProgress.add(
-					GetStudyGroupToOtherUserResponse.toDTO(targetGroup, targetGroupMember, groupOwner.getUser()));
-			} else if (targetGroup.getStartDate() != null && targetGroup.getStartDate().isAfter(today)) {
-				queued.add(
-					GetStudyGroupToOtherUserResponse.toDTO(targetGroup, targetGroupMember, groupOwner.getUser()));
-			}
-		}
+		log.info("success to get study group list");
+		return response;
+	}
 
-		return new GetGroupMemberInfoResponse
-			(targetUser.getEmail(), targetUser.getNickname(), targetUser.getProfileImage(), targetUser.getBjNickname(),
-				targetUser.getDescription(), done, inProgress, queued, bookmarked);
+	private boolean isVisible(StudyGroup group, User user) {
+		GroupMember targetMember = groupMemberRepository.findByUserAndStudyGroupAndIsVisible(user, group, true)
+			.orElse(null);
+
+		if (targetMember == null)
+			return false;
+
+		return true;
 	}
 }
