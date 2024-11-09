@@ -47,7 +47,7 @@ public class SolutionController {
 		return ResponseEntity.ok().body(response);
 	}
 
-	@GetMapping("/solution/{solutionId}")
+	@GetMapping("/solutions/{solutionId}")
 	@Operation(summary = "풀이 하나 조회 API", description = "특정 풀이 하나를 조회하는 API")
 	public ResponseEntity<GetSolutionResponse> getSolution(@AuthedUser User user,
 		@PathVariable Long solutionId) {
@@ -55,7 +55,7 @@ public class SolutionController {
 		return ResponseEntity.ok().body(response);
 	}
 
-	@PostMapping("/solution")
+	@PostMapping("/solutions")
 	@Operation(summary = "풀이 생성 API")
 	public ResponseEntity<Void> createSolution(@Valid @RequestBody CreateSolutionRequest request, Errors errors) {
 		if (errors.hasErrors())
