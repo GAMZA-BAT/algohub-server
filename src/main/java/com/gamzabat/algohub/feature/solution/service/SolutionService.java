@@ -23,7 +23,6 @@ import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValida
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.notification.enums.NotificationCategory;
-import com.gamzabat.algohub.feature.notification.repository.NotificationSettingRepository;
 import com.gamzabat.algohub.feature.notification.service.NotificationService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
@@ -54,7 +53,6 @@ public class SolutionService {
 	private final SolutionCommentRepository commentRepository;
 	private final RankingService rankingService;
 	private final RankingUpdateService rankingUpdateService;
-	private final NotificationSettingRepository notificationSettingRepository;
 
 	public Page<GetSolutionResponse> getSolutionList(User user, Long problemId, String nickname,
 		String language, String result, Pageable pageable) {

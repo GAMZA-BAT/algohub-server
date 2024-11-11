@@ -8,6 +8,8 @@ import lombok.Builder;
 
 @Builder
 public record GetSolutionResponse(Long solutionId,
+								  String problemTitle,
+								  Integer problemLevel,
 								  String nickname,
 								  String profileImage,
 								  String solvedDateTime,
@@ -22,6 +24,8 @@ public record GetSolutionResponse(Long solutionId,
 	public static GetSolutionResponse toDTO(Solution solution, Long commentCount) {
 		return GetSolutionResponse.builder()
 			.solutionId(solution.getId())
+			.problemTitle(solution.getProblem().getTitle())
+			.problemLevel(solution.getProblem().getLevel())
 			.nickname(solution.getUser().getNickname())
 			.profileImage(solution.getUser().getProfileImage())
 			.solvedDateTime(DateFormatUtil.formatDateTime(solution.getSolvedDateTime()))

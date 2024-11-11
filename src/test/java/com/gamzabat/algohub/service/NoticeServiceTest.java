@@ -82,6 +82,7 @@ public class NoticeServiceTest {
 			.createdAt(LocalDateTime.now())
 			.title("title")
 			.content("content")
+			.category("category")
 			.author(user)
 			.build();
 
@@ -111,7 +112,7 @@ public class NoticeServiceTest {
 	@DisplayName("공지 작성 성공")
 	void createNoticeSuccess_1() {
 		//given
-		CreateNoticeRequest request = new CreateNoticeRequest(30L, "title", "content");
+		CreateNoticeRequest request = new CreateNoticeRequest(30L, "title", "content", "category");
 		when(studyGroupRepository.findById(request.studyGroupId())).thenReturn(Optional.ofNullable(studyGroup));
 		when(groupMemberRepository.findByUserAndStudyGroup(user2, studyGroup)).thenReturn(
 			Optional.ofNullable(groupMember2));
@@ -123,6 +124,7 @@ public class NoticeServiceTest {
 		assertThat(result.getAuthor()).isEqualTo(user2);
 		assertThat(result.getContent()).isEqualTo("content");
 		assertThat(result.getTitle()).isEqualTo("title");
+		assertThat(result.getCategory()).isEqualTo("category");
 		assertThat(result.getStudyGroup()).isEqualTo(studyGroup);
 
 	}
@@ -131,7 +133,7 @@ public class NoticeServiceTest {
 	@DisplayName("공지 작성 실패 그룹장or부방장이 아님")
 	void createNoticeFail_1() {
 		//given
-		CreateNoticeRequest request = new CreateNoticeRequest(30L, "title", "content");
+		CreateNoticeRequest request = new CreateNoticeRequest(30L, "title", "content", "category");
 		when(studyGroupRepository.findById(request.studyGroupId())).thenReturn(Optional.ofNullable(studyGroup));
 		when(groupMemberRepository.findByUserAndStudyGroup(user3, studyGroup)).thenReturn(
 			Optional.ofNullable(groupMember3));
@@ -146,7 +148,7 @@ public class NoticeServiceTest {
 	@DisplayName("공지 작성 실패 존재하지 않는 그룹")
 	void createNoticeFail_2() {
 		//given
-		CreateNoticeRequest request = new CreateNoticeRequest(31L, "title", "content");
+		CreateNoticeRequest request = new CreateNoticeRequest(31L, "title", "content", "category");
 		when(studyGroupRepository.findById(request.studyGroupId())).thenReturn(Optional.empty());
 		//when,then
 		assertThatThrownBy(() -> noticeService.createNotice(user, request))
@@ -159,7 +161,7 @@ public class NoticeServiceTest {
 	@DisplayName("공지 작성 실패 존재하지 않는 멤버")
 	void createNoticeFail_3() {
 		//given
-		CreateNoticeRequest request = new CreateNoticeRequest(30L, "title", "content");
+		CreateNoticeRequest request = new CreateNoticeRequest(30L, "title", "content", "category");
 		when(studyGroupRepository.findById(request.studyGroupId())).thenReturn(Optional.ofNullable(studyGroup));
 		when(groupMemberRepository.findByUserAndStudyGroup(user4, studyGroup)).thenReturn(Optional.empty());
 		//when,then
@@ -180,8 +182,9 @@ public class NoticeServiceTest {
 		GetNoticeResponse response = noticeService.getNotice(user2, 1000L);
 		//then
 		assertThat(response.author()).isEqualTo("nickname1");
-		assertThat(response.noticeContent()).isEqualTo("content");
-		assertThat(response.noticeTitle()).isEqualTo("title");
+		assertThat(response.content()).isEqualTo("content");
+		assertThat(response.title()).isEqualTo("title");
+		assertThat(response.category()).isEqualTo("category");
 		assertThat(response.createAt()).isEqualTo(DateFormatUtil.formatDate(LocalDateTime.now().toLocalDate()));
 		assertThat(response.noticeId()).isEqualTo(1000L);
 		verify(noticeReadRepository, times(1)).save(any(NoticeRead.class));
@@ -220,19 +223,21 @@ public class NoticeServiceTest {
 		List<Notice> noticeList = new ArrayList<>(10);
 		for (int i = 0; i < 10; i++)
 			noticeList.add(
-				notice.builder()
+				Notice.builder()
 					.author(user)
 					.content("content" + i)
 					.title("title" + i)
+					.category("category" + i)
 					.createdAt(LocalDateTime.now())
 					.studyGroup(studyGroup)
 					.build());
 		for (int i = 10; i < 20; i++)
 			noticeList.add(
-				notice.builder()
+				Notice.builder()
 					.author(user2)
 					.content("content" + i)
 					.title("title" + i)
+					.category("category" + i)
 					.createdAt(LocalDateTime.now())
 					.studyGroup(studyGroup)
 					.build());
@@ -244,8 +249,9 @@ public class NoticeServiceTest {
 		//then
 		assertThat(result.size()).isEqualTo(20);
 		for (int i = 0; i < 20; i++) {
-			assertThat(result.get(i).noticeContent()).isEqualTo("content" + i);
-			assertThat(result.get(i).noticeTitle()).isEqualTo("title" + i);
+			assertThat(result.get(i).content()).isEqualTo("content" + i);
+			assertThat(result.get(i).title()).isEqualTo("title" + i);
+			assertThat(result.get(i).category()).isEqualTo("category" + i);
 			assertThat(result.get(i).isRead()).isFalse();
 		}
 	}
@@ -279,7 +285,8 @@ public class NoticeServiceTest {
 	@DisplayName("공지 수정 성공")
 	void updateNoticeSuccess() {
 		//given
-		UpdateNoticeRequest updateNoticeRequest = new UpdateNoticeRequest(1000L, "updateTitle", "updateContent");
+		UpdateNoticeRequest updateNoticeRequest = new UpdateNoticeRequest(1000L, "updateTitle", "updateContent",
+			"updateCategory");
 		when(noticeRepository.findById(1000L)).thenReturn(Optional.ofNullable(notice));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
 		//when
@@ -287,13 +294,15 @@ public class NoticeServiceTest {
 		//then
 		assertThat(notice.getContent()).isEqualTo("updateContent");
 		assertThat(notice.getTitle()).isEqualTo("updateTitle");
+		assertThat(notice.getCategory()).isEqualTo("updateCategory");
 	}
 
 	@Test
 	@DisplayName("공지 수정 실패(존재하지 않는 게시글)")
 	void updateNoticeFailed_1() {
 		//given
-		UpdateNoticeRequest updateNoticeRequest = new UpdateNoticeRequest(1001L, "updateTitle", "updateContent");
+		UpdateNoticeRequest updateNoticeRequest = new UpdateNoticeRequest(1001L, "updateTitle", "updateContent",
+			"updateCategory");
 		when(noticeRepository.findById(1001L)).thenReturn(Optional.empty());
 		//when,then
 		assertThatThrownBy(() -> noticeService.updateNotice(user, updateNoticeRequest))
@@ -305,7 +314,8 @@ public class NoticeServiceTest {
 	@DisplayName("공시 수정 실패(존재하지 않는 스터디 그룹)")
 	void updateNoticeFailed_2() {
 		//given
-		UpdateNoticeRequest updateNoticeRequest = new UpdateNoticeRequest(1000L, "updateTitle", "updateContent");
+		UpdateNoticeRequest updateNoticeRequest = new UpdateNoticeRequest(1000L, "updateTitle", "updateContent",
+			"updateCategory");
 		when(noticeRepository.findById(1000L)).thenReturn(Optional.ofNullable(notice));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.empty());
 		//when,then
@@ -320,7 +330,8 @@ public class NoticeServiceTest {
 	@DisplayName("공지 수정 실패(게시글 작성자가 아님)")
 	void updateNoticeFailed_3() {
 		//given
-		UpdateNoticeRequest updateNoticeRequest = new UpdateNoticeRequest(1000L, "updateTitle", "updateContent");
+		UpdateNoticeRequest updateNoticeRequest = new UpdateNoticeRequest(1000L, "updateTitle", "updateContent",
+			"updateCategory");
 		when(noticeRepository.findById(1000L)).thenReturn(Optional.ofNullable(notice));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
 		//when, then
