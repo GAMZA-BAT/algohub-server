@@ -168,10 +168,10 @@ public class StudyGroupController {
 		return ResponseEntity.ok().build();
 	}
 
-	@GetMapping(value = "other-user-group_list")
-	@Operation(summary = "그룹 목록 조회 API", description = "방장 여부 상관 없이 유저가 참여하고 있는 그룹 모두 조회")
+	@GetMapping(value = "/{targetUserId}/list")
+	@Operation(summary = "타 유저 그룹 목록 조회 API", description = "유저가 보이도록 설정해놓은 유저가 참여하고 있는 그룹 모두 조회")
 	public ResponseEntity<GetStudyGroupListsResponse> getOtherUserStudyGroupList(@AuthedUser User user,
-		@RequestParam Long targetUserId) {
+		@RequestParam @PathVariable Long targetUserId) {
 		GetStudyGroupListsResponse response = studyGroupService.getOtherStudyGroupList(targetUserId);
 		return ResponseEntity.ok().body(response);
 	}
