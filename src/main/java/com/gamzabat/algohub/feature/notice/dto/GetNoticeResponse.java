@@ -11,9 +11,10 @@ public record GetNoticeResponse(String author,
 								String content,
 								String title,
 								String category,
-								String createAt) {
+								String createAt,
+								boolean isRead) {
 
-	public static GetNoticeResponse toDTO(Notice notice) {
+	public static GetNoticeResponse toDTO(Notice notice, boolean isRead) {
 		return GetNoticeResponse.builder()
 			.author(notice.getAuthor().getNickname())
 			.noticeId(notice.getId())
@@ -21,7 +22,7 @@ public record GetNoticeResponse(String author,
 			.content(notice.getContent())
 			.category(notice.getCategory())
 			.createAt(DateFormatUtil.formatDateTimeForNotice(notice.getCreatedAt()))
+			.isRead(isRead)
 			.build();
-
 	}
 }
