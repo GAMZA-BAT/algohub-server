@@ -27,12 +27,12 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/solution")
+@RequestMapping("/api")
 @Tag(name = "풀이 API", description = "문제 풀이 관련 API")
 public class SolutionController {
 	private final SolutionService solutionService;
 
-	@GetMapping
+	@GetMapping("/solutions")
 	@Operation(summary = "풀이 목록 조회 API", description = "특정 문제에 대한 풀이를 모두 조회하는 API")
 	public ResponseEntity<Page<GetSolutionResponse>> getSolutionList(@AuthedUser User user,
 		@RequestParam Long problemId,
@@ -47,7 +47,7 @@ public class SolutionController {
 		return ResponseEntity.ok().body(response);
 	}
 
-	@GetMapping("/{solutionId}")
+	@GetMapping("/solutions/{solutionId}")
 	@Operation(summary = "풀이 하나 조회 API", description = "특정 풀이 하나를 조회하는 API")
 	public ResponseEntity<GetSolutionResponse> getSolution(@AuthedUser User user,
 		@PathVariable Long solutionId) {
@@ -55,7 +55,7 @@ public class SolutionController {
 		return ResponseEntity.ok().body(response);
 	}
 
-	@PostMapping
+	@PostMapping("/solutions")
 	@Operation(summary = "풀이 생성 API")
 	public ResponseEntity<Void> createSolution(@Valid @RequestBody CreateSolutionRequest request, Errors errors) {
 		if (errors.hasErrors())
@@ -64,4 +64,17 @@ public class SolutionController {
 		return ResponseEntity.ok().build();
 	}
 
+	@GetMapping("/my-solutions")
+	@Operation(summary = "나의 풀이 목록 조회 API", description = "나의 풀이를 모두 조회하는 API")
+	public ResponseEntity<Page<GetSolutionResponse>> getSolutionList(@AuthedUser User user,
+		@RequestParam Long problemId,
+		@RequestParam(required = false) String language,
+		@RequestParam(required = false) String result,
+		@RequestParam(defaultValue = "0") int page,
+		@RequestParam(defaultValue = "20") int size) {
+		Pageable pageable = PageRequest.of(page, size);
+		Page<GetSolutionResponse> response = solutionService.getSolutionList(user, problemId, user.getNickname(),
+			language, result, pageable);
+		return ResponseEntity.ok().body(response);
+	}
 }
