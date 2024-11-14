@@ -3,6 +3,7 @@ package com.gamzabat.algohub.common;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 public final class DateFormatUtil {
 	public static String formatDate(LocalDate date) {
@@ -16,7 +17,7 @@ public final class DateFormatUtil {
 	}
 
 	public static String formatDateTimeForNotice(LocalDateTime dateTime) {
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yy/MM/dd HH:mm a");
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yy/MM/dd HH:mm a", Locale.ENGLISH);
 		return dateTime.format(formatter);
 	}
 }
