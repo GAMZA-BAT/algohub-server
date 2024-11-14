@@ -49,6 +49,9 @@ import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepos
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.group.studygroup.service.StudyGroupService;
 import com.gamzabat.algohub.feature.image.service.ImageService;
+import com.gamzabat.algohub.feature.notification.domain.NotificationSetting;
+import com.gamzabat.algohub.feature.notification.repository.NotificationSettingRepository;
+import com.gamzabat.algohub.feature.notification.service.NotificationService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.solution.domain.Solution;
@@ -61,6 +64,8 @@ class StudyGroupServiceTest {
 	@InjectMocks
 	private StudyGroupService studyGroupService;
 	@Mock
+	private NotificationService notificationService;
+	@Mock
 	private StudyGroupRepository studyGroupRepository;
 	@Mock
 	private GroupMemberRepository groupMemberRepository;
@@ -72,6 +77,8 @@ class StudyGroupServiceTest {
 	private ProblemRepository problemRepository;
 	@Mock
 	private UserRepository userRepository;
+	@Mock
+	private NotificationSettingRepository notificationSettingRepository;
 	@Mock
 	private RankingRepository rankingRepository;
 	@Mock
@@ -170,6 +177,12 @@ class StudyGroupServiceTest {
 		Field groupId = StudyGroup.class.getDeclaredField("id");
 		groupId.setAccessible(true);
 		groupId.set(group, 10L);
+
+		Field memberId = GroupMember.class.getDeclaredField("id");
+		memberId.setAccessible(true);
+		memberId.set(groupMember1, 100L);
+		memberId.set(groupMember2, 200L);
+		memberId.set(groupMember3, 300L);
 	}
 
 	@Test
@@ -192,13 +205,18 @@ class StudyGroupServiceTest {
 		assertThat(result.getEndDate()).isEqualTo(LocalDate.now().plusDays(5));
 		assertThat(result.getIntroduction()).isEqualTo("introduction");
 		assertThat(result.getGroupImage()).isEqualTo(imageUrl);
+		verify(groupMemberRepository, times(1)).save(any(GroupMember.class));
+		verify(notificationSettingRepository, times(1)).save(any(NotificationSetting.class));
 	}
 
 	@Test
 	@DisplayName("코드 사용한 그룹 참여 성공")
 	void joinGroupWithCode() {
 		// given
+		List<GroupMember> members = List.of(groupMember1, groupMember2, groupMember3);
+
 		when(studyGroupRepository.findByGroupCode("code")).thenReturn(Optional.ofNullable(group));
+		when(groupMemberRepository.findAllByStudyGroup(group)).thenReturn(members);
 		// when
 		studyGroupService.joinGroupWithCode(user2, "code");
 		// then
@@ -206,6 +224,8 @@ class StudyGroupServiceTest {
 		GroupMember result = memberCaptor.getValue();
 		assertThat(result.getStudyGroup()).isEqualTo(group);
 		assertThat(result.getUser()).isEqualTo(user2);
+		verify(groupMemberRepository, times(1)).save(any(GroupMember.class));
+		verify(notificationService, times(1)).sendNotificationToMembers(any(), any(), any(), any());
 	}
 
 	@Test
@@ -242,11 +262,12 @@ class StudyGroupServiceTest {
 		when(studyGroupRepository.findById(10L)).thenReturn(Optional.of(group));
 		when(bookmarkedStudyGroupRepository.findAllByStudyGroup(group)).thenReturn(bookmarks);
 		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
+		when(groupMemberRepository.findAllByStudyGroup(group)).thenReturn(List.of(groupMember1));
 		// when
 		studyGroupService.deleteGroup(user, 10L);
 		// then
 		verify(studyGroupRepository, times(1)).delete(group);
-		verify(groupMemberRepository, times(1)).delete(groupMember1);
+		verify(groupMemberRepository, times(1)).deleteAll(List.of(groupMember1));
 		verify(bookmarkedStudyGroupRepository, times(1)).deleteAll(bookmarks);
 	}
 
@@ -535,7 +556,7 @@ class StudyGroupServiceTest {
 		// when
 		UpdateBookmarkResponse response = studyGroupService.updateBookmarkGroup(user2, groupId);
 		// then
-		assertThat(response.status()).isEqualTo(BookmarkStatus.UNMARKED);
+		assertThat(response).isEqualTo(new UpdateBookmarkResponse(BookmarkStatus.UNMARKED));
 	}
 
 	@Test

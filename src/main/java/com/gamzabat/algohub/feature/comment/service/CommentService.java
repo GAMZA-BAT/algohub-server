@@ -16,5 +16,4 @@ public interface CommentService<T extends CreateCommentRequest> {
 	void updateComment(User user, UpdateCommentRequest request);
 
 	void deleteComment(User user, Long commentId);
-
 }

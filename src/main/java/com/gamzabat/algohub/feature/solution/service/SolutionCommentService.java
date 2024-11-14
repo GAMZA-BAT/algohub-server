@@ -14,10 +14,12 @@ import com.gamzabat.algohub.feature.comment.dto.GetCommentResponse;
 import com.gamzabat.algohub.feature.comment.dto.UpdateCommentRequest;
 import com.gamzabat.algohub.feature.comment.exception.CommentValidationException;
 import com.gamzabat.algohub.feature.comment.service.CommentService;
+import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
+import com.gamzabat.algohub.feature.notification.enums.NotificationCategory;
 import com.gamzabat.algohub.feature.notification.service.NotificationService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
@@ -55,22 +57,22 @@ public class SolutionCommentService implements CommentService<CreateSolutionComm
 			.createdAt(LocalDateTime.now())
 			.build());
 
-		sendCommentNotification(solution, user, request.content());
+		sendCommentNotification(user, solution);
 		log.info("success to create solution comment. commentId: {}, solutionId: {}", comment.getId(),
 			solution.getId());
 	}
 
-	private void sendCommentNotification(Solution solution, User user, String content) {
-		String message = content.length() <= 35 ? content : content.substring(0, 35) + "...";
-		try {
-			notificationService.send(solution.getUser().getEmail(),
-				user.getNickname() + "님이 코멘트를 남겼습니다.",
-				solution.getProblem().getStudyGroup(),
-				message);
-		} catch (Exception e) {
-			log.info("failed to send solution comment notification. solutionId: {},  userId: {}, error: {}",
-				solution.getId(), user.getId(), e.getMessage());
-		}
+	private void sendCommentNotification(User commenter, Solution solution) {
+		GroupMember member = groupMemberRepository.findByUserAndStudyGroup(solution.getUser(),
+				solution.getProblem().getStudyGroup())
+			.orElseThrow(() -> new GroupMemberValidationException(HttpStatus.NOT_FOUND.value(), "참여하지 않은 스터디 그룹입니다."));
+
+		notificationService.sendNotificationToMembers(
+			solution.getProblem().getStudyGroup(),
+			List.of(member),
+			NotificationCategory.NEW_COMMENT_POSTED,
+			NotificationCategory.NEW_COMMENT_POSTED.getMessage(commenter.getNickname())
+		);
 	}
 
 	@Override

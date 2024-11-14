@@ -23,6 +23,7 @@ import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.group.studygroup.service.StudyGroupService;
+import com.gamzabat.algohub.feature.notification.repository.NotificationSettingRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.repository.UserRepository;
 
@@ -31,6 +32,8 @@ import com.gamzabat.algohub.feature.user.repository.UserRepository;
 public class RankingUpdateServiceAOPTest {
 	@MockBean
 	private RankingRepository rankingRepository;
+	@MockBean
+	private NotificationSettingRepository notificationSettingRepository;
 	@MockBean
 	private StudyGroupRepository studyGroupRepository;
 	@MockBean

@@ -30,11 +30,15 @@ import com.gamzabat.algohub.feature.comment.domain.Comment;
 import com.gamzabat.algohub.feature.comment.dto.GetCommentResponse;
 import com.gamzabat.algohub.feature.comment.dto.UpdateCommentRequest;
 import com.gamzabat.algohub.feature.comment.exception.CommentValidationException;
+import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
+import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
 import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
+import com.gamzabat.algohub.feature.notification.domain.NotificationSetting;
 import com.gamzabat.algohub.feature.notification.repository.NotificationRepository;
+import com.gamzabat.algohub.feature.notification.repository.NotificationSettingRepository;
 import com.gamzabat.algohub.feature.notification.service.NotificationService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
@@ -65,6 +69,8 @@ class SolutionCommentServiceTest {
 	private ProblemRepository problemRepository;
 	@Mock
 	private NotificationRepository notificationRepository;
+	@Mock
+	private NotificationSettingRepository notificationSettingRepository;
 	private User user, user2;
 	private SolutionComment comment, comment2;
 	private Solution solution;
@@ -111,48 +117,24 @@ class SolutionCommentServiceTest {
 	@Test
 	@DisplayName("댓글 작성 성공")
 	void createComment_1() {
-		// givenvoid setUp() throws NoSuchFieldException, IllegalAccessException {
-		// 		user = User.builder().email("email1").password("password").nickname("nickname")
-		// 			.role(Role.USER).profileImage("image").build();
-		// 		user2 = User.builder().email("email2").password("password").nickname("nickname")
-		// 			.role(Role.USER).profileImage("image").build();
-		// 		studyGroup = StudyGroup.builder().build();
-		// 		problem = Problem.builder().studyGroup(studyGroup).build();
-		// 		solution = Solution.builder().problem(problem).user(user).content("solution").build();
-		// 		comment = SolutionComment.builder().user(user).content("content").solution(solution).build();
-		// 		comment2 = SolutionComment.builder().user(user2).content("content").solution(solution).build();
-		//
-		// 		Field userField = User.class.getDeclaredField("id");
-		// 		userField.setAccessible(true);
-		// 		userField.set(user, 1L);
-		// 		userField.set(user2, 2L);
-		//
-		// 		Field solutionField = Solution.class.getDeclaredField("id");
-		// 		solutionField.setAccessible(true);
-		// 		solutionField.set(solution, 10L);
-		//
-		// 		Field problemField = Problem.class.getDeclaredField("id");
-		// 		problemField.setAccessible(true);
-		// 		problemField.set(problem, 20L);
-		//
-		// 		Field groupField = StudyGroup.class.getDeclaredField("id");
-		// 		groupField.setAccessible(true);
-		// 		groupField.set(studyGroup, 30L);
-		//
-		// 		Field commentField = Comment.class.getDeclaredField("id");
-		// 		commentField.setAccessible(true);
-		// 		commentField.set(comment, 40L);
-		// 		commentField.set(comment2, 41L);
-		// 	}
+		// given
 		CreateSolutionCommentRequest request = CreateSolutionCommentRequest.builder()
 			.solutionId(10L)
 			.content("content")
 			.build();
+		GroupMember member = GroupMember.builder()
+			.user(user)
+			.studyGroup(studyGroup)
+			.role(RoleOfGroupMember.PARTICIPANT)
+			.build();
+		NotificationSetting setting = new NotificationSetting(member);
+
 		when(solutionRepository.findById(10L)).thenReturn(Optional.ofNullable(solution));
 		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user2, studyGroup)).thenReturn(true);
 		when(commentRepository.save(any(SolutionComment.class))).thenReturn(comment);
+		when(groupMemberRepository.findByUserAndStudyGroup(user, studyGroup)).thenReturn(Optional.ofNullable(member));
 		// when
 		commentService.createComment(user2, request);
 		// then
@@ -161,7 +143,7 @@ class SolutionCommentServiceTest {
 		assertThat(result.getContent()).isEqualTo("content");
 		assertThat(result.getUser()).isEqualTo(user2);
 		assertThat(result.getSolution()).isEqualTo(solution);
-		verify(notificationService, times(1)).send(any(), any(), any(), any());
+		verify(notificationService, times(1)).sendNotificationToMembers(any(), any(), any(), any());
 	}
 
 	@Test
@@ -235,28 +217,6 @@ class SolutionCommentServiceTest {
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹 입니다.");
 		verify(notificationService, never()).send(any(), any(), any(), any());
-	}
-
-	@Test
-	@DisplayName("댓글 작성 성공, 알림 전송 실패")
-	void createCommentSuccess_NotificationFailed() {
-		// given
-		CreateSolutionCommentRequest request = CreateSolutionCommentRequest.builder()
-			.solutionId(10L)
-			.content("content")
-			.build();
-		when(solutionRepository.findById(10L)).thenReturn(Optional.ofNullable(solution));
-		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
-		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
-		when(groupMemberRepository.existsByUserAndStudyGroup(user2, studyGroup)).thenReturn(true);
-		when(commentRepository.save(any(SolutionComment.class))).thenReturn(comment);
-		doThrow(new RuntimeException()).when(notificationService).send(any(), any(), any(), any());
-		// when
-		commentService.createComment(user2, request);
-		// then
-		verify(commentRepository, times(1)).save(any(SolutionComment.class));
-		verify(notificationService, times(1)).send(any(), any(), any(), any());
-		verify(notificationRepository, never()).save(any());
 	}
 
 	@Test
