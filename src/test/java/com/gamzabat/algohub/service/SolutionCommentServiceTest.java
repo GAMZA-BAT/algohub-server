@@ -36,7 +36,6 @@ import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
 import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
-import com.gamzabat.algohub.feature.notification.domain.NotificationSetting;
 import com.gamzabat.algohub.feature.notification.repository.NotificationRepository;
 import com.gamzabat.algohub.feature.notification.repository.NotificationSettingRepository;
 import com.gamzabat.algohub.feature.notification.service.NotificationService;
@@ -119,7 +118,6 @@ class SolutionCommentServiceTest {
 	void createComment_1() {
 		// given
 		CreateSolutionCommentRequest request = CreateSolutionCommentRequest.builder()
-			.solutionId(10L)
 			.content("content")
 			.build();
 		GroupMember member = GroupMember.builder()
@@ -127,7 +125,6 @@ class SolutionCommentServiceTest {
 			.studyGroup(studyGroup)
 			.role(RoleOfGroupMember.PARTICIPANT)
 			.build();
-		NotificationSetting setting = new NotificationSetting(member);
 
 		when(solutionRepository.findById(10L)).thenReturn(Optional.ofNullable(solution));
 		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
@@ -136,7 +133,7 @@ class SolutionCommentServiceTest {
 		when(commentRepository.save(any(SolutionComment.class))).thenReturn(comment);
 		when(groupMemberRepository.findByUserAndStudyGroup(user, studyGroup)).thenReturn(Optional.ofNullable(member));
 		// when
-		commentService.createComment(user2, request);
+		commentService.createComment(user2, 10L, request);
 		// then
 		verify(commentRepository, times(1)).save(commentCaptor.capture());
 		SolutionComment result = commentCaptor.getValue();
@@ -151,12 +148,11 @@ class SolutionCommentServiceTest {
 	void createCommentFailed_1() {
 		// given
 		CreateSolutionCommentRequest request = CreateSolutionCommentRequest.builder()
-			.solutionId(10L)
 			.content("content")
 			.build();
 		when(solutionRepository.findById(10L)).thenReturn(Optional.empty());
 		// when, then
-		assertThatThrownBy(() -> commentService.createComment(user, request))
+		assertThatThrownBy(() -> commentService.createComment(user, 10L, request))
 			.isInstanceOf(SolutionValidationException.class)
 			.hasFieldOrPropertyWithValue("error", "존재하지 않는 풀이 입니다.");
 		verify(notificationService, never()).send(any(), any(), any(), any());
@@ -167,13 +163,12 @@ class SolutionCommentServiceTest {
 	void createCommentFailed_2() {
 		// given
 		CreateSolutionCommentRequest request = CreateSolutionCommentRequest.builder()
-			.solutionId(10L)
 			.content("content")
 			.build();
 		when(solutionRepository.findById(10L)).thenReturn(Optional.ofNullable(solution));
 		when(problemRepository.findById(20L)).thenReturn(Optional.empty());
 		// when, then
-		assertThatThrownBy(() -> commentService.createComment(user, request))
+		assertThatThrownBy(() -> commentService.createComment(user, 10L, request))
 			.isInstanceOf(ProblemValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.NOT_FOUND.value())
 			.hasFieldOrPropertyWithValue("error", "존재하지 않는 문제 입니다.");
@@ -185,14 +180,13 @@ class SolutionCommentServiceTest {
 	void createCommentFailed_3() {
 		// given
 		CreateSolutionCommentRequest request = CreateSolutionCommentRequest.builder()
-			.solutionId(10L)
 			.content("content")
 			.build();
 		when(solutionRepository.findById(10L)).thenReturn(Optional.ofNullable(solution));
 		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.empty());
 		// when, then
-		assertThatThrownBy(() -> commentService.createComment(user, request))
+		assertThatThrownBy(() -> commentService.createComment(user, 10L, request))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.NOT_FOUND.value())
 			.hasFieldOrPropertyWithValue("error", "존재하지 않는 그룹 입니다.");
@@ -204,7 +198,6 @@ class SolutionCommentServiceTest {
 	void createCommentFailed_4() {
 		// given
 		CreateSolutionCommentRequest request = CreateSolutionCommentRequest.builder()
-			.solutionId(10L)
 			.content("content")
 			.build();
 		when(solutionRepository.findById(10L)).thenReturn(Optional.ofNullable(solution));
@@ -212,7 +205,7 @@ class SolutionCommentServiceTest {
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user2, studyGroup)).thenReturn(false);
 		// when, then
-		assertThatThrownBy(() -> commentService.createComment(user2, request))
+		assertThatThrownBy(() -> commentService.createComment(user2, 10L, request))
 			.isInstanceOf(GroupMemberValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹 입니다.");
@@ -397,8 +390,8 @@ class SolutionCommentServiceTest {
 	@DisplayName("댓글 수정 성공")
 	void testUpdateCommentSuccess() {
 		// given
-		UpdateCommentRequest request = new UpdateCommentRequest(40L, "Updated content");
-		when(commentRepository.findById(request.commentId())).thenReturn(Optional.of(comment));
+		UpdateCommentRequest request = new UpdateCommentRequest("Updated content");
+		when(commentRepository.findById(40L)).thenReturn(Optional.of(comment));
 		LocalDateTime previousUpdatedAt = comment.getUpdatedAt();
 
 		// 현재 시간을 모킹
@@ -407,10 +400,10 @@ class SolutionCommentServiceTest {
 			mockedStatic.when(LocalDateTime::now).thenReturn(fixedNow);
 
 			// when
-			commentService.updateComment(user, request);
+			commentService.updateComment(user, 40L, request);
 
 			// then
-			verify(commentRepository).findById(request.commentId());
+			verify(commentRepository).findById(40L);
 			assertEquals("Updated content", comment.getContent());
 			assertEquals(fixedNow, comment.getUpdatedAt());  // 모킹한 시간으로 검증
 
@@ -421,10 +414,10 @@ class SolutionCommentServiceTest {
 	@DisplayName("댓글 수정 실패(작성자가 아님)")
 	void testUpdateCommentFailed_1() {
 		//given
-		UpdateCommentRequest request = new UpdateCommentRequest(40L, "Updated content");
-		when(commentRepository.findById(request.commentId())).thenReturn(Optional.ofNullable(comment));
+		UpdateCommentRequest request = new UpdateCommentRequest("Updated content");
+		when(commentRepository.findById(40L)).thenReturn(Optional.ofNullable(comment));
 		//when,then
-		assertThatThrownBy(() -> commentService.updateComment(user2, request))
+		assertThatThrownBy(() -> commentService.updateComment(user2, 40L, request))
 			.isInstanceOf(UserValidationException.class)
 			.hasFieldOrPropertyWithValue("errors", "댓글 작성자가 아닙니다.");
 
@@ -434,10 +427,10 @@ class SolutionCommentServiceTest {
 	@DisplayName("댓글 수정 실패(존재하지 않는 댓글)")
 	void testUpdateCommentFailed_2() {
 		//given
-		UpdateCommentRequest request = new UpdateCommentRequest(50L, "Updated content");
-		when(commentRepository.findById(request.commentId())).thenReturn(Optional.empty());
+		UpdateCommentRequest request = new UpdateCommentRequest("Updated content");
+		when(commentRepository.findById(50L)).thenReturn(Optional.empty());
 		//when, then
-		assertThatThrownBy(() -> commentService.updateComment(user2, request))
+		assertThatThrownBy(() -> commentService.updateComment(user2, 50L, request))
 			.isInstanceOf(CommentValidationException.class)
 			.extracting("code", "error")
 			.containsExactly(HttpStatus.NOT_FOUND.value(), "존재하지 않는 댓글 입니다.");

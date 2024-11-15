@@ -47,8 +47,8 @@ public class SolutionCommentService implements CommentService<CreateSolutionComm
 
 	@Override
 	@Transactional
-	public void createComment(User user, CreateSolutionCommentRequest request) {
-		Solution solution = checkSolutionValidation(user, request.solutionId());
+	public void createComment(User user, Long solutionId, CreateSolutionCommentRequest request) {
+		Solution solution = checkSolutionValidation(user, solutionId);
 
 		SolutionComment comment = commentRepository.save(SolutionComment.builder()
 			.user(user)
@@ -87,14 +87,14 @@ public class SolutionCommentService implements CommentService<CreateSolutionComm
 
 	@Override
 	@Transactional
-	public void updateComment(User user, UpdateCommentRequest request) {
-		SolutionComment comment = commentRepository.findById(request.commentId())
+	public void updateComment(User user, Long commentId, UpdateCommentRequest request) {
+		SolutionComment comment = commentRepository.findById(commentId)
 			.orElseThrow(() -> new CommentValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 댓글 입니다."));
 		if (!comment.getUser().getId().equals(user.getId()))
 			throw new UserValidationException("댓글 작성자가 아닙니다.");
 
 		comment.updateComment(request.content());
-		log.info("success to update solution comment. commentId: {}", request.commentId());
+		log.info("success to update solution comment. commentId: {}", commentId);
 	}
 
 	@Override

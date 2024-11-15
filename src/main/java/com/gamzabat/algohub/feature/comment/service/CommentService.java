@@ -9,11 +9,11 @@ import com.gamzabat.algohub.feature.user.domain.User;
 
 public interface CommentService<T extends CreateCommentRequest> {
 
-	void createComment(User user, T request);
+	void createComment(User user, Long baseId, T request);
 
 	List<GetCommentResponse> getCommentList(User user, Long baseId);
 
-	void updateComment(User user, UpdateCommentRequest request);
+	void updateComment(User user, Long commentId, UpdateCommentRequest request);
 
 	void deleteComment(User user, Long commentId);
 }

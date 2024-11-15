@@ -102,7 +102,6 @@ class NoticeCommentServiceTest {
 	void createComment_1() {
 
 		CreateNoticeCommentRequest request = CreateNoticeCommentRequest.builder()
-			.noticeId(10L)
 			.content("content")
 			.build();
 		when(noticeRepository.findById(10L)).thenReturn(Optional.ofNullable(notice));
@@ -111,7 +110,7 @@ class NoticeCommentServiceTest {
 		when(commentRepository.save(any(NoticeComment.class))).thenReturn(comment);
 
 		// when
-		commentService.createComment(user2, request);
+		commentService.createComment(user2, 10L, request);
 		// then
 		verify(commentRepository, times(1)).save(commentCaptor.capture());
 		NoticeComment result = commentCaptor.getValue();
@@ -126,12 +125,11 @@ class NoticeCommentServiceTest {
 	void createCommentFailed_1() {
 		// given
 		CreateNoticeCommentRequest request = CreateNoticeCommentRequest.builder()
-			.noticeId(10L)
 			.content("content")
 			.build();
 		when(noticeRepository.findById(10L)).thenReturn(Optional.empty());
 		// when, then
-		assertThatThrownBy(() -> commentService.createComment(user, request))
+		assertThatThrownBy(() -> commentService.createComment(user, 10L, request))
 			.isInstanceOf(NoticeValidationException.class)
 			.hasFieldOrPropertyWithValue("error", "공지사항이 존재하지 않습니다.");
 		verify(notificationService, never()).send(any(), any(), any(), any());
@@ -142,12 +140,11 @@ class NoticeCommentServiceTest {
 	void createCommentFailed_2() {
 		// given
 		CreateNoticeCommentRequest request = CreateNoticeCommentRequest.builder()
-			.noticeId(10L)
 			.content("content")
 			.build();
 		when(noticeRepository.findById(10L)).thenReturn(Optional.ofNullable(notice));
 		// when, then
-		assertThatThrownBy(() -> commentService.createComment(user, request))
+		assertThatThrownBy(() -> commentService.createComment(user, 10L, request))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.NOT_FOUND.value())
 			.hasFieldOrPropertyWithValue("error", "스터디 그룹이 존재하지 않습니다.");
@@ -159,14 +156,13 @@ class NoticeCommentServiceTest {
 	void createCommentFailed_3() {
 		// given
 		CreateNoticeCommentRequest request = CreateNoticeCommentRequest.builder()
-			.noticeId(10L)
 			.content("content")
 			.build();
 		when(noticeRepository.findById(10L)).thenReturn(Optional.ofNullable(notice));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user2, studyGroup)).thenReturn(false);
 		// when, then
-		assertThatThrownBy(() -> commentService.createComment(user2, request))
+		assertThatThrownBy(() -> commentService.createComment(user2, 10L, request))
 			.isInstanceOf(GroupMemberValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹 입니다.");
@@ -178,7 +174,6 @@ class NoticeCommentServiceTest {
 	void createCommentSuccess_NotificationFailed() {
 		// given
 		CreateNoticeCommentRequest request = CreateNoticeCommentRequest.builder()
-			.noticeId(10L)
 			.content("content")
 			.build();
 		when(noticeRepository.findById(10L)).thenReturn(Optional.ofNullable(notice));
@@ -187,7 +182,7 @@ class NoticeCommentServiceTest {
 		when(commentRepository.save(any(NoticeComment.class))).thenReturn(comment);
 		doThrow(new RuntimeException()).when(notificationService).send(any(), any(), any(), any());
 		// when
-		commentService.createComment(user2, request);
+		commentService.createComment(user2, 10L, request);
 		// then
 		verify(commentRepository, times(1)).save(any(NoticeComment.class));
 		verify(notificationService, times(1)).send(any(), any(), any(), any());
@@ -337,8 +332,8 @@ class NoticeCommentServiceTest {
 	@DisplayName("댓글 수정 성공")
 	void testUpdateCommentSuccess() {
 		// given
-		UpdateCommentRequest request = new UpdateCommentRequest(40L, "Updated content");
-		when(commentRepository.findById(request.commentId())).thenReturn(Optional.of(comment));
+		UpdateCommentRequest request = new UpdateCommentRequest("Updated content");
+		when(commentRepository.findById(40L)).thenReturn(Optional.of(comment));
 		LocalDateTime previousUpdatedAt = comment.getUpdatedAt();
 
 		// 현재 시간을 모킹
@@ -347,10 +342,10 @@ class NoticeCommentServiceTest {
 			mockedStatic.when(LocalDateTime::now).thenReturn(fixedNow);
 
 			// when
-			commentService.updateComment(user, request);
+			commentService.updateComment(user, 40L, request);
 
 			// then
-			verify(commentRepository).findById(request.commentId());
+			verify(commentRepository).findById(anyLong());
 			assertEquals("Updated content", comment.getContent());
 			assertEquals(fixedNow, comment.getUpdatedAt());  // 모킹한 시간으로 검증
 
@@ -361,10 +356,10 @@ class NoticeCommentServiceTest {
 	@DisplayName("댓글 수정 실패(작성자가 아님)")
 	void testUpdateCommentFailed_1() {
 		//given
-		UpdateCommentRequest request = new UpdateCommentRequest(40L, "Updated content");
-		when(commentRepository.findById(request.commentId())).thenReturn(Optional.ofNullable(comment));
+		UpdateCommentRequest request = new UpdateCommentRequest("Updated content");
+		when(commentRepository.findById(40L)).thenReturn(Optional.ofNullable(comment));
 		//when,then
-		assertThatThrownBy(() -> commentService.updateComment(user2, request))
+		assertThatThrownBy(() -> commentService.updateComment(user2, 40L, request))
 			.isInstanceOf(UserValidationException.class)
 			.hasFieldOrPropertyWithValue("errors", "댓글 작성자만 수정할 수 있습니다.");
 
@@ -374,10 +369,10 @@ class NoticeCommentServiceTest {
 	@DisplayName("댓글 수정 실패(존재하지 않는 댓글)")
 	void testUpdateCommentFailed_2() {
 		//given
-		UpdateCommentRequest request = new UpdateCommentRequest(50L, "Updated content");
-		when(commentRepository.findById(request.commentId())).thenReturn(Optional.empty());
+		UpdateCommentRequest request = new UpdateCommentRequest("Updated content");
+		when(commentRepository.findById(50L)).thenReturn(Optional.empty());
 		//when, then
-		assertThatThrownBy(() -> commentService.updateComment(user2, request))
+		assertThatThrownBy(() -> commentService.updateComment(user2, 50L, request))
 			.isInstanceOf(CommentValidationException.class)
 			.extracting("code", "error")
 			.containsExactly(HttpStatus.NOT_FOUND.value(), "댓글이 존재하지 않습니다.");

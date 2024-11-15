@@ -14,7 +14,7 @@ import io.swagger.v3.oas.annotations.Operation;
 
 public interface CommentController<T extends CreateCommentRequest> {
 	@Operation(summary = "댓글 작성 API")
-	ResponseEntity<Void> createComment(User user,
+	ResponseEntity<Void> createComment(User user, Long baseId,
 		T request, Errors errors);
 
 	@Operation(summary = "댓글 목록 조회 API", description = "대상 하나에 대한 댓글 전체 조회")
@@ -23,7 +23,7 @@ public interface CommentController<T extends CreateCommentRequest> {
 
 	@Operation(summary = "댓글 수정 API")
 	ResponseEntity<Void> modifyComment(User user,
-		UpdateCommentRequest request, Errors errors);
+		Long baseId, UpdateCommentRequest request, Errors errors);
 
 	@Operation(summary = "댓글 삭제 API")
 	ResponseEntity<Void> deleteComment(User user, Long commentId);

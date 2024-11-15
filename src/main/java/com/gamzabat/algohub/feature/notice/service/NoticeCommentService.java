@@ -40,8 +40,8 @@ public class NoticeCommentService implements CommentService<CreateNoticeCommentR
 
 	@Override
 	@Transactional
-	public void createComment(User user, CreateNoticeCommentRequest request) {
-		Notice notice = validateNotice(user, request.noticeId());
+	public void createComment(User user, Long noticeId, CreateNoticeCommentRequest request) {
+		Notice notice = validateNotice(user, noticeId);
 
 		NoticeComment comment = noticeCommentRepository.save(NoticeComment.builder()
 			.user(user)
@@ -77,8 +77,8 @@ public class NoticeCommentService implements CommentService<CreateNoticeCommentR
 
 	@Override
 	@Transactional
-	public void updateComment(User user, UpdateCommentRequest request) {
-		NoticeComment comment = noticeCommentRepository.findById(request.commentId())
+	public void updateComment(User user, Long commentId, UpdateCommentRequest request) {
+		NoticeComment comment = noticeCommentRepository.findById(commentId)
 			.orElseThrow(() -> new CommentValidationException(
 				HttpStatus.NOT_FOUND.value(), "댓글이 존재하지 않습니다."));
 		if (!comment.getUser().getId().equals(user.getId()))

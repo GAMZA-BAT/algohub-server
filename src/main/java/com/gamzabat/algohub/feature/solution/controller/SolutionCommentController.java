@@ -7,10 +7,10 @@ import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.gamzabat.algohub.common.annotation.AuthedUser;
@@ -28,43 +28,45 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/solution/comment")
+@RequestMapping("/api")
 @Tag(name = "풀이 댓글 API", description = "풀이에 대한 댓글 관련 API")
 public class SolutionCommentController implements CommentController<CreateSolutionCommentRequest> {
 	private final SolutionCommentService commentService;
 
 	@Override
-	@PostMapping
+	@PostMapping("/solutions/{solutionId}/comments")
 	public ResponseEntity<Void> createComment(@AuthedUser User user,
+		@PathVariable Long solutionId,
 		@Valid @RequestBody CreateSolutionCommentRequest request, Errors errors) {
 		if (errors.hasErrors())
 			throw new RequestException("댓글 작성 요청이 올바르지 않습니다.", errors);
-		commentService.createComment(user, request);
+		commentService.createComment(user, solutionId, request);
 		return ResponseEntity.ok().build();
 	}
 
 	@Override
-	@GetMapping
+	@GetMapping("/solutions/{solutionId}/comments")
 	public ResponseEntity<List<GetCommentResponse>> getCommentList(@AuthedUser User user,
-		@RequestParam Long solutionId) {
+		@PathVariable Long solutionId) {
 		List<GetCommentResponse> response = commentService.getCommentList(user, solutionId);
 		return ResponseEntity.ok().body(response);
 	}
 
 	@Override
-	@DeleteMapping
-	public ResponseEntity<Void> deleteComment(@AuthedUser User user, @RequestParam Long commentId) {
+	@DeleteMapping("/solutions/comments/{commentId}")
+	public ResponseEntity<Void> deleteComment(@AuthedUser User user, @PathVariable Long commentId) {
 		commentService.deleteComment(user, commentId);
 		return ResponseEntity.ok().build();
 	}
 
 	@Override
-	@PatchMapping
+	@PatchMapping("/solutions/comments/{commentId}")
 	public ResponseEntity<Void> modifyComment(@AuthedUser User user,
+		@PathVariable Long commentId,
 		@Valid @RequestBody UpdateCommentRequest request, Errors errors) {
 		if (errors.hasErrors())
 			throw new RequestException("수정 요청이 올바르지 않습니다", errors);
-		commentService.updateComment(user, request);
+		commentService.updateComment(user, commentId, request);
 		return ResponseEntity.ok().build();
 	}
 }
