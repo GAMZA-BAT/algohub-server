@@ -90,9 +90,8 @@ class SolutionControllerTest {
 		when(solutionService.getSolutionList(any(User.class), anyLong(), isNull(), isNull(), isNull(),
 			any(Pageable.class))).thenReturn(pagedResponse);
 		// when, then
-		mockMvc.perform(get("/api/solutions")
-				.header("Authorization", token)
-				.param("problemId", String.valueOf(problemId)))
+		mockMvc.perform(get("/api/problems/{problemId}/solutions", problemId)
+				.header("Authorization", token))
 			.andExpect(status().isOk())
 			.andExpect(content().string(objectMapper.writeValueAsString(pagedResponse)));
 		verify(solutionService, times(1)).getSolutionList(user, problemId, null, null, null, pageable);
@@ -107,9 +106,8 @@ class SolutionControllerTest {
 			any(Pageable.class)))
 			.thenThrow(new ProblemValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 문제 입니다."));
 		// when, then
-		mockMvc.perform(get("/api/solutions")
-				.header("Authorization", token)
-				.param("problemId", String.valueOf(problemId)))
+		mockMvc.perform(get("/api/problems/{problemId}/solutions", problemId)
+				.header("Authorization", token))
 			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.error").value("존재하지 않는 문제 입니다."));
 		verify(solutionService, times(1)).getSolutionList(user, problemId, null, null, null, pageable);
@@ -124,9 +122,8 @@ class SolutionControllerTest {
 			any(Pageable.class)))
 			.thenThrow(new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다."));
 		// when, then
-		mockMvc.perform(get("/api/solutions")
-				.header("Authorization", token)
-				.param("problemId", String.valueOf(problemId)))
+		mockMvc.perform(get("/api/problems/{problemId}/solutions", problemId)
+				.header("Authorization", token))
 			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.error").value("존재하지 않는 그룹 입니다."));
 		verify(solutionService, times(1)).getSolutionList(user, problemId, null, null, null, pageable);
@@ -141,9 +138,8 @@ class SolutionControllerTest {
 			any(Pageable.class)))
 			.thenThrow(new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹 입니다."));
 		// when, then
-		mockMvc.perform(get("/api/solutions")
-				.header("Authorization", token)
-				.param("problemId", String.valueOf(problemId)))
+		mockMvc.perform(get("/api/problems/{problemId}/solutions", problemId)
+				.header("Authorization", token))
 			.andExpect(status().isForbidden())
 			.andExpect(jsonPath("$.error").value("참여하지 않은 그룹 입니다."));
 		verify(solutionService, times(1)).getSolutionList(user, problemId, null, null, null, pageable);

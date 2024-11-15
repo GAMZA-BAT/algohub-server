@@ -32,10 +32,10 @@ import lombok.RequiredArgsConstructor;
 public class SolutionController {
 	private final SolutionService solutionService;
 
-	@GetMapping("/solutions")
+	@GetMapping("/problems/{problemId}/solutions")
 	@Operation(summary = "풀이 목록 조회 API", description = "특정 문제에 대한 풀이를 모두 조회하는 API")
 	public ResponseEntity<Page<GetSolutionResponse>> getSolutionList(@AuthedUser User user,
-		@RequestParam Long problemId,
+		@PathVariable Long problemId,
 		@RequestParam(required = false) String language,
 		@RequestParam(required = false) String result,
 		@RequestParam(required = false) String nickname,
