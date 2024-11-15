@@ -43,8 +43,8 @@ public class NoticeService {
 	private final NoticeReadRepository noticeReadRepository;
 
 	@Transactional
-	public void createNotice(@AuthedUser User user, CreateNoticeRequest request) {
-		StudyGroup studyGroup = studyGroupRepository.findById(request.studyGroupId())
+	public void createNotice(@AuthedUser User user, Long groupId, CreateNoticeRequest request) {
+		StudyGroup studyGroup = studyGroupRepository.findById(groupId)
 			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.BAD_REQUEST.value(), "존재하지 않는 스터디 그룹입니다"));
 		GroupMember groupMember = groupMemberRepository.findByUserAndStudyGroup(user, studyGroup)
 			.orElseThrow(
@@ -101,8 +101,8 @@ public class NoticeService {
 	}
 
 	@Transactional
-	public void updateNotice(User user, UpdateNoticeRequest request) {
-		Notice notice = noticeRepository.findById(request.noticeId())
+	public void updateNotice(User user, Long noticeId, UpdateNoticeRequest request) {
+		Notice notice = noticeRepository.findById(noticeId)
 			.orElseThrow(() -> new NoticeValidationException("존재하지 않는 게시글입니다"));
 		validateStudyGroupExists(notice);
 		if (!user.getId().equals(notice.getAuthor().getId()))

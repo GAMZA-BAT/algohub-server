@@ -112,12 +112,12 @@ public class NoticeServiceTest {
 	@DisplayName("공지 작성 성공")
 	void createNoticeSuccess_1() {
 		//given
-		CreateNoticeRequest request = new CreateNoticeRequest(30L, "title", "content", "category");
-		when(studyGroupRepository.findById(request.studyGroupId())).thenReturn(Optional.ofNullable(studyGroup));
+		CreateNoticeRequest request = new CreateNoticeRequest("title", "content", "category");
+		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
 		when(groupMemberRepository.findByUserAndStudyGroup(user2, studyGroup)).thenReturn(
 			Optional.ofNullable(groupMember2));
 		//when
-		noticeService.createNotice(user2, request);
+		noticeService.createNotice(user2, 30L, request);
 		//then
 		verify(noticeRepository, times(1)).save(noticeCaptor.capture());
 		Notice result = noticeCaptor.getValue();
@@ -133,12 +133,12 @@ public class NoticeServiceTest {
 	@DisplayName("공지 작성 실패 그룹장or부방장이 아님")
 	void createNoticeFail_1() {
 		//given
-		CreateNoticeRequest request = new CreateNoticeRequest(30L, "title", "content", "category");
-		when(studyGroupRepository.findById(request.studyGroupId())).thenReturn(Optional.ofNullable(studyGroup));
+		CreateNoticeRequest request = new CreateNoticeRequest("title", "content", "category");
+		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
 		when(groupMemberRepository.findByUserAndStudyGroup(user3, studyGroup)).thenReturn(
 			Optional.ofNullable(groupMember3));
 		//when,then
-		assertThatThrownBy(() -> noticeService.createNotice(user3, request))
+		assertThatThrownBy(() -> noticeService.createNotice(user3, 30L, request))
 			.isInstanceOf(UserValidationException.class)
 			.hasFieldOrPropertyWithValue("errors", "공지 작성 권한이 없습니다");
 
@@ -148,10 +148,10 @@ public class NoticeServiceTest {
 	@DisplayName("공지 작성 실패 존재하지 않는 그룹")
 	void createNoticeFail_2() {
 		//given
-		CreateNoticeRequest request = new CreateNoticeRequest(31L, "title", "content", "category");
-		when(studyGroupRepository.findById(request.studyGroupId())).thenReturn(Optional.empty());
+		CreateNoticeRequest request = new CreateNoticeRequest("title", "content", "category");
+		when(studyGroupRepository.findById(31L)).thenReturn(Optional.empty());
 		//when,then
-		assertThatThrownBy(() -> noticeService.createNotice(user, request))
+		assertThatThrownBy(() -> noticeService.createNotice(user, 31L, request))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.extracting("code", "error")
 			.containsExactly(HttpStatus.BAD_REQUEST.value(), "존재하지 않는 스터디 그룹입니다");
@@ -161,11 +161,11 @@ public class NoticeServiceTest {
 	@DisplayName("공지 작성 실패 존재하지 않는 멤버")
 	void createNoticeFail_3() {
 		//given
-		CreateNoticeRequest request = new CreateNoticeRequest(30L, "title", "content", "category");
-		when(studyGroupRepository.findById(request.studyGroupId())).thenReturn(Optional.ofNullable(studyGroup));
+		CreateNoticeRequest request = new CreateNoticeRequest("title", "content", "category");
+		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
 		when(groupMemberRepository.findByUserAndStudyGroup(user4, studyGroup)).thenReturn(Optional.empty());
 		//when,then
-		assertThatThrownBy(() -> noticeService.createNotice(user4, request))
+		assertThatThrownBy(() -> noticeService.createNotice(user4, 30L, request))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹 입니다.");
@@ -285,12 +285,12 @@ public class NoticeServiceTest {
 	@DisplayName("공지 수정 성공")
 	void updateNoticeSuccess() {
 		//given
-		UpdateNoticeRequest updateNoticeRequest = new UpdateNoticeRequest(1000L, "updateTitle", "updateContent",
+		UpdateNoticeRequest updateNoticeRequest = new UpdateNoticeRequest("updateTitle", "updateContent",
 			"updateCategory");
 		when(noticeRepository.findById(1000L)).thenReturn(Optional.ofNullable(notice));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
 		//when
-		noticeService.updateNotice(user, updateNoticeRequest);
+		noticeService.updateNotice(user, 1000L, updateNoticeRequest);
 		//then
 		assertThat(notice.getContent()).isEqualTo("updateContent");
 		assertThat(notice.getTitle()).isEqualTo("updateTitle");
@@ -301,11 +301,11 @@ public class NoticeServiceTest {
 	@DisplayName("공지 수정 실패(존재하지 않는 게시글)")
 	void updateNoticeFailed_1() {
 		//given
-		UpdateNoticeRequest updateNoticeRequest = new UpdateNoticeRequest(1001L, "updateTitle", "updateContent",
+		UpdateNoticeRequest updateNoticeRequest = new UpdateNoticeRequest("updateTitle", "updateContent",
 			"updateCategory");
 		when(noticeRepository.findById(1001L)).thenReturn(Optional.empty());
 		//when,then
-		assertThatThrownBy(() -> noticeService.updateNotice(user, updateNoticeRequest))
+		assertThatThrownBy(() -> noticeService.updateNotice(user, 1001L, updateNoticeRequest))
 			.isInstanceOf(NoticeValidationException.class)
 			.hasFieldOrPropertyWithValue("error", "존재하지 않는 게시글입니다");
 	}
@@ -314,12 +314,12 @@ public class NoticeServiceTest {
 	@DisplayName("공시 수정 실패(존재하지 않는 스터디 그룹)")
 	void updateNoticeFailed_2() {
 		//given
-		UpdateNoticeRequest updateNoticeRequest = new UpdateNoticeRequest(1000L, "updateTitle", "updateContent",
+		UpdateNoticeRequest updateNoticeRequest = new UpdateNoticeRequest("updateTitle", "updateContent",
 			"updateCategory");
 		when(noticeRepository.findById(1000L)).thenReturn(Optional.ofNullable(notice));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.empty());
 		//when,then
-		assertThatThrownBy(() -> noticeService.updateNotice(user, updateNoticeRequest))
+		assertThatThrownBy(() -> noticeService.updateNotice(user, 1000L, updateNoticeRequest))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
 			.hasFieldOrPropertyWithValue("error", "존재하지 않는 스터디 그룹입니다");
@@ -330,12 +330,12 @@ public class NoticeServiceTest {
 	@DisplayName("공지 수정 실패(게시글 작성자가 아님)")
 	void updateNoticeFailed_3() {
 		//given
-		UpdateNoticeRequest updateNoticeRequest = new UpdateNoticeRequest(1000L, "updateTitle", "updateContent",
+		UpdateNoticeRequest updateNoticeRequest = new UpdateNoticeRequest("updateTitle", "updateContent",
 			"updateCategory");
 		when(noticeRepository.findById(1000L)).thenReturn(Optional.ofNullable(notice));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
 		//when, then
-		assertThatThrownBy(() -> noticeService.updateNotice(user4, updateNoticeRequest))
+		assertThatThrownBy(() -> noticeService.updateNotice(user4, 1000L, updateNoticeRequest))
 			.isInstanceOf(UserValidationException.class)
 			.hasFieldOrPropertyWithValue("errors", "공지를 수정할 수 있는 권한이 없습니다");
 	}
