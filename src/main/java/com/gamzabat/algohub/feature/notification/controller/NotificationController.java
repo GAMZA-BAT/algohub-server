@@ -30,7 +30,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/notification")
+@RequestMapping("/api/notifications")
 @Tag(name = "알림 API", description = "알림 관련 API")
 public class NotificationController {
 	private final NotificationService notificationService;
@@ -55,13 +55,13 @@ public class NotificationController {
 		notificationService.updateIsRead(user);
 	}
 
-	@GetMapping(value = "/setting")
+	@GetMapping(value = "/settings")
 	@Operation(summary = "알림 설정 목록 조회 API", description = "유저가 가입한 그룹들에 대해 알림 설정 목록을 조회하는 API")
 	public ResponseEntity<List<GetNotificationSettingResponse>> getNotificationSettings(@AuthedUser User user) {
 		return ResponseEntity.ok().body(notificationSettingService.getNotificationSettings(user));
 	}
 
-	@PatchMapping(value = "/setting")
+	@PatchMapping(value = "/settings")
 	@Operation(summary = "알림 설정 수정 API")
 	public ResponseEntity<Void> updateNotificationSettings(@AuthedUser User user, @Valid @RequestBody
 	EditNotificationSettingRequest request, Errors errors) {
