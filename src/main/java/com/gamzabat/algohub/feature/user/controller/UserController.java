@@ -36,7 +36,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/user")
+@RequestMapping("/api/users")
 @Tag(name = "회원 API", description = "회원 관련된 API 명세서")
 public class UserController {
 	private final UserService userService;
@@ -60,15 +60,15 @@ public class UserController {
 		return ResponseEntity.ok().body(response);
 	}
 
-	@GetMapping()
-	@Operation(summary = "회원정보조회 API")
+	@GetMapping(value = "/me")
+	@Operation(summary = "회원 정보 조회 API")
 	public ResponseEntity<UserInfoResponse> userInfo(@AuthedUser User user) {
 		UserInfoResponse userInfo = userService.userInfo(user);
 		return ResponseEntity.ok().body(userInfo);
 	}
 
-	@PatchMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-	@Operation(summary = "회원정보수정 API")
+	@PatchMapping(value = "/me", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	@Operation(summary = "회원 정보 수정 API")
 	public ResponseEntity<Void> updateInfo(@AuthedUser User user, @RequestPart UpdateUserRequest request,
 		@RequestPart(required = false) MultipartFile profileImage) {
 
@@ -76,8 +76,8 @@ public class UserController {
 		return ResponseEntity.ok().build();
 	}
 
-	@DeleteMapping()
-	@Operation(summary = "회원정보삭제 API")
+	@DeleteMapping(value = "/me")
+	@Operation(summary = "회원 정보 삭제 API")
 	public ResponseEntity<Void> deleteUser(@AuthedUser User user, @Valid @RequestBody DeleteUserRequest request,
 		Errors errors) {
 		if (errors.hasErrors()) {
@@ -87,7 +87,7 @@ public class UserController {
 		return ResponseEntity.ok().build();
 	}
 
-	@DeleteMapping("/logout")
+	@DeleteMapping("/sign-out")
 	@Operation(summary = "로그아웃 API")
 	public ResponseEntity<Void> logout(HttpServletRequest request) {
 		userService.logout(request);
@@ -101,7 +101,7 @@ public class UserController {
 		return ResponseEntity.ok().build();
 	}
 
-	@PatchMapping("/edit-password")
+	@PatchMapping("/me/password")
 	@Operation(summary = "비밀번호 변경 API")
 	public ResponseEntity<Void> editPassword(@AuthedUser User user,
 		@Valid @RequestBody EditUserPasswordRequest request, Errors errors) {
@@ -129,8 +129,8 @@ public class UserController {
 		return ResponseEntity.ok().build();
 	}
 
-	@GetMapping(value = "/{userId}/info")
-	@Operation(summary = "타회원정보조회 API")
+	@GetMapping(value = "/{userId}")
+	@Operation(summary = "타 회원 정보 조회 API")
 	public ResponseEntity<UserInfoResponse> getOtherUserInfo(@AuthedUser User user,
 		@RequestParam @PathVariable Long userId) {
 		UserInfoResponse userInfo = userService.otherUserInfo(user, userId);

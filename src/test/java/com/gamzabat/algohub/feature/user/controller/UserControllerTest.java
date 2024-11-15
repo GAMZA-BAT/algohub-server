@@ -97,7 +97,7 @@ class UserControllerTest {
 
 		doNothing().when(userService).register(any(RegisterRequest.class), any(MultipartFile.class));
 		// when, then
-		mockMvc.perform(multipart("/api/user/sign-up")
+		mockMvc.perform(multipart("/api/users/sign-up")
 				.file(requestPart)
 				.file(profileImage)
 				.contentType(MediaType.MULTIPART_FORM_DATA))
@@ -117,7 +117,7 @@ class UserControllerTest {
 
 		doNothing().when(userService).register(any(RegisterRequest.class), any());
 		// when, then
-		mockMvc.perform(multipart("/api/user/sign-up")
+		mockMvc.perform(multipart("/api/users/sign-up")
 				.file(requestPart)
 				.contentType(MediaType.MULTIPART_FORM_DATA))
 			.andExpect(status().isOk());
@@ -143,7 +143,7 @@ class UserControllerTest {
 		MockMultipartFile profileImage = new MockMultipartFile("profileImage", "profile.jpg", "image/jpeg",
 			"image".getBytes());
 		// when, then
-		mockMvc.perform(multipart("/api/user/sign-up")
+		mockMvc.perform(multipart("/api/users/sign-up")
 				.file(requestPart)
 				.file(profileImage)
 				.contentType(MediaType.MULTIPART_FORM_DATA))
@@ -166,7 +166,7 @@ class UserControllerTest {
 		doThrow(new UserValidationException("이미 사용 중인 이메일 입니다.")).when(userService)
 			.register(any(RegisterRequest.class), any(MultipartFile.class));
 		// when, then
-		mockMvc.perform(multipart("/api/user/sign-up")
+		mockMvc.perform(multipart("/api/users/sign-up")
 				.file(requestPart)
 				.file(profileImage)
 				.contentType(MediaType.MULTIPART_FORM_DATA))
@@ -185,7 +185,7 @@ class UserControllerTest {
 		SignInResponse response = new SignInResponse("token");
 		when(userService.signIn(any(SignInRequest.class))).thenReturn(response);
 		// when, then
-		mockMvc.perform(post("/api/user/sign-in")
+		mockMvc.perform(post("/api/users/sign-in")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isOk())
@@ -204,7 +204,7 @@ class UserControllerTest {
 		// given
 		SignInRequest request = new SignInRequest(email, password);
 		// when, then
-		mockMvc.perform(post("/api/user/sign-in")
+		mockMvc.perform(post("/api/users/sign-in")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isBadRequest())
@@ -220,7 +220,7 @@ class UserControllerTest {
 		SignInRequest request = new SignInRequest("invalidEmail", "password");
 		doThrow(new UserValidationException("존재하지 않는 회원 입니다.")).when(userService).signIn(any(SignInRequest.class));
 		// when, then
-		mockMvc.perform(post("/api/user/sign-in")
+		mockMvc.perform(post("/api/users/sign-in")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isBadRequest())
@@ -236,7 +236,7 @@ class UserControllerTest {
 		SignInRequest request = new SignInRequest("email", "invalidPassword");
 		doThrow(new UncorrectedPasswordException("비밀번호가 틀렸습니다.")).when(userService).signIn(any(SignInRequest.class));
 		// when, then
-		mockMvc.perform(post("/api/user/sign-in")
+		mockMvc.perform(post("/api/users/sign-in")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isBadRequest())
@@ -255,7 +255,7 @@ class UserControllerTest {
 		MockMultipartFile profileImage = new MockMultipartFile("profileImage", "profile.jpg", "image/jpeg",
 			"image".getBytes());
 		// when, then
-		mockMvc.perform(multipart("/api/user")
+		mockMvc.perform(multipart("/api/users/me")
 				.file(requestPart)
 				.file(profileImage)
 				.header("Authorization", token)
@@ -277,7 +277,7 @@ class UserControllerTest {
 		UserInfoResponse response = new UserInfoResponse("email", "nickname", "profileImage", "bjNickname", "");
 		when(userService.userInfo(user)).thenReturn(response);
 		// when, then
-		mockMvc.perform(get("/api/user")
+		mockMvc.perform(get("/api/users/me")
 				.header("Authorization", token))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.email").value("email"))
@@ -295,7 +295,7 @@ class UserControllerTest {
 		// given
 		DeleteUserRequest request = new DeleteUserRequest("password");
 		// when, then
-		mockMvc.perform(delete("/api/user")
+		mockMvc.perform(delete("/api/users/me")
 				.header("Authorization", token)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
@@ -310,7 +310,7 @@ class UserControllerTest {
 		// given
 		DeleteUserRequest request = new DeleteUserRequest("");
 		// when, then
-		mockMvc.perform(delete("/api/user")
+		mockMvc.perform(delete("/api/users/me")
 				.header("Authorization", token)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
@@ -326,7 +326,7 @@ class UserControllerTest {
 		DeleteUserRequest request = new DeleteUserRequest("invalidPassword");
 		doThrow(new UncorrectedPasswordException("비밀번호가 틀렸습니다.")).when(userService).deleteUser(user, request);
 		// when, then
-		mockMvc.perform(delete("/api/user")
+		mockMvc.perform(delete("/api/users/me")
 				.header("Authorization", token)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
@@ -343,7 +343,7 @@ class UserControllerTest {
 		String bjNickname = "bjNickname";
 		doNothing().when(userService).checkBjNickname(bjNickname);
 		// when, then
-		mockMvc.perform(get("/api/user/check-baekjoon-nickname")
+		mockMvc.perform(get("/api/users/check-baekjoon-nickname")
 				.param("bjNickname", bjNickname))
 			.andExpect(status().isOk());
 		verify(userService, times(1)).checkBjNickname(bjNickname);
@@ -357,7 +357,7 @@ class UserControllerTest {
 		doThrow(new CheckBjNicknameValidationException(HttpStatus.NOT_FOUND.value(), "백준 닉네임이 유효하지 않습니다.")).when(
 			userService).checkBjNickname(bjNickname);
 		// when, then
-		mockMvc.perform(get("/api/user/check-baekjoon-nickname")
+		mockMvc.perform(get("/api/users/check-baekjoon-nickname")
 				.param("bjNickname", bjNickname))
 			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.error").value("백준 닉네임이 유효하지 않습니다."));
@@ -372,7 +372,7 @@ class UserControllerTest {
 		doThrow(new CheckBjNicknameValidationException(HttpStatus.CONFLICT.value(), "이미 가입된 백준 닉네임 입니다.")).when(
 			userService).checkBjNickname(bjNickname);
 		// when, then
-		mockMvc.perform(get("/api/user/check-baekjoon-nickname")
+		mockMvc.perform(get("/api/users/check-baekjoon-nickname")
 				.param("bjNickname", bjNickname))
 			.andExpect(status().isConflict())
 			.andExpect(jsonPath("$.error").value("이미 가입된 백준 닉네임 입니다."));
@@ -387,7 +387,7 @@ class UserControllerTest {
 		doThrow(new BOJServerErrorException("현재 백준 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요."))
 			.when(userService).checkBjNickname(bjNickname);
 		// when, then
-		mockMvc.perform(get("/api/user/check-baekjoon-nickname")
+		mockMvc.perform(get("/api/users/check-baekjoon-nickname")
 				.param("bjNickname", bjNickname))
 			.andExpect(status().isServiceUnavailable())
 			.andExpect(jsonPath("$.error").value("현재 백준 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요."));
@@ -401,7 +401,7 @@ class UserControllerTest {
 		CheckEmailRequest request = new CheckEmailRequest("email@email.com");
 		doNothing().when(userService).checkEmailDuplication(anyString());
 		// when, then
-		mockMvc.perform(post("/api/user/check-email")
+		mockMvc.perform(post("/api/users/check-email")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isOk());
@@ -415,7 +415,7 @@ class UserControllerTest {
 		CheckEmailRequest request = new CheckEmailRequest("email@email.com");
 		doThrow(new UserValidationException("이미 사용 중인 이메일 입니다.")).when(userService).checkEmailDuplication(anyString());
 		// when, then
-		mockMvc.perform(post("/api/user/check-email")
+		mockMvc.perform(post("/api/users/check-email")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isBadRequest())
@@ -433,7 +433,7 @@ class UserControllerTest {
 		// given
 		CheckEmailRequest request = new CheckEmailRequest(email);
 		// when, then
-		mockMvc.perform(post("/api/user/check-email")
+		mockMvc.perform(post("/api/users/check-email")
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.status").value(400))
@@ -448,7 +448,7 @@ class UserControllerTest {
 		String nickname = "nickname";
 		doNothing().when(userService).checkNickname(nickname);
 		// when, then
-		mockMvc.perform(get("/api/user/check-nickname")
+		mockMvc.perform(get("/api/users/check-nickname")
 				.header("Authorization", token)
 				.param("nickname", nickname))
 			.andExpect(status().isOk());
@@ -464,7 +464,7 @@ class UserControllerTest {
 			new CheckNicknameValidationException(HttpStatus.BAD_REQUEST.value(), "닉네임은 3글자 이상, 16글자 이하이며 특수문자 불가입니다."))
 			.when(userService).checkNickname(nickname);
 		// when, then
-		mockMvc.perform(get("/api/user/check-nickname")
+		mockMvc.perform(get("/api/users/check-nickname")
 				.header("Authorization", token)
 				.param("nickname", nickname))
 			.andExpect(status().isBadRequest())
@@ -481,7 +481,7 @@ class UserControllerTest {
 			new CheckNicknameValidationException(HttpStatus.CONFLICT.value(), "이미 사용 중인 닉네임입니다."))
 			.when(userService).checkNickname(nickname);
 		// when, then
-		mockMvc.perform(get("/api/user/check-nickname")
+		mockMvc.perform(get("/api/users/check-nickname")
 				.header("Authorization", token)
 				.param("nickname", nickname))
 			.andExpect(status().isConflict())
