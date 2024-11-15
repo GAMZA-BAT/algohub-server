@@ -125,7 +125,6 @@ class ProblemServiceTest {
 	void createProblem_Success() {
 		// given
 		CreateProblemRequest request = CreateProblemRequest.builder()
-			.groupId(10L)
 			.link("https://www.acmicpc.net/problem/1000")
 			.startDate(LocalDate.now().plusDays(3))
 			.endDate(LocalDate.now().plusDays(10))
@@ -136,7 +135,7 @@ class ProblemServiceTest {
 		when(restTemplate.getForEntity(anyString(), eq(String.class))).thenReturn(responseEntity);
 		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
 		// when
-		problemService.createProblem(user, request);
+		problemService.createProblem(user, 10L, request);
 		// then
 		verify(problemRepository, times(1)).save(problemCaptor.capture());
 		Problem result = problemCaptor.getValue();
@@ -154,7 +153,6 @@ class ProblemServiceTest {
 	void createProblem_SuccessByADMIN() {
 		// given
 		CreateProblemRequest request = CreateProblemRequest.builder()
-			.groupId(10L)
 			.link("https://www.acmicpc.net/problem/1000")
 			.startDate(LocalDate.now())
 			.endDate(LocalDate.now().plusDays(10))
@@ -165,7 +163,7 @@ class ProblemServiceTest {
 		ResponseEntity<String> responseEntity = new ResponseEntity<>(apiResult, HttpStatus.OK);
 		when(restTemplate.getForEntity(anyString(), eq(String.class))).thenReturn(responseEntity);
 		// when
-		problemService.createProblem(user3, request);
+		problemService.createProblem(user3, 10L, request);
 		// then
 		verify(problemRepository, times(1)).save(problemCaptor.capture());
 		Problem result = problemCaptor.getValue();
@@ -184,14 +182,13 @@ class ProblemServiceTest {
 	void createProblemFailed_1() {
 		// given
 		CreateProblemRequest request = CreateProblemRequest.builder()
-			.groupId(10L)
 			.link("link")
 			.startDate(LocalDate.now().minusDays(7))
 			.endDate(LocalDate.now())
 			.build();
 		when(groupRepository.findById(10L)).thenReturn(Optional.empty());
 		// when, then
-		assertThatThrownBy(() -> problemService.createProblem(user, request))
+		assertThatThrownBy(() -> problemService.createProblem(user, 10L, request))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.NOT_FOUND.value())
 			.hasFieldOrPropertyWithValue("error", "존재하지 않는 그룹 입니다.");
@@ -202,14 +199,13 @@ class ProblemServiceTest {
 	void createProblemFailed_2() {
 		// given
 		CreateProblemRequest request = CreateProblemRequest.builder()
-			.groupId(10L)
 			.link("link")
 			.startDate(LocalDate.now().minusDays(7))
 			.endDate(LocalDate.now())
 			.build();
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
 		// when, then
-		assertThatThrownBy(() -> problemService.createProblem(user2, request))
+		assertThatThrownBy(() -> problemService.createProblem(user2, 10L, request))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹 입니다.");
@@ -220,7 +216,6 @@ class ProblemServiceTest {
 	void createProblemFailed_4() {
 		// given
 		CreateProblemRequest request = CreateProblemRequest.builder()
-			.groupId(10L)
 			.link("link")
 			.startDate(LocalDate.now().minusDays(7))
 			.endDate(LocalDate.now())
@@ -228,7 +223,7 @@ class ProblemServiceTest {
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
 		when(groupMemberRepository.findByUserAndStudyGroup(user4, group)).thenReturn(Optional.of(groupMember4));
 		// when, then
-		assertThatThrownBy(() -> problemService.createProblem(user4, request))
+		assertThatThrownBy(() -> problemService.createProblem(user4, 10L, request))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "문제 생성 권한이 없습니다. 방장, 부방장일 경우에만 생성이 가능합니다.");
@@ -239,7 +234,6 @@ class ProblemServiceTest {
 	void createProblemFailed_5() {
 		// given
 		CreateProblemRequest request = CreateProblemRequest.builder()
-			.groupId(10L)
 			.link("https://www.acmicpc.net/problem/00")
 			.startDate(LocalDate.now().minusDays(7))
 			.endDate(LocalDate.now())
@@ -250,7 +244,7 @@ class ProblemServiceTest {
 		when(restTemplate.getForEntity(anyString(), eq(String.class))).thenReturn(responseEntity);
 		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
 		// when, then
-		assertThatThrownBy(() -> problemService.createProblem(user, request))
+		assertThatThrownBy(() -> problemService.createProblem(user, 10L, request))
 			.isInstanceOf(SolvedAcApiErrorException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
 			.hasFieldOrPropertyWithValue("error", "백준에 유효하지 않은 문제입니다.");
@@ -261,7 +255,6 @@ class ProblemServiceTest {
 	void createProblemFailed_6() {
 		// given
 		CreateProblemRequest request = CreateProblemRequest.builder()
-			.groupId(10L)
 			.link("https://www.acmicpc.net/problem/00")
 			.startDate(LocalDate.now().minusDays(7))
 			.endDate(LocalDate.now())
@@ -272,7 +265,7 @@ class ProblemServiceTest {
 		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
 		when(restTemplate.getForEntity(anyString(), eq(String.class))).thenReturn(responseEntity);
 		// when, then
-		assertThatThrownBy(() -> problemService.createProblem(user, request))
+		assertThatThrownBy(() -> problemService.createProblem(user, 10L, request))
 			.isInstanceOf(SolvedAcApiErrorException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.SERVICE_UNAVAILABLE.value())
 			.hasFieldOrPropertyWithValue("error", "solved.ac API로부터 예상치 못한 응답을 받았습니다.");
@@ -283,7 +276,6 @@ class ProblemServiceTest {
 	void editProblem() {
 		// given
 		EditProblemRequest request = EditProblemRequest.builder()
-			.problemId(20L)
 			.startDate(LocalDate.now())
 			.endDate(LocalDate.now().plusDays(7))
 			.build();
@@ -291,7 +283,7 @@ class ProblemServiceTest {
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
 		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
 		// when
-		problemService.editProblem(user, request);
+		problemService.editProblem(user, 20L, request);
 		// then
 		assertThat(problem.getStartDate()).isEqualTo(request.startDate());
 		assertThat(problem.getEndDate()).isEqualTo(request.endDate());
@@ -302,14 +294,13 @@ class ProblemServiceTest {
 	void editProblemFailed_1() {
 		// given
 		EditProblemRequest request = EditProblemRequest.builder()
-			.problemId(20L)
 			.startDate(LocalDate.now())
 			.endDate(LocalDate.now().plusDays(7))
 			.build();
 		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
 		when(groupRepository.findById(10L)).thenReturn(Optional.empty());
 		// when, then
-		assertThatThrownBy(() -> problemService.editProblem(user, request))
+		assertThatThrownBy(() -> problemService.editProblem(user, 20L, request))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.NOT_FOUND.value())
 			.hasFieldOrPropertyWithValue("error", "존재하지 않는 그룹 입니다.");
@@ -320,13 +311,12 @@ class ProblemServiceTest {
 	void editProblemFailed_2() {
 		// given
 		EditProblemRequest request = EditProblemRequest.builder()
-			.problemId(20L)
 			.startDate(LocalDate.now())
 			.endDate(LocalDate.now().plusDays(7))
 			.build();
 		when(problemRepository.findById(20L)).thenReturn(Optional.empty());
 		// when, then
-		assertThatThrownBy(() -> problemService.editProblem(user, request))
+		assertThatThrownBy(() -> problemService.editProblem(user, 20L, request))
 			.isInstanceOf(ProblemValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.NOT_FOUND.value())
 			.hasFieldOrPropertyWithValue("error", "존재하지 않는 문제 입니다.");
@@ -337,14 +327,13 @@ class ProblemServiceTest {
 	void editProblemFailed_3() {
 		// given
 		EditProblemRequest request = EditProblemRequest.builder()
-			.problemId(20L)
 			.startDate(LocalDate.now())
 			.endDate(LocalDate.now().plusDays(7))
 			.build();
 		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
 		// when, then
-		assertThatThrownBy(() -> problemService.editProblem(user2, request))
+		assertThatThrownBy(() -> problemService.editProblem(user2, 20L, request))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹 입니다.");
@@ -355,7 +344,6 @@ class ProblemServiceTest {
 	void editProblemFailed_4() {
 		// given
 		EditProblemRequest request = EditProblemRequest.builder()
-			.problemId(20L)
 			.startDate(LocalDate.now())
 			.endDate(LocalDate.now().plusDays(7))
 			.build();
@@ -363,7 +351,7 @@ class ProblemServiceTest {
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
 		when(groupMemberRepository.findByUserAndStudyGroup(user4, group)).thenReturn(Optional.of(groupMember4));
 		// when, then
-		assertThatThrownBy(() -> problemService.editProblem(user4, request))
+		assertThatThrownBy(() -> problemService.editProblem(user4, 20L, request))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "문제 수정 권한이 없습니다. 방장, 부방장일 경우에만 수정이 가능합니다.");
@@ -380,7 +368,6 @@ class ProblemServiceTest {
 			.endDate(LocalDate.now().plusDays(10))
 			.build();
 		EditProblemRequest request = EditProblemRequest.builder()
-			.problemId(20L)
 			.startDate(LocalDate.now().plusDays(1))
 			.endDate(LocalDate.now().plusDays(7))
 			.build();
@@ -388,7 +375,7 @@ class ProblemServiceTest {
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
 		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
 		// when, then
-		assertThatThrownBy(() -> problemService.editProblem(user, request))
+		assertThatThrownBy(() -> problemService.editProblem(user, 20L, request))
 			.isInstanceOf(ProblemValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "문제 시작 날짜 수정이 불가합니다. : 이미 진행 중인 문제입니다.");
@@ -405,7 +392,6 @@ class ProblemServiceTest {
 			.endDate(LocalDate.now().plusDays(10))
 			.build();
 		EditProblemRequest request = EditProblemRequest.builder()
-			.problemId(20L)
 			.startDate(LocalDate.now().minusDays(3))
 			.endDate(LocalDate.now().plusDays(7))
 			.build();
@@ -413,7 +399,7 @@ class ProblemServiceTest {
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
 		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
 		// when, then
-		assertThatThrownBy(() -> problemService.editProblem(user, request))
+		assertThatThrownBy(() -> problemService.editProblem(user, 20L, request))
 			.isInstanceOf(ProblemValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
 			.hasFieldOrPropertyWithValue("error", "문제 시작 날짜는 오늘 이전의 날짜로 수정할 수 없습니다.");
@@ -430,7 +416,6 @@ class ProblemServiceTest {
 			.endDate(LocalDate.now())
 			.build();
 		EditProblemRequest request = EditProblemRequest.builder()
-			.problemId(20L)
 			.startDate(LocalDate.now().minusDays(10))
 			.endDate(LocalDate.now().minusDays(2))
 			.build();
@@ -438,7 +423,7 @@ class ProblemServiceTest {
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
 		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
 		// when, then
-		assertThatThrownBy(() -> problemService.editProblem(user, request))
+		assertThatThrownBy(() -> problemService.editProblem(user, 20L, request))
 			.isInstanceOf(ProblemValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
 			.hasFieldOrPropertyWithValue("error", "문제 마감 날짜는 오늘 이전의 날짜로 수정할 수 없습니다.");

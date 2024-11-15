@@ -56,8 +56,8 @@ public class ProblemService {
 	private final RestTemplate restTemplate;
 
 	@Transactional
-	public void createProblem(User user, CreateProblemRequest request) {
-		StudyGroup group = getGroup(request.groupId());
+	public void createProblem(User user, Long groupId, CreateProblemRequest request) {
+		StudyGroup group = getGroup(groupId);
 		GroupMember groupMember = groupMemberRepository.findByUserAndStudyGroup(user, group)
 			.orElseThrow(
 				() -> new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹 입니다."));
@@ -94,8 +94,8 @@ public class ProblemService {
 	}
 
 	@Transactional
-	public void editProblem(User user, EditProblemRequest request) {
-		Problem problem = getProblem(request.problemId());
+	public void editProblem(User user, Long problemId, EditProblemRequest request) {
+		Problem problem = getProblem(problemId);
 		StudyGroup group = getGroup(problem.getStudyGroup().getId());
 		GroupMember groupMember = groupMemberRepository.findByUserAndStudyGroup(user, group)
 			.orElseThrow(
