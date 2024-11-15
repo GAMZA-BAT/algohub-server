@@ -63,9 +63,8 @@ class RankingControllerTest {
 		List<GetRankingResponse> response = new ArrayList<>();
 		when(rankingService.getAllRank(user, groupId)).thenReturn(response);
 		// when, then
-		mockMvc.perform(get("/api/group/all-ranking")
-				.header("Authorization", token)
-				.param("groupId", String.valueOf(groupId)))
+		mockMvc.perform(get("/api/groups/{groupId}/rankings", groupId)
+				.header("Authorization", token))
 			.andExpect(status().isOk())
 			.andExpect(content().json(objectMapper.writeValueAsString(response)));
 
@@ -78,9 +77,8 @@ class RankingControllerTest {
 		// given
 		doThrow(new CannotFoundGroupException("그룹을 찾을 수 없습니다.")).when(rankingService).getAllRank(user, groupId);
 		// when, then
-		mockMvc.perform(get("/api/group/all-ranking")
-				.header("Authorization", token)
-				.param("groupId", String.valueOf(groupId)))
+		mockMvc.perform(get("/api/groups/{groupId}/rankings", groupId)
+				.header("Authorization", token))
 			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.error").value("그룹을 찾을 수 없습니다."));
 
@@ -94,59 +92,11 @@ class RankingControllerTest {
 		doThrow(new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "랭킹을 확인할 권한이 없습니다.")).when(
 			rankingService).getAllRank(user, groupId);
 		// when, then
-		mockMvc.perform(get("/api/group/all-ranking")
-				.header("Authorization", token)
-				.param("groupId", String.valueOf(groupId)))
+		mockMvc.perform(get("/api/groups/{groupId}/rankings", groupId)
+				.header("Authorization", token))
 			.andExpect(status().isForbidden())
 			.andExpect(jsonPath("$.error").value("랭킹을 확인할 권한이 없습니다."));
 
 		verify(rankingService, times(1)).getAllRank(any(User.class), anyLong());
-	}
-
-	@Test
-	@DisplayName("Top 3 랭킹 조회 성공")
-	void getTopRank() throws Exception {
-		// given
-		List<GetRankingResponse> response = new ArrayList<>();
-		when(rankingService.getAllRank(user, groupId)).thenReturn(response);
-		// when, then
-		mockMvc.perform(get("/api/group/top-ranking")
-				.header("Authorization", token)
-				.param("groupId", String.valueOf(groupId)))
-			.andExpect(status().isOk())
-			.andExpect(content().json(objectMapper.writeValueAsString(response)));
-
-		verify(rankingService, times(1)).getTopRank(any(User.class), anyLong());
-	}
-
-	@Test
-	@DisplayName("Top 3 랭킹 조회 실패 : 그룹을 못 찾은 경우")
-	void getTopRankFailed_1() throws Exception {
-		// given
-		doThrow(new CannotFoundGroupException("그룹을 찾을 수 없습니다.")).when(rankingService).getTopRank(user, groupId);
-		// when, then
-		mockMvc.perform(get("/api/group/top-ranking")
-				.header("Authorization", token)
-				.param("groupId", String.valueOf(groupId)))
-			.andExpect(status().isNotFound())
-			.andExpect(jsonPath("$.error").value("그룹을 찾을 수 없습니다."));
-
-		verify(rankingService, times(1)).getTopRank(any(User.class), anyLong());
-	}
-
-	@Test
-	@DisplayName("Top 3 랭킹 조회 실패 : 랭킹 확인 권한이 없는 경우")
-	void getTopRankFailed_2() throws Exception {
-		// given
-		doThrow(new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "랭킹을 확인할 권한이 없습니다.")).when(
-			rankingService).getTopRank(user, groupId);
-		// when, then
-		mockMvc.perform(get("/api/group/top-ranking")
-				.header("Authorization", token)
-				.param("groupId", String.valueOf(groupId)))
-			.andExpect(status().isForbidden())
-			.andExpect(jsonPath("$.error").value("랭킹을 확인할 권한이 없습니다."));
-
-		verify(rankingService, times(1)).getTopRank(any(User.class), anyLong());
 	}
 }

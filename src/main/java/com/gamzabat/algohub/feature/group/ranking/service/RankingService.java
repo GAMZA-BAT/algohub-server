@@ -37,26 +37,6 @@ public class RankingService {
 	public static final double SCORE_SCALING_FACTOR = 1e-4;
 
 	@Transactional(readOnly = true)
-	public List<GetRankingResponse> getTopRank(User user, Long groupId) {
-
-		StudyGroup group = groupRepository.findById(groupId)
-			.orElseThrow(() -> new CannotFoundGroupException("그룹을 찾을 수 없습니다."));
-
-		if (!groupMemberRepository.existsByUserAndStudyGroup(user, group)) {
-			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "랭킹을 확인할 권한이 없습니다.");
-		}
-
-		List<Ranking> ranking = rankingRepository.findAllByStudyGroup(group)
-			.stream()
-			.filter(r -> r.getSolvedCount() != 0)
-			.sorted(Comparator.comparing(Ranking::getCurrentRank))
-			.limit(3)
-			.toList();
-
-		return getRankingResponse(ranking);
-	}
-
-	@Transactional(readOnly = true)
 	public List<GetRankingResponse> getAllRank(User user, Long groupId) {
 
 		StudyGroup group = groupRepository.findById(groupId)

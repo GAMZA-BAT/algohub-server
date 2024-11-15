@@ -4,8 +4,8 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.gamzabat.algohub.common.annotation.AuthedUser;
@@ -19,21 +19,14 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/group")
+@RequestMapping("/api/groups")
 @Tag(name = "랭킹 관련 API", description = "랭킹 조회 관련 API")
 public class RankingController {
 	private final RankingService rankingService;
 
-	@GetMapping(value = "/top-ranking")
-	@Operation(summary = "과제 진행도 상위순위")
-	public ResponseEntity<List<GetRankingResponse>> getTopRanking(@AuthedUser User user, @RequestParam Long groupId) {
-		List<GetRankingResponse> rankingResponse = rankingService.getTopRank(user, groupId);
-		return ResponseEntity.ok().body(rankingResponse);
-	}
-
-	@GetMapping(value = "/all-ranking")
-	@Operation(summary = "과제 진행도 전체순위")
-	public ResponseEntity<List<GetRankingResponse>> getAllRanking(@AuthedUser User user, @RequestParam Long groupId) {
+	@GetMapping(value = "/{groupId}/rankings")
+	@Operation(summary = "과제 진행도 전체순위 API")
+	public ResponseEntity<List<GetRankingResponse>> getAllRanking(@AuthedUser User user, @PathVariable Long groupId) {
 		List<GetRankingResponse> rankingResponse = rankingService.getAllRank(user, groupId);
 		return ResponseEntity.ok().body(rankingResponse);
 	}
