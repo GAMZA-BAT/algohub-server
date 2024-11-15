@@ -112,7 +112,7 @@ class StudyGroupControllerTest {
 		when(studyGroupService.createGroup(any(User.class), any(CreateGroupRequest.class),
 			any(MultipartFile.class))).thenReturn(response);
 		// when, then
-		mockMvc.perform(multipart("/api/group")
+		mockMvc.perform(multipart("/api/groups")
 				.file(requestPart)
 				.file(profileImage)
 				.contentType(MediaType.MULTIPART_FORM_DATA)
@@ -143,7 +143,7 @@ class StudyGroupControllerTest {
 		MockMultipartFile profileImage = new MockMultipartFile("profileImage", "profile.jpg", "image/jpeg",
 			"image".getBytes());
 		// when, then
-		mockMvc.perform(multipart("/api/group")
+		mockMvc.perform(multipart("/api/groups")
 				.file(requestPart)
 				.file(profileImage)
 				.contentType(MediaType.MULTIPART_FORM_DATA)
@@ -163,7 +163,7 @@ class StudyGroupControllerTest {
 		// given
 		doNothing().when(studyGroupService).joinGroupWithCode(any(User.class), anyString());
 		// when, then
-		mockMvc.perform(post("/api/group/{code}/join", code)
+		mockMvc.perform(post("/api/groups/{code}/join", code)
 				.header("Authorization", token)
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk());
@@ -178,7 +178,7 @@ class StudyGroupControllerTest {
 		doThrow(new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다.")).when(
 			studyGroupService).joinGroupWithCode(any(User.class), anyString());
 		// when, then
-		mockMvc.perform(post("/api/group/{code}/join", code)
+		mockMvc.perform(post("/api/groups/{code}/join", code)
 				.header("Authorization", token)
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isNotFound())
@@ -194,7 +194,7 @@ class StudyGroupControllerTest {
 		doThrow(new StudyGroupValidationException(HttpStatus.BAD_REQUEST.value(), "이미 참여한 그룹 입니다.")).when(
 			studyGroupService).joinGroupWithCode(any(User.class), anyString());
 		// when, then
-		mockMvc.perform(post("/api/group/{code}/join", code)
+		mockMvc.perform(post("/api/groups/{code}/join", code)
 				.header("Authorization", token)
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isBadRequest())
@@ -244,7 +244,7 @@ class StudyGroupControllerTest {
 		GetStudyGroupListsResponse response = new GetStudyGroupListsResponse(bookmarked, done, inProgress, queued);
 		when(studyGroupService.getStudyGroupList(user)).thenReturn(response);
 		// when, then
-		mockMvc.perform(get("/api/group/list")
+		mockMvc.perform(get("/api/users/me/groups")
 				.header("Authorization", token)
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
@@ -259,9 +259,8 @@ class StudyGroupControllerTest {
 		// given
 		doNothing().when(studyGroupService).deleteGroup(user, groupId);
 		// when, then
-		mockMvc.perform(delete("/api/group/leave")
+		mockMvc.perform(delete("/api/groups/{groupId}/members/me", groupId)
 				.header("Authorization", token)
-				.param("groupId", String.valueOf(groupId))
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk());
 
@@ -275,9 +274,8 @@ class StudyGroupControllerTest {
 		doThrow(new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다.")).when(
 			studyGroupService).deleteGroup(user, groupId);
 		// when, then
-		mockMvc.perform(delete("/api/group/leave")
+		mockMvc.perform(delete("/api/groups/{groupId}/members/me", groupId)
 				.header("Authorization", token)
-				.param("groupId", String.valueOf(groupId))
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.error").value("존재하지 않는 그룹 입니다."));
@@ -292,9 +290,8 @@ class StudyGroupControllerTest {
 		doThrow(new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(), "이미 참여하지 않은 그룹 입니다.")).when(
 			studyGroupService).deleteGroup(user, groupId);
 		// when, then
-		mockMvc.perform(delete("/api/group/leave")
+		mockMvc.perform(delete("/api/groups/{groupId}/members/me", groupId)
 				.header("Authorization", token)
-				.param("groupId", String.valueOf(groupId))
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.error").value("이미 참여하지 않은 그룹 입니다."));
@@ -308,10 +305,8 @@ class StudyGroupControllerTest {
 		// given
 		doNothing().when(studyGroupService).deleteMember(any(User.class), anyLong(), anyLong());
 		// when, then
-		mockMvc.perform(delete("/api/group/delete")
+		mockMvc.perform(delete("/api/groups/{groupId}/members/{userId}", groupId, userId)
 				.header("Authorization", token)
-				.param("userId", String.valueOf(userId))
-				.param("groupId", String.valueOf(groupId))
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk());
 		verify(studyGroupService, times(1)).deleteMember(user, userId, groupId);
@@ -325,9 +320,8 @@ class StudyGroupControllerTest {
 			"멤버 삭제 권한이 없습니다. : 참여하지 않은 그룹 입니다.")).when(
 			studyGroupService).deleteGroup(user, groupId);
 		// when, then
-		mockMvc.perform(delete("/api/group/leave")
+		mockMvc.perform(delete("/api/groups/{groupId}/members/me", groupId)
 				.header("Authorization", token)
-				.param("groupId", String.valueOf(groupId))
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.error").value("멤버 삭제 권한이 없습니다. : 참여하지 않은 그룹 입니다."));
@@ -340,9 +334,8 @@ class StudyGroupControllerTest {
 		doThrow(new UserValidationException("멤버를 삭제 할 권한이 없습니다.")).when(
 			studyGroupService).deleteGroup(user, groupId);
 		// when, then
-		mockMvc.perform(delete("/api/group/leave")
+		mockMvc.perform(delete("/api/groups/{groupId}/members/me", groupId)
 				.header("Authorization", token)
-				.param("groupId", String.valueOf(groupId))
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.error").value("멤버를 삭제 할 권한이 없습니다."));
@@ -352,16 +345,16 @@ class StudyGroupControllerTest {
 	@DisplayName("그룹 정보 수정 성공")
 	void editGroup() throws Exception {
 		// given
-		EditGroupRequest request = new EditGroupRequest(groupId, "name", LocalDate.now(), LocalDate.now().plusDays(30),
+		EditGroupRequest request = new EditGroupRequest("name", LocalDate.now(), LocalDate.now().plusDays(30),
 			"editedIntroduction");
 		MockMultipartFile requestPart = new MockMultipartFile("request", "", "application/json",
 			objectMapper.writeValueAsBytes(request));
 		MockMultipartFile groupImage = new MockMultipartFile("groupImage", "group.jpg", "image/jpeg",
 			"image".getBytes());
 		doNothing().when(studyGroupService)
-			.editGroup(any(User.class), any(EditGroupRequest.class), any(MultipartFile.class));
+			.editGroup(any(User.class), anyLong(), any(EditGroupRequest.class), any(MultipartFile.class));
 		// when, then
-		mockMvc.perform(multipart("/api/group")
+		mockMvc.perform(multipart("/api/groups/{groupId}", groupId)
 				.file(requestPart)
 				.file(groupImage) // 파라미터 이름이랑 똑같이 해줘야 함
 				.header("Authorization", token)
@@ -372,40 +365,15 @@ class StudyGroupControllerTest {
 				}))
 			.andExpect(status().isOk());
 
-		verify(studyGroupService, times(1)).editGroup(any(User.class), any(EditGroupRequest.class),
+		verify(studyGroupService, times(1)).editGroup(any(User.class), anyLong(), any(EditGroupRequest.class),
 			any(MultipartFile.class));
-	}
-
-	@Test
-	@DisplayName("그룹 정보 수정 실패 : 잘못된 요청__잘못된 id")
-	void editGroupFailed_1() throws Exception {
-		// given
-		EditGroupRequest request = new EditGroupRequest(null, "name", LocalDate.now(), LocalDate.now().plusDays(30),
-			"editedIntroduction");
-		MockMultipartFile requestPart = new MockMultipartFile("request", "", "application/json",
-			objectMapper.writeValueAsBytes(request));
-		MockMultipartFile groupImage = new MockMultipartFile("groupImage", "group.jpg", "image/jpeg",
-			"image".getBytes());
-		// when, then
-		mockMvc.perform(multipart("/api/group")
-				.file(requestPart)
-				.file(groupImage)
-				.header("Authorization", token)
-				.contentType(MediaType.MULTIPART_FORM_DATA)
-				.with(request1 -> {
-					request1.setMethod("PATCH");
-					return request1;
-				}))
-			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.error").value("그룹 정보 수정 요청이 올바르지 않습니다."))
-			.andExpect(jsonPath("$.messages", hasItems("id : 그룹 고유 아이디는 필수 입력 입니다.")));
 	}
 
 	@Test
 	@DisplayName("그룹 정보 수정 실패 : 잘못된 요청__스터디 이름이 15글자 초과")
 	void editGroupFailed_nameTooLong() throws Exception {
 		// given
-		EditGroupRequest request = new EditGroupRequest(1L, "이름이너무긴스터디이름이네요하하", LocalDate.now(),
+		EditGroupRequest request = new EditGroupRequest("이름이너무긴스터디이름이네요하하", LocalDate.now(),
 			LocalDate.now().plusDays(30),
 			"editedIntroduction"); // 16글자
 		MockMultipartFile requestPart = new MockMultipartFile("request", "", "application/json",
@@ -414,7 +382,7 @@ class StudyGroupControllerTest {
 			"image".getBytes());
 
 		// when, then
-		mockMvc.perform(multipart("/api/group")
+		mockMvc.perform(multipart("/api/groups/{groupId}", groupId)
 				.file(requestPart)
 				.file(groupImage)
 				.header("Authorization", token)
@@ -432,7 +400,7 @@ class StudyGroupControllerTest {
 	@DisplayName("그룹 정보 수정 실패 : 존재하지 않는 그룹")
 	void editGroupFailed_2() throws Exception {
 		// given
-		EditGroupRequest request = new EditGroupRequest(groupId, "name", LocalDate.now(), LocalDate.now().plusDays(30),
+		EditGroupRequest request = new EditGroupRequest("name", LocalDate.now(), LocalDate.now().plusDays(30),
 			"editedIntroduction");
 		MockMultipartFile requestPart = new MockMultipartFile("request", "", "application/json",
 			objectMapper.writeValueAsBytes(request));
@@ -440,9 +408,9 @@ class StudyGroupControllerTest {
 			"image".getBytes());
 		doThrow(new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다.")).when(
 				studyGroupService)
-			.editGroup(any(User.class), any(EditGroupRequest.class), any(MultipartFile.class));
+			.editGroup(any(User.class), anyLong(), any(EditGroupRequest.class), any(MultipartFile.class));
 		// when, then
-		mockMvc.perform(multipart("/api/group")
+		mockMvc.perform(multipart("/api/groups/{groupId}", groupId)
 				.file(requestPart)
 				.file(groupImage)
 				.header("Authorization", token)
@@ -454,7 +422,7 @@ class StudyGroupControllerTest {
 			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.error").value("존재하지 않는 그룹 입니다."));
 
-		verify(studyGroupService, times(1)).editGroup(any(User.class), any(EditGroupRequest.class),
+		verify(studyGroupService, times(1)).editGroup(any(User.class), anyLong(), any(EditGroupRequest.class),
 			any(MultipartFile.class));
 	}
 
@@ -462,7 +430,7 @@ class StudyGroupControllerTest {
 	@DisplayName("그룹 정보 수정 실패 : 권한 없음")
 	void editGroupFailed_3() throws Exception {
 		// given
-		EditGroupRequest request = new EditGroupRequest(groupId, "name", LocalDate.now(), LocalDate.now().plusDays(30),
+		EditGroupRequest request = new EditGroupRequest("name", LocalDate.now(), LocalDate.now().plusDays(30),
 			"editedIntroduction");
 		MockMultipartFile requestPart = new MockMultipartFile("request", "", "application/json",
 			objectMapper.writeValueAsBytes(request));
@@ -470,9 +438,9 @@ class StudyGroupControllerTest {
 			"image".getBytes());
 		doThrow(new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "그룹 정보 수정에 대한 권한이 없습니다.")).when(
 				studyGroupService)
-			.editGroup(any(User.class), any(EditGroupRequest.class), any(MultipartFile.class));
+			.editGroup(any(User.class), anyLong(), any(EditGroupRequest.class), any(MultipartFile.class));
 		// when, then
-		mockMvc.perform(multipart("/api/group")
+		mockMvc.perform(multipart("/api/groups/{groupId}", groupId)
 				.file(requestPart)
 				.file(groupImage)
 				.header("Authorization", token)
@@ -484,7 +452,7 @@ class StudyGroupControllerTest {
 			.andExpect(status().isForbidden())
 			.andExpect(jsonPath("$.error").value("그룹 정보 수정에 대한 권한이 없습니다."));
 
-		verify(studyGroupService, times(1)).editGroup(any(User.class), any(EditGroupRequest.class),
+		verify(studyGroupService, times(1)).editGroup(any(User.class), anyLong(), any(EditGroupRequest.class),
 			any(MultipartFile.class));
 	}
 
@@ -500,9 +468,8 @@ class StudyGroupControllerTest {
 		}
 		when(studyGroupService.getGroupMemberList(user, groupId)).thenReturn(response);
 		// when, then
-		mockMvc.perform(get("/api/group/member-list")
-				.header("Authorization", token)
-				.param("groupId", String.valueOf(groupId)))
+		mockMvc.perform(get("/api/groups/{groupId}/members", groupId)
+				.header("Authorization", token))
 			.andExpect(status().isOk())
 			.andExpect(content().json(objectMapper.writeValueAsString(response)));
 
@@ -516,9 +483,8 @@ class StudyGroupControllerTest {
 		when(studyGroupService.getGroupMemberList(user, groupId)).thenThrow(
 			new CannotFoundGroupException("그룹을 찾을 수 없습니다."));
 		// when, then
-		mockMvc.perform(get("/api/group/member-list")
-				.header("Authorization", token)
-				.param("groupId", String.valueOf(groupId)))
+		mockMvc.perform(get("/api/groups/{groupId}/members", groupId)
+				.header("Authorization", token))
 			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.error").value("그룹을 찾을 수 없습니다."));
 
@@ -532,9 +498,8 @@ class StudyGroupControllerTest {
 		when(studyGroupService.getGroupMemberList(user, groupId)).thenThrow(
 			new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "그룹 내용을 확인할 권한이 없습니다"));
 		// when, then
-		mockMvc.perform(get("/api/group/member-list")
-				.header("Authorization", token)
-				.param("groupId", String.valueOf(groupId)))
+		mockMvc.perform(get("/api/groups/{groupId}/members", groupId)
+				.header("Authorization", token))
 			.andExpect(status().isForbidden())
 			.andExpect(jsonPath("$.error").value("그룹 내용을 확인할 권한이 없습니다"));
 
@@ -551,9 +516,8 @@ class StudyGroupControllerTest {
 		}
 		when(studyGroupService.getCheckingSolvedProblem(any(User.class), anyLong())).thenReturn(response);
 		// when, then
-		mockMvc.perform(get("/api/group/problem-solving")
-				.header("Authorization", token)
-				.param("problemId", String.valueOf(problemId)))
+		mockMvc.perform(get("/api/problems/{problemId}/solving", problemId)
+				.header("Authorization", token))
 			.andExpect(status().isOk())
 			.andExpect(content().json(objectMapper.writeValueAsString(response)));
 		verify(studyGroupService, times(1)).getCheckingSolvedProblem(any(User.class), anyLong());
@@ -566,9 +530,8 @@ class StudyGroupControllerTest {
 		when(studyGroupService.getCheckingSolvedProblem(any(User.class), anyLong())).thenThrow(
 			new CannotFoundGroupException("문제를 찾을 수 없습니다."));
 		// when, then
-		mockMvc.perform(get("/api/group/problem-solving")
-				.header("Authorization", token)
-				.param("problemId", String.valueOf(problemId)))
+		mockMvc.perform(get("/api/problems/{problemId}/solving", problemId)
+				.header("Authorization", token))
 			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.error").value("문제를 찾을 수 없습니다."));
 		verify(studyGroupService, times(1)).getCheckingSolvedProblem(any(User.class), anyLong());
@@ -581,9 +544,8 @@ class StudyGroupControllerTest {
 		when(studyGroupService.getCheckingSolvedProblem(any(User.class), anyLong())).thenThrow(
 			new UserValidationException("풀이 여부 목록을 확인할 권한이 없습니다."));
 		// when, then
-		mockMvc.perform(get("/api/group/problem-solving")
-				.header("Authorization", token)
-				.param("problemId", String.valueOf(problemId)))
+		mockMvc.perform(get("/api/problems/{problemId}/solving", problemId)
+				.header("Authorization", token))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.error").value("풀이 여부 목록을 확인할 권한이 없습니다."));
 		verify(studyGroupService, times(1)).getCheckingSolvedProblem(any(User.class), anyLong());
@@ -596,9 +558,8 @@ class StudyGroupControllerTest {
 		// given
 		when(studyGroupService.getGroupCode(user, groupId)).thenReturn(groupCodeResponse);
 		// when, then
-		mockMvc.perform(get("/api/group/group-code")
-				.header("Authorization", token)
-				.param("groupId", String.valueOf(groupId)))
+		mockMvc.perform(get("/api/groups/{groupId}/code", groupId)
+				.header("Authorization", token))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.inviteCode").value(code));
 		verify(studyGroupService, times(1)).getGroupCode(any(User.class), anyLong());
@@ -610,9 +571,8 @@ class StudyGroupControllerTest {
 		// given
 		when(studyGroupService.getGroupCode(user, groupId)).thenThrow(new CannotFoundGroupException("그룹을 찾지 못했습니다."));
 		// when, then
-		mockMvc.perform(get("/api/group/group-code")
-				.header("Authorization", token)
-				.param("groupId", String.valueOf(groupId)))
+		mockMvc.perform(get("/api/groups/{groupId}/code", groupId)
+				.header("Authorization", token))
 			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.error").value("그룹을 찾지 못했습니다."));
 		verify(studyGroupService, times(1)).getGroupCode(any(User.class), anyLong());
@@ -625,9 +585,8 @@ class StudyGroupControllerTest {
 		when(studyGroupService.getGroupCode(user, groupId)).thenThrow(
 			new UserValidationException("초대 코드를 조회할 권한이 없습니다."));
 		// when, then
-		mockMvc.perform(get("/api/group/group-code")
-				.header("Authorization", token)
-				.param("groupId", String.valueOf(groupId)))
+		mockMvc.perform(get("/api/groups/{groupId}/code", groupId)
+				.header("Authorization", token))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.error").value("초대 코드를 조회할 권한이 없습니다."));
 		verify(studyGroupService, times(1)).getGroupCode(any(User.class), anyLong());
@@ -640,9 +599,8 @@ class StudyGroupControllerTest {
 		when(studyGroupService.updateBookmarkGroup(user, groupId)).thenReturn(
 			new UpdateBookmarkResponse(BookmarkStatus.BOOKMARKED));
 		// when, then
-		mockMvc.perform(post("/api/group/bookmark")
-				.header("Authorization", token)
-				.param("groupId", String.valueOf(groupId)))
+		mockMvc.perform(post("/api/groups/{groupId}/bookmark", groupId)
+				.header("Authorization", token))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.status").value(BookmarkStatus.BOOKMARKED.getDescription()));
 
@@ -656,9 +614,8 @@ class StudyGroupControllerTest {
 		when(studyGroupService.updateBookmarkGroup(user, groupId)).thenReturn(
 			new UpdateBookmarkResponse(BookmarkStatus.UNMARKED));
 		// when, then
-		mockMvc.perform(post("/api/group/bookmark")
-				.header("Authorization", token)
-				.param("groupId", String.valueOf(groupId)))
+		mockMvc.perform(post("/api/groups/{groupId}/bookmark", groupId)
+				.header("Authorization", token))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.status").value(BookmarkStatus.UNMARKED.getDescription()));
 		verify(studyGroupService, times(1)).updateBookmarkGroup(user, groupId);
@@ -671,9 +628,8 @@ class StudyGroupControllerTest {
 		when(studyGroupService.updateBookmarkGroup(user, groupId)).thenThrow(
 			new CannotFoundSolutionException("존재하지 않는 그룹 입니다."));
 		// when, then
-		mockMvc.perform(post("/api/group/bookmark")
-				.header("Authorization", token)
-				.param("groupId", String.valueOf(groupId)))
+		mockMvc.perform(post("/api/groups/{groupId}/bookmark", groupId)
+				.header("Authorization", token))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.error").value("존재하지 않는 그룹 입니다."));
 		verify(studyGroupService, times(1)).updateBookmarkGroup(user, groupId);
@@ -686,9 +642,8 @@ class StudyGroupControllerTest {
 		when(studyGroupService.updateBookmarkGroup(user, groupId)).thenThrow(
 			new StudyGroupValidationException(HttpStatus.BAD_REQUEST.value(), "참여하지 않은 그룹 입니다."));
 		// when, then
-		mockMvc.perform(post("/api/group/bookmark")
-				.header("Authorization", token)
-				.param("groupId", String.valueOf(groupId)))
+		mockMvc.perform(post("/api/groups/{groupId}/bookmark", groupId)
+				.header("Authorization", token))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.error").value("참여하지 않은 그룹 입니다."));
 		verify(studyGroupService, times(1)).updateBookmarkGroup(user, groupId);
@@ -698,77 +653,77 @@ class StudyGroupControllerTest {
 	@DisplayName("스터디 그룹 멤버 역할 수정 성공")
 	void updateGroupMemberRole() throws Exception {
 		// given
-		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(groupId, 20L, "ADMIN");
+		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(20L, "ADMIN");
 		// when, then
-		mockMvc.perform(patch("/api/group/role")
+		mockMvc.perform(patch("/api/groups/{groupId}/role", groupId)
 				.header("Authorization", token)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isOk());
-		verify(studyGroupService, times(1)).updateGroupMemberRole(user, request);
+		verify(studyGroupService, times(1)).updateGroupMemberRole(user, groupId, request);
 	}
 
 	@Test
 	@DisplayName("스터디 그룹 멤버 역할 수정 실패 : 존재하지 않는 그룹")
 	void updateGroupMemberRoleFailed_1() throws Exception {
 		// given
-		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(groupId, 20L, "ADMIN");
+		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(20L, "ADMIN");
 		doThrow(new CannotFoundSolutionException("존재하지 않는 그룹입니다.")).when(studyGroupService)
-			.updateGroupMemberRole(user, request);
+			.updateGroupMemberRole(user, groupId, request);
 		// when, then
-		mockMvc.perform(patch("/api/group/role")
+		mockMvc.perform(patch("/api/groups/{groupId}/role", groupId)
 				.header("Authorization", token)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.error").value("존재하지 않는 그룹입니다."));
-		verify(studyGroupService, times(1)).updateGroupMemberRole(user, request);
+		verify(studyGroupService, times(1)).updateGroupMemberRole(user, groupId, request);
 	}
 
 	@Test
 	@DisplayName("스터디 그룹 멤버 역할 수정 실패 : 스터디 그룹 멤버 역할 수정 권한 없음")
 	void updateGroupMemberRoleFailed_2() throws Exception {
 		// given
-		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(groupId, 20L, "ADMIN");
+		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(20L, "ADMIN");
 		doThrow(new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "스터디 그룹 멤버 역할을 수정할 권한이 없습니다.")).when(
-			studyGroupService).updateGroupMemberRole(user, request);
+			studyGroupService).updateGroupMemberRole(user, groupId, request);
 		// when, then
-		mockMvc.perform(patch("/api/group/role")
+		mockMvc.perform(patch("/api/groups/{groupId}/role", groupId)
 				.header("Authorization", token)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isForbidden())
 			.andExpect(jsonPath("$.error").value("스터디 그룹 멤버 역할을 수정할 권한이 없습니다."));
-		verify(studyGroupService, times(1)).updateGroupMemberRole(user, request);
+		verify(studyGroupService, times(1)).updateGroupMemberRole(user, groupId, request);
 	}
 
 	@Test
 	@DisplayName("스터디 그룹 멤버 역할 수정 실패 : 존재하지 않는 회원")
 	void updateGroupMemberRoleFailed_3() throws Exception {
 		// given
-		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(groupId, 20L, "ADMIN");
+		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(20L, "ADMIN");
 		doThrow(new UserValidationException("존재하지 않는 회원입니다.")).when(
-			studyGroupService).updateGroupMemberRole(user, request);
+			studyGroupService).updateGroupMemberRole(user, groupId, request);
 		// when, then
-		mockMvc.perform(patch("/api/group/role")
+		mockMvc.perform(patch("/api/groups/{groupId}/role", groupId)
 				.header("Authorization", token)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.error").value("존재하지 않는 회원입니다."));
-		verify(studyGroupService, times(1)).updateGroupMemberRole(user, request);
+		verify(studyGroupService, times(1)).updateGroupMemberRole(user, groupId, request);
 	}
 
 	@Test
 	@DisplayName("스터디 그룹 멤버 역할 수정 실패 : 스터디 그룹에 참여하지 않은 회원")
 	void updateGroupMemberRoleFailed_4() throws Exception {
 		// given
-		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(groupId, 20L, "ADMIN");
+		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(20L, "ADMIN");
 		doThrow(new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(), "해당 스터디 그룹에 참여하지 않은 회원입니다.")).when(
-			studyGroupService).updateGroupMemberRole(user, request);
+			studyGroupService).updateGroupMemberRole(user, groupId, request);
 		// when, then
-		mockMvc.perform(patch("/api/group/role")
+		mockMvc.perform(patch("/api/groups/{groupId}/role", groupId)
 				.header("Authorization", token)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.error").value("해당 스터디 그룹에 참여하지 않은 회원입니다."));
-		verify(studyGroupService, times(1)).updateGroupMemberRole(user, request);
+		verify(studyGroupService, times(1)).updateGroupMemberRole(user, groupId, request);
 	}
 
 	@Test
@@ -777,9 +732,8 @@ class StudyGroupControllerTest {
 		// given
 		when(studyGroupService.getRoleInGroup(user, groupId)).thenReturn(RoleOfGroupMember.OWNER.getValue());
 		// when, then
-		mockMvc.perform(get("/api/group/role")
-				.header("Authorization", token)
-				.param("groupId", String.valueOf(groupId)))
+		mockMvc.perform(get("/api/groups/{groupId}/role", groupId)
+				.header("Authorization", token))
 			.andExpect(status().isOk())
 			.andExpect(content().string(RoleOfGroupMember.OWNER.getValue()));
 		verify(studyGroupService, times(1)).getRoleInGroup(user, groupId);
@@ -792,9 +746,8 @@ class StudyGroupControllerTest {
 		when(studyGroupService.getRoleInGroup(user, groupId)).thenThrow(
 			new CannotFoundGroupException("존재하지 않는 그룹입니다."));
 		// when, then
-		mockMvc.perform(get("/api/group/role")
-				.header("Authorization", token)
-				.param("groupId", String.valueOf(groupId)))
+		mockMvc.perform(get("/api/groups/{groupId}/role", groupId)
+				.header("Authorization", token))
 			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.error").value("존재하지 않는 그룹입니다."));
 		verify(studyGroupService, times(1)).getRoleInGroup(user, groupId);
@@ -807,9 +760,8 @@ class StudyGroupControllerTest {
 		when(studyGroupService.getRoleInGroup(user, groupId)).thenThrow(
 			new GroupMemberValidationException(HttpStatus.NOT_FOUND.value(), "참여하지 않은 그룹입니다."));
 		// when, then
-		mockMvc.perform(get("/api/group/role")
-				.header("Authorization", token)
-				.param("groupId", String.valueOf(groupId)))
+		mockMvc.perform(get("/api/groups/{groupId}/role", groupId)
+				.header("Authorization", token))
 			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.error").value("참여하지 않은 그룹입니다."));
 		verify(studyGroupService, times(1)).getRoleInGroup(user, groupId);
@@ -819,45 +771,45 @@ class StudyGroupControllerTest {
 	@DisplayName("스터디 그룹 공개 여부 수정 성공")
 	void editGroupVisibility() throws Exception {
 		// given
-		EditGroupVisibilityRequest request = new EditGroupVisibilityRequest(groupId, false);
+		EditGroupVisibilityRequest request = new EditGroupVisibilityRequest(false);
 		// when, then
-		mockMvc.perform(patch("/api/group/visibility")
+		mockMvc.perform(patch("/api/groups/{groupId}/visibility", groupId)
 				.header("Authorization", token)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isOk());
-		verify(studyGroupService, times(1)).editStudyGroupVisibility(user, request);
+		verify(studyGroupService, times(1)).editStudyGroupVisibility(user, groupId, request);
 	}
 
 	@Test
 	@DisplayName("스터디 그룹 공개 여부 수정 실패 : 존재하지 않는 스터디 그룹")
 	void editGroupVisibilityFailed_1() throws Exception {
 		// given
-		EditGroupVisibilityRequest request = new EditGroupVisibilityRequest(groupId, false);
+		EditGroupVisibilityRequest request = new EditGroupVisibilityRequest(false);
 		doThrow(new CannotFoundGroupException("존재하지 않는 그룹입니다.")).when(studyGroupService)
-			.editStudyGroupVisibility(user, request);
+			.editStudyGroupVisibility(user, groupId, request);
 		// when, then
-		mockMvc.perform(patch("/api/group/visibility")
+		mockMvc.perform(patch("/api/groups/{groupId}/visibility", groupId)
 				.header("Authorization", token)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.error").value("존재하지 않는 그룹입니다."));
-		verify(studyGroupService, times(1)).editStudyGroupVisibility(user, request);
+		verify(studyGroupService, times(1)).editStudyGroupVisibility(user, groupId, request);
 	}
 
 	@Test
 	@DisplayName("스터디 그룹 공개 여부 수정 실패 : 참여하지 않은 그룹")
 	void editGroupVisibilityFailed_2() throws Exception {
 		// given
-		EditGroupVisibilityRequest request = new EditGroupVisibilityRequest(groupId, false);
+		EditGroupVisibilityRequest request = new EditGroupVisibilityRequest(false);
 		doThrow(new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹입니다.")).when(
 				studyGroupService)
-			.editStudyGroupVisibility(user, request);
+			.editStudyGroupVisibility(user, groupId, request);
 		// when, then
-		mockMvc.perform(patch("/api/group/visibility")
+		mockMvc.perform(patch("/api/groups/{groupId}/visibility", groupId)
 				.header("Authorization", token)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isForbidden())
 			.andExpect(jsonPath("$.error").value("참여하지 않은 그룹입니다."));
-		verify(studyGroupService, times(1)).editStudyGroupVisibility(user, request);
+		verify(studyGroupService, times(1)).editStudyGroupVisibility(user, groupId, request);
 	}
 }

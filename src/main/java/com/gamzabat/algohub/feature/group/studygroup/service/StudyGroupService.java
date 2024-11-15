@@ -244,8 +244,8 @@ public class StudyGroupService {
 	}
 
 	@Transactional
-	public void editGroup(User user, EditGroupRequest request, MultipartFile groupImage) {
-		StudyGroup group = groupRepository.findById(request.id())
+	public void editGroup(User user, Long groupId, EditGroupRequest request, MultipartFile groupImage) {
+		StudyGroup group = groupRepository.findById(groupId)
 			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다."));
 
 		GroupMember groupMember = groupMemberRepository.findByUserAndStudyGroup(user, group)
@@ -406,8 +406,8 @@ public class StudyGroupService {
 	}
 
 	@Transactional
-	public void updateGroupMemberRole(User user, UpdateGroupMemberRoleRequest request) {
-		StudyGroup group = studyGroupRepository.findById(request.studyGroupId())
+	public void updateGroupMemberRole(User user, Long groupId, UpdateGroupMemberRoleRequest request) {
+		StudyGroup group = studyGroupRepository.findById(groupId)
 			.orElseThrow(() -> new CannotFoundGroupException("존재하지 않는 그룹입니다."));
 
 		GroupMember owner = groupMemberRepository.findByUserAndStudyGroup(user, group)
@@ -440,8 +440,8 @@ public class StudyGroupService {
 	}
 
 	@Transactional
-	public void editStudyGroupVisibility(User user, EditGroupVisibilityRequest request) {
-		StudyGroup group = groupRepository.findById(request.groupId())
+	public void editStudyGroupVisibility(User user, Long groupId, EditGroupVisibilityRequest request) {
+		StudyGroup group = groupRepository.findById(groupId)
 			.orElseThrow(() -> new CannotFoundGroupException("존재하지 않는 그룹입니다."));
 
 		GroupMember member = groupMemberRepository.findByUserAndStudyGroup(user, group)

@@ -431,14 +431,14 @@ class StudyGroupServiceTest {
 	@DisplayName("그룹 정보 수정 성공")
 	void editGroup() {
 		// given
-		EditGroupRequest request = new EditGroupRequest(10L, "editName", LocalDate.now().plusDays(10),
+		EditGroupRequest request = new EditGroupRequest("editName", LocalDate.now().plusDays(10),
 			LocalDate.now().plusDays(10), "editIntroduction");
 		MockMultipartFile editImage = new MockMultipartFile("editImage", new byte[] {1, 2, 3});
 		when(imageService.saveImage(editImage)).thenReturn("editImage");
 		when(studyGroupRepository.findById(anyLong())).thenReturn(Optional.ofNullable(group));
 		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
 		// when
-		studyGroupService.editGroup(user, request, editImage);
+		studyGroupService.editGroup(user, 10L, request, editImage);
 		// then
 		assertThat(group.getName()).isEqualTo("editName");
 		assertThat(group.getGroupImage()).isEqualTo("editImage");
@@ -451,12 +451,12 @@ class StudyGroupServiceTest {
 	@DisplayName("그룹 정보 수정 실패 : 존재하지 않는 그룹")
 	void editGroupFailed_1() {
 		// given
-		EditGroupRequest request = new EditGroupRequest(10L, "editName", LocalDate.now().plusDays(10),
+		EditGroupRequest request = new EditGroupRequest("editName", LocalDate.now().plusDays(10),
 			LocalDate.now().plusDays(10), "editIntroduction");
 		MockMultipartFile editImage = new MockMultipartFile("editImage", new byte[] {1, 2, 3});
 		when(studyGroupRepository.findById(10L)).thenReturn(Optional.empty());
 		// when, then
-		assertThatThrownBy(() -> studyGroupService.editGroup(user, request, editImage))
+		assertThatThrownBy(() -> studyGroupService.editGroup(user, 10L, request, editImage))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.NOT_FOUND.value())
 			.hasFieldOrPropertyWithValue("error", "존재하지 않는 그룹 입니다.");
@@ -466,13 +466,13 @@ class StudyGroupServiceTest {
 	@DisplayName("그룹 정보 수정 실패 : 권한 없음")
 	void editGroupFailed_2() {
 		// given
-		EditGroupRequest request = new EditGroupRequest(10L, "editName", LocalDate.now().plusDays(10),
+		EditGroupRequest request = new EditGroupRequest("editName", LocalDate.now().plusDays(10),
 			LocalDate.now().plusDays(10), "editIntroduction");
 		MockMultipartFile editImage = new MockMultipartFile("editImage", new byte[] {1, 2, 3});
 		when(studyGroupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
 		when(groupMemberRepository.findByUserAndStudyGroup(user2, group)).thenReturn(Optional.ofNullable(groupMember2));
 		// when, then
-		assertThatThrownBy(() -> studyGroupService.editGroup(user2, request, editImage))
+		assertThatThrownBy(() -> studyGroupService.editGroup(user2, 10L, request, editImage))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "그룹 정보 수정에 대한 권한이 없습니다.");
@@ -586,13 +586,13 @@ class StudyGroupServiceTest {
 	@DisplayName("스터디 그룹 멤버 역할 수정 성공")
 	void updateGroupMemberRole() {
 		// given
-		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(groupId, 2L, "ADMIN");
+		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(2L, "ADMIN");
 		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
 		when(groupMemberRepository.findByUserAndStudyGroup(user2, group)).thenReturn(Optional.ofNullable(groupMember2));
 		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.ofNullable(group));
 		when(userRepository.findById(anyLong())).thenReturn(Optional.ofNullable(user2));
 		// when
-		studyGroupService.updateGroupMemberRole(user, request);
+		studyGroupService.updateGroupMemberRole(user, groupId, request);
 		// then
 		assertThat(groupMember2.getUser()).isEqualTo(user2);
 		assertThat(groupMember2.getStudyGroup()).isEqualTo(group);
@@ -603,10 +603,10 @@ class StudyGroupServiceTest {
 	@DisplayName("스터디 그룹 멤버 역할 수정 실패 : 존재하지 않는 그룹")
 	void updateGroupMemberRoleFailed_1() {
 		// given
-		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(groupId, 2L, "ADMIN");
+		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(2L, "ADMIN");
 		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.empty());
 		// when, then
-		assertThatThrownBy(() -> studyGroupService.updateGroupMemberRole(user, request))
+		assertThatThrownBy(() -> studyGroupService.updateGroupMemberRole(user, groupId, request))
 			.isInstanceOf(CannotFoundGroupException.class)
 			.hasFieldOrPropertyWithValue("errors", "존재하지 않는 그룹입니다.");
 	}
@@ -615,11 +615,11 @@ class StudyGroupServiceTest {
 	@DisplayName("스터디 그룹 멤버 역할 수정 실패 : 역할 수정 권한 없음")
 	void updateGroupMemberRoleFailed_2() {
 		// given
-		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(groupId, 2L, "ADMIN");
+		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(2L, "ADMIN");
 		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.of(group));
 		when(groupMemberRepository.findByUserAndStudyGroup(user2, group)).thenReturn(Optional.ofNullable(groupMember2));
 		// when, then
-		assertThatThrownBy(() -> studyGroupService.updateGroupMemberRole(user2, request))
+		assertThatThrownBy(() -> studyGroupService.updateGroupMemberRole(user2, groupId, request))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "스터디 그룹의 멤버 역할을 수정할 권한이 없습니다.");
@@ -629,12 +629,12 @@ class StudyGroupServiceTest {
 	@DisplayName("스터디 그룹 멤버 역할 수정 실패 : 존재하지 않는 회원")
 	void updateGroupMemberRoleFailed_3() {
 		// given
-		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(groupId, 2L, "ADMIN");
+		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(2L, "ADMIN");
 		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.of(group));
 		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
 		when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
 		// when, then
-		assertThatThrownBy(() -> studyGroupService.updateGroupMemberRole(user, request))
+		assertThatThrownBy(() -> studyGroupService.updateGroupMemberRole(user, groupId, request))
 			.isInstanceOf(UserValidationException.class)
 			.hasFieldOrPropertyWithValue("errors", "존재하지 않는 회원입니다.");
 	}
@@ -643,13 +643,13 @@ class StudyGroupServiceTest {
 	@DisplayName("스터디 그룹 멤버 역할 수정 실패 : 참여하지 않은 회원")
 	void updateGroupMemberRoleFailed_4() {
 		// given
-		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(groupId, 2L, "ADMIN");
+		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(2L, "ADMIN");
 		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.of(group));
 		when(userRepository.findById(anyLong())).thenReturn(Optional.of(user2));
 		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
 		when(groupMemberRepository.findByUserAndStudyGroup(user2, group)).thenReturn(Optional.empty());
 		// when, then
-		assertThatThrownBy(() -> studyGroupService.updateGroupMemberRole(user, request))
+		assertThatThrownBy(() -> studyGroupService.updateGroupMemberRole(user, groupId, request))
 			.isInstanceOf(GroupMemberValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
 			.hasFieldOrPropertyWithValue("error", "해당 스터디 그룹에 참여하지 않은 회원입니다.");
@@ -694,11 +694,11 @@ class StudyGroupServiceTest {
 	@DisplayName("스터디 그룹 공개 여부 수정 성공")
 	void editGroupVisibility() {
 		// given
-		EditGroupVisibilityRequest request = new EditGroupVisibilityRequest(groupId, false);
+		EditGroupVisibilityRequest request = new EditGroupVisibilityRequest(false);
 		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.of(group));
 		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.of(groupMember1));
 		// when
-		studyGroupService.editStudyGroupVisibility(user, request);
+		studyGroupService.editStudyGroupVisibility(user, groupId, request);
 		// then
 		assertThat(groupMember1.getIsVisible()).isFalse();
 	}
@@ -707,10 +707,10 @@ class StudyGroupServiceTest {
 	@DisplayName("스터디 그룹 공개 여부 수정 실패 : 존재하지 않는 그룹")
 	void editGroupVisibilityFailed_1() {
 		// given
-		EditGroupVisibilityRequest request = new EditGroupVisibilityRequest(groupId, false);
+		EditGroupVisibilityRequest request = new EditGroupVisibilityRequest(false);
 		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.empty());
 		// when, then
-		assertThatThrownBy(() -> studyGroupService.editStudyGroupVisibility(user, request))
+		assertThatThrownBy(() -> studyGroupService.editStudyGroupVisibility(user, groupId, request))
 			.isInstanceOf(CannotFoundGroupException.class)
 			.hasFieldOrPropertyWithValue("errors", "존재하지 않는 그룹입니다.");
 	}
@@ -719,11 +719,11 @@ class StudyGroupServiceTest {
 	@DisplayName("스터디 그룹 공개 여부 수정 실패 : 참여하지 않은 그룹")
 	void editGroupVisibilityFailed_2() {
 		// given
-		EditGroupVisibilityRequest request = new EditGroupVisibilityRequest(groupId, false);
+		EditGroupVisibilityRequest request = new EditGroupVisibilityRequest(false);
 		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.of(group));
 		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.empty());
 		// when, then
-		assertThatThrownBy(() -> studyGroupService.editStudyGroupVisibility(user, request))
+		assertThatThrownBy(() -> studyGroupService.editStudyGroupVisibility(user, groupId, request))
 			.isInstanceOf(GroupMemberValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹입니다.");
