@@ -349,7 +349,8 @@ public class StudyGroupService {
 	public GetStudyGroupWithCodeResponse getGroupByCode(String code) {
 		StudyGroup group = groupRepository.findByGroupCode(code)
 			.orElseThrow(() -> new CannotFoundGroupException("그룹을 찾을 수 없습니다."));
-		return GetStudyGroupWithCodeResponse.toDTO(group);
+		User owner = getStudyGroupOwner(group);
+		return GetStudyGroupWithCodeResponse.toDTO(group, owner);
 	}
 
 	@Transactional(readOnly = true)
