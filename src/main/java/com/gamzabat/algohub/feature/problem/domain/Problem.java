@@ -23,7 +23,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @SQLRestriction("deleted_at IS NULL")
-@SQLDelete(sql = "UPDATE Problem SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLDelete(sql = "UPDATE problem SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
 public class Problem {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
