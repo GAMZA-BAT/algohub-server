@@ -64,7 +64,7 @@ public class NoticeService {
 		log.info("success to create notice");
 	}
 
-	@Transactional(readOnly = true)
+	@Transactional(readOnly = false)
 	public GetNoticeResponse getNotice(@AuthedUser User user, Long noticeId) {
 		Notice notice = noticeRepository.findById(noticeId)
 			.orElseThrow(() -> new NoticeValidationException("존재하지 않는 게시글입니다"));
