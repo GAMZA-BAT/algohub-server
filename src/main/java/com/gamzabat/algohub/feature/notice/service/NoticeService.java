@@ -1,8 +1,9 @@
 package com.gamzabat.algohub.feature.notice.service;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -86,18 +87,17 @@ public class NoticeService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<GetNoticeResponse> getNoticeList(@AuthedUser User user, Long studyGroupId) {
+	public Page<GetNoticeResponse> getNoticeList(@AuthedUser User user, Long studyGroupId, Pageable pageable) {
 		StudyGroup studyGroup = studyGroupRepository.findById(studyGroupId)
 			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.BAD_REQUEST.value(), "존재하지 않는 스터디 그룹입니다"));
 		if (!groupMemberRepository.existsByUserAndStudyGroup(user, studyGroup))
 			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 스터디 그룹입니다");
 
-		List<Notice> list = noticeRepository.findAllByStudyGroup(studyGroup);
-		List<GetNoticeResponse> result = list.stream().map(
-			notice -> GetNoticeResponse.toDTO(notice, noticeReadRepository.existsByNoticeAndUser(notice, user))
-		).toList();
+		Page<Notice> list = noticeRepository.findAllByStudyGroup(studyGroup, pageable);
+		Page<GetNoticeResponse> responses = list.map(
+			notice -> GetNoticeResponse.toDTO(notice, noticeReadRepository.existsByNoticeAndUser(notice, user)));
 		log.info("success to get notice list");
-		return result;
+		return responses;
 	}
 
 	@Transactional

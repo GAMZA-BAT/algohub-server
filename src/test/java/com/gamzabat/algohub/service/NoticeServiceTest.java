@@ -19,6 +19,10 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 
 import com.gamzabat.algohub.common.DateFormatUtil;
@@ -220,6 +224,8 @@ public class NoticeServiceTest {
 	@DisplayName("공지 목록 조회 성공")
 	void getNoticeListSuccess_1() {
 		//given
+		Pageable pageable = PageRequest.of(0, 20);
+
 		List<Notice> noticeList = new ArrayList<>(10);
 		for (int i = 0; i < 10; i++)
 			noticeList.add(
@@ -243,16 +249,17 @@ public class NoticeServiceTest {
 					.build());
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user, studyGroup)).thenReturn(true);
-		when(noticeRepository.findAllByStudyGroup(studyGroup)).thenReturn(noticeList);
+		when(noticeRepository.findAllByStudyGroup(studyGroup, pageable)).thenReturn(
+			new PageImpl<>(noticeList, pageable, noticeList.size()));
 		//when
-		List<GetNoticeResponse> result = noticeService.getNoticeList(user, 30L);
+		Page<GetNoticeResponse> result = noticeService.getNoticeList(user, 30L, pageable);
 		//then
-		assertThat(result.size()).isEqualTo(20);
+		assertThat(result.getTotalElements()).isEqualTo(20);
 		for (int i = 0; i < 20; i++) {
-			assertThat(result.get(i).content()).isEqualTo("content" + i);
-			assertThat(result.get(i).title()).isEqualTo("title" + i);
-			assertThat(result.get(i).category()).isEqualTo("category" + i);
-			assertThat(result.get(i).isRead()).isFalse();
+			assertThat(result.getContent().get(i).content()).isEqualTo("content" + i);
+			assertThat(result.getContent().get(i).title()).isEqualTo("title" + i);
+			assertThat(result.getContent().get(i).category()).isEqualTo("category" + i);
+			assertThat(result.getContent().get(i).isRead()).isFalse();
 		}
 	}
 
@@ -260,9 +267,11 @@ public class NoticeServiceTest {
 	@DisplayName("공지 목록 조회 실패 (존재하지 않는 스터디 그룹임)")
 	void getNoticeListFailed_1() {
 		//given
+		Pageable pageable = PageRequest.of(0, 20);
+
 		when(studyGroupRepository.findById(31L)).thenReturn(Optional.empty());
 		//when,then
-		assertThatThrownBy(() -> noticeService.getNoticeList(user, 31L))
+		assertThatThrownBy(() -> noticeService.getNoticeList(user, 31L, pageable))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
 			.hasFieldOrPropertyWithValue("error", "존재하지 않는 스터디 그룹입니다");
@@ -272,10 +281,12 @@ public class NoticeServiceTest {
 	@DisplayName("공지 목록 조회 실패(참여하지 않은 스터디 그룹)")
 	void getNoticeListFailed_2() {
 		//given
+		Pageable pageable = PageRequest.of(0, 20);
+
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user4, studyGroup)).thenReturn(false);
 		//when, then
-		assertThatThrownBy(() -> noticeService.getNoticeList(user4, 30L))
+		assertThatThrownBy(() -> noticeService.getNoticeList(user4, 30L, pageable))
 			.isInstanceOf(GroupMemberValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "참여하지 않은 스터디 그룹입니다");

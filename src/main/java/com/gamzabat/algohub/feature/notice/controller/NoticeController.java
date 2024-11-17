@@ -1,7 +1,8 @@
 package com.gamzabat.algohub.feature.notice.controller;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.gamzabat.algohub.common.annotation.AuthedUser;
@@ -55,9 +57,12 @@ public class NoticeController {
 
 	@GetMapping(value = "/groups/{groupId}/notices")
 	@Operation(summary = "공지 목록 조회 API")
-	public ResponseEntity<List<GetNoticeResponse>> getNoticeList(@AuthedUser User user,
-		@PathVariable Long groupId) {
-		List<GetNoticeResponse> response = noticeService.getNoticeList(user, groupId);
+	public ResponseEntity<Page<GetNoticeResponse>> getNoticeList(@AuthedUser User user,
+		@PathVariable Long groupId,
+		@RequestParam(defaultValue = "0") int page,
+		@RequestParam(defaultValue = "20") int size) {
+		Pageable pageable = PageRequest.of(page, size);
+		Page<GetNoticeResponse> response = noticeService.getNoticeList(user, groupId, pageable);
 		return ResponseEntity.ok().body(response);
 	}
 
