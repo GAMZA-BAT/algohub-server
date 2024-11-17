@@ -107,7 +107,7 @@ class StudyGroupControllerTest {
 		GroupCodeResponse response = new GroupCodeResponse("inviteCode");
 		MockMultipartFile requestPart = new MockMultipartFile("request", "", "application/json",
 			objectMapper.writeValueAsString(request).getBytes());
-		MockMultipartFile profileImage = new MockMultipartFile("profileImage", "profile.jpg", "image/jpeg",
+		MockMultipartFile profileImage = new MockMultipartFile("groupImage", "profile.jpg", "image/jpeg",
 			"image".getBytes());
 		when(studyGroupService.createGroup(any(User.class), any(CreateGroupRequest.class),
 			any(MultipartFile.class))).thenReturn(response);

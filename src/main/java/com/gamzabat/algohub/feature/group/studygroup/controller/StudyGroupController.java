@@ -49,10 +49,10 @@ public class StudyGroupController {
 	@Operation(summary = "그룹 생성 API")
 	public ResponseEntity<GroupCodeResponse> createGroup(@AuthedUser User user,
 		@Valid @RequestPart CreateGroupRequest request, Errors errors,
-		@RequestPart(required = false) MultipartFile profileImage) {
+		@RequestPart(required = false) MultipartFile groupImage) {
 		if (errors.hasErrors())
 			throw new RequestException("그룹 생성 요청이 올바르지 않습니다.", errors);
-		GroupCodeResponse inviteCode = studyGroupService.createGroup(user, request, profileImage);
+		GroupCodeResponse inviteCode = studyGroupService.createGroup(user, request, groupImage);
 		return ResponseEntity.ok().body(inviteCode);
 	}
 
