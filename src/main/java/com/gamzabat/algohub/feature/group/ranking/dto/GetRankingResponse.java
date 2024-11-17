@@ -1,5 +1,7 @@
 package com.gamzabat.algohub.feature.group.ranking.dto;
 
+import com.gamzabat.algohub.feature.group.ranking.domain.Ranking;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -19,5 +21,15 @@ public class GetRankingResponse {
 		this.rank = rank;
 		this.solvedCount = solvedCount;
 		this.rankDiff = rankDiff;
+	}
+
+	public static GetRankingResponse toDTO(Ranking ranking) {
+		return new GetRankingResponse(
+			ranking.getMember().getUser().getNickname(),
+			ranking.getMember().getUser().getProfileImage(),
+			ranking.getCurrentRank(),
+			ranking.getSolvedCount(),
+			ranking.getRankDiff()
+		);
 	}
 }

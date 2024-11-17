@@ -4,11 +4,8 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Comparator;
-import java.util.List;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -49,27 +46,8 @@ public class RankingService {
 			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "랭킹을 확인할 권한이 없습니다.");
 		}
 
-		List<Ranking> ranking = rankingRepository.findAllByStudyGroup(group)
-			.stream()
-			.sorted(Comparator.comparing(Ranking::getCurrentRank))
-			.toList();
-		return getRankingResponse(ranking, pageable);
-	}
-
-	private Page<GetRankingResponse> getRankingResponse(List<Ranking> ranking, Pageable pageable) {
-		List<GetRankingResponse> responses = ranking.stream().map(r -> new GetRankingResponse(
-				r.getMember().getUser().getNickname(),
-				r.getMember().getUser().getProfileImage(),
-				r.getCurrentRank(),
-				r.getSolvedCount(),
-				r.getRankDiff()))
-			.toList();
-
-		return new PageImpl<>(
-			responses,
-			pageable,
-			ranking.size()
-		);
+		return rankingRepository.findAllByStudyGroup(group, pageable)
+			.map(GetRankingResponse::toDTO);
 	}
 
 	@Transactional

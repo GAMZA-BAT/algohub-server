@@ -21,6 +21,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -147,15 +148,16 @@ class RankingServiceTest {
 	@DisplayName("전체랭킹 조회 성공")
 	void getAllRank_SuccessByOwner() {
 		//given
-		Pageable pageable = PageRequest.of(0, 20);
+		Pageable pageable = PageRequest.of(0, 4);
 		when(studyGroupRepository.findById(10L)).thenReturn(Optional.of(group));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user2, group)).thenReturn(true);
 		List<Ranking> ranking = new ArrayList<>();
+		ranking.add(ranking1);
 		ranking.add(ranking2);
 		ranking.add(ranking3);
-		ranking.add(ranking1);
 		ranking.add(ranking4);
-		when(rankingRepository.findAllByStudyGroup(group)).thenReturn(ranking);
+		Page<Ranking> page = new PageImpl<>(ranking, pageable, ranking.size());
+		when(rankingRepository.findAllByStudyGroup(group, pageable)).thenReturn(page);
 
 		//when
 		Page<GetRankingResponse> result = rankingService.getAllRank(user2, 10L, pageable);
