@@ -7,7 +7,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -17,6 +16,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
@@ -60,43 +63,47 @@ class RankingControllerTest {
 	@DisplayName("전체 랭킹 조회 성공")
 	void getAllRank() throws Exception {
 		// given
-		List<GetRankingResponse> response = new ArrayList<>();
-		when(rankingService.getAllRank(user, groupId)).thenReturn(response);
+		Page<GetRankingResponse> response = new PageImpl<>(new ArrayList<>());
+		Pageable pageable = PageRequest.of(0, 20);
+		when(rankingService.getAllRank(user, groupId, pageable)).thenReturn(response);
 		// when, then
 		mockMvc.perform(get("/api/groups/{groupId}/rankings", groupId)
 				.header("Authorization", token))
 			.andExpect(status().isOk())
 			.andExpect(content().json(objectMapper.writeValueAsString(response)));
 
-		verify(rankingService, times(1)).getAllRank(any(User.class), anyLong());
+		verify(rankingService, times(1)).getAllRank(any(User.class), anyLong(), any(Pageable.class));
 	}
 
 	@Test
 	@DisplayName("전체 랭킹 조회 실패 : 그룹을 못 찾은 경우")
 	void getAllRankFailed_1() throws Exception {
 		// given
-		doThrow(new CannotFoundGroupException("그룹을 찾을 수 없습니다.")).when(rankingService).getAllRank(user, groupId);
+		Pageable pageable = PageRequest.of(0, 20);
+		doThrow(new CannotFoundGroupException("그룹을 찾을 수 없습니다.")).when(rankingService)
+			.getAllRank(user, groupId, pageable);
 		// when, then
 		mockMvc.perform(get("/api/groups/{groupId}/rankings", groupId)
 				.header("Authorization", token))
 			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.error").value("그룹을 찾을 수 없습니다."));
 
-		verify(rankingService, times(1)).getAllRank(any(User.class), anyLong());
+		verify(rankingService, times(1)).getAllRank(any(User.class), anyLong(), any(Pageable.class));
 	}
 
 	@Test
 	@DisplayName("전체 랭킹 조회 실패 : 랭킹 확인 권한이 없는 경우")
 	void getAllRankFailed_2() throws Exception {
 		// given
+		Pageable pageable = PageRequest.of(0, 20);
 		doThrow(new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "랭킹을 확인할 권한이 없습니다.")).when(
-			rankingService).getAllRank(user, groupId);
+			rankingService).getAllRank(user, groupId, pageable);
 		// when, then
 		mockMvc.perform(get("/api/groups/{groupId}/rankings", groupId)
 				.header("Authorization", token))
 			.andExpect(status().isForbidden())
 			.andExpect(jsonPath("$.error").value("랭킹을 확인할 권한이 없습니다."));
 
-		verify(rankingService, times(1)).getAllRank(any(User.class), anyLong());
+		verify(rankingService, times(1)).getAllRank(any(User.class), anyLong(), any(Pageable.class));
 	}
 }

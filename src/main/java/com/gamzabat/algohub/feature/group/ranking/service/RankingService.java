@@ -7,6 +7,9 @@ import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,7 +40,7 @@ public class RankingService {
 	public static final double SCORE_SCALING_FACTOR = 1e-4;
 
 	@Transactional(readOnly = true)
-	public List<GetRankingResponse> getAllRank(User user, Long groupId) {
+	public Page<GetRankingResponse> getAllRank(User user, Long groupId, Pageable pageable) {
 
 		StudyGroup group = groupRepository.findById(groupId)
 			.orElseThrow(() -> new CannotFoundGroupException("그룹을 찾을 수 없습니다."));
@@ -50,17 +53,23 @@ public class RankingService {
 			.stream()
 			.sorted(Comparator.comparing(Ranking::getCurrentRank))
 			.toList();
-		return getRankingResponse(ranking);
+		return getRankingResponse(ranking, pageable);
 	}
 
-	private List<GetRankingResponse> getRankingResponse(List<Ranking> ranking) {
-		return ranking.stream().map(r -> new GetRankingResponse(
+	private Page<GetRankingResponse> getRankingResponse(List<Ranking> ranking, Pageable pageable) {
+		List<GetRankingResponse> responses = ranking.stream().map(r -> new GetRankingResponse(
 				r.getMember().getUser().getNickname(),
 				r.getMember().getUser().getProfileImage(),
 				r.getCurrentRank(),
 				r.getSolvedCount(),
 				r.getRankDiff()))
 			.toList();
+
+		return new PageImpl<>(
+			responses,
+			pageable,
+			ranking.size()
+		);
 	}
 
 	@Transactional
