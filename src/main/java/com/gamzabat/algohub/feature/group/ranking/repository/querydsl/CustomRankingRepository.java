@@ -7,4 +7,6 @@ import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 
 public interface CustomRankingRepository {
 	List<Ranking> findAllByStudyGroup(StudyGroup studyGroup);
+
+	void deleteAllByStudyGroup(StudyGroup studyGroup);
 }

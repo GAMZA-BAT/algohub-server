@@ -257,14 +257,14 @@ class StudyGroupControllerTest {
 	@DisplayName("그룹 탈퇴 성공")
 	void leaveGroup() throws Exception {
 		// given
-		doNothing().when(studyGroupService).deleteGroup(user, groupId);
+		doNothing().when(studyGroupService).exitGroup(user, groupId);
 		// when, then
 		mockMvc.perform(delete("/api/groups/{groupId}/members/me", groupId)
 				.header("Authorization", token)
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk());
 
-		verify(studyGroupService, times(1)).deleteGroup(any(User.class), anyLong());
+		verify(studyGroupService, times(1)).exitGroup(any(User.class), anyLong());
 	}
 
 	@Test
@@ -272,7 +272,7 @@ class StudyGroupControllerTest {
 	void leaveGroupFailed_1() throws Exception {
 		// given
 		doThrow(new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다.")).when(
-			studyGroupService).deleteGroup(user, groupId);
+			studyGroupService).exitGroup(user, groupId);
 		// when, then
 		mockMvc.perform(delete("/api/groups/{groupId}/members/me", groupId)
 				.header("Authorization", token)
@@ -280,7 +280,7 @@ class StudyGroupControllerTest {
 			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.error").value("존재하지 않는 그룹 입니다."));
 
-		verify(studyGroupService, times(1)).deleteGroup(any(User.class), anyLong());
+		verify(studyGroupService, times(1)).exitGroup(any(User.class), anyLong());
 	}
 
 	@Test
@@ -288,7 +288,7 @@ class StudyGroupControllerTest {
 	void leaveGroupFailed_2() throws Exception {
 		// given
 		doThrow(new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(), "이미 참여하지 않은 그룹 입니다.")).when(
-			studyGroupService).deleteGroup(user, groupId);
+			studyGroupService).exitGroup(user, groupId);
 		// when, then
 		mockMvc.perform(delete("/api/groups/{groupId}/members/me", groupId)
 				.header("Authorization", token)
@@ -296,7 +296,7 @@ class StudyGroupControllerTest {
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.error").value("이미 참여하지 않은 그룹 입니다."));
 
-		verify(studyGroupService, times(1)).deleteGroup(any(User.class), anyLong());
+		verify(studyGroupService, times(1)).exitGroup(any(User.class), anyLong());
 	}
 
 	@Test
@@ -318,7 +318,7 @@ class StudyGroupControllerTest {
 		// given
 		doThrow(new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(),
 			"멤버 삭제 권한이 없습니다. : 참여하지 않은 그룹 입니다.")).when(
-			studyGroupService).deleteGroup(user, groupId);
+			studyGroupService).exitGroup(user, groupId);
 		// when, then
 		mockMvc.perform(delete("/api/groups/{groupId}/members/me", groupId)
 				.header("Authorization", token)
@@ -332,7 +332,7 @@ class StudyGroupControllerTest {
 	void deleteMemberFailed_2() throws Exception {
 		// given
 		doThrow(new UserValidationException("멤버를 삭제 할 권한이 없습니다.")).when(
-			studyGroupService).deleteGroup(user, groupId);
+			studyGroupService).exitGroup(user, groupId);
 		// when, then
 		mockMvc.perform(delete("/api/groups/{groupId}/members/me", groupId)
 				.header("Authorization", token)

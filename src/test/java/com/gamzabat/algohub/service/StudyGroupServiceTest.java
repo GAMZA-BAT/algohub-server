@@ -264,7 +264,7 @@ class StudyGroupServiceTest {
 		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
 		when(groupMemberRepository.findAllByStudyGroup(group)).thenReturn(List.of(groupMember1));
 		// when
-		studyGroupService.deleteGroup(user, 10L);
+		studyGroupService.exitGroup(user, 10L);
 		// then
 		verify(studyGroupRepository, times(1)).delete(group);
 		verify(groupMemberRepository, times(1)).deleteAll(List.of(groupMember1));
@@ -296,7 +296,7 @@ class StudyGroupServiceTest {
 		}).when(groupService).deleteMemberFromStudyGroup(user2, groupMember, group);
 
 		// when
-		studyGroupService.deleteGroup(user2, groupId);
+		studyGroupService.exitGroup(user2, groupId);
 		// then
 		verify(groupMemberRepository, times(1)).delete(groupMember);
 		verify(bookmarkedStudyGroupRepository, times(1)).delete(Objects.requireNonNull(bookmark));
@@ -310,7 +310,7 @@ class StudyGroupServiceTest {
 		// given
 		when(studyGroupRepository.findById(10L)).thenReturn(Optional.empty());
 		// when, then
-		assertThatThrownBy(() -> studyGroupService.deleteGroup(user, 10L))
+		assertThatThrownBy(() -> studyGroupService.exitGroup(user, 10L))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.NOT_FOUND.value())
 			.hasFieldOrPropertyWithValue("error", "존재하지 않는 그룹 입니다.");
@@ -323,7 +323,7 @@ class StudyGroupServiceTest {
 		when(studyGroupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
 		when(groupMemberRepository.findByUserAndStudyGroup(user2, group)).thenReturn(Optional.empty());
 		// when, then
-		assertThatThrownBy(() -> studyGroupService.deleteGroup(user2, 10L))
+		assertThatThrownBy(() -> studyGroupService.exitGroup(user2, 10L))
 			.isInstanceOf(GroupMemberValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
 			.hasFieldOrPropertyWithValue("error", "이미 참여하지 않은 그룹 입니다.");

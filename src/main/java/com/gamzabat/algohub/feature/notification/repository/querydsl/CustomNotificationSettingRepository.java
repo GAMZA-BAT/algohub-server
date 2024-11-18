@@ -10,4 +10,6 @@ public interface CustomNotificationSettingRepository {
 	List<NotificationSetting> findAllByUser(User user);
 
 	List<NotificationSetting> findAllByStudyGroup(StudyGroup studyGroup);
+
+	void deleteAllByStudyGroup(StudyGroup studyGroup);
 }

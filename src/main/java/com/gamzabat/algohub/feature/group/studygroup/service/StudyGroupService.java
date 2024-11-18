@@ -148,6 +148,33 @@ public class StudyGroupService {
 
 	@Transactional
 	public void deleteGroup(User user, Long groupId) {
+		StudyGroup group = groupRepository.findById(groupId)
+			.orElseThrow(() -> new CannotFoundGroupException("존재하지 않는 그룹입니다."));
+
+		GroupMember owner = groupMemberRepository.findByUserAndStudyGroup(user, group)
+			.orElseThrow(
+				() -> new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(), "참여하지 않은 그룹입니다."));
+
+		if (!RoleOfGroupMember.isOwner(owner)) {
+			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "스터디 그룹 삭제는 방장만 가능합니다.");
+		}
+
+		// bookmarkedStudyGroupRepository.deleteAllInBatch(bookmarkedStudyGroupRepository.findAllByStudyGroup(group));
+		// rankingRepository.deleteAllInBatch(rankingRepository.findAllByStudyGroup(group));
+		// notificationSettingRepository.deleteAllInBatch(notificationSettingRepository.findAllByStudyGroup(group));
+		// groupMemberRepository.deleteAllInBatch(groupMemberRepository.findAllByStudyGroup(group));
+		// groupRepository.delete(group);
+		bookmarkedStudyGroupRepository.deleteAllByStudyGroup(group);
+		rankingRepository.deleteAllByStudyGroup(group);
+		notificationSettingRepository.deleteAllByStudyGroup(group);
+		groupMemberRepository.deleteAllByStudyGroup(group);
+		groupRepository.delete(group);
+
+		log.info("success to delete study group");
+	}
+
+	@Transactional
+	public void exitGroup(User user, Long groupId) {
 		StudyGroup studyGroup = groupRepository.findById(groupId)
 			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다."));
 
