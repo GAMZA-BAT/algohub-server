@@ -8,7 +8,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -255,53 +254,16 @@ class StudyGroupServiceTest {
 	@DisplayName("그룹 삭제 성공 (주인)")
 	void deleteGroup() {
 		// given
-		List<BookmarkedStudyGroup> bookmarks = new ArrayList<>();
-		bookmarks.add(BookmarkedStudyGroup.builder().studyGroup(group).user(user).build());
-		bookmarks.add(BookmarkedStudyGroup.builder().studyGroup(group).user(user2).build());
-
 		when(studyGroupRepository.findById(10L)).thenReturn(Optional.of(group));
-		when(bookmarkedStudyGroupRepository.findAllByStudyGroup(group)).thenReturn(bookmarks);
 		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
-		when(groupMemberRepository.findAllByStudyGroup(group)).thenReturn(List.of(groupMember1));
 		// when
-		studyGroupService.exitGroup(user, 10L);
+		studyGroupService.deleteGroup(user, 10L);
 		// then
+		verify(bookmarkedStudyGroupRepository, times(1)).deleteAllByStudyGroup(group);
+		verify(rankingRepository, times(1)).deleteAllByStudyGroup(group);
+		verify(notificationSettingRepository, times(1)).deleteAllByStudyGroup(group);
+		verify(groupMemberRepository, times(1)).deleteAllByStudyGroup(group);
 		verify(studyGroupRepository, times(1)).delete(group);
-		verify(groupMemberRepository, times(1)).deleteAll(List.of(groupMember1));
-		verify(bookmarkedStudyGroupRepository, times(1)).deleteAll(bookmarks);
-	}
-
-	@Test
-	@DisplayName("그룹 삭제 성공 (멤버)")
-	void exitGroup() {
-		// given
-		BookmarkedStudyGroup bookmark = BookmarkedStudyGroup.builder().studyGroup(group).user(user2).build();
-
-		GroupMember groupMember = GroupMember.builder()
-			.studyGroup(group)
-			.user(user2)
-			.role(RoleOfGroupMember.ADMIN)
-			.joinDate(LocalDate.now())
-			.build();
-
-		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.ofNullable(group));
-		when(groupMemberRepository.findByUserAndStudyGroup(user2, group)).thenReturn(Optional.of(groupMember));
-
-		when(studyGroupServiceObjectProvider.getObject()).thenReturn(groupService);
-		doNothing().when(groupService).deleteMemberFromStudyGroup(user2, groupMember, group);
-		doAnswer(invocation -> {
-			groupMemberRepository.delete(groupMember);
-			bookmarkedStudyGroupRepository.delete(bookmark);
-			return null;
-		}).when(groupService).deleteMemberFromStudyGroup(user2, groupMember, group);
-
-		// when
-		studyGroupService.exitGroup(user2, groupId);
-		// then
-		verify(groupMemberRepository, times(1)).delete(groupMember);
-		verify(bookmarkedStudyGroupRepository, times(1)).delete(Objects.requireNonNull(bookmark));
-		verify(groupService, times(1)).deleteMemberFromStudyGroup(user2, groupMember,
-			group);
 	}
 
 	@Test
@@ -310,10 +272,9 @@ class StudyGroupServiceTest {
 		// given
 		when(studyGroupRepository.findById(10L)).thenReturn(Optional.empty());
 		// when, then
-		assertThatThrownBy(() -> studyGroupService.exitGroup(user, 10L))
-			.isInstanceOf(StudyGroupValidationException.class)
-			.hasFieldOrPropertyWithValue("code", HttpStatus.NOT_FOUND.value())
-			.hasFieldOrPropertyWithValue("error", "존재하지 않는 그룹 입니다.");
+		assertThatThrownBy(() -> studyGroupService.deleteGroup(user, 10L))
+			.isInstanceOf(CannotFoundGroupException.class)
+			.hasFieldOrPropertyWithValue("errors", "존재하지 않는 그룹입니다.");
 	}
 
 	@Test
@@ -323,10 +284,10 @@ class StudyGroupServiceTest {
 		when(studyGroupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
 		when(groupMemberRepository.findByUserAndStudyGroup(user2, group)).thenReturn(Optional.empty());
 		// when, then
-		assertThatThrownBy(() -> studyGroupService.exitGroup(user2, 10L))
+		assertThatThrownBy(() -> studyGroupService.deleteGroup(user2, 10L))
 			.isInstanceOf(GroupMemberValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
-			.hasFieldOrPropertyWithValue("error", "이미 참여하지 않은 그룹 입니다.");
+			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹입니다.");
 	}
 
 	@Test
