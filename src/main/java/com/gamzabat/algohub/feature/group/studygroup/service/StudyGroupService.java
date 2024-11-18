@@ -159,11 +159,6 @@ public class StudyGroupService {
 			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "스터디 그룹 삭제는 방장만 가능합니다.");
 		}
 
-		// bookmarkedStudyGroupRepository.deleteAllInBatch(bookmarkedStudyGroupRepository.findAllByStudyGroup(group));
-		// rankingRepository.deleteAllInBatch(rankingRepository.findAllByStudyGroup(group));
-		// notificationSettingRepository.deleteAllInBatch(notificationSettingRepository.findAllByStudyGroup(group));
-		// groupMemberRepository.deleteAllInBatch(groupMemberRepository.findAllByStudyGroup(group));
-		// groupRepository.delete(group);
 		bookmarkedStudyGroupRepository.deleteAllByStudyGroup(group);
 		rankingRepository.deleteAllByStudyGroup(group);
 		notificationSettingRepository.deleteAllByStudyGroup(group);
