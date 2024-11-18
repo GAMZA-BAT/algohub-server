@@ -337,7 +337,7 @@ public class ProblemService {
 	private String getProblemId(CreateProblemRequest request) {
 		String url = request.link();
 		String[] parts = url.split("/");
-		if (parts.length < 2 || !parts[2].equals(BOJ_PROBLEM_URL))
+		if (parts.length < 3 || !parts[2].equals(BOJ_PROBLEM_URL))
 			throw new NotBojLinkException(HttpStatus.BAD_REQUEST.value(), "백준 링크가 아닙니다");
 		return parts[parts.length - 1];
 	}
