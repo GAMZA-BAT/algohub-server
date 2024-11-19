@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -50,9 +51,17 @@ public class NotificationController {
 	}
 
 	@PatchMapping
-	@Operation(summary = "알림 읽음을 표시하는 API", description = "알림 탭을 연 후 닫을 때 호출하면 봤던 알림들은 읽음 처리 되는 API")
-	public void updateIsRead(@AuthedUser User user) {
-		notificationService.updateIsRead(user);
+	@Operation(summary = "전체 알림 읽음 표시 API", description = "알림 탭을 연 후 닫을 때 호출하면 봤던 알림들은 읽음 처리 되는 API")
+	public ResponseEntity<Void> readAllNotifications(@AuthedUser User user) {
+		notificationService.readAllNotifications(user);
+		return ResponseEntity.ok().build();
+	}
+
+	@PatchMapping("/{notificationId}")
+	@Operation(summary = "알림 단건 읽음 표시 API", description = "알림 하나를 클릭했을 시 해당 알림은 읽음 처리 되는 API")
+	public ResponseEntity<Void> readNotification(@AuthedUser User user, @PathVariable Long notificationId) {
+		notificationService.readNotification(user, notificationId);
+		return ResponseEntity.ok().build();
 	}
 
 	@GetMapping(value = "/settings")

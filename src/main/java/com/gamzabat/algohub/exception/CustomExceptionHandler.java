@@ -12,7 +12,9 @@ import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundProble
 import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.InvalidRoleException;
 import com.gamzabat.algohub.feature.notice.exception.NoticeValidationException;
+import com.gamzabat.algohub.feature.notification.exception.CannotFoundNotificationException;
 import com.gamzabat.algohub.feature.notification.exception.CannotFoundNotificationSettingException;
+import com.gamzabat.algohub.feature.notification.exception.NotificationValidationException;
 import com.gamzabat.algohub.feature.problem.exception.NotBojLinkException;
 import com.gamzabat.algohub.feature.problem.exception.SolvedAcApiErrorException;
 import com.gamzabat.algohub.feature.solution.exception.CannotFoundSolutionException;
@@ -127,5 +129,16 @@ public class CustomExceptionHandler {
 	protected ResponseEntity<ErrorResponse> handler(CannotFoundNotificationSettingException e) {
 		return ResponseEntity.status(HttpStatus.NOT_FOUND)
 			.body(new ErrorResponse(HttpStatus.NOT_FOUND.value(), e.getError(), null));
+	}
+
+	@ExceptionHandler(CannotFoundNotificationException.class)
+	protected ResponseEntity<ErrorResponse> handler(CannotFoundNotificationException e) {
+		return ResponseEntity.status(HttpStatus.NOT_FOUND)
+			.body(new ErrorResponse(HttpStatus.NOT_FOUND.value(), e.getError(), null));
+	}
+
+	@ExceptionHandler(NotificationValidationException.class)
+	protected ResponseEntity<ErrorResponse> handler(NotificationValidationException e) {
+		return ResponseEntity.status(e.getCode()).body(new ErrorResponse(e.getCode(), e.getError(), null));
 	}
 }

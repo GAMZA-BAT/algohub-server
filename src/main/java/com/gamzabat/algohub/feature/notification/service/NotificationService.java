@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +22,9 @@ import com.gamzabat.algohub.feature.notification.domain.Notification;
 import com.gamzabat.algohub.feature.notification.domain.NotificationSetting;
 import com.gamzabat.algohub.feature.notification.dto.GetNotificationResponse;
 import com.gamzabat.algohub.feature.notification.enums.NotificationCategory;
+import com.gamzabat.algohub.feature.notification.exception.CannotFoundNotificationException;
 import com.gamzabat.algohub.feature.notification.exception.CannotFoundNotificationSettingException;
+import com.gamzabat.algohub.feature.notification.exception.NotificationValidationException;
 import com.gamzabat.algohub.feature.notification.repository.EmitterRepositoryImpl;
 import com.gamzabat.algohub.feature.notification.repository.NotificationRepository;
 import com.gamzabat.algohub.feature.notification.repository.NotificationSettingRepository;
@@ -158,13 +161,21 @@ public class NotificationService {
 		return notifications.stream().map(GetNotificationResponse::toDTO).toList();
 	}
 
-	public void updateIsRead(User user) {
+	@Transactional
+	public void readAllNotifications(User user) {
 		List<Notification> notifications = notificationRepository.findAllByUserAndIsRead(user, false);
-		notifications.forEach(notification -> {
-			notification.updateIsRead();
-			notificationRepository.save(notification);
-		});
-		log.info("success to read status");
+		notifications.forEach(Notification::updateIsRead);
+		log.info("success to read all notifications.");
+	}
+
+	@Transactional
+	public void readNotification(User user, Long notificationId) {
+		Notification notification = notificationRepository.findById(notificationId)
+			.orElseThrow(() -> new CannotFoundNotificationException("존재하지 않는 알림입니다."));
+		if (!notification.getUser().getId().equals(user.getId()))
+			throw new NotificationValidationException(HttpStatus.FORBIDDEN.value(), "알림의 주인이 일치하지 않습니다.");
+		notification.updateIsRead();
+		log.info("success to read notification. notificationId : {}", notificationId);
 	}
 
 	@Transactional
