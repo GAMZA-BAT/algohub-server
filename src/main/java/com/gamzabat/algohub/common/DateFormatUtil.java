@@ -17,7 +17,7 @@ public final class DateFormatUtil {
 	}
 
 	public static String formatDateTimeForNotice(LocalDateTime dateTime) {
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yy/MM/dd HH:mm a", Locale.ENGLISH);
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yy/MM/dd hh:mm a", Locale.ENGLISH);
 		return dateTime.format(formatter);
 	}
 }
