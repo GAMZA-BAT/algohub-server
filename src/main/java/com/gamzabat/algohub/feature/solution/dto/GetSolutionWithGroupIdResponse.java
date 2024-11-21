@@ -11,11 +11,15 @@ import lombok.experimental.SuperBuilder;
 public class GetSolutionWithGroupIdResponse extends GetSolutionResponse {
 	private final Long groupId;
 
-	public static GetSolutionWithGroupIdResponse toDTO(Solution solution, Long commentCount) {
+	public static GetSolutionWithGroupIdResponse toDTO(Solution solution, Integer accuracy, Integer submitMemberCount,
+		Integer totalMemberCount, Long commentCount) {
 		return GetSolutionWithGroupIdResponse.builder()
 			.solutionId(solution.getId())
 			.problemTitle(solution.getProblem().getTitle())
 			.problemLevel(solution.getProblem().getLevel())
+			.accuracy(accuracy)
+			.submitMemberCount(submitMemberCount)
+			.totalMemberCount(totalMemberCount)
 			.nickname(solution.getUser().getNickname())
 			.profileImage(solution.getUser().getProfileImage())
 			.solvedDateTime(DateFormatUtil.formatDateTime(solution.getSolvedDateTime()))

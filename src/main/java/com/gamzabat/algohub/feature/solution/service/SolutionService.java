@@ -71,10 +71,7 @@ public class SolutionService {
 		Page<Solution> solutions = solutionRepository.findAllFilteredSolutions(problem, nickname, language, result,
 			pageable);
 
-		return solutions.map(solution -> {
-			long commentCount = commentRepository.countCommentsBySolutionId(solution.getId());
-			return GetSolutionResponse.toDTO(solution, commentCount);
-		});
+		return solutions.map(this::getGetSolutionResponse);
 	}
 
 	public GetSolutionResponse getSolution(User user, Long solutionId) {
@@ -84,8 +81,7 @@ public class SolutionService {
 		StudyGroup group = solution.getProblem().getStudyGroup();
 
 		if (groupMemberRepository.existsByUserAndStudyGroup(user, group)) {
-			long commentCount = commentRepository.countCommentsBySolutionId(solution.getId());
-			return GetSolutionResponse.toDTO(solution, commentCount);
+			return getGetSolutionResponse(solution);
 		} else {
 			throw new UserValidationException("해당 풀이를 확인 할 권한이 없습니다.");
 		}
@@ -104,10 +100,7 @@ public class SolutionService {
 			language,
 			result, pageable);
 
-		return solutions.map(solution -> {
-			long commentCount = commentRepository.countCommentsBySolutionId(solution.getId());
-			return GetSolutionResponse.toDTO(solution, commentCount);
-		});
+		return solutions.map(this::getGetSolutionResponse);
 	}
 
 	public Page<GetSolutionWithGroupIdResponse> getMySolutions(User user, Integer problemNumber, String language,
@@ -118,9 +111,29 @@ public class SolutionService {
 			result, pageable);
 
 		return solutions.map(solution -> {
+			Integer correctCount = getCorrectCount(solution);
+			Integer submitMemberCount = solutionRepository.countDistinctUsersByProblemId(solution.getProblem().getId());
+			Integer totalMemberCount = groupMemberRepository.countMembersByStudyGroupId(getGroupId(solution)) + 1;
+			Integer accuracy = calculateAccuracy(submitMemberCount, correctCount);
 			long commentCount = commentRepository.countCommentsBySolutionId(solution.getId());
-			return GetSolutionWithGroupIdResponse.toDTO(solution, commentCount);
+			return GetSolutionWithGroupIdResponse.toDTO(solution, accuracy, submitMemberCount, totalMemberCount,
+				commentCount);
 		});
+	}
+
+	private GetSolutionResponse getGetSolutionResponse(Solution solution) {
+		Integer correctCount = getCorrectCount(solution);
+		Integer submitMemberCount = solutionRepository.countDistinctUsersByProblemId(solution.getProblem().getId());
+		Integer totalMemberCount = groupMemberRepository.countMembersByStudyGroupId(getGroupId(solution)) + 1;
+		Integer accuracy = calculateAccuracy(submitMemberCount, correctCount);
+		long commentCount = commentRepository.countCommentsBySolutionId(solution.getId());
+		return GetSolutionResponse.toDTO(solution, accuracy, submitMemberCount, totalMemberCount, commentCount);
+	}
+
+	private Integer getCorrectCount(Solution solution) {
+		return solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(
+			solution.getProblem().getId(),
+			BOJResultConstants.CORRECT);
 	}
 
 	public void createSolution(CreateSolutionRequest request) {
@@ -185,5 +198,19 @@ public class SolutionService {
 
 	private boolean isCorrect(String result) {
 		return result.equals(BOJResultConstants.CORRECT) || result.endsWith("점");
+	}
+
+	private Integer calculateAccuracy(Integer submitMemberCount, Integer correctCount) {
+		if (submitMemberCount == 0)
+			return 0;
+
+		Double tempCorrectCount = correctCount.doubleValue();
+		Double tempSubmitMemberCount = submitMemberCount.doubleValue();
+		Double tempAccuracy = ((tempCorrectCount / tempSubmitMemberCount) * 100);
+		return tempAccuracy.intValue();
+	}
+
+	private static Long getGroupId(Solution solution) {
+		return solution.getProblem().getStudyGroup().getId();
 	}
 }
