@@ -3,21 +3,13 @@ package com.gamzabat.algohub.feature.solution.dto;
 import com.gamzabat.algohub.common.DateFormatUtil;
 import com.gamzabat.algohub.feature.solution.domain.Solution;
 
-import lombok.Builder;
 import lombok.Getter;
+import lombok.experimental.SuperBuilder;
 
+@SuperBuilder
 @Getter
 public class GetSolutionWithGroupIdResponse extends GetSolutionResponse {
 	private final Long groupId;
-
-	@Builder
-	GetSolutionWithGroupIdResponse(Long solutionId, String problemTitle, Integer problemLevel, String nickname,
-		String profileImage, String solvedDateTime, String content, String result, Integer memoryUsage,
-		Integer executionTime, String language, Integer codeLength, Long commentCount, Long groupId) {
-		super(solutionId, problemTitle, problemLevel, nickname, profileImage, solvedDateTime, content, result,
-			memoryUsage, executionTime, language, codeLength, commentCount);
-		this.groupId = groupId;
-	}
 
 	public static GetSolutionWithGroupIdResponse toDTO(Solution solution, Long commentCount) {
 		return GetSolutionWithGroupIdResponse.builder()

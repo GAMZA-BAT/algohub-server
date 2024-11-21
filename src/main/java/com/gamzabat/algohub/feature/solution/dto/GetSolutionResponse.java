@@ -4,10 +4,10 @@ import com.gamzabat.algohub.common.DateFormatUtil;
 import com.gamzabat.algohub.constants.BOJResultConstants;
 import com.gamzabat.algohub.feature.solution.domain.Solution;
 
-import lombok.Builder;
 import lombok.Getter;
+import lombok.experimental.SuperBuilder;
 
-@Builder
+@SuperBuilder
 @Getter
 public class GetSolutionResponse {
 	private Long solutionId;
