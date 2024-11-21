@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -29,4 +30,8 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> 
 	GroupMember findByStudyGroupAndRole(StudyGroup group, RoleOfGroupMember role);
 
 	int countByStudyGroup(StudyGroup studyGroup);
+
+	@Modifying
+	@Query("delete from GroupMember gm where gm.studyGroup = :studyGroup")
+	void deleteAllByStudyGroup(StudyGroup studyGroup);
 }

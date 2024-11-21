@@ -14,6 +14,7 @@ import org.springframework.stereotype.Repository;
 import com.gamzabat.algohub.feature.group.ranking.domain.Ranking;
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.querydsl.jpa.impl.JPAQuery;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import lombok.AllArgsConstructor;
@@ -49,5 +50,15 @@ public class CustomRankingRepositoryImpl implements CustomRankingRepository {
 	private JPAQuery<Long> rankingCountQuery() {
 		return queryFactory.select(ranking.count())
 			.from(ranking);
+	}
+
+	@Override
+	public void deleteAllByStudyGroup(StudyGroup group) {
+		queryFactory.delete(ranking)
+			.where(ranking.member.in(
+				JPAExpressions.selectFrom(groupMember)
+					.where(groupMember.studyGroup.eq(group))
+			))
+			.execute();
 	}
 }

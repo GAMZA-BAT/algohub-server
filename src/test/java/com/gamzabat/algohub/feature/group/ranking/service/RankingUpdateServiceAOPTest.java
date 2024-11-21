@@ -117,7 +117,7 @@ public class RankingUpdateServiceAOPTest {
 		when(groupMemberRepository.findByUserAndStudyGroup(user2, group)).thenReturn(Optional.of(groupMember2));
 		doNothing().when(rankingUpdateService).updateRanking(group);
 		// when
-		studyGroupService.deleteGroup(user2, groupId);
+		studyGroupService.exitGroup(user2, groupId);
 		// then
 		verify(rankingUpdateService, times(1)).updateRanking(group);
 	}

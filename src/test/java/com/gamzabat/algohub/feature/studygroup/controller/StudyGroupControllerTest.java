@@ -254,49 +254,95 @@ class StudyGroupControllerTest {
 	}
 
 	@Test
-	@DisplayName("그룹 탈퇴 성공")
-	void leaveGroup() throws Exception {
+	@DisplayName("그룹 삭제 성공")
+	void deleteGroup() throws Exception {
 		// given
 		doNothing().when(studyGroupService).deleteGroup(user, groupId);
+		// when, then
+		mockMvc.perform(delete("/api/groups/{groupId}", groupId)
+				.header("Authorization", token)
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk());
+
+		verify(studyGroupService, times(1)).deleteGroup(user, groupId);
+	}
+
+	@Test
+	@DisplayName("그룹 삭제 실패 : 이미 참여 안한 그룹")
+	void deleteGroupFailed_1() throws Exception {
+		// given
+		doThrow(new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(), "참여하지 않은 그룹 입니다.")).when(
+			studyGroupService).deleteGroup(user, groupId);
+		// when, then
+		mockMvc.perform(delete("/api/groups/{groupId}", groupId)
+				.header("Authorization", token)
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.error").value("참여하지 않은 그룹 입니다."));
+
+		verify(studyGroupService, times(1)).deleteGroup(any(User.class), anyLong());
+	}
+
+	@Test
+	@DisplayName("그룹 삭제 실패 : 존재하지 않는 그룹")
+	void deleteGroupFailed_2() throws Exception {
+		// given
+		doThrow(new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹입니다.")).when(
+			studyGroupService).deleteGroup(user, groupId);
+		// when, then
+		mockMvc.perform(delete("/api/groups/{groupId}", groupId)
+				.header("Authorization", token)
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.error").value("존재하지 않는 그룹입니다."));
+
+		verify(studyGroupService, times(1)).deleteGroup(any(User.class), anyLong());
+	}
+
+	@Test
+	@DisplayName("그룹 탈퇴 성공")
+	void exitGroup() throws Exception {
+		// given
+		doNothing().when(studyGroupService).exitGroup(user, groupId);
 		// when, then
 		mockMvc.perform(delete("/api/groups/{groupId}/members/me", groupId)
 				.header("Authorization", token)
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk());
 
-		verify(studyGroupService, times(1)).deleteGroup(any(User.class), anyLong());
+		verify(studyGroupService, times(1)).exitGroup(any(User.class), anyLong());
 	}
 
 	@Test
 	@DisplayName("그룹 탈퇴 실패 : 존재하지 않는 그룹")
-	void leaveGroupFailed_1() throws Exception {
+	void exitGroupFailed_1() throws Exception {
 		// given
-		doThrow(new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다.")).when(
-			studyGroupService).deleteGroup(user, groupId);
+		doThrow(new CannotFoundGroupException("존재하지 않는 그룹입니다.")).when(
+			studyGroupService).exitGroup(user, groupId);
 		// when, then
 		mockMvc.perform(delete("/api/groups/{groupId}/members/me", groupId)
 				.header("Authorization", token)
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isNotFound())
-			.andExpect(jsonPath("$.error").value("존재하지 않는 그룹 입니다."));
+			.andExpect(jsonPath("$.error").value("존재하지 않는 그룹입니다."));
 
-		verify(studyGroupService, times(1)).deleteGroup(any(User.class), anyLong());
+		verify(studyGroupService, times(1)).exitGroup(any(User.class), anyLong());
 	}
 
 	@Test
 	@DisplayName("그룹 탈퇴 실패 : 이미 참여 안한 그룹")
-	void leaveGroupFailed_2() throws Exception {
+	void exitGroupFailed_2() throws Exception {
 		// given
-		doThrow(new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(), "이미 참여하지 않은 그룹 입니다.")).when(
-			studyGroupService).deleteGroup(user, groupId);
+		doThrow(new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(), "참여하지 않은 그룹 입니다.")).when(
+			studyGroupService).exitGroup(user, groupId);
 		// when, then
 		mockMvc.perform(delete("/api/groups/{groupId}/members/me", groupId)
 				.header("Authorization", token)
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.error").value("이미 참여하지 않은 그룹 입니다."));
+			.andExpect(jsonPath("$.error").value("참여하지 않은 그룹 입니다."));
 
-		verify(studyGroupService, times(1)).deleteGroup(any(User.class), anyLong());
+		verify(studyGroupService, times(1)).exitGroup(any(User.class), anyLong());
 	}
 
 	@Test
@@ -313,12 +359,12 @@ class StudyGroupControllerTest {
 	}
 
 	@Test
-	@DisplayName("그룹 탈퇴 실패 : 참여하지 않은 그룹")
+	@DisplayName("멤버 삭제 실패 : 참여하지 않은 그룹")
 	void deleteMemberFailed_1() throws Exception {
 		// given
 		doThrow(new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(),
 			"멤버 삭제 권한이 없습니다. : 참여하지 않은 그룹 입니다.")).when(
-			studyGroupService).deleteGroup(user, groupId);
+			studyGroupService).exitGroup(user, groupId);
 		// when, then
 		mockMvc.perform(delete("/api/groups/{groupId}/members/me", groupId)
 				.header("Authorization", token)
@@ -328,11 +374,11 @@ class StudyGroupControllerTest {
 	}
 
 	@Test
-	@DisplayName("그룹 탈퇴 실패 : 권한 없음")
+	@DisplayName("멤버 삭제 실패 : 권한 없음")
 	void deleteMemberFailed_2() throws Exception {
 		// given
 		doThrow(new UserValidationException("멤버를 삭제 할 권한이 없습니다.")).when(
-			studyGroupService).deleteGroup(user, groupId);
+			studyGroupService).exitGroup(user, groupId);
 		// when, then
 		mockMvc.perform(delete("/api/groups/{groupId}/members/me", groupId)
 				.header("Authorization", token)

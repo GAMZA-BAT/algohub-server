@@ -12,4 +12,6 @@ public interface CustomRankingRepository {
 	Page<Ranking> findAllByStudyGroup(StudyGroup studyGroup, Pageable pageable);
 
 	List<Ranking> findAllByStudyGroup(StudyGroup studyGroup);
+
+	void deleteAllByStudyGroup(StudyGroup studyGroup);
 }

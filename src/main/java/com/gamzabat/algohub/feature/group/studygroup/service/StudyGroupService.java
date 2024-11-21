@@ -47,6 +47,7 @@ import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupReposi
 import com.gamzabat.algohub.feature.image.service.ImageService;
 import com.gamzabat.algohub.feature.notification.domain.NotificationSetting;
 import com.gamzabat.algohub.feature.notification.enums.NotificationCategory;
+import com.gamzabat.algohub.feature.notification.repository.NotificationRepository;
 import com.gamzabat.algohub.feature.notification.repository.NotificationSettingRepository;
 import com.gamzabat.algohub.feature.notification.service.NotificationService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
@@ -71,6 +72,7 @@ public class StudyGroupService {
 	private final StudyGroupRepository studyGroupRepository;
 	private final BookmarkedStudyGroupRepository bookmarkedStudyGroupRepository;
 	private final RankingRepository rankingRepository;
+	private final NotificationRepository notificationRepository;
 
 	private final ObjectProvider<StudyGroupService> studyGroupServiceProvider;
 	private final NotificationSettingRepository notificationSettingRepository;
@@ -148,23 +150,47 @@ public class StudyGroupService {
 
 	@Transactional
 	public void deleteGroup(User user, Long groupId) {
+		StudyGroup group = groupRepository.findById(groupId)
+			.orElseThrow(() -> new CannotFoundGroupException("존재하지 않는 그룹입니다."));
+
+		GroupMember owner = groupMemberRepository.findByUserAndStudyGroup(user, group)
+			.orElseThrow(
+				() -> new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(), "참여하지 않은 그룹입니다."));
+
+		if (!RoleOfGroupMember.isOwner(owner)) {
+			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "스터디 그룹 삭제는 방장만 가능합니다.");
+		}
+
+		bookmarkedStudyGroupRepository.deleteAllByStudyGroup(group);
+		rankingRepository.deleteAllByStudyGroup(group);
+		notificationSettingRepository.deleteAllByStudyGroup(group);
+		notificationRepository.deleteAllByStudyGroup(group);
+		groupMemberRepository.deleteAllByStudyGroup(group);
+		groupRepository.delete(group);
+
+		log.info("success to delete study group");
+	}
+
+	@Transactional
+	public void exitGroup(User user, Long groupId) {
 		StudyGroup studyGroup = groupRepository.findById(groupId)
-			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다."));
+			.orElseThrow(() -> new CannotFoundGroupException("존재하지 않는 그룹입니다."));
 
 		GroupMember groupMember = groupMemberRepository.findByUserAndStudyGroup(user, studyGroup)
 			.orElseThrow(
-				() -> new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(), "이미 참여하지 않은 그룹 입니다."));
+				() -> new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(), "참여하지 않은 그룹입니다."));
 
-		if (RoleOfGroupMember.isOwner(groupMember)) { // owner
-			bookmarkedStudyGroupRepository.deleteAll(bookmarkedStudyGroupRepository.findAllByStudyGroup(studyGroup));
-			rankingRepository.deleteAll(rankingRepository.findAllByStudyGroup(studyGroup));
-			notificationSettingRepository.deleteAll(notificationSettingRepository.findAllByStudyGroup(studyGroup));
-			groupMemberRepository.deleteAll(groupMemberRepository.findAllByStudyGroup(studyGroup));
-			groupRepository.delete(studyGroup);
-		} else { // member
-			studyGroupServiceProvider.getObject().deleteMemberFromStudyGroup(user, groupMember, studyGroup);
+		studyGroupServiceProvider.getObject().deleteMemberFromStudyGroup(user, groupMember, studyGroup);
+
+		if (RoleOfGroupMember.isOwner(groupMember)) {
+			GroupMember member = groupMemberRepository.findAllByStudyGroup(studyGroup)
+				.stream()
+				.sorted(Comparator.comparing(GroupMember::getRole).thenComparing(GroupMember::getJoinDate))
+				.toList().getFirst();
+			member.updateRole(RoleOfGroupMember.OWNER);
 		}
-		log.info("success to delete(exit) study group");
+
+		log.info("success to exit study group");
 	}
 
 	@Transactional
@@ -195,6 +221,7 @@ public class StudyGroupService {
 			.ifPresent(bookmarkedStudyGroupRepository::delete);
 		rankingRepository.deleteByMember(groupMember);
 		notificationSettingRepository.deleteByMember(groupMember);
+		notificationRepository.deleteAllByStudyGroup(groupMember.getStudyGroup());
 		groupMemberRepository.delete(groupMember);
 		log.info("success to delete group member");
 	}

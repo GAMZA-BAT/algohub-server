@@ -71,7 +71,14 @@ public class StudyGroupController {
 	}
 
 	@DeleteMapping(value = "/groups/{groupId}/members/me")
-	@Operation(summary = "그룹 탈퇴 API", description = "방장,멤버 상관 없이 해당 그룹을 삭제,탈퇴하는 API")
+	@Operation(summary = "그룹 탈퇴 API", description = "방장,멤버 상관 없이 해당 그룹을 탈퇴하는 API")
+	public ResponseEntity<Void> exitGroup(@AuthedUser User user, @PathVariable Long groupId) {
+		studyGroupService.exitGroup(user, groupId);
+		return ResponseEntity.ok().build();
+	}
+
+	@DeleteMapping(value = "/groups/{groupId}")
+	@Operation(summary = "그룹 삭제 API", description = "방장 권한으로 그룹을 삭제하는 API")
 	public ResponseEntity<Void> deleteGroup(@AuthedUser User user, @PathVariable Long groupId) {
 		studyGroupService.deleteGroup(user, groupId);
 		return ResponseEntity.ok().build();
