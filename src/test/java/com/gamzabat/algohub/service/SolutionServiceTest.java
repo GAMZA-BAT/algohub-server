@@ -66,8 +66,10 @@ class SolutionServiceTest {
 	@Mock
 	private UserRepository userRepository;
 	private User user, user2;
-	private Problem problem;
-	private StudyGroup group;
+	private Problem problem, problem1, problem2;
+	private StudyGroup group, group1;
+	private Long groupId = 30L;
+	private Integer problemNumber = 1010;
 	DateTimeFormatter formatter;
 
 	@BeforeEach
@@ -78,9 +80,28 @@ class SolutionServiceTest {
 		user2 = User.builder().email("email2").password("password").nickname("nickname2").bjNickname("bjNickname2")
 			.role(Role.USER).profileImage("profileImage").build();
 		group = StudyGroup.builder().name("name").groupImage("imageUrl").groupCode("code").build();
+		group1 = StudyGroup.builder().name("name1").groupImage("imageUrl1").groupCode("code1").build();
 		problem = Problem.builder()
 			.studyGroup(group)
 			.link("link")
+			.number(1010)
+			.level(100)
+			.startDate(LocalDate.now())
+			.endDate(LocalDate.now())
+			.build();
+		problem1 = Problem.builder()
+			.studyGroup(group)
+			.link("link1")
+			.number(1020)
+			.level(200)
+			.startDate(LocalDate.now())
+			.endDate(LocalDate.now())
+			.build();
+		problem2 = Problem.builder()
+			.studyGroup(group1)
+			.link("link2")
+			.number(1030)
+			.level(300)
 			.startDate(LocalDate.now())
 			.endDate(LocalDate.now())
 			.build();
@@ -446,5 +467,40 @@ class SolutionServiceTest {
 		// then
 		verify(solutionRepository, times(1)).save(any(Solution.class));
 		verify(notificationService, times(1)).sendNotificationToMembers(any(), any(), any(), any());
+	}
+
+	@Test
+	@DisplayName("그룹 내 나의 풀이 전체 조회 성공 : 문제 필터링")
+	void getMySolutionsInGroup() {
+		// given
+		Pageable pageable = PageRequest.of(0, 10);
+		List<Solution> solutions = new ArrayList<>();
+		LocalDateTime fixedDateTime = LocalDateTime.now();
+
+		for (int i = 0; i < 5; i++) {
+			solutions.add(Solution.builder()
+				.problem(problem)
+				.user(user)
+				.codeLength(i)
+				.result("맞았습니다!!")
+				.language("Java 11")
+				.solvedDateTime(fixedDateTime)
+				.build());
+		}
+
+		Page<Solution> mySolutions = new PageImpl<>(solutions, pageable, 10);
+		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.ofNullable(group));
+		when(groupMemberRepository.existsByUserAndStudyGroup(user, group)).thenReturn(true);
+		when(solutionRepository.findAllFilteredMySolutions(user, group, problemNumber, null, null,
+			pageable)).thenReturn(mySolutions);
+		// when
+		Page<GetSolutionResponse> responses = solutionService.getMySolutionsInGroup(user, groupId, problemNumber, null,
+			null,
+			pageable);
+		// then
+		for (int i = 0; i < 5; i++) {
+			assertThat(responses.getContent().get(i).nickname()).isEqualTo("nickname1");
+			assertThat(responses.getContent().get(i).problemLevel()).isEqualTo(problem.getLevel());
+		}
 	}
 }
