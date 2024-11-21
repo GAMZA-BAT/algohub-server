@@ -24,5 +24,12 @@ public interface CustomSolutionRepository {
 		String result,
 		Pageable pageable);
 
+	Page<Solution> findAllFilteredMySolutions(
+		User user,
+		Integer problemNumber,
+		String language,
+		String result,
+		Pageable pageable);
+
 	boolean existsByUserAndProblemAndResult(User user, Problem problem, String result);
 }

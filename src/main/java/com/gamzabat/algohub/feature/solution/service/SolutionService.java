@@ -109,6 +109,18 @@ public class SolutionService {
 		});
 	}
 
+	public Page<GetSolutionResponse> getMySolutions(User user, Integer problemNumber, String language, String result,
+		Pageable pageable) {
+		Page<Solution> solutions = solutionRepository.findAllFilteredMySolutions(user, problemNumber,
+			language,
+			result, pageable);
+
+		return solutions.map(solution -> {
+			long commentCount = commentRepository.countCommentsBySolutionId(solution.getId());
+			return GetSolutionResponse.toDTO(solution, commentCount);
+		});
+	}
+
 	public void createSolution(CreateSolutionRequest request) {
 
 		List<Problem> problems = problemRepository.findAllByNumber(request.problemNumber());

@@ -79,4 +79,17 @@ public class SolutionController {
 		return ResponseEntity.ok().body(response);
 	}
 
+	@GetMapping("/users/my-solutions")
+	@Operation(summary = "내 풀이 전체 조회 API", description = "그룹 상관 없이 나의 풀이 전체를 조회하는 API")
+	public ResponseEntity<Page<GetSolutionResponse>> getMySolutions(@AuthedUser User user,
+		@RequestParam(required = false) Integer problemNumber,
+		@RequestParam(required = false) String language,
+		@RequestParam(required = false) String result,
+		@RequestParam(defaultValue = "0") int page,
+		@RequestParam(defaultValue = "20") int size) {
+		Pageable pageable = PageRequest.of(page, size);
+		Page<GetSolutionResponse> response = solutionService.getMySolutions(user,
+			problemNumber, language, result, pageable);
+		return ResponseEntity.ok().body(response);
+	}
 }

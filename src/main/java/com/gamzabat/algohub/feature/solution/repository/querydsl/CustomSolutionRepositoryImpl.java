@@ -73,6 +73,21 @@ public class CustomSolutionRepositoryImpl implements CustomSolutionRepository {
 		return PageableExecutionUtils.getPage(query.fetch(), pageable, countQuery::fetchOne);
 	}
 
+	@Override
+	public Page<Solution> findAllFilteredMySolutions(User user, Integer problemNumber,
+		String language,
+		String result, Pageable pageable) {
+		JPAQuery<Solution> query = queryFactory.selectFrom(solution)
+			.where(solution.user.eq(user));
+
+		addProblemFilter(problemNumber, query);
+		addLanguageFilter(language, query);
+		addResultFilter(result, query);
+
+		JPAQuery<Long> countQuery = solutionCountQuery(query);
+		return PageableExecutionUtils.getPage(query.fetch(), pageable, countQuery::fetchOne);
+	}
+
 	private void addResultFilter(String result, JPAQuery<Solution> query) {
 		if (result != null && !result.isBlank()) {
 			if (result.equals(CORRECT))
