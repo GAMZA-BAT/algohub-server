@@ -17,6 +17,7 @@ import com.gamzabat.algohub.common.annotation.AuthedUser;
 import com.gamzabat.algohub.exception.RequestException;
 import com.gamzabat.algohub.feature.solution.dto.CreateSolutionRequest;
 import com.gamzabat.algohub.feature.solution.dto.GetSolutionResponse;
+import com.gamzabat.algohub.feature.solution.dto.GetSolutionWithGroupIdResponse;
 import com.gamzabat.algohub.feature.solution.service.SolutionService;
 import com.gamzabat.algohub.feature.user.domain.User;
 
@@ -81,14 +82,14 @@ public class SolutionController {
 
 	@GetMapping("/users/my-solutions")
 	@Operation(summary = "내 풀이 전체 조회 API", description = "그룹 상관 없이 나의 풀이 전체를 조회하는 API")
-	public ResponseEntity<Page<GetSolutionResponse>> getMySolutions(@AuthedUser User user,
+	public ResponseEntity<Page<GetSolutionWithGroupIdResponse>> getMySolutions(@AuthedUser User user,
 		@RequestParam(required = false) Integer problemNumber,
 		@RequestParam(required = false) String language,
 		@RequestParam(required = false) String result,
 		@RequestParam(defaultValue = "0") int page,
 		@RequestParam(defaultValue = "20") int size) {
 		Pageable pageable = PageRequest.of(page, size);
-		Page<GetSolutionResponse> response = solutionService.getMySolutions(user,
+		Page<GetSolutionWithGroupIdResponse> response = solutionService.getMySolutions(user,
 			problemNumber, language, result, pageable);
 		return ResponseEntity.ok().body(response);
 	}

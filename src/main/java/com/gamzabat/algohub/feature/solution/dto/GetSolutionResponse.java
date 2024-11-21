@@ -5,21 +5,24 @@ import com.gamzabat.algohub.constants.BOJResultConstants;
 import com.gamzabat.algohub.feature.solution.domain.Solution;
 
 import lombok.Builder;
+import lombok.Getter;
 
 @Builder
-public record GetSolutionResponse(Long solutionId,
-								  String problemTitle,
-								  Integer problemLevel,
-								  String nickname,
-								  String profileImage,
-								  String solvedDateTime,
-								  String content,
-								  String result,
-								  Integer memoryUsage,
-								  Integer executionTime,
-								  String language,
-								  Integer codeLength,
-								  Long commentCount) {
+@Getter
+public class GetSolutionResponse {
+	private Long solutionId;
+	private String problemTitle;
+	private Integer problemLevel;
+	private String nickname;
+	private String profileImage;
+	private String solvedDateTime;
+	private String content;
+	private String result;
+	private Integer memoryUsage;
+	private Integer executionTime;
+	private String language;
+	private Integer codeLength;
+	private Long commentCount;
 
 	public static GetSolutionResponse toDTO(Solution solution, Long commentCount) {
 		return GetSolutionResponse.builder()
@@ -39,7 +42,7 @@ public record GetSolutionResponse(Long solutionId,
 			.build();
 	}
 
-	private static String convertToCustomResult(String result) {
+	protected static String convertToCustomResult(String result) {
 		if (result.endsWith("점"))
 			return BOJResultConstants.CORRECT;
 		else if (result.equals(BOJResultConstants.WRONG_OUTPUT_FORMAT))

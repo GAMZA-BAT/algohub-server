@@ -30,6 +30,7 @@ import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.solution.domain.Solution;
 import com.gamzabat.algohub.feature.solution.dto.CreateSolutionRequest;
 import com.gamzabat.algohub.feature.solution.dto.GetSolutionResponse;
+import com.gamzabat.algohub.feature.solution.dto.GetSolutionWithGroupIdResponse;
 import com.gamzabat.algohub.feature.solution.exception.CannotFoundSolutionException;
 import com.gamzabat.algohub.feature.solution.repository.SolutionCommentRepository;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
@@ -109,7 +110,8 @@ public class SolutionService {
 		});
 	}
 
-	public Page<GetSolutionResponse> getMySolutions(User user, Integer problemNumber, String language, String result,
+	public Page<GetSolutionWithGroupIdResponse> getMySolutions(User user, Integer problemNumber, String language,
+		String result,
 		Pageable pageable) {
 		Page<Solution> solutions = solutionRepository.findAllFilteredMySolutions(user, problemNumber,
 			language,
@@ -117,7 +119,7 @@ public class SolutionService {
 
 		return solutions.map(solution -> {
 			long commentCount = commentRepository.countCommentsBySolutionId(solution.getId());
-			return GetSolutionResponse.toDTO(solution, commentCount);
+			return GetSolutionWithGroupIdResponse.toDTO(solution, commentCount);
 		});
 	}
 
