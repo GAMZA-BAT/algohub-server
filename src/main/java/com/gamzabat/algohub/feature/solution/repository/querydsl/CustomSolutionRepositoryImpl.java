@@ -1,6 +1,8 @@
 package com.gamzabat.algohub.feature.solution.repository.querydsl;
 
 import static com.gamzabat.algohub.constants.BOJResultConstants.*;
+import static com.gamzabat.algohub.feature.group.studygroup.domain.QStudyGroup.*;
+import static com.gamzabat.algohub.feature.problem.domain.QProblem.*;
 import static com.gamzabat.algohub.feature.solution.domain.QSolution.*;
 
 import org.springframework.data.domain.Page;
@@ -9,6 +11,7 @@ import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
 
 import com.gamzabat.algohub.constants.LanguageConstants;
+import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.solution.domain.Solution;
 import com.gamzabat.algohub.feature.user.domain.User;
@@ -52,6 +55,24 @@ public class CustomSolutionRepositoryImpl implements CustomSolutionRepository {
 		return PageableExecutionUtils.getPage(query.fetch(), pageable, countQuery::fetchOne);
 	}
 
+	@Override
+	public Page<Solution> findAllFilteredMySolutions(User user, StudyGroup group, Integer problemNumber,
+		String language,
+		String result, Pageable pageable) {
+		JPAQuery<Solution> query = queryFactory.selectFrom(solution)
+			.join(solution.problem, problem).fetchJoin()
+			.join(problem.studyGroup, studyGroup).fetchJoin()
+			.where(solution.problem.studyGroup.eq(group)
+				.and(solution.user.eq(user)));
+
+		addProblemFilter(problemNumber, query);
+		addLanguageFilter(language, query);
+		addResultFilter(result, query);
+
+		JPAQuery<Long> countQuery = solutionCountQuery(query);
+		return PageableExecutionUtils.getPage(query.fetch(), pageable, countQuery::fetchOne);
+	}
+
 	private void addResultFilter(String result, JPAQuery<Solution> query) {
 		if (result != null && !result.isBlank()) {
 			if (result.equals(CORRECT))
@@ -72,6 +93,11 @@ public class CustomSolutionRepositoryImpl implements CustomSolutionRepository {
 	private void addLanguageFilter(String language, JPAQuery<Solution> query) {
 		if (language != null && !language.isBlank())
 			languageFilter(query, language);
+	}
+
+	private void addProblemFilter(Integer problemNumber, JPAQuery<Solution> query) {
+		if (problemNumber != null)
+			query.where(solution.problem.number.eq(problemNumber));
 	}
 
 	private void languageFilter(JPAQuery<Solution> query, String language) {

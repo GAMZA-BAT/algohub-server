@@ -64,17 +64,19 @@ public class SolutionController {
 		return ResponseEntity.ok().build();
 	}
 
-	@GetMapping("/my-solutions")
-	@Operation(summary = "나의 풀이 목록 조회 API", description = "나의 풀이를 모두 조회하는 API")
-	public ResponseEntity<Page<GetSolutionResponse>> getSolutionList(@AuthedUser User user,
-		@RequestParam Long problemId,
+	@GetMapping("/groups/{groupId}/my-solutions")
+	@Operation(summary = "그룹 내 나의 풀이 전체 조회 API", description = "특정 그룹 내에서 제출한 나의 풀이를 모두 조회하는 API")
+	public ResponseEntity<Page<GetSolutionResponse>> getMySolutionsInGroup(@AuthedUser User user,
+		@PathVariable Long groupId,
+		@RequestParam(required = false) Integer problemNumber,
 		@RequestParam(required = false) String language,
 		@RequestParam(required = false) String result,
 		@RequestParam(defaultValue = "0") int page,
 		@RequestParam(defaultValue = "20") int size) {
 		Pageable pageable = PageRequest.of(page, size);
-		Page<GetSolutionResponse> response = solutionService.getSolutionList(user, problemId, user.getNickname(),
-			language, result, pageable);
+		Page<GetSolutionResponse> response = solutionService.getMySolutionsInGroup(user,
+			groupId, problemNumber, language, result, pageable);
 		return ResponseEntity.ok().body(response);
 	}
+
 }

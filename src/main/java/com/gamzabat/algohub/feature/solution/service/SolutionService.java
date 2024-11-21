@@ -19,6 +19,7 @@ import com.gamzabat.algohub.feature.group.ranking.service.RankingService;
 import com.gamzabat.algohub.feature.group.ranking.service.RankingUpdateService;
 import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
+import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundGroupException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
@@ -87,6 +88,24 @@ public class SolutionService {
 		} else {
 			throw new UserValidationException("해당 풀이를 확인 할 권한이 없습니다.");
 		}
+	}
+
+	public Page<GetSolutionResponse> getMySolutionsInGroup(User user, Long groupId, Integer problemNumber,
+		String language,
+		String result, Pageable pageable) {
+		StudyGroup group = studyGroupRepository.findById(groupId)
+			.orElseThrow(() -> new CannotFoundGroupException("존재하지 않는 그룹입니다."));
+		if (!groupMemberRepository.existsByUserAndStudyGroup(user, group)) {
+			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹입니다.");
+		}
+
+		Page<Solution> solutions = solutionRepository.findAllFilteredMySolutions(user, group, problemNumber, language,
+			result, pageable);
+
+		return solutions.map(solution -> {
+			long commentCount = commentRepository.countCommentsBySolutionId(solution.getId());
+			return GetSolutionResponse.toDTO(solution, commentCount);
+		});
 	}
 
 	public void createSolution(CreateSolutionRequest request) {
