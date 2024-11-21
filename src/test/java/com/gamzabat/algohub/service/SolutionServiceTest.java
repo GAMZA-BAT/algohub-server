@@ -491,7 +491,7 @@ class SolutionServiceTest {
 		Page<Solution> mySolutions = new PageImpl<>(solutions, pageable, 10);
 		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.ofNullable(group));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user, group)).thenReturn(true);
-		when(solutionRepository.findAllFilteredMySolutions(user, group, problemNumber, null, null,
+		when(solutionRepository.findAllFilteredMySolutionsInGroup(user, group, problemNumber, null, null,
 			pageable)).thenReturn(mySolutions);
 		// when
 		Page<GetSolutionResponse> responses = solutionService.getMySolutionsInGroup(user, groupId, problemNumber, null,

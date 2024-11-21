@@ -16,7 +16,7 @@ public interface CustomSolutionRepository {
 		String result,
 		Pageable pageable);
 
-	Page<Solution> findAllFilteredMySolutions(
+	Page<Solution> findAllFilteredMySolutionsInGroup(
 		User user,
 		StudyGroup group,
 		Integer problemNumber,

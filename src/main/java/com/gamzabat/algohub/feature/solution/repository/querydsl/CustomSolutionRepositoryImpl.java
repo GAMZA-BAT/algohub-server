@@ -56,7 +56,7 @@ public class CustomSolutionRepositoryImpl implements CustomSolutionRepository {
 	}
 
 	@Override
-	public Page<Solution> findAllFilteredMySolutions(User user, StudyGroup group, Integer problemNumber,
+	public Page<Solution> findAllFilteredMySolutionsInGroup(User user, StudyGroup group, Integer problemNumber,
 		String language,
 		String result, Pageable pageable) {
 		JPAQuery<Solution> query = queryFactory.selectFrom(solution)

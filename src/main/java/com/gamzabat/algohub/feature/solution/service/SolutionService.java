@@ -99,7 +99,8 @@ public class SolutionService {
 			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹입니다.");
 		}
 
-		Page<Solution> solutions = solutionRepository.findAllFilteredMySolutions(user, group, problemNumber, language,
+		Page<Solution> solutions = solutionRepository.findAllFilteredMySolutionsInGroup(user, group, problemNumber,
+			language,
 			result, pageable);
 
 		return solutions.map(solution -> {
