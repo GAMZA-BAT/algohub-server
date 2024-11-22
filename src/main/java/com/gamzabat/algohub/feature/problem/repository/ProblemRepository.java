@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -27,4 +28,8 @@ public interface ProblemRepository extends JpaRepository<Problem, Long> {
 	Long countProblemsByGroupId(@Param("groupId") Long groupId);
 
 	List<Problem> findAllByEndDate(LocalDate endDate);
+
+	@Modifying
+	@Query("delete from Problem p where p.studyGroup = :studyGroup")
+	void deleteAllByStudyGroup(StudyGroup studyGroup);
 }

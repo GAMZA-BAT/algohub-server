@@ -45,6 +45,8 @@ import com.gamzabat.algohub.feature.group.studygroup.repository.BookmarkedStudyG
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.image.service.ImageService;
+import com.gamzabat.algohub.feature.notice.repository.NoticeCommentRepository;
+import com.gamzabat.algohub.feature.notice.repository.NoticeRepository;
 import com.gamzabat.algohub.feature.notification.domain.NotificationSetting;
 import com.gamzabat.algohub.feature.notification.enums.NotificationCategory;
 import com.gamzabat.algohub.feature.notification.repository.NotificationRepository;
@@ -52,6 +54,7 @@ import com.gamzabat.algohub.feature.notification.repository.NotificationSettingR
 import com.gamzabat.algohub.feature.notification.service.NotificationService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
+import com.gamzabat.algohub.feature.solution.repository.SolutionCommentRepository;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.repository.UserRepository;
@@ -72,6 +75,9 @@ public class StudyGroupService {
 	private final StudyGroupRepository studyGroupRepository;
 	private final BookmarkedStudyGroupRepository bookmarkedStudyGroupRepository;
 	private final RankingRepository rankingRepository;
+	private final NoticeRepository noticeRepository;
+	private final NoticeCommentRepository noticeCommentRepository;
+	private final SolutionCommentRepository solutionCommentRepository;
 	private final NotificationRepository notificationRepository;
 
 	private final ObjectProvider<StudyGroupService> studyGroupServiceProvider;
@@ -161,14 +167,23 @@ public class StudyGroupService {
 			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "스터디 그룹 삭제는 방장만 가능합니다.");
 		}
 
+		deleteAllAboutGroup(group);
+
+		log.info("success to delete study group");
+	}
+
+	private void deleteAllAboutGroup(StudyGroup group) {
 		bookmarkedStudyGroupRepository.deleteAllByStudyGroup(group);
 		rankingRepository.deleteAllByStudyGroup(group);
 		notificationSettingRepository.deleteAllByStudyGroup(group);
 		notificationRepository.deleteAllByStudyGroup(group);
+		noticeRepository.deleteAllByStudyGroup(group);
+		noticeCommentRepository.deleteAllByStudyGroup(group);
+		problemRepository.deleteAllByStudyGroup(group);
+		solutionRepository.deleteAllByStudyGroup(group);
+		solutionCommentRepository.deleteAllByStudyGroup(group);
 		groupMemberRepository.deleteAllByStudyGroup(group);
 		groupRepository.delete(group);
-
-		log.info("success to delete study group");
 	}
 
 	@Transactional
@@ -183,11 +198,16 @@ public class StudyGroupService {
 		studyGroupServiceProvider.getObject().deleteMemberFromStudyGroup(user, groupMember, studyGroup);
 
 		if (RoleOfGroupMember.isOwner(groupMember)) {
-			GroupMember member = groupMemberRepository.findAllByStudyGroup(studyGroup)
+			List<GroupMember> members = groupMemberRepository.findAllByStudyGroup(studyGroup)
 				.stream()
 				.sorted(Comparator.comparing(GroupMember::getRole).thenComparing(GroupMember::getJoinDate))
-				.toList().getFirst();
-			member.updateRole(RoleOfGroupMember.OWNER);
+				.toList();
+
+			if (members.isEmpty()) {
+				deleteAllAboutGroup(studyGroup);
+			} else {
+				members.getFirst().updateRole(RoleOfGroupMember.OWNER);
+			}
 		}
 
 		log.info("success to exit study group");

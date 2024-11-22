@@ -1,9 +1,11 @@
 package com.gamzabat.algohub.feature.solution.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.solution.domain.Solution;
 import com.gamzabat.algohub.feature.solution.repository.querydsl.CustomSolutionRepository;
@@ -26,4 +28,8 @@ public interface SolutionRepository extends JpaRepository<Solution, Long>, Custo
 		"AND s.result = :correct")
 	Long countDistinctCorrectSolutionsByUserAndGroup(@Param("user") User user, @Param("groupId") Long groupId,
 		@Param("correct") String correct);
+
+	@Modifying
+	@Query("DELETE FROM Solution s WHERE s.problem.studyGroup = :studyGroup")
+	void deleteAllByStudyGroup(StudyGroup studyGroup);
 }
