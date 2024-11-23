@@ -18,4 +18,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 	@Modifying
 	@Query("delete from Notification n where n.studyGroup = :studyGroup")
 	void deleteAllByStudyGroup(StudyGroup studyGroup);
+
+	@Modifying
+	@Query("DELETE FROM Notification n WHERE n.user = :user AND n.studyGroup = :studyGroup")
+	void deleteAllByUserAndStudyGroup(User user, StudyGroup studyGroup);
 }
