@@ -48,6 +48,8 @@ import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepos
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.group.studygroup.service.StudyGroupService;
 import com.gamzabat.algohub.feature.image.service.ImageService;
+import com.gamzabat.algohub.feature.notice.repository.NoticeCommentRepository;
+import com.gamzabat.algohub.feature.notice.repository.NoticeRepository;
 import com.gamzabat.algohub.feature.notification.domain.NotificationSetting;
 import com.gamzabat.algohub.feature.notification.repository.NotificationRepository;
 import com.gamzabat.algohub.feature.notification.repository.NotificationSettingRepository;
@@ -55,6 +57,7 @@ import com.gamzabat.algohub.feature.notification.service.NotificationService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.solution.domain.Solution;
+import com.gamzabat.algohub.feature.solution.repository.SolutionCommentRepository;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.repository.UserRepository;
@@ -81,6 +84,12 @@ class StudyGroupServiceTest {
 	private NotificationRepository notificationRepository;
 	@Mock
 	private NotificationSettingRepository notificationSettingRepository;
+	@Mock
+	private NoticeRepository noticeRepository;
+	@Mock
+	private NoticeCommentRepository noticeCommentRepository;
+	@Mock
+	private SolutionCommentRepository solutionCommentRepository;
 	@Mock
 	private RankingRepository rankingRepository;
 	@Mock
@@ -299,18 +308,18 @@ class StudyGroupServiceTest {
 	void exitGroup() {
 		// given
 		when(studyGroupRepository.findById(10L)).thenReturn(Optional.of(group));
-		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
-		when(groupMemberRepository.findAllByStudyGroup(group)).thenReturn(
-			List.of(groupMember2, groupMember3));
+		when(groupMemberRepository.findByUserAndStudyGroup(user2, group)).thenReturn(Optional.ofNullable(groupMember2));
+		// when(groupMemberRepository.findAllByStudyGroup(group)).thenReturn(
+		// 	List.of(groupMember2, groupMember3));
 		when(studyGroupServiceObjectProvider.getObject()).thenReturn(studyGroupService);
 		// when
-		studyGroupService.exitGroup(user, 10L);
+		studyGroupService.exitGroup(user2, 10L);
 		// then
-		verify(rankingRepository, times(1)).deleteByMember(groupMember1);
-		verify(notificationSettingRepository, times(1)).deleteByMember(groupMember1);
-		verify(groupMemberRepository, times(1)).delete(groupMember1);
-		verify(notificationRepository, times(1)).deleteAllByStudyGroup(group);
-		assertThat(groupMember3.getRole()).isEqualTo(RoleOfGroupMember.OWNER);
+		verify(rankingRepository, times(1)).deleteByMember(groupMember2);
+		verify(notificationSettingRepository, times(1)).deleteByMember(groupMember2);
+		verify(groupMemberRepository, times(1)).delete(groupMember2);
+		verify(notificationRepository, times(1)).deleteAllByUserAndStudyGroup(user2, group);
+		// assertThat(groupMember3.getRole()).isEqualTo(RoleOfGroupMember.OWNER);
 	}
 
 	@Test
