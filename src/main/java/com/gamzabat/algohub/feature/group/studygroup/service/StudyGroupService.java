@@ -177,11 +177,11 @@ public class StudyGroupService {
 		rankingRepository.deleteAllByStudyGroup(group);
 		notificationSettingRepository.deleteAllByStudyGroup(group);
 		notificationRepository.deleteAllByStudyGroup(group);
-		noticeRepository.deleteAllByStudyGroup(group);
 		noticeCommentRepository.deleteAllByStudyGroup(group);
-		problemRepository.deleteAllByStudyGroup(group);
-		solutionRepository.deleteAllByStudyGroup(group);
+		noticeRepository.deleteAllByStudyGroup(group);
 		solutionCommentRepository.deleteAllByStudyGroup(group);
+		solutionRepository.deleteAllByStudyGroup(group);
+		problemRepository.deleteAllByStudyGroup(group);
 		groupMemberRepository.deleteAllByStudyGroup(group);
 		groupRepository.delete(group);
 	}

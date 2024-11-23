@@ -19,6 +19,6 @@ public interface NoticeCommentRepository extends JpaRepository<NoticeComment, Lo
 	void deleteAllCommentByNotice(Notice notice);
 
 	@Modifying
-	@Query("delete from NoticeComment nc join nc.notice where nc.notice.studyGroup = :group")
+	@Query("DELETE FROM NoticeComment nc WHERE nc.notice.studyGroup = :group")
 	void deleteAllByStudyGroup(StudyGroup group);
 }
