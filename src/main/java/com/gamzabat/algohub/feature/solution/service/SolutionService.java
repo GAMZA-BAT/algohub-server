@@ -29,8 +29,11 @@ import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.solution.domain.Solution;
 import com.gamzabat.algohub.feature.solution.dto.CreateSolutionRequest;
+import com.gamzabat.algohub.feature.solution.dto.GetMySolutionListResponse;
+import com.gamzabat.algohub.feature.solution.dto.GetMySolutionListWithGroupIdResponse;
 import com.gamzabat.algohub.feature.solution.dto.GetSolutionResponse;
 import com.gamzabat.algohub.feature.solution.dto.GetSolutionWithGroupIdResponse;
+import com.gamzabat.algohub.feature.solution.enums.ProgressCategory;
 import com.gamzabat.algohub.feature.solution.exception.CannotFoundSolutionException;
 import com.gamzabat.algohub.feature.solution.repository.SolutionCommentRepository;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
@@ -87,7 +90,7 @@ public class SolutionService {
 		}
 	}
 
-	public Page<GetSolutionResponse> getMySolutionsInGroup(User user, Long groupId, Integer problemNumber,
+	public GetMySolutionListResponse getMySolutionsInGroup(User user, Long groupId, Integer problemNumber,
 		String language,
 		String result, Pageable pageable) {
 		StudyGroup group = studyGroupRepository.findById(groupId)
@@ -96,29 +99,40 @@ public class SolutionService {
 			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹입니다.");
 		}
 
-		Page<Solution> solutions = solutionRepository.findAllFilteredMySolutionsInGroup(user, group, problemNumber,
+		Page<GetSolutionResponse> inProgressSolutions = solutionRepository.findAllFilteredMySolutionsInGroup(user,
+			group,
+			problemNumber,
 			language,
-			result, pageable);
+			result, ProgressCategory.IN_PROGRESS, pageable).map(this::getGetSolutionResponse);
+		Page<GetSolutionResponse> expiredSolutions = solutionRepository.findAllFilteredMySolutionsInGroup(user, group,
+			problemNumber, language, result, ProgressCategory.EXPIRED, pageable).map(this::getGetSolutionResponse);
 
-		return solutions.map(this::getGetSolutionResponse);
+		log.info("success to get my solutions in group {}", groupId);
+		return new GetMySolutionListResponse(inProgressSolutions, expiredSolutions);
 	}
 
-	public Page<GetSolutionWithGroupIdResponse> getMySolutions(User user, Integer problemNumber, String language,
+	public GetMySolutionListWithGroupIdResponse getMySolutions(User user, Integer problemNumber, String language,
 		String result,
 		Pageable pageable) {
-		Page<Solution> solutions = solutionRepository.findAllFilteredMySolutions(user, problemNumber,
+		Page<GetSolutionWithGroupIdResponse> inProgressSolutions = solutionRepository.findAllFilteredMySolutions(user,
+			problemNumber,
 			language,
-			result, pageable);
+			result, ProgressCategory.IN_PROGRESS, pageable).map(this::getGetSolutionWithGroupIdResponse);
+		Page<GetSolutionWithGroupIdResponse> expiredSolutions = solutionRepository.findAllFilteredMySolutions(user,
+			problemNumber,
+			language,
+			result, ProgressCategory.EXPIRED, pageable).map(this::getGetSolutionWithGroupIdResponse);
+		return new GetMySolutionListWithGroupIdResponse(inProgressSolutions, expiredSolutions);
+	}
 
-		return solutions.map(solution -> {
-			Integer correctCount = getCorrectCount(solution);
-			Integer submitMemberCount = solutionRepository.countDistinctUsersByProblemId(solution.getProblem().getId());
-			Integer totalMemberCount = groupMemberRepository.countMembersByStudyGroupId(getGroupId(solution)) + 1;
-			Integer accuracy = calculateAccuracy(submitMemberCount, correctCount);
-			long commentCount = commentRepository.countCommentsBySolutionId(solution.getId());
-			return GetSolutionWithGroupIdResponse.toDTO(solution, accuracy, submitMemberCount, totalMemberCount,
-				commentCount);
-		});
+	private GetSolutionWithGroupIdResponse getGetSolutionWithGroupIdResponse(Solution solution) {
+		Integer correctCount = getCorrectCount(solution);
+		Integer submitMemberCount = solutionRepository.countDistinctUsersByProblemId(solution.getProblem().getId());
+		Integer totalMemberCount = groupMemberRepository.countMembersByStudyGroupId(getGroupId(solution)) + 1;
+		Integer accuracy = calculateAccuracy(submitMemberCount, correctCount);
+		long commentCount = commentRepository.countCommentsBySolutionId(solution.getId());
+		return GetSolutionWithGroupIdResponse.toDTO(solution, accuracy, submitMemberCount, totalMemberCount,
+			commentCount);
 	}
 
 	private GetSolutionResponse getGetSolutionResponse(Solution solution) {

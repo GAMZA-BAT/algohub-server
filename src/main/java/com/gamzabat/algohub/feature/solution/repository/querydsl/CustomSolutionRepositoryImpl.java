@@ -5,6 +5,8 @@ import static com.gamzabat.algohub.feature.group.studygroup.domain.QStudyGroup.*
 import static com.gamzabat.algohub.feature.problem.domain.QProblem.*;
 import static com.gamzabat.algohub.feature.solution.domain.QSolution.*;
 
+import java.time.LocalDate;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.support.PageableExecutionUtils;
@@ -14,6 +16,7 @@ import com.gamzabat.algohub.constants.LanguageConstants;
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.solution.domain.Solution;
+import com.gamzabat.algohub.feature.solution.enums.ProgressCategory;
 import com.gamzabat.algohub.feature.user.domain.User;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -56,18 +59,20 @@ public class CustomSolutionRepositoryImpl implements CustomSolutionRepository {
 	}
 
 	@Override
-	public Page<Solution> findAllFilteredMySolutionsInGroup(User user, StudyGroup group, Integer problemNumber,
+	public Page<Solution> findAllFilteredMySolutionsInGroup(User user, StudyGroup group,
+		Integer problemNumber,
 		String language,
-		String result, Pageable pageable) {
+		String result, ProgressCategory category, Pageable pageable) {
 		JPAQuery<Solution> query = queryFactory.selectFrom(solution)
 			.join(solution.problem, problem).fetchJoin()
 			.join(problem.studyGroup, studyGroup).fetchJoin()
 			.where(solution.problem.studyGroup.eq(group)
-				.and(solution.user.eq(user)));
+				.and(solution.user.eq(user)))
+			.orderBy(solution.solvedDateTime.desc());
 
-		addProblemFilter(problemNumber, query);
-		addLanguageFilter(language, query);
-		addResultFilter(result, query);
+		addMySolutionFilters(problemNumber, language, result, category, query);
+		query.offset(pageable.getOffset())
+			.limit(pageable.getPageSize());
 
 		JPAQuery<Long> countQuery = solutionCountQuery(query);
 		return PageableExecutionUtils.getPage(query.fetch(), pageable, countQuery::fetchOne);
@@ -76,16 +81,32 @@ public class CustomSolutionRepositoryImpl implements CustomSolutionRepository {
 	@Override
 	public Page<Solution> findAllFilteredMySolutions(User user, Integer problemNumber,
 		String language,
-		String result, Pageable pageable) {
+		String result, ProgressCategory category, Pageable pageable) {
 		JPAQuery<Solution> query = queryFactory.selectFrom(solution)
-			.where(solution.user.eq(user));
+			.where(solution.user.eq(user))
+			.orderBy(solution.solvedDateTime.desc());
 
-		addProblemFilter(problemNumber, query);
-		addLanguageFilter(language, query);
-		addResultFilter(result, query);
+		addMySolutionFilters(problemNumber, language, result, category, query);
+		query.offset(pageable.getOffset())
+			.limit(pageable.getPageSize());
 
 		JPAQuery<Long> countQuery = solutionCountQuery(query);
 		return PageableExecutionUtils.getPage(query.fetch(), pageable, countQuery::fetchOne);
+	}
+
+	private void addMySolutionFilters(Integer problemNumber, String language, String result, ProgressCategory category,
+		JPAQuery<Solution> query) {
+		addEndDateFilter(category, query);
+		addProblemFilter(problemNumber, query);
+		addLanguageFilter(language, query);
+		addResultFilter(result, query);
+	}
+
+	private void addEndDateFilter(ProgressCategory category, JPAQuery<Solution> query) {
+		if (category.equals(ProgressCategory.IN_PROGRESS))
+			query.where(problem.endDate.goe(LocalDate.now()));
+		else if (category.equals(ProgressCategory.EXPIRED))
+			query.where(problem.endDate.before(LocalDate.now()));
 	}
 
 	private void addResultFilter(String result, JPAQuery<Solution> query) {

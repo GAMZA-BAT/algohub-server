@@ -16,8 +16,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.gamzabat.algohub.common.annotation.AuthedUser;
 import com.gamzabat.algohub.exception.RequestException;
 import com.gamzabat.algohub.feature.solution.dto.CreateSolutionRequest;
+import com.gamzabat.algohub.feature.solution.dto.GetMySolutionListResponse;
+import com.gamzabat.algohub.feature.solution.dto.GetMySolutionListWithGroupIdResponse;
 import com.gamzabat.algohub.feature.solution.dto.GetSolutionResponse;
-import com.gamzabat.algohub.feature.solution.dto.GetSolutionWithGroupIdResponse;
 import com.gamzabat.algohub.feature.solution.service.SolutionService;
 import com.gamzabat.algohub.feature.user.domain.User;
 
@@ -67,7 +68,7 @@ public class SolutionController {
 
 	@GetMapping("/groups/{groupId}/my-solutions")
 	@Operation(summary = "그룹 내 나의 풀이 전체 조회 API", description = "특정 그룹 내에서 제출한 나의 풀이를 모두 조회하는 API")
-	public ResponseEntity<Page<GetSolutionResponse>> getMySolutionsInGroup(@AuthedUser User user,
+	public ResponseEntity<GetMySolutionListResponse> getMySolutionsInGroup(@AuthedUser User user,
 		@PathVariable Long groupId,
 		@RequestParam(required = false) Integer problemNumber,
 		@RequestParam(required = false) String language,
@@ -75,21 +76,21 @@ public class SolutionController {
 		@RequestParam(defaultValue = "0") int page,
 		@RequestParam(defaultValue = "20") int size) {
 		Pageable pageable = PageRequest.of(page, size);
-		Page<GetSolutionResponse> response = solutionService.getMySolutionsInGroup(user,
+		GetMySolutionListResponse response = solutionService.getMySolutionsInGroup(user,
 			groupId, problemNumber, language, result, pageable);
 		return ResponseEntity.ok().body(response);
 	}
 
 	@GetMapping("/users/my-solutions")
 	@Operation(summary = "내 풀이 전체 조회 API", description = "그룹 상관 없이 나의 풀이 전체를 조회하는 API")
-	public ResponseEntity<Page<GetSolutionWithGroupIdResponse>> getMySolutions(@AuthedUser User user,
+	public ResponseEntity<GetMySolutionListWithGroupIdResponse> getMySolutions(@AuthedUser User user,
 		@RequestParam(required = false) Integer problemNumber,
 		@RequestParam(required = false) String language,
 		@RequestParam(required = false) String result,
 		@RequestParam(defaultValue = "0") int page,
 		@RequestParam(defaultValue = "20") int size) {
 		Pageable pageable = PageRequest.of(page, size);
-		Page<GetSolutionWithGroupIdResponse> response = solutionService.getMySolutions(user,
+		GetMySolutionListWithGroupIdResponse response = solutionService.getMySolutions(user,
 			problemNumber, language, result, pageable);
 		return ResponseEntity.ok().body(response);
 	}
