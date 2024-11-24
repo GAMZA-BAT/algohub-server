@@ -3,6 +3,7 @@ package com.gamzabat.algohub.feature.notice.controller;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -34,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "공지 API", description = "공지 관련 API")
 
 public class NoticeController {
+	private final String NOTICE_SORT_BY = "createdAt";
 	private final NoticeService noticeService;
 
 	@PostMapping("/groups/{groupId}/notices")
@@ -61,7 +63,7 @@ public class NoticeController {
 		@PathVariable Long groupId,
 		@RequestParam(defaultValue = "0") int page,
 		@RequestParam(defaultValue = "20") int size) {
-		Pageable pageable = PageRequest.of(page, size);
+		Pageable pageable = PageRequest.of(page, size, Sort.by(NOTICE_SORT_BY).descending());
 		Page<GetNoticeResponse> response = noticeService.getNoticeList(user, groupId, pageable);
 		return ResponseEntity.ok().body(response);
 	}
