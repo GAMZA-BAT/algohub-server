@@ -39,8 +39,10 @@ import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.solution.domain.Solution;
 import com.gamzabat.algohub.feature.solution.dto.CreateSolutionRequest;
+import com.gamzabat.algohub.feature.solution.dto.GetMySolutionListResponse;
+import com.gamzabat.algohub.feature.solution.dto.GetMySolutionListWithGroupIdResponse;
 import com.gamzabat.algohub.feature.solution.dto.GetSolutionResponse;
-import com.gamzabat.algohub.feature.solution.dto.GetSolutionWithGroupIdResponse;
+import com.gamzabat.algohub.feature.solution.enums.ProgressCategory;
 import com.gamzabat.algohub.feature.solution.exception.CannotFoundSolutionException;
 import com.gamzabat.algohub.feature.solution.repository.SolutionCommentRepository;
 import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
@@ -95,8 +97,8 @@ class SolutionServiceTest {
 			.link("link1")
 			.number(1020)
 			.level(200)
-			.startDate(LocalDate.now())
-			.endDate(LocalDate.now())
+			.startDate(LocalDate.now().minusDays(30))
+			.endDate(LocalDate.now().minusDays(10))
 			.build();
 		problem2 = Problem.builder()
 			.studyGroup(group1)
@@ -475,11 +477,12 @@ class SolutionServiceTest {
 	void getMySolutionsInGroup() {
 		// given
 		Pageable pageable = PageRequest.of(0, 10);
-		List<Solution> solutions = new ArrayList<>();
+		List<Solution> inProgress = new ArrayList<>();
+		List<Solution> expired = new ArrayList<>();
 		LocalDateTime fixedDateTime = LocalDateTime.now();
 
 		for (int i = 0; i < 5; i++) {
-			solutions.add(Solution.builder()
+			inProgress.add(Solution.builder()
 				.problem(problem)
 				.user(user)
 				.codeLength(i)
@@ -488,20 +491,38 @@ class SolutionServiceTest {
 				.solvedDateTime(fixedDateTime)
 				.build());
 		}
+		for (int i = 0; i < 5; i++) {
+			expired.add(Solution.builder()
+				.problem(problem1)
+				.user(user)
+				.codeLength(i)
+				.result("틀렸습니다")
+				.language("Java 11")
+				.solvedDateTime(fixedDateTime)
+				.build());
+		}
 
-		Page<Solution> mySolutions = new PageImpl<>(solutions, pageable, 10);
+		Page<Solution> inProgressPages = new PageImpl<>(inProgress, pageable, 10);
+		Page<Solution> expiredPages = new PageImpl<>(expired, pageable, 10);
 		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.ofNullable(group));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user, group)).thenReturn(true);
 		when(solutionRepository.findAllFilteredMySolutionsInGroup(user, group, problemNumber, null, null,
-			pageable)).thenReturn(mySolutions);
+			ProgressCategory.IN_PROGRESS,
+			pageable)).thenReturn(inProgressPages);
+		when(solutionRepository.findAllFilteredMySolutionsInGroup(user, group, problemNumber, null, null,
+			ProgressCategory.EXPIRED,
+			pageable)).thenReturn(expiredPages);
 		// when
-		Page<GetSolutionResponse> responses = solutionService.getMySolutionsInGroup(user, groupId, problemNumber, null,
-			null,
-			pageable);
+		GetMySolutionListResponse responses = solutionService.getMySolutionsInGroup(user, groupId, problemNumber, null,
+			null, pageable);
 		// then
 		for (int i = 0; i < 5; i++) {
-			assertThat(responses.getContent().get(i).getNickname()).isEqualTo("nickname1");
-			assertThat(responses.getContent().get(i).getProblemLevel()).isEqualTo(problem.getLevel());
+			assertThat(responses.inProgress().getContent().get(i).getNickname()).isEqualTo("nickname1");
+			assertThat(responses.inProgress().getContent().get(i).getProblemLevel()).isEqualTo(problem.getLevel());
+		}
+		for (int i = 0; i < 5; i++) {
+			assertThat(responses.expired().getContent().get(i).getNickname()).isEqualTo("nickname1");
+			assertThat(responses.expired().getContent().get(i).getProblemLevel()).isEqualTo(problem1.getLevel());
 		}
 	}
 
@@ -510,11 +531,12 @@ class SolutionServiceTest {
 	void getMySolutions() {
 		// given
 		Pageable pageable = PageRequest.of(0, 10);
-		List<Solution> solutions = new ArrayList<>();
+		List<Solution> inProgress = new ArrayList<>();
+		List<Solution> expired = new ArrayList<>();
 		LocalDateTime fixedDateTime = LocalDateTime.now();
 
 		for (int i = 0; i < 5; i++) {
-			solutions.add(Solution.builder()
+			inProgress.add(Solution.builder()
 				.problem(problem)
 				.user(user)
 				.codeLength(i)
@@ -523,18 +545,8 @@ class SolutionServiceTest {
 				.solvedDateTime(fixedDateTime)
 				.build());
 		}
-		for (int i = 5; i < 10; i++) {
-			solutions.add(Solution.builder()
-				.problem(problem)
-				.user(user)
-				.codeLength(i)
-				.result("틀렸습니다")
-				.language("Java 11")
-				.solvedDateTime(fixedDateTime)
-				.build());
-		}
-		for (int i = 10; i < 15; i++) {
-			solutions.add(Solution.builder()
+		for (int i = 0; i < 5; i++) {
+			expired.add(Solution.builder()
 				.problem(problem2)
 				.user(user)
 				.codeLength(i)
@@ -544,20 +556,26 @@ class SolutionServiceTest {
 				.build());
 		}
 
-		Page<Solution> mySolutions = new PageImpl<>(solutions, pageable, 10);
+		Page<Solution> inProgressPages = new PageImpl<>(inProgress, pageable, 10);
+		Page<Solution> expiredPages = new PageImpl<>(expired, pageable, 10);
+
 		when(solutionRepository.findAllFilteredMySolutions(user, null, null, null,
-			pageable)).thenReturn(mySolutions);
+			ProgressCategory.IN_PROGRESS, pageable)).thenReturn(inProgressPages);
+		when(solutionRepository.findAllFilteredMySolutions(user, null, null, null,
+			ProgressCategory.EXPIRED, pageable)).thenReturn(expiredPages);
 		// when
-		Page<GetSolutionWithGroupIdResponse> responses = solutionService.getMySolutions(user, null, null,
+		GetMySolutionListWithGroupIdResponse responses = solutionService.getMySolutions(user, null, null,
 			null, pageable);
 		// then
-		for (int i = 0; i < 10; i++) {
-			assertThat(responses.getContent().get(i).getNickname()).isEqualTo("nickname1");
-			assertThat(responses.getContent().get(i).getGroupId()).isEqualTo(problem.getStudyGroup().getId());
+		for (int i = 0; i < 5; i++) {
+			assertThat(responses.inProgress().getContent().get(i).getNickname()).isEqualTo("nickname1");
+			assertThat(responses.inProgress().getContent().get(i).getGroupId()).isEqualTo(
+				problem.getStudyGroup().getId());
 		}
-		for (int i = 10; i < 15; i++) {
-			assertThat(responses.getContent().get(i).getNickname()).isEqualTo("nickname1");
-			assertThat(responses.getContent().get(i).getGroupId()).isEqualTo(problem2.getStudyGroup().getId());
+		for (int i = 0; i < 5; i++) {
+			assertThat(responses.expired().getContent().get(i).getNickname()).isEqualTo("nickname1");
+			assertThat(responses.expired().getContent().get(i).getGroupId()).isEqualTo(
+				problem2.getStudyGroup().getId());
 		}
 	}
 }
