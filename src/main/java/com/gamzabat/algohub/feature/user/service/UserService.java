@@ -191,8 +191,8 @@ public class UserService {
 	}
 
 	@Transactional(readOnly = true)
-	public UserInfoResponse otherUserInfo(User user, Long targetUserId) {
-		User targetUser = userRepository.findById(targetUserId)
+	public UserInfoResponse otherUserInfo(User user, String userNickname) {
+		User targetUser = userRepository.findByNickname(userNickname)
 			.orElseThrow(() -> new CannotFoundUserException(HttpStatus.NOT_FOUND.value(), "해당 유저는 존재하지 않습니다."));
 
 		return new UserInfoResponse(targetUser.getEmail(), targetUser.getNickname(), targetUser.getProfileImage(),

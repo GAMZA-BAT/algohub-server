@@ -129,11 +129,11 @@ public class UserController {
 		return ResponseEntity.ok().build();
 	}
 
-	@GetMapping(value = "/{userId}")
+	@GetMapping(value = "/{userNickname}")
 	@Operation(summary = "타 회원 정보 조회 API")
 	public ResponseEntity<UserInfoResponse> getOtherUserInfo(@AuthedUser User user,
-		@RequestParam @PathVariable Long userId) {
-		UserInfoResponse userInfo = userService.otherUserInfo(user, userId);
+		@RequestParam @PathVariable String userNickname) {
+		UserInfoResponse userInfo = userService.otherUserInfo(user, userNickname);
 		return ResponseEntity.ok().body(userInfo);
 	}
 }
