@@ -23,6 +23,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 
 import com.gamzabat.algohub.common.DateFormatUtil;
@@ -224,7 +225,7 @@ public class NoticeServiceTest {
 	@DisplayName("공지 목록 조회 성공")
 	void getNoticeListSuccess_1() {
 		//given
-		Pageable pageable = PageRequest.of(0, 20);
+		Pageable pageable = PageRequest.of(0, 20, Sort.by("createdAt").descending());
 
 		List<Notice> noticeList = new ArrayList<>(10);
 		for (int i = 0; i < 10; i++)
@@ -234,7 +235,7 @@ public class NoticeServiceTest {
 					.content("content" + i)
 					.title("title" + i)
 					.category("category" + i)
-					.createdAt(LocalDateTime.now())
+					.createdAt(LocalDateTime.now().minusDays(i))
 					.studyGroup(studyGroup)
 					.build());
 		for (int i = 10; i < 20; i++)
@@ -244,7 +245,7 @@ public class NoticeServiceTest {
 					.content("content" + i)
 					.title("title" + i)
 					.category("category" + i)
-					.createdAt(LocalDateTime.now())
+					.createdAt(LocalDateTime.now().minusDays(i))
 					.studyGroup(studyGroup)
 					.build());
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
