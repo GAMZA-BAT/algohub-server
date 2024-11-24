@@ -802,10 +802,10 @@ class StudyGroupServiceTest {
 		}
 		when(bookmarkedStudyGroupRepository.findAllByUser(user)).thenReturn(bookmarks);
 		when(studyGroupRepository.findAllByUser(user)).thenReturn(groups);
-		when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+		when(userRepository.findByNickname(user.getNickname())).thenReturn(Optional.of(user));
 		when(studyGroupRepository.findAllByUser(user)).thenReturn(groups);
 		// when
-		GetStudyGroupListsResponse result = studyGroupService.getOtherStudyGroupList(user.getId());
+		GetStudyGroupListsResponse result = studyGroupService.getOtherStudyGroupList(user.getNickname());
 		// then
 		List<GetStudyGroupResponse> bookmarked = result.getBookmarked();
 		List<GetStudyGroupResponse> done = result.getDone();
