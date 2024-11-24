@@ -500,8 +500,8 @@ public class StudyGroupService {
 	}
 
 	@Transactional(readOnly = true)
-	public GetStudyGroupListsResponse getOtherStudyGroupList(Long targetUserId) {
-		User targetUser = userRepository.findById(targetUserId)
+	public GetStudyGroupListsResponse getOtherStudyGroupList(String userNickname) {
+		User targetUser = userRepository.findByNickname(userNickname)
 			.orElseThrow(() -> new CannotFoundUserException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 유저입니다."));
 		List<StudyGroup> groups = groupRepository.findAllByUser(targetUser);
 

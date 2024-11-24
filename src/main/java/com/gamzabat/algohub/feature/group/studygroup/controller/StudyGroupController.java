@@ -178,11 +178,11 @@ public class StudyGroupController {
 		return ResponseEntity.ok().build();
 	}
 
-	@GetMapping(value = "/users/{userId}/groups")
+	@GetMapping(value = "/users/{userNickname}/groups")
 	@Operation(summary = "타 유저 그룹 목록 조회 API", description = "유저가 보이도록 설정해놓은 유저가 참여하고 있는 그룹 모두 조회")
 	public ResponseEntity<GetStudyGroupListsResponse> getOtherUserStudyGroupList(@AuthedUser User user,
-		@PathVariable Long userId) {
-		GetStudyGroupListsResponse response = studyGroupService.getOtherStudyGroupList(userId);
+		@PathVariable String userNickname) {
+		GetStudyGroupListsResponse response = studyGroupService.getOtherStudyGroupList(userNickname);
 		return ResponseEntity.ok().body(response);
 	}
 }
