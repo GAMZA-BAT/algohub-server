@@ -400,8 +400,8 @@ class UserServiceTest {
 			.role(Role.USER)
 			.build();
 		// when
-		when(userRepository.findById(user2.getId())).thenReturn(Optional.of(user2));
-		UserInfoResponse response = userService.otherUserInfo(user, user2.getId());
+		when(userRepository.findByNickname(user2.getNickname())).thenReturn(Optional.of(user2));
+		UserInfoResponse response = userService.otherUserInfo(user, user2.getNickname());
 		// then
 		assertThat(response.getEmail()).isEqualTo("otherUserEmail");
 		assertThat(response.getNickname()).isEqualTo("otherUserNickname");
@@ -414,10 +414,10 @@ class UserServiceTest {
 	@DisplayName("타회원 정보 조회 실패")
 	void otherUserInfo_failed() {
 		// given
-		when(userRepository.findById(1L)).thenReturn(Optional.empty());
+		when(userRepository.findByNickname("nickname2")).thenReturn(Optional.empty());
 
 		// then
-		assertThatThrownBy(() -> userService.otherUserInfo(user, 1L))
+		assertThatThrownBy(() -> userService.otherUserInfo(user, "nickname2"))
 			.isInstanceOf(CannotFoundUserException.class)
 			.satisfies(exception -> {
 				CannotFoundUserException ex = (CannotFoundUserException)exception;
