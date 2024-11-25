@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -37,6 +38,7 @@ import lombok.RequiredArgsConstructor;
 
 public class ProblemController {
 	private final ProblemService problemService;
+	private final String PROBLEM_SORT_BY = "startDate";
 
 	@PostMapping(value = "/groups/{groupId}/problems")
 	@Operation(summary = "문제 생성 API")
@@ -66,7 +68,7 @@ public class ProblemController {
 		@PathVariable Long groupId,
 		@RequestParam(defaultValue = "0") int page,
 		@RequestParam(defaultValue = "20") int size) {
-		Pageable pageable = PageRequest.of(page, size);
+		Pageable pageable = PageRequest.of(page, size, Sort.by(PROBLEM_SORT_BY).descending());
 		Page<GetProblemResponse> response = problemService.getInProgressProblems(user, groupId, pageable);
 		return ResponseEntity.ok().body(response);
 	}
@@ -77,7 +79,7 @@ public class ProblemController {
 		@PathVariable Long groupId,
 		@RequestParam(defaultValue = "0") int page,
 		@RequestParam(defaultValue = "20") int size) {
-		Pageable pageable = PageRequest.of(page, size);
+		Pageable pageable = PageRequest.of(page, size, Sort.by(PROBLEM_SORT_BY).descending());
 		Page<GetProblemResponse> response = problemService.getExpiredProblems(user, groupId, pageable);
 		return ResponseEntity.ok().body(response);
 	}
@@ -98,9 +100,12 @@ public class ProblemController {
 
 	@GetMapping("/groups/{groupId}/problems/queued")
 	@Operation(summary = "시작 예정인 문제들 조회 API")
-	public ResponseEntity<List<GetProblemResponse>> getQueuedProblemList(@AuthedUser User user,
-		@PathVariable Long groupId) {
-		return ResponseEntity.ok().body(problemService.getQueuedProblemList(user, groupId));
+	public ResponseEntity<Page<GetProblemResponse>> getQueuedProblemList(@AuthedUser User user,
+		@PathVariable Long groupId,
+		@RequestParam(defaultValue = "0") int page,
+		@RequestParam(defaultValue = "20") int size) {
+		Pageable pageable = PageRequest.of(page, size, Sort.by(PROBLEM_SORT_BY).descending());
+		return ResponseEntity.ok().body(problemService.getQueuedProblems(user, groupId, pageable));
 	}
 
 	@DeleteMapping(value = "/problems/{problemId}")

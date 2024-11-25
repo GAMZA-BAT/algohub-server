@@ -24,6 +24,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -301,7 +302,7 @@ class ProblemControllerTest {
 	@DisplayName("진행 중인 문제 목록 조회 성공")
 	void getProblemList() throws Exception {
 		// given
-		Pageable pageable = PageRequest.of(0, 20);
+		Pageable pageable = PageRequest.of(0, 20, Sort.by("startDate").descending());
 		Page<GetProblemResponse> response = new PageImpl<>(new ArrayList<>());
 		when(problemService.getInProgressProblems(any(User.class), anyLong(), any(Pageable.class))).thenReturn(
 			response);
@@ -317,7 +318,7 @@ class ProblemControllerTest {
 	@DisplayName("문제 목록 조회 실패 : 권한 없음")
 	void getProblemListFailed_1() throws Exception {
 		// given
-		Pageable pageable = PageRequest.of(0, 20);
+		Pageable pageable = PageRequest.of(0, 20, Sort.by("startDate").descending());
 		when(problemService.getInProgressProblems(any(User.class), anyLong(), any(Pageable.class))).thenThrow(
 			new ProblemValidationException(HttpStatus.FORBIDDEN.value(), "문제를 조회할 권한이 없습니다."));
 		// when, then

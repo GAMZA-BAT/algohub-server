@@ -592,9 +592,8 @@ class ProblemServiceTest {
 	@Test
 	@DisplayName("예정 문제 조회 성공 : 방장")
 	void getQueuedProblemSuccess_1() throws NoSuchFieldException, IllegalAccessException {
-
-		//given
-		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		// given
+		Pageable pageable = PageRequest.of(0, 10);
 		Field problemField = Problem.class.getDeclaredField("id");
 		problemField.setAccessible(true);
 
@@ -610,19 +609,24 @@ class ProblemServiceTest {
 			list.add(problem);
 			problemField.set(problem, (long)i);
 		}
-		when(problemRepository.findAllByStudyGroupAndStartDateAfter(group, LocalDate.now())).thenReturn(list);
+		Page<Problem> problemPage = new PageImpl<>(list.subList(0, 10), pageable, list.size());
+
+		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		when(problemRepository.findAllByStudyGroupAndStartDateAfter(group, LocalDate.now(), pageable)).thenReturn(
+			problemPage);
 		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
 		//when
-		List<GetProblemResponse> result = problemService.getQueuedProblemList(user, group.getId());
+		Page<GetProblemResponse> result = problemService.getQueuedProblems(user, group.getId(), pageable);
 
 		//then
-		assertThat(result.size()).isEqualTo(10);
+		assertThat(result.getSize()).isEqualTo(10);
 		for (int i = 0; i < 10; i++) {
-			assertThat(result.get(i).getProblemId()).isEqualTo(i);
-			assertThat(result.get(i).getLink()).isEqualTo("https://www.acmicpc.net/problem/" + i);
-			assertThat(result.get(i).getTitle()).isEqualTo("title" + i);
-			assertThat(result.get(i).getStartDate()).isEqualTo(DateFormatUtil.formatDate(LocalDate.now().plusDays(1)));
-			assertThat(result.get(i).getEndDate()).isEqualTo(
+			assertThat(result.getContent().get(i).getProblemId()).isEqualTo(i);
+			assertThat(result.getContent().get(i).getLink()).isEqualTo("https://www.acmicpc.net/problem/" + i);
+			assertThat(result.getContent().get(i).getTitle()).isEqualTo("title" + i);
+			assertThat(result.getContent().get(i).getStartDate()).isEqualTo(
+				DateFormatUtil.formatDate(LocalDate.now().plusDays(1)));
+			assertThat(result.getContent().get(i).getEndDate()).isEqualTo(
 				DateFormatUtil.formatDate(LocalDate.now().plusDays(i + 1)));
 		}
 	}
@@ -630,9 +634,8 @@ class ProblemServiceTest {
 	@Test
 	@DisplayName("예정 문제 조회 성공 : 부방장")
 	void getQueuedProblemSuccess_2() throws NoSuchFieldException, IllegalAccessException {
-
 		//given
-		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		Pageable pageable = PageRequest.of(0, 10);
 		Field problemField = Problem.class.getDeclaredField("id");
 		problemField.setAccessible(true);
 
@@ -648,34 +651,39 @@ class ProblemServiceTest {
 			list.add(problem);
 			problemField.set(problem, (long)i);
 		}
+		Page<Problem> problemPage = new PageImpl<>(list.subList(0, 10), pageable, list.size());
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
 		when(groupMemberRepository.findByUserAndStudyGroup(user3, group)).thenReturn(Optional.of(groupMember3));
-		when(problemRepository.findAllByStudyGroupAndStartDateAfter(group, LocalDate.now())).thenReturn(list);
+		when(problemRepository.findAllByStudyGroupAndStartDateAfter(group, LocalDate.now(), pageable)).thenReturn(
+			problemPage);
 
-		//when
-		List<GetProblemResponse> result = problemService.getQueuedProblemList(user3, group.getId());
+		// when
+		Page<GetProblemResponse> result = problemService.getQueuedProblems(user3, group.getId(), pageable);
 
 		//then
-		assertThat(result.size()).isEqualTo(10);
+		assertThat(result.getSize()).isEqualTo(10);
 		for (int i = 0; i < 10; i++) {
-			assertThat(result.get(i).getProblemId()).isEqualTo(i);
-			assertThat(result.get(i).getLink()).isEqualTo("https://www.acmicpc.net/problem/" + i);
-			assertThat(result.get(i).getTitle()).isEqualTo("title" + i);
-			assertThat(result.get(i).getStartDate()).isEqualTo(DateFormatUtil.formatDate(LocalDate.now().plusDays(1)));
-			assertThat(result.get(i).getEndDate()).isEqualTo(
+			assertThat(result.getContent().get(i).getProblemId()).isEqualTo(i);
+			assertThat(result.getContent().get(i).getLink()).isEqualTo("https://www.acmicpc.net/problem/" + i);
+			assertThat(result.getContent().get(i).getTitle()).isEqualTo("title" + i);
+			assertThat(result.getContent().get(i).getStartDate()).isEqualTo(
+				DateFormatUtil.formatDate(LocalDate.now().plusDays(1)));
+			assertThat(result.getContent().get(i).getEndDate()).isEqualTo(
 				DateFormatUtil.formatDate(LocalDate.now().plusDays(i + 1)));
 		}
 	}
 
 	@Test
 	@DisplayName("예정 문제 조회 실패 : 그룹을 찾지 못함")
-	void getQueuedProblemListFailed_2() {
+	void getQueuedProblemsFailed_2() {
 		//given
+		Pageable pageable = PageRequest.of(0, 10);
+
 		when(groupRepository.findById(20L)).thenReturn(Optional.empty());
 
 		//whe
 		//then
-		assertThatThrownBy(() -> problemService.getQueuedProblemList(user2, 20L))
+		assertThatThrownBy(() -> problemService.getQueuedProblems(user2, 20L, pageable))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.NOT_FOUND.value())
 			.hasFieldOrPropertyWithValue("error", "존재하지 않는 그룹 입니다.");
@@ -683,14 +691,16 @@ class ProblemServiceTest {
 
 	@Test
 	@DisplayName("예정 문제 조회 실패 : 그룹원이 아님")
-	void getQueuedProblemListFailed_3() {
+	void getQueuedProblemsFailed_3() {
 		//given
+		Pageable pageable = PageRequest.of(0, 10);
+
 		when(groupRepository.findById(10L)).thenReturn(Optional.of(group));
 		when(groupMemberRepository.findByUserAndStudyGroup(user2, group)).thenReturn(Optional.empty());
 
 		//when
 		//then
-		assertThatThrownBy(() -> problemService.getQueuedProblemList(user2, 10L))
+		assertThatThrownBy(() -> problemService.getQueuedProblems(user2, 10L, pageable))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹 입니다.");
@@ -698,14 +708,16 @@ class ProblemServiceTest {
 
 	@Test
 	@DisplayName("예정 문제 조회 실패 : 권한 없음")
-	void getQueuedProblemListFailed_4() {
+	void getQueuedProblemsFailed_4() {
 		//given
+		Pageable pageable = PageRequest.of(0, 10);
+
 		when(groupRepository.findById(10L)).thenReturn(Optional.of(group));
 		when(groupMemberRepository.findByUserAndStudyGroup(user4, group)).thenReturn(Optional.of(groupMember4));
 
 		//when
 		//then
-		assertThatThrownBy(() -> problemService.getQueuedProblemList(user4, 10L))
+		assertThatThrownBy(() -> problemService.getQueuedProblems(user4, 10L, pageable))
 			.isInstanceOf(ProblemValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "예정 문제를 조회할 권한이 없습니다. : 그룹의 방장과 부방장만 볼 수 있습니다.");

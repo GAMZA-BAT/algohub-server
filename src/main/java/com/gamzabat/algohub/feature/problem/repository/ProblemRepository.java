@@ -20,7 +20,7 @@ public interface ProblemRepository extends JpaRepository<Problem, Long> {
 
 	List<Problem> findAllByStudyGroupAndEndDateBetween(StudyGroup studyGroup, LocalDate now, LocalDate tomorrow);
 
-	List<Problem> findAllByStudyGroupAndStartDateAfter(StudyGroup studyGroup, LocalDate startDate);
+	Page<Problem> findAllByStudyGroupAndStartDateAfter(StudyGroup studyGroup, LocalDate startDate, Pageable pageable);
 
 	List<Problem> findAllByStartDate(LocalDate startDate);
 

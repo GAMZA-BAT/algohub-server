@@ -5,7 +5,6 @@ import static com.gamzabat.algohub.constants.ApiConstants.*;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -219,7 +218,7 @@ public class ProblemService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<GetProblemResponse> getQueuedProblemList(User user, Long groupId) {
+	public Page<GetProblemResponse> getQueuedProblems(User user, Long groupId, Pageable pageable) {
 		StudyGroup group = getGroup(groupId);
 		GroupMember groupMember = groupMemberRepository.findByUserAndStudyGroup(user, group)
 			.orElseThrow(
@@ -230,9 +229,9 @@ public class ProblemService {
 				"예정 문제를 조회할 권한이 없습니다. : 그룹의 방장과 부방장만 볼 수 있습니다.");
 		}
 
-		List<GetProblemResponse> responseList = problemRepository.findAllByStudyGroupAndStartDateAfter(group,
-				LocalDate.now())
-			.stream()
+		Page<Problem> problems = problemRepository.findAllByStudyGroupAndStartDateAfter(group,
+			LocalDate.now(), pageable);
+		return problems
 			.map(problem -> {
 				String title = problem.getTitle();
 				Long problemId = problem.getId();
@@ -248,10 +247,7 @@ public class ProblemService {
 				return new GetProblemResponse(title, problemId, link, startDate, endDate, level, solved,
 					submitMemberCount,
 					groupMemberCount, accuracy);
-			})
-			.collect(Collectors.toList());
-
-		return responseList;
+			});
 	}
 
 	@Transactional(readOnly = true)
