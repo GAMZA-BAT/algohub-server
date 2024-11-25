@@ -33,6 +33,8 @@ import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
+import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundProblemException;
+import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.notification.repository.NotificationRepository;
@@ -746,6 +748,54 @@ class ProblemServiceTest {
 		problemService.dailyProblemScheduler();
 		// then
 		verify(notificationService, times(20)).sendNotificationToMembers(any(), any(), any(), any());
+	}
+
+	@Test
+	@DisplayName("문제 단건 조회 성공")
+	void getProblem() throws NoSuchFieldException, IllegalAccessException {
+		// given
+		Long problemId = 10L;
+		Field problemField = Problem.class.getDeclaredField("id");
+		problemField.setAccessible(true);
+		problemField.set(problem, problemId);
+
+		when(problemRepository.findById(anyLong())).thenReturn(Optional.of(problem));
+		when(groupMemberRepository.existsByUserAndStudyGroup(user, group)).thenReturn(true);
+		when(solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(anyLong(),
+			anyString())).thenReturn(8);
+		when(groupMemberRepository.countMembersByStudyGroupId(group.getId())).thenReturn(3);
+		when(solutionRepository.countDistinctUsersByProblemId(anyLong())).thenReturn(10);
+		// when
+		GetProblemResponse response = problemService.getProblem(user, problemId);
+		// then
+		assertThat(response.getMemberCount()).isEqualTo(3);
+		assertThat(response.getAccuracy()).isEqualTo(80);
+	}
+
+	@Test
+	@DisplayName("문제 단건 조회 실패 : 존재하지 않는 문제")
+	void getProblemFailed_1() {
+		// given
+		Long problemId = 10L;
+		when(problemRepository.findById(anyLong())).thenReturn(Optional.empty());
+		// when, then
+		assertThatThrownBy(() -> problemService.getProblem(user, problemId))
+			.isInstanceOf(CannotFoundProblemException.class)
+			.hasFieldOrPropertyWithValue("errors", "존재하지 않는 문제입니다.");
+	}
+
+	@Test
+	@DisplayName("문제 단건 조회 실패 : 참여하지 않은 그룹")
+	void getProblemFailed_2() {
+		// given
+		Long problemId = 10L;
+		when(problemRepository.findById(anyLong())).thenReturn(Optional.ofNullable(problem));
+		when(groupMemberRepository.existsByUserAndStudyGroup(user, group)).thenReturn(false);
+		// when, then
+		assertThatThrownBy(() -> problemService.getProblem(user, problemId))
+			.isInstanceOf(GroupMemberValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
+			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹입니다.");
 	}
 
 }
