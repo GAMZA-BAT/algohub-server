@@ -9,6 +9,7 @@ import com.gamzabat.algohub.feature.comment.exception.CommentValidationException
 import com.gamzabat.algohub.feature.group.ranking.exception.CannotFoundRankingException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundGroupException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundProblemException;
+import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundUserException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.InvalidRoleException;
 import com.gamzabat.algohub.feature.notice.exception.NoticeValidationException;
@@ -140,5 +141,11 @@ public class CustomExceptionHandler {
 	@ExceptionHandler(NotificationValidationException.class)
 	protected ResponseEntity<ErrorResponse> handler(NotificationValidationException e) {
 		return ResponseEntity.status(e.getCode()).body(new ErrorResponse(e.getCode(), e.getError(), null));
+	}
+
+	@ExceptionHandler(CannotFoundUserException.class)
+	protected ResponseEntity<ErrorResponse> handler(CannotFoundUserException e) {
+		return ResponseEntity.status(e.getCode())
+			.body(new ErrorResponse(e.getCode(), e.getError(), null));
 	}
 }

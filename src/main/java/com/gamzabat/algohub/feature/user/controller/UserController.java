@@ -131,9 +131,9 @@ public class UserController {
 
 	@GetMapping(value = "/{userNickname}")
 	@Operation(summary = "타 회원 정보 조회 API")
-	public ResponseEntity<UserInfoResponse> getOtherUserInfo(@AuthedUser User user,
-		@RequestParam @PathVariable String userNickname) {
-		UserInfoResponse userInfo = userService.otherUserInfo(user, userNickname);
+	public ResponseEntity<UserInfoResponse> getOtherUserInfo(
+		@PathVariable String userNickname) {
+		UserInfoResponse userInfo = userService.otherUserInfo(userNickname);
 		return ResponseEntity.ok().body(userInfo);
 	}
 }
