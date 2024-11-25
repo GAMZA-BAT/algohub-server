@@ -401,7 +401,7 @@ class UserServiceTest {
 			.build();
 		// when
 		when(userRepository.findByNickname(user2.getNickname())).thenReturn(Optional.of(user2));
-		UserInfoResponse response = userService.otherUserInfo(user, user2.getNickname());
+		UserInfoResponse response = userService.otherUserInfo(user2.getNickname());
 		// then
 		assertThat(response.getEmail()).isEqualTo("otherUserEmail");
 		assertThat(response.getNickname()).isEqualTo("otherUserNickname");
@@ -417,7 +417,7 @@ class UserServiceTest {
 		when(userRepository.findByNickname("nickname2")).thenReturn(Optional.empty());
 
 		// then
-		assertThatThrownBy(() -> userService.otherUserInfo(user, "nickname2"))
+		assertThatThrownBy(() -> userService.otherUserInfo("nickname2"))
 			.isInstanceOf(CannotFoundUserException.class)
 			.satisfies(exception -> {
 				CannotFoundUserException ex = (CannotFoundUserException)exception;
