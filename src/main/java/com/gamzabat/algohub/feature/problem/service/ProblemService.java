@@ -26,6 +26,8 @@ import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
+import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundProblemException;
+import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.notification.enums.NotificationCategory;
@@ -143,7 +145,7 @@ public class ProblemService {
 			Integer correctCount = solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(problem.getId(),
 				BOJResultConstants.CORRECT);
 			Integer submitMemberCount = solutionRepository.countDistinctUsersByProblemId(problem.getId());
-			Integer groupMemberCount = groupMemberRepository.countMembersByStudyGroupId(groupId) + 1;
+			Integer groupMemberCount = groupMemberRepository.countMembersByStudyGroupId(groupId);
 			Integer accuracy = calculateAccuracy(submitMemberCount, correctCount);
 			Boolean inProgress = isInProgress(problem);
 
@@ -198,7 +200,7 @@ public class ProblemService {
 			Integer correctCount = solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(problem.getId(),
 				BOJResultConstants.CORRECT);
 			Integer submitMemberCount = solutionRepository.countDistinctUsersByProblemId(problem.getId());
-			Integer groupMemberCount = groupMemberRepository.countMembersByStudyGroupId(groupId) + 1;
+			Integer groupMemberCount = groupMemberRepository.countMembersByStudyGroupId(groupId);
 			Integer accuracy = calculateAccuracy(submitMemberCount, correctCount);
 			Boolean inProgress = isInProgress(problem);
 
@@ -241,7 +243,7 @@ public class ProblemService {
 				Integer level = problem.getLevel();
 				boolean solved = false;
 				Integer submitMemberCount = 0;
-				Integer groupMemberCount = groupMemberRepository.countMembersByStudyGroupId(groupId) + 1;
+				Integer groupMemberCount = groupMemberRepository.countMembersByStudyGroupId(groupId);
 				Integer accuracy = 0;
 				Boolean inProgress = false;
 
@@ -252,6 +254,35 @@ public class ProblemService {
 			.collect(Collectors.toList());
 
 		return responseList;
+	}
+
+	@Transactional(readOnly = true)
+	public GetProblemResponse getProblem(User user, Long problemId) {
+		Problem problem = problemRepository.findById(problemId)
+			.orElseThrow(() -> new CannotFoundProblemException("존재하지 않는 문제입니다."));
+		if (!groupMemberRepository.existsByUserAndStudyGroup(user, problem.getStudyGroup()))
+			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹입니다.");
+
+		boolean solved = solutionRepository.existsByUserAndProblemAndResult(user, problem,
+			BOJResultConstants.CORRECT);
+		Integer correctCount = solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(problem.getId(),
+			BOJResultConstants.CORRECT);
+		Integer submitMemberCount = solutionRepository.countDistinctUsersByProblemId(problem.getId());
+		Integer groupMemberCount =
+			groupMemberRepository.countMembersByStudyGroupId(problem.getStudyGroup().getId());
+		Integer accuracy = calculateAccuracy(submitMemberCount, correctCount);
+		Boolean inProgress = isInProgress(problem);
+
+		GetProblemResponse response = new GetProblemResponse(
+			problem.getTitle(),
+			problem.getId(),
+			problem.getLink(),
+			problem.getStartDate(),
+			problem.getEndDate(),
+			problem.getLevel(),
+			solved, submitMemberCount, groupMemberCount, accuracy, inProgress);
+		log.info("success to get problem. problemId:{}", problemId);
+		return response;
 	}
 
 	@Scheduled(cron = "0 0 0 * * *")

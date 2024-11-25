@@ -61,13 +61,20 @@ public class ProblemController {
 	}
 
 	@GetMapping(value = "/groups/{groupId}/problems")
-	@Operation(summary = "문제 조회 API", description = "특정 그룹에 대한 문제를 모두 조회하는 API")
+	@Operation(summary = "문제 목록 조회 API", description = "특정 그룹에 대한 문제를 모두 조회하는 API")
 	public ResponseEntity<GetProblemListsResponse> getProblemList(@AuthedUser User user,
 		@PathVariable Long groupId,
 		@RequestParam(defaultValue = "0") int page,
 		@RequestParam(defaultValue = "20") int size) {
 		Pageable pageable = PageRequest.of(page, size);
 		GetProblemListsResponse response = problemService.getProblemList(user, groupId, pageable);
+		return ResponseEntity.ok().body(response);
+	}
+
+	@GetMapping("/problems/{problemId}")
+	@Operation(summary = "문제 단건 조회 API")
+	public ResponseEntity<GetProblemResponse> getProblem(@AuthedUser User user, @PathVariable Long problemId) {
+		GetProblemResponse response = problemService.getProblem(user, problemId);
 		return ResponseEntity.ok().body(response);
 	}
 
