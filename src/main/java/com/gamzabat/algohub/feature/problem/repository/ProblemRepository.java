@@ -32,4 +32,9 @@ public interface ProblemRepository extends JpaRepository<Problem, Long> {
 	@Modifying
 	@Query("delete from Problem p where p.studyGroup = :studyGroup")
 	void deleteAllByStudyGroup(StudyGroup studyGroup);
+
+	Page<Problem> findAllByStudyGroupAndEndDateGreaterThanEqual(StudyGroup studyGroup, LocalDate now,
+		Pageable pageable);
+
+	Page<Problem> findAllByStudyGroupAndEndDateBefore(StudyGroup studyGroup, LocalDate now, Pageable pageable);
 }
