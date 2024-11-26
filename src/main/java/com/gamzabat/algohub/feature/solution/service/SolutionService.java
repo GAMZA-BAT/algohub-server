@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.gamzabat.algohub.constants.BOJResultConstants;
 import com.gamzabat.algohub.exception.ProblemValidationException;
@@ -29,7 +30,6 @@ import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.solution.domain.Solution;
 import com.gamzabat.algohub.feature.solution.dto.CreateSolutionRequest;
-import com.gamzabat.algohub.feature.solution.dto.GetMySolutionListResponse;
 import com.gamzabat.algohub.feature.solution.dto.GetMySolutionListWithGroupIdResponse;
 import com.gamzabat.algohub.feature.solution.dto.GetSolutionResponse;
 import com.gamzabat.algohub.feature.solution.dto.GetSolutionWithGroupIdResponse;
@@ -40,13 +40,11 @@ import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.repository.UserRepository;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
-@Transactional
 @RequiredArgsConstructor
 public class SolutionService {
 	private final SolutionRepository solutionRepository;
@@ -59,6 +57,7 @@ public class SolutionService {
 	private final RankingService rankingService;
 	private final RankingUpdateService rankingUpdateService;
 
+	@Transactional(readOnly = true)
 	public Page<GetSolutionResponse> getSolutionList(User user, Long problemId, String nickname,
 		String language, String result, Pageable pageable) {
 		Problem problem = problemRepository.findById(problemId)
@@ -77,6 +76,7 @@ public class SolutionService {
 		return solutions.map(this::getGetSolutionResponse);
 	}
 
+	@Transactional(readOnly = true)
 	public GetSolutionResponse getSolution(User user, Long solutionId) {
 		Solution solution = solutionRepository.findById(solutionId)
 			.orElseThrow(() -> new CannotFoundSolutionException("존재하지 않는 풀이 입니다."));
@@ -90,7 +90,8 @@ public class SolutionService {
 		}
 	}
 
-	public GetMySolutionListResponse getMySolutionsInGroup(User user, Long groupId, Integer problemNumber,
+	@Transactional(readOnly = true)
+	public Page<GetSolutionResponse> getMySolutionsInGroupInProgress(User user, Long groupId, Integer problemNumber,
 		String language,
 		String result, Pageable pageable) {
 		StudyGroup group = studyGroupRepository.findById(groupId)
@@ -100,17 +101,31 @@ public class SolutionService {
 		}
 
 		Page<GetSolutionResponse> inProgressSolutions = solutionRepository.findAllFilteredMySolutionsInGroup(user,
-			group,
-			problemNumber,
-			language,
-			result, ProgressCategory.IN_PROGRESS, pageable).map(this::getGetSolutionResponse);
+				group, problemNumber, language, result, ProgressCategory.IN_PROGRESS, pageable)
+			.map(this::getGetSolutionResponse);
+
+		log.info("success to get my in-progress solutions in group {}", groupId);
+		return inProgressSolutions;
+	}
+
+	@Transactional(readOnly = true)
+	public Page<GetSolutionResponse> getMySolutionsInGroupExpired(User user, Long groupId, Integer problemNumber,
+		String language,
+		String result, Pageable pageable) {
+		StudyGroup group = studyGroupRepository.findById(groupId)
+			.orElseThrow(() -> new CannotFoundGroupException("존재하지 않는 그룹입니다."));
+		if (!groupMemberRepository.existsByUserAndStudyGroup(user, group)) {
+			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹입니다.");
+		}
+
 		Page<GetSolutionResponse> expiredSolutions = solutionRepository.findAllFilteredMySolutionsInGroup(user, group,
 			problemNumber, language, result, ProgressCategory.EXPIRED, pageable).map(this::getGetSolutionResponse);
 
-		log.info("success to get my solutions in group {}", groupId);
-		return new GetMySolutionListResponse(inProgressSolutions, expiredSolutions);
+		log.info("success to get my expired solutions in group {}", groupId);
+		return expiredSolutions;
 	}
 
+	@Transactional(readOnly = true)
 	public GetMySolutionListWithGroupIdResponse getMySolutions(User user, Integer problemNumber, String language,
 		String result,
 		Pageable pageable) {
@@ -150,6 +165,7 @@ public class SolutionService {
 			BOJResultConstants.CORRECT);
 	}
 
+	@Transactional
 	public void createSolution(CreateSolutionRequest request) {
 
 		List<Problem> problems = problemRepository.findAllByNumber(request.problemNumber());

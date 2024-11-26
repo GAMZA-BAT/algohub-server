@@ -3,6 +3,7 @@ package com.gamzabat.algohub.feature.solution.controller;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,7 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.gamzabat.algohub.common.annotation.AuthedUser;
 import com.gamzabat.algohub.exception.RequestException;
 import com.gamzabat.algohub.feature.solution.dto.CreateSolutionRequest;
-import com.gamzabat.algohub.feature.solution.dto.GetMySolutionListResponse;
 import com.gamzabat.algohub.feature.solution.dto.GetMySolutionListWithGroupIdResponse;
 import com.gamzabat.algohub.feature.solution.dto.GetSolutionResponse;
 import com.gamzabat.algohub.feature.solution.service.SolutionService;
@@ -66,9 +66,9 @@ public class SolutionController {
 		return ResponseEntity.ok().build();
 	}
 
-	@GetMapping("/groups/{groupId}/my-solutions")
-	@Operation(summary = "그룹 내 나의 풀이 전체 조회 API", description = "특정 그룹 내에서 제출한 나의 풀이를 모두 조회하는 API")
-	public ResponseEntity<GetMySolutionListResponse> getMySolutionsInGroup(@AuthedUser User user,
+	@GetMapping("/groups/{groupId}/my-solutions/in-progress")
+	@Operation(summary = "그룹 내 진행 중인 나의 풀이 전체 조회 API", description = "특정 그룹 내에서 제출한 나의 풀이를 모두 조회하는 API")
+	public ResponseEntity<Page<GetSolutionResponse>> getMySolutionsInGroupInProgress(@AuthedUser User user,
 		@PathVariable Long groupId,
 		@RequestParam(required = false) Integer problemNumber,
 		@RequestParam(required = false) String language,
@@ -76,7 +76,22 @@ public class SolutionController {
 		@RequestParam(defaultValue = "0") int page,
 		@RequestParam(defaultValue = "20") int size) {
 		Pageable pageable = PageRequest.of(page, size);
-		GetMySolutionListResponse response = solutionService.getMySolutionsInGroup(user,
+		Page<GetSolutionResponse> response = solutionService.getMySolutionsInGroupInProgress(user,
+			groupId, problemNumber, language, result, pageable);
+		return ResponseEntity.ok().body(response);
+	}
+
+	@GetMapping("/groups/{groupId}/my-solutions/expired")
+	@Operation(summary = "그룹 내 마감된 나의 풀이 전체 조회 API", description = "특정 그룹 내에서 제출한 나의 풀이를 모두 조회하는 API")
+	public ResponseEntity<Page<GetSolutionResponse>> getMySolutionsInGroupExpired(@AuthedUser User user,
+		@PathVariable Long groupId,
+		@RequestParam(required = false) Integer problemNumber,
+		@RequestParam(required = false) String language,
+		@RequestParam(required = false) String result,
+		@RequestParam(defaultValue = "0") int page,
+		@RequestParam(defaultValue = "20") int size) {
+		Pageable pageable = PageRequest.of(page, size);
+		Page<GetSolutionResponse> response = solutionService.getMySolutionsInGroupExpired(user,
 			groupId, problemNumber, language, result, pageable);
 		return ResponseEntity.ok().body(response);
 	}
@@ -89,7 +104,7 @@ public class SolutionController {
 		@RequestParam(required = false) String result,
 		@RequestParam(defaultValue = "0") int page,
 		@RequestParam(defaultValue = "20") int size) {
-		Pageable pageable = PageRequest.of(page, size);
+		Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 		GetMySolutionListWithGroupIdResponse response = solutionService.getMySolutions(user,
 			problemNumber, language, result, pageable);
 		return ResponseEntity.ok().body(response);
