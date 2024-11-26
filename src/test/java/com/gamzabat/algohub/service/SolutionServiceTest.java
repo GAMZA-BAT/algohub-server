@@ -39,7 +39,6 @@ import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.solution.domain.Solution;
 import com.gamzabat.algohub.feature.solution.dto.CreateSolutionRequest;
-import com.gamzabat.algohub.feature.solution.dto.GetMySolutionListResponse;
 import com.gamzabat.algohub.feature.solution.dto.GetMySolutionListWithGroupIdResponse;
 import com.gamzabat.algohub.feature.solution.dto.GetSolutionResponse;
 import com.gamzabat.algohub.feature.solution.enums.ProgressCategory;
@@ -473,12 +472,11 @@ class SolutionServiceTest {
 	}
 
 	@Test
-	@DisplayName("그룹 내 나의 풀이 전체 조회 성공 : 문제 필터링")
-	void getMySolutionsInGroup() {
+	@DisplayName("그룹 내 진행 중인 나의 풀이 전체 조회 성공 : 문제 필터링")
+	void getMySolutionsInGroupInProgress() {
 		// given
 		Pageable pageable = PageRequest.of(0, 10);
 		List<Solution> inProgress = new ArrayList<>();
-		List<Solution> expired = new ArrayList<>();
 		LocalDateTime fixedDateTime = LocalDateTime.now();
 
 		for (int i = 0; i < 5; i++) {
@@ -491,6 +489,31 @@ class SolutionServiceTest {
 				.solvedDateTime(fixedDateTime)
 				.build());
 		}
+
+		Page<Solution> inProgressPages = new PageImpl<>(inProgress, pageable, 10);
+		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.ofNullable(group));
+		when(groupMemberRepository.existsByUserAndStudyGroup(user, group)).thenReturn(true);
+		when(solutionRepository.findAllFilteredMySolutionsInGroup(user, group, problemNumber, null, null,
+			ProgressCategory.IN_PROGRESS,
+			pageable)).thenReturn(inProgressPages);
+		// when
+		Page<GetSolutionResponse> responses = solutionService.getMySolutionsInGroupInProgress(user, groupId,
+			problemNumber, null,
+			null, pageable);
+		// then
+		for (int i = 0; i < 5; i++) {
+			assertThat(responses.getContent().get(i).getNickname()).isEqualTo("nickname1");
+			assertThat(responses.getContent().get(i).getProblemLevel()).isEqualTo(problem.getLevel());
+		}
+	}
+
+	@Test
+	@DisplayName("그룹 내 마감된 나의 풀이 전체 조회 성공 : 문제 필터링")
+	void getMySolutionsInGroupExpired() {
+		// given
+		Pageable pageable = PageRequest.of(0, 10);
+		List<Solution> expired = new ArrayList<>();
+		LocalDateTime fixedDateTime = LocalDateTime.now();
 		for (int i = 0; i < 5; i++) {
 			expired.add(Solution.builder()
 				.problem(problem1)
@@ -502,27 +525,20 @@ class SolutionServiceTest {
 				.build());
 		}
 
-		Page<Solution> inProgressPages = new PageImpl<>(inProgress, pageable, 10);
 		Page<Solution> expiredPages = new PageImpl<>(expired, pageable, 10);
 		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.ofNullable(group));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user, group)).thenReturn(true);
 		when(solutionRepository.findAllFilteredMySolutionsInGroup(user, group, problemNumber, null, null,
-			ProgressCategory.IN_PROGRESS,
-			pageable)).thenReturn(inProgressPages);
-		when(solutionRepository.findAllFilteredMySolutionsInGroup(user, group, problemNumber, null, null,
 			ProgressCategory.EXPIRED,
 			pageable)).thenReturn(expiredPages);
 		// when
-		GetMySolutionListResponse responses = solutionService.getMySolutionsInGroup(user, groupId, problemNumber, null,
+		Page<GetSolutionResponse> responses = solutionService.getMySolutionsInGroupExpired(user, groupId,
+			problemNumber, null,
 			null, pageable);
 		// then
 		for (int i = 0; i < 5; i++) {
-			assertThat(responses.inProgress().getContent().get(i).getNickname()).isEqualTo("nickname1");
-			assertThat(responses.inProgress().getContent().get(i).getProblemLevel()).isEqualTo(problem.getLevel());
-		}
-		for (int i = 0; i < 5; i++) {
-			assertThat(responses.expired().getContent().get(i).getNickname()).isEqualTo("nickname1");
-			assertThat(responses.expired().getContent().get(i).getProblemLevel()).isEqualTo(problem1.getLevel());
+			assertThat(responses.getContent().get(i).getNickname()).isEqualTo("nickname1");
+			assertThat(responses.getContent().get(i).getProblemLevel()).isEqualTo(problem1.getLevel());
 		}
 	}
 
