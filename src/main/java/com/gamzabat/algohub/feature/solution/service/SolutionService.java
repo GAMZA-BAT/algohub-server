@@ -30,7 +30,6 @@ import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.solution.domain.Solution;
 import com.gamzabat.algohub.feature.solution.dto.CreateSolutionRequest;
-import com.gamzabat.algohub.feature.solution.dto.GetMySolutionListWithGroupIdResponse;
 import com.gamzabat.algohub.feature.solution.dto.GetSolutionResponse;
 import com.gamzabat.algohub.feature.solution.dto.GetSolutionWithGroupIdResponse;
 import com.gamzabat.algohub.feature.solution.enums.ProgressCategory;
@@ -126,18 +125,28 @@ public class SolutionService {
 	}
 
 	@Transactional(readOnly = true)
-	public GetMySolutionListWithGroupIdResponse getMySolutions(User user, Integer problemNumber, String language,
+	public Page<GetSolutionWithGroupIdResponse> getMySolutionsInProgress(User user, Integer problemNumber,
+		String language,
 		String result,
 		Pageable pageable) {
 		Page<GetSolutionWithGroupIdResponse> inProgressSolutions = solutionRepository.findAllFilteredMySolutions(user,
 			problemNumber,
 			language,
 			result, ProgressCategory.IN_PROGRESS, pageable).map(this::getGetSolutionWithGroupIdResponse);
+		log.info("success to get my in-progress solutions.");
+		return inProgressSolutions;
+	}
+
+	@Transactional(readOnly = true)
+	public Page<GetSolutionWithGroupIdResponse> getMySolutionsExpired(User user, Integer problemNumber, String language,
+		String result,
+		Pageable pageable) {
 		Page<GetSolutionWithGroupIdResponse> expiredSolutions = solutionRepository.findAllFilteredMySolutions(user,
 			problemNumber,
 			language,
 			result, ProgressCategory.EXPIRED, pageable).map(this::getGetSolutionWithGroupIdResponse);
-		return new GetMySolutionListWithGroupIdResponse(inProgressSolutions, expiredSolutions);
+		log.info("success to get my expired solutions.");
+		return expiredSolutions;
 	}
 
 	private GetSolutionWithGroupIdResponse getGetSolutionWithGroupIdResponse(Solution solution) {
