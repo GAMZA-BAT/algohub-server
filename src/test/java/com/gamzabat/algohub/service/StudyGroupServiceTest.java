@@ -49,6 +49,7 @@ import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupReposi
 import com.gamzabat.algohub.feature.group.studygroup.service.StudyGroupService;
 import com.gamzabat.algohub.feature.image.service.ImageService;
 import com.gamzabat.algohub.feature.notice.repository.NoticeCommentRepository;
+import com.gamzabat.algohub.feature.notice.repository.NoticeReadRepository;
 import com.gamzabat.algohub.feature.notice.repository.NoticeRepository;
 import com.gamzabat.algohub.feature.notification.domain.NotificationSetting;
 import com.gamzabat.algohub.feature.notification.repository.NotificationRepository;
@@ -78,6 +79,8 @@ class StudyGroupServiceTest {
 	private SolutionRepository solutionRepository;
 	@Mock
 	private ProblemRepository problemRepository;
+	@Mock
+	private NoticeReadRepository noticeReadRepository;
 	@Mock
 	private UserRepository userRepository;
 	@Mock

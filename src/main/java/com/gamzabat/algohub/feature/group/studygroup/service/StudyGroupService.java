@@ -46,6 +46,7 @@ import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepos
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.image.service.ImageService;
 import com.gamzabat.algohub.feature.notice.repository.NoticeCommentRepository;
+import com.gamzabat.algohub.feature.notice.repository.NoticeReadRepository;
 import com.gamzabat.algohub.feature.notice.repository.NoticeRepository;
 import com.gamzabat.algohub.feature.notification.domain.NotificationSetting;
 import com.gamzabat.algohub.feature.notification.enums.NotificationCategory;
@@ -79,7 +80,7 @@ public class StudyGroupService {
 	private final NoticeCommentRepository noticeCommentRepository;
 	private final SolutionCommentRepository solutionCommentRepository;
 	private final NotificationRepository notificationRepository;
-
+	private final NoticeReadRepository noticeReadRepository;
 	private final ObjectProvider<StudyGroupService> studyGroupServiceProvider;
 	private final NotificationSettingRepository notificationSettingRepository;
 	private final NotificationService notificationService;
@@ -178,6 +179,7 @@ public class StudyGroupService {
 		notificationSettingRepository.deleteAllByStudyGroup(group);
 		notificationRepository.deleteAllByStudyGroup(group);
 		noticeCommentRepository.deleteAllByStudyGroup(group);
+		noticeReadRepository.deleteAllByStudyGroup(group);
 		noticeRepository.deleteAllByStudyGroup(group);
 		solutionCommentRepository.deleteAllByStudyGroup(group);
 		solutionRepository.deleteAllByStudyGroup(group);
@@ -241,6 +243,7 @@ public class StudyGroupService {
 			.ifPresent(bookmarkedStudyGroupRepository::delete);
 		rankingRepository.deleteByMember(groupMember);
 		notificationSettingRepository.deleteByMember(groupMember);
+		noticeReadRepository.deleteAllByStudyGroupAndUser(studyGroup, user);
 		notificationRepository.deleteAllByUserAndStudyGroup(user, studyGroup);
 		groupMemberRepository.delete(groupMember);
 		log.info("success to delete group member");

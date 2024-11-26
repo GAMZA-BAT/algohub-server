@@ -121,6 +121,7 @@ public class NoticeService {
 			throw new UserValidationException("공지를 삭제할 수 있는 권한이 없습니다");
 
 		noticeCommentRepository.deleteAllCommentByNotice(notice);
+		noticeReadRepository.deleteAllByNotice(notice);
 		noticeRepository.delete(notice);
 
 		log.info("success to delete notice. userId: {}, noticeId: {}", user.getId(), noticeId);
