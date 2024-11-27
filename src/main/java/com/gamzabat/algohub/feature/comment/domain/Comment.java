@@ -38,9 +38,9 @@ public abstract class Comment {
 		this.updatedAt = LocalDateTime.now();
 	}
 
-	public Comment(User user, String content, LocalDateTime createdAt) {
+	public Comment(User user, String content) {
 		this.user = user;
 		this.content = content;
-		this.createdAt = createdAt;
+		this.createdAt = LocalDateTime.now();
 	}
 }

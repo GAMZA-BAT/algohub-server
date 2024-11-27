@@ -197,7 +197,6 @@ class NoticeCommentServiceTest {
 		for (int i = 0; i < 30; i++)
 			list.add(NoticeComment.builder()
 				.notice(notice)
-				.createdAt(LocalDateTime.now())
 				.user(user)
 				.content("content" + i)
 				.build());

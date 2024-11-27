@@ -1,7 +1,5 @@
 package com.gamzabat.algohub.feature.solution.domain;
 
-import java.time.LocalDateTime;
-
 import org.hibernate.annotations.DynamicUpdate;
 
 import com.gamzabat.algohub.feature.comment.domain.Comment;
@@ -26,8 +24,8 @@ public class SolutionComment extends Comment {
 	private Solution solution;
 
 	@Builder
-	public SolutionComment(Solution solution, User user, String content, LocalDateTime createdAt) {
-		super(user, content, createdAt);
+	public SolutionComment(Solution solution, User user, String content) {
+		super(user, content);
 		this.solution = solution;
 	}
 

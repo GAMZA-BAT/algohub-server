@@ -1,7 +1,5 @@
 package com.gamzabat.algohub.feature.notice.domain;
 
-import java.time.LocalDateTime;
-
 import org.hibernate.annotations.DynamicUpdate;
 
 import com.gamzabat.algohub.feature.comment.domain.Comment;
@@ -26,9 +24,8 @@ public class NoticeComment extends Comment {
 	private Notice notice;
 
 	@Builder
-	public NoticeComment(User user, String content,
-		LocalDateTime createdAt, Notice notice) {
-		super(user, content, createdAt);
+	public NoticeComment(User user, String content, Notice notice) {
+		super(user, content);
 		this.notice = notice;
 	}
 }

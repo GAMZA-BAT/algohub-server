@@ -220,7 +220,6 @@ class SolutionCommentServiceTest {
 		for (int i = 0; i < 30; i++)
 			list.add(SolutionComment.builder()
 				.solution(solution)
-				.createdAt(LocalDateTime.now())
 				.user(user)
 				.content("content" + i)
 				.build());

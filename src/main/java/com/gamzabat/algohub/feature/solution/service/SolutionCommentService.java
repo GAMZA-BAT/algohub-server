@@ -1,6 +1,5 @@
 package com.gamzabat.algohub.feature.solution.service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -54,7 +53,6 @@ public class SolutionCommentService implements CommentService<CreateSolutionComm
 			.user(user)
 			.solution(solution)
 			.content(request.content())
-			.createdAt(LocalDateTime.now())
 			.build());
 
 		sendCommentNotification(user, solution);
