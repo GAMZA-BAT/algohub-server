@@ -38,7 +38,7 @@ import lombok.RequiredArgsConstructor;
 
 public class ProblemController {
 	private final ProblemService problemService;
-	private final String PROBLEM_SORT_BY = "startDate";
+	private final String PROBLEM_SORT_BY = "endDate";
 
 	@PostMapping(value = "/groups/{groupId}/problems")
 	@Operation(summary = "문제 생성 API")
