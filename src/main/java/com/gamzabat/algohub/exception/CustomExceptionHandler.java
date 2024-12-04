@@ -12,6 +12,7 @@ import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundProble
 import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundUserException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.InvalidRoleException;
+import com.gamzabat.algohub.feature.image.exception.AwsS3Exception;
 import com.gamzabat.algohub.feature.notice.exception.NoticeValidationException;
 import com.gamzabat.algohub.feature.notification.exception.CannotFoundNotificationException;
 import com.gamzabat.algohub.feature.notification.exception.CannotFoundNotificationSettingException;
@@ -147,5 +148,11 @@ public class CustomExceptionHandler {
 	protected ResponseEntity<ErrorResponse> handler(CannotFoundUserException e) {
 		return ResponseEntity.status(e.getCode())
 			.body(new ErrorResponse(e.getCode(), e.getError(), null));
+	}
+
+	@ExceptionHandler(AwsS3Exception.class)
+	protected ResponseEntity<ErrorResponse> handler(AwsS3Exception e) {
+		return ResponseEntity.internalServerError()
+			.body(new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getError(), null));
 	}
 }
