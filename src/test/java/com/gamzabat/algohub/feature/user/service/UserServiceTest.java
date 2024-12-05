@@ -105,7 +105,7 @@ class UserServiceTest {
 	}
 
 	@Test
-	@DisplayName("회원가입 성공")
+	@DisplayName("회원가입 성공 : 이미지 포함")
 	void register() {
 		// given
 		String prefix = "1_test@email.com";
