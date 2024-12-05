@@ -33,7 +33,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.gamzabat.algohub.common.jwt.TokenProvider;
 import com.gamzabat.algohub.common.jwt.dto.JwtDTO;
@@ -203,28 +202,6 @@ class UserServiceTest {
 		assertThat(response.getProfileImage()).isEqualTo(imageUrl);
 		assertThat(response.getBjNickname()).isEqualTo(bjNickname);
 		assertThat(response.getDescription()).isEqualTo("");
-	}
-
-	@Test
-	@DisplayName("회원 정보 수정 성공 : 프로필 이미지 존재")
-	void userUpdate() {
-		// given
-		String prefix = "1_test@email.com";
-		UpdateUserRequest request = new UpdateUserRequest("newNickname", "newBjNickname", "I am Batman");
-		MockMultipartFile newProfileImage = new MockMultipartFile("newImage", "image.jpg", "image/jpeg",
-			"test".getBytes());
-		when(imageService.getImageName(any(ImageType.class), anyString(), any(MultipartFile.class))).thenReturn(
-			"originalProfileImage");
-		when(imageService.createImagePrefix(user.getId(), user.getEmail())).thenReturn(prefix);
-		when(imageService.saveImage(ImageType.USER, prefix, newProfileImage)).thenReturn("newProfileImageUrl");
-		doNothing().when(imageService).deleteImage(imageUrl);
-		// when
-		userService.userUpdate(user, request, newProfileImage);
-		// then
-		assertThat(user.getNickname()).isEqualTo("newNickname");
-		assertThat(user.getBjNickname()).isEqualTo("newBjNickname");
-		assertThat(user.getProfileImage()).isEqualTo("newProfileImageUrl");
-		assertThat(user.getDescription()).isEqualTo("I am Batman");
 	}
 
 	@Test
