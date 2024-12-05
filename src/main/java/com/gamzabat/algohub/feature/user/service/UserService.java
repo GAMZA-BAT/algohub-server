@@ -2,6 +2,8 @@ package com.gamzabat.algohub.feature.user.service;
 
 import static com.gamzabat.algohub.constants.ApiConstants.*;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.regex.Pattern;
 
@@ -24,6 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.gamzabat.algohub.common.jwt.TokenProvider;
 import com.gamzabat.algohub.common.jwt.dto.JwtDTO;
 import com.gamzabat.algohub.common.redis.RedisService;
+import com.gamzabat.algohub.enums.ImageType;
 import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.exception.JwtRequestException;
 import com.gamzabat.algohub.exception.UserValidationException;
@@ -62,17 +65,24 @@ public class UserService {
 	@Transactional
 	public void register(RegisterRequest request, MultipartFile profileImage) {
 		checkEmailDuplication(request.email());
-		String imageUrl = imageService.saveImage(profileImage);
 		String encodedPassword = passwordEncoder.encode(request.password());
-		userRepository.save(User.builder()
+
+		User user = userRepository.save(User.builder()
 			.email(request.email())
 			.password(encodedPassword)
 			.nickname(request.nickname())
 			.bjNickname(request.bjNickname())
-			.profileImage(imageUrl)
 			.role(Role.USER)
 			.build());
+
+		saveProfileImage(profileImage, user);
 		log.info("success to register");
+	}
+
+	private void saveProfileImage(MultipartFile profileImage, User user) {
+		String imagePrefix = imageService.createProfileImagePrefix(user.getId(), user.getEmail());
+		String imageUrl = imageService.saveImage(ImageType.USER, imagePrefix, profileImage);
+		user.editProfileImage(imageUrl);
 	}
 
 	@Transactional(readOnly = true)
@@ -97,24 +107,51 @@ public class UserService {
 
 	@Transactional
 	public void userUpdate(User user, UpdateUserRequest updateUserRequest, MultipartFile profileImage) {
-		if (profileImage != null && !profileImage.isEmpty()) {
-			if (user.getProfileImage() != null && !user.getProfileImage().isEmpty()) {
-				imageService.deleteImage(user.getProfileImage());
-			}
-			String imageUrl = imageService.saveImage(profileImage);
-			user.editProfileImage(imageUrl);
-		}
-		if (updateUserRequest.getNickname() != null && !updateUserRequest.getNickname().isEmpty()) {
+		editUserProfileImage(user, profileImage);
+
+		if (!updateUserRequest.getNickname().isEmpty()) {
 			user.editNickname(updateUserRequest.getNickname());
 		}
-		if (updateUserRequest.getBjNickname() != null && !updateUserRequest.getBjNickname().isEmpty()) {
+		if (!updateUserRequest.getBjNickname().isEmpty()) {
 			user.editBjNickname(updateUserRequest.getBjNickname());
 		}
-		if (updateUserRequest.getDescription() != null && !updateUserRequest.getDescription().isEmpty()) {
+		if (!updateUserRequest.getDescription().isEmpty()) {
 			user.editDescription(updateUserRequest.getDescription());
 		}
 
 		userRepository.save(user);
+		log.info("success to update user");
+	}
+
+	private void editUserProfileImage(User user, MultipartFile inputImage) {
+		if (inputImage == null || inputImage.isEmpty()) {
+			handleNullInputImage(user);
+			return;
+		}
+
+		if (user.getProfileImage() != null) {
+			if (isEqualToProfileImage(user, inputImage))
+				return;
+			imageService.deleteImage(user.getProfileImage());
+		}
+
+		saveProfileImage(inputImage, user);
+		log.info("success to edit user profile image. profile image : {}", user.getProfileImage());
+	}
+
+	private void handleNullInputImage(User user) {
+		if (user.getProfileImage() != null) {
+			imageService.deleteImage(user.getProfileImage());
+			user.editProfileImage(null);
+		}
+	}
+
+	private boolean isEqualToProfileImage(User user, MultipartFile profileImage) {
+		String prefix = imageService.createProfileImagePrefix(user.getId(), user.getEmail());
+		String inputImageUrl = URLEncoder.encode(imageService.getImageName(ImageType.USER, prefix,
+			profileImage), StandardCharsets.UTF_8);
+		String userProfileImageUrl = imageService.parseImageName(user.getProfileImage());
+		return inputImageUrl.equals(userProfileImageUrl);
 	}
 
 	@Transactional
