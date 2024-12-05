@@ -73,7 +73,7 @@ public class ImageService {
 		return null;
 	}
 
-	public String createProfileImagePrefix(Long userId, String userEmail) {
-		return userId + DELIMITER + userEmail;
+	public String createImagePrefix(Long id, String identifier) {
+		return id + DELIMITER + identifier;
 	}
 }

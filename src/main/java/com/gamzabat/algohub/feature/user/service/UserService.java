@@ -2,7 +2,7 @@ package com.gamzabat.algohub.feature.user.service;
 
 import static com.gamzabat.algohub.constants.ApiConstants.*;
 
-import java.net.URLEncoder;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.regex.Pattern;
@@ -80,7 +80,7 @@ public class UserService {
 	}
 
 	private void saveProfileImage(MultipartFile profileImage, User user) {
-		String imagePrefix = imageService.createProfileImagePrefix(user.getId(), user.getEmail());
+		String imagePrefix = imageService.createImagePrefix(user.getId(), user.getEmail());
 		String imageUrl = imageService.saveImage(ImageType.USER, imagePrefix, profileImage);
 		user.editProfileImage(imageUrl);
 	}
@@ -147,10 +147,11 @@ public class UserService {
 	}
 
 	private boolean isEqualToProfileImage(User user, MultipartFile profileImage) {
-		String prefix = imageService.createProfileImagePrefix(user.getId(), user.getEmail());
-		String inputImageUrl = URLEncoder.encode(imageService.getImageName(ImageType.USER, prefix,
-			profileImage), StandardCharsets.UTF_8);
-		String userProfileImageUrl = imageService.parseImageName(user.getProfileImage());
+		String prefix = imageService.createImagePrefix(user.getId(), user.getEmail());
+		String inputImageUrl = imageService.getImageName(ImageType.USER, prefix,
+			profileImage);
+		String userProfileImageUrl = URLDecoder.decode(imageService.parseImageName(user.getProfileImage()),
+			StandardCharsets.UTF_8);
 		return inputImageUrl.equals(userProfileImageUrl);
 	}
 

@@ -113,7 +113,7 @@ class UserServiceTest {
 		RegisterRequest request = new RegisterRequest(email, password, nickname, bjNickname);
 		MockMultipartFile profileImage = new MockMultipartFile("image", "image.jpg", "image/jpeg", "test".getBytes());
 		when(userRepository.save(any(User.class))).thenReturn(user);
-		when(imageService.createProfileImagePrefix(user.getId(), user.getEmail())).thenReturn(prefix);
+		when(imageService.createImagePrefix(user.getId(), user.getEmail())).thenReturn(prefix);
 		when(imageService.saveImage(ImageType.USER, prefix,
 			profileImage)).thenReturn(imageUrl);
 		when(passwordEncoder.encode(password)).thenReturn(encoded);
@@ -125,7 +125,7 @@ class UserServiceTest {
 		assertThat(user.getEmail()).isEqualTo(email);
 		assertThat(user.getRole()).isEqualTo(Role.USER);
 		assertThat(user.getDescription()).isEqualTo("");
-		verify(imageService, times(1)).createProfileImagePrefix(anyLong(), anyString());
+		verify(imageService, times(1)).createImagePrefix(anyLong(), anyString());
 		verify(imageService, times(1)).saveImage(ImageType.USER, prefix, profileImage);
 	}
 
@@ -215,7 +215,7 @@ class UserServiceTest {
 			"test".getBytes());
 		when(imageService.getImageName(any(ImageType.class), anyString(), any(MultipartFile.class))).thenReturn(
 			"originalProfileImage");
-		when(imageService.createProfileImagePrefix(user.getId(), user.getEmail())).thenReturn(prefix);
+		when(imageService.createImagePrefix(user.getId(), user.getEmail())).thenReturn(prefix);
 		when(imageService.saveImage(ImageType.USER, prefix, newProfileImage)).thenReturn("newProfileImageUrl");
 		doNothing().when(imageService).deleteImage(imageUrl);
 		// when
