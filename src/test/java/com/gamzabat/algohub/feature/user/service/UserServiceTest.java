@@ -3,6 +3,7 @@ package com.gamzabat.algohub.feature.user.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.lang.reflect.Field;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,10 +33,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.gamzabat.algohub.common.jwt.TokenProvider;
 import com.gamzabat.algohub.common.jwt.dto.JwtDTO;
 import com.gamzabat.algohub.common.redis.RedisService;
+import com.gamzabat.algohub.enums.ImageType;
 import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.exception.JwtRequestException;
 import com.gamzabat.algohub.exception.UserValidationException;
@@ -82,12 +85,12 @@ class UserServiceTest {
 	private final String password = "password";
 	private final String nickname = "nickname";
 	private final String encoded = "encoded";
-	private final String imageUrl = "imageUrl";
+	private final String imageUrl = "1_test@email.com_image.jpg";
 	private final String bjNickname = "bjNickname";
 	private User user;
 
 	@BeforeEach
-	void setUp() {
+	void setUp() throws NoSuchFieldException, IllegalAccessException {
 		user = User.builder()
 			.email(email)
 			.password(encoded)
@@ -96,15 +99,23 @@ class UserServiceTest {
 			.profileImage(imageUrl)
 			.role(Role.USER)
 			.build();
+
+		Field userId = User.class.getDeclaredField("id");
+		userId.setAccessible(true);
+		userId.set(user, 1L);
 	}
 
 	@Test
 	@DisplayName("회원가입 성공")
 	void register() {
 		// given
+		String prefix = "1_test@email.com";
 		RegisterRequest request = new RegisterRequest(email, password, nickname, bjNickname);
 		MockMultipartFile profileImage = new MockMultipartFile("image", "image.jpg", "image/jpeg", "test".getBytes());
-		when(imageService.saveImage(profileImage)).thenReturn(imageUrl);
+		when(userRepository.save(any(User.class))).thenReturn(user);
+		when(imageService.createProfileImagePrefix(user.getId(), user.getEmail())).thenReturn(prefix);
+		when(imageService.saveImage(ImageType.USER, prefix,
+			profileImage)).thenReturn(imageUrl);
 		when(passwordEncoder.encode(password)).thenReturn(encoded);
 		// when
 		userService.register(request, profileImage);
@@ -112,11 +123,10 @@ class UserServiceTest {
 		verify(userRepository, times(1)).save(userCaptor.capture());
 		User user = userCaptor.getValue();
 		assertThat(user.getEmail()).isEqualTo(email);
-		assertThat(user.getNickname()).isEqualTo(nickname);
-		assertThat(user.getProfileImage()).isEqualTo(imageUrl);
 		assertThat(user.getRole()).isEqualTo(Role.USER);
-		assertThat(user.getBjNickname()).isEqualTo(bjNickname);
 		assertThat(user.getDescription()).isEqualTo("");
+		verify(imageService, times(1)).createProfileImagePrefix(anyLong(), anyString());
+		verify(imageService, times(1)).saveImage(ImageType.USER, prefix, profileImage);
 	}
 
 	@Test
@@ -196,13 +206,17 @@ class UserServiceTest {
 	}
 
 	@Test
-	@DisplayName("회원 정보 수정 성공")
+	@DisplayName("회원 정보 수정 성공 : 프로필 이미지 존재")
 	void userUpdate() {
 		// given
+		String prefix = "1_test@email.com";
 		UpdateUserRequest request = new UpdateUserRequest("newNickname", "newBjNickname", "I am Batman");
 		MockMultipartFile newProfileImage = new MockMultipartFile("newImage", "image.jpg", "image/jpeg",
 			"test".getBytes());
-		when(imageService.saveImage(newProfileImage)).thenReturn("newProfileImageUrl");
+		when(imageService.getImageName(any(ImageType.class), anyString(), any(MultipartFile.class))).thenReturn(
+			"originalProfileImage");
+		when(imageService.createProfileImagePrefix(user.getId(), user.getEmail())).thenReturn(prefix);
+		when(imageService.saveImage(ImageType.USER, prefix, newProfileImage)).thenReturn("newProfileImageUrl");
 		doNothing().when(imageService).deleteImage(imageUrl);
 		// when
 		userService.userUpdate(user, request, newProfileImage);
@@ -211,6 +225,22 @@ class UserServiceTest {
 		assertThat(user.getBjNickname()).isEqualTo("newBjNickname");
 		assertThat(user.getProfileImage()).isEqualTo("newProfileImageUrl");
 		assertThat(user.getDescription()).isEqualTo("I am Batman");
+	}
+
+	@Test
+	@DisplayName("회원 정보 수정 : 프로필 이미지를 null로 설정")
+	void userUpdateWithoutImage() {
+		// given
+		UpdateUserRequest request = new UpdateUserRequest("newNickname", "newBjNickname", "I am Batman");
+		doNothing().when(imageService).deleteImage(imageUrl);
+		// when
+		userService.userUpdate(user, request, null);
+		// then
+		assertThat(user.getNickname()).isEqualTo("newNickname");
+		assertThat(user.getBjNickname()).isEqualTo("newBjNickname");
+		assertThat(user.getDescription()).isEqualTo("I am Batman");
+		assertThat(user.getProfileImage()).isNull();
+		verify(imageService, times(1)).deleteImage(imageUrl);
 	}
 
 	@Test
@@ -314,7 +344,6 @@ class UserServiceTest {
 		when(passwordEncoder.matches(request.currentPassword(), user.getPassword())).thenReturn(true);
 		//when
 		userService.editPassword(user, request);
-
 		//then
 		verify(userRepository).save(user);
 	}
