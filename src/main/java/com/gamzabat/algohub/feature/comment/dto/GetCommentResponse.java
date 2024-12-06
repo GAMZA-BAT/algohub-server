@@ -18,7 +18,7 @@ public record GetCommentResponse(Long commentId,
 			.writerNickname(comment.getUser().getNickname())
 			.writerProfileImage(comment.getUser().getProfileImage())
 			.content(comment.getContent())
-			.createdAt(DateFormatUtil.formatDate(comment.getCreatedAt().toLocalDate()))
+			.createdAt(DateFormatUtil.formatDateTime(comment.getCreatedAt()))
 			.build();
 	}
 }
