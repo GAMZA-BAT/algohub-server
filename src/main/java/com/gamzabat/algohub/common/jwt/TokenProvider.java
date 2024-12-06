@@ -42,6 +42,8 @@ public class TokenProvider {
 	private final RedisService redisService;
 	@Value("${jwt_expiration_time}")
 	private long tokenExpiration;
+	@Value("${refresh_token_expiration_time}")
+	private long refreshTokenExpirationTime;
 
 	public TokenProvider(@Value("${jwt_secret_key}") String secretKey, RedisService redisService) {
 		byte[] keyBytes = Decoders.BASE64URL.decode(secretKey);
@@ -86,13 +88,13 @@ public class TokenProvider {
 	public boolean validateToken(String token) {
 		try {
 			if (logout(token))
-				throw new JwtRequestException(HttpStatus.UNAUTHORIZED.value(), "UNAUTHORIZED", "로그아웃 되었습니다.");
+				throw new JwtRequestException(HttpStatus.FORBIDDEN.value(), "FORBIDDEN", "로그아웃 된 토큰입니다.");
 			Jwts.parserBuilder()
 				.setSigningKey(key)
 				.build().parseClaimsJws(token);
 			return true;
 		} catch (SecurityException | MalformedJwtException e) {
-			throw new JwtRequestException(HttpStatus.UNAUTHORIZED.value(), "UNAUTHORIZED", "검증되지 않은 토큰입니다.");
+			throw new JwtRequestException(HttpStatus.BAD_REQUEST.value(), "BAD_REQUEST", "검증되지 않은 토큰입니다.");
 		} catch (ExpiredJwtException e) {
 			throw new JwtRequestException(HttpStatus.UNAUTHORIZED.value(), "UNAUTHORIZED", "만료된 토큰 입니다.");
 		} catch (UnsupportedJwtException e) {
