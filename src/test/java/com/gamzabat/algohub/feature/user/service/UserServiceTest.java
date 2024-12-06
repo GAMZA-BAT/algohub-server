@@ -137,17 +137,20 @@ class UserServiceTest {
 	void signIn() {
 		// given
 		SignInRequest request = new SignInRequest(email, password);
+		String accessToken = "access-token";
+		String refreshToken = "refresh-token";
 		Authentication authentication = mock(Authentication.class);
-		JwtDTO jwtDTO = new JwtDTO("access-token", "mocked-token-string");
+		JwtDTO jwtDTO = new JwtDTO("Baerer", accessToken, refreshToken);
 		AuthenticationManager authenticationManager = mock(AuthenticationManager.class);
 		when(authManager.getObject()).thenReturn(authenticationManager);
 		when(authManager.getObject().authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(
 			authentication);
-		when(tokenProvider.generateToken(authentication)).thenReturn(jwtDTO);
+		when(tokenProvider.generateTokens(authentication)).thenReturn(jwtDTO);
 		// when
 		SignInResponse response = userService.signIn(request);
 		// then
-		assertThat(response.token()).isEqualTo("mocked-token-string");
+		assertThat(response.accessToken()).isEqualTo(accessToken);
+		assertThat(response.refreshToken()).isEqualTo(refreshToken);
 	}
 
 	@Test
@@ -244,7 +247,7 @@ class UserServiceTest {
 		HttpServletRequest request = mock(HttpServletRequest.class);
 		String token = "mocked-token-string";
 		when(tokenProvider.resolveToken(request)).thenReturn(token);
-		when(tokenProvider.getTokenExpiration()).thenReturn(6000L);
+		when(tokenProvider.getAccessTokenExpirationTime()).thenReturn(6000L);
 		// when
 		userService.logout(request);
 		// then

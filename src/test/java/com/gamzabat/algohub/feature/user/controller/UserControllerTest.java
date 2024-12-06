@@ -182,14 +182,15 @@ class UserControllerTest {
 	void signIn() throws Exception {
 		// given
 		SignInRequest request = new SignInRequest("email", "password");
-		SignInResponse response = new SignInResponse("token");
+		SignInResponse response = new SignInResponse("access-token", "refresh-token");
 		when(userService.signIn(any(SignInRequest.class))).thenReturn(response);
 		// when, then
 		mockMvc.perform(post("/api/auth/sign-in")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.token").value("token"));
+			.andExpect(jsonPath("$.accessToken").value("access-token"))
+			.andExpect(jsonPath("$.refreshToken").value("refresh-token"));
 
 		verify(userService, times(1)).signIn(request);
 	}
