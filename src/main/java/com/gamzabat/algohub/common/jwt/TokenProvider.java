@@ -4,6 +4,7 @@ import java.security.Key;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -17,9 +18,13 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import com.amazonaws.util.StringUtils;
+import com.gamzabat.algohub.common.jwt.domain.RefreshToken;
 import com.gamzabat.algohub.common.jwt.dto.JwtDTO;
+import com.gamzabat.algohub.common.jwt.repository.RefreshTokenRepository;
 import com.gamzabat.algohub.common.redis.RedisService;
 import com.gamzabat.algohub.exception.JwtRequestException;
+import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundUserException;
+import com.gamzabat.algohub.feature.user.repository.UserRepository;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -38,38 +43,75 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @Getter
 public class TokenProvider {
-	private final Key key;
+	private final Key accessTokenKey;
+	private final Key refreshTokenKey;
 	private final RedisService redisService;
+	private final RefreshTokenRepository refreshTokenRepository;
+	private final UserRepository userRepository;
 	@Value("${jwt_expiration_time}")
-	private long tokenExpiration;
+	private long accessTokenExpirationTime;
 	@Value("${refresh_token_expiration_time}")
 	private long refreshTokenExpirationTime;
 
-	public TokenProvider(@Value("${jwt_secret_key}") String secretKey, RedisService redisService) {
-		byte[] keyBytes = Decoders.BASE64URL.decode(secretKey);
-		this.key = Keys.hmacShaKeyFor(keyBytes);
+	public TokenProvider(@Value("${jwt_secret_key}") String accessTokenKey,
+		@Value("${jwt_refresh_secret_key}") String refreshTokenKey,
+		RedisService redisService, RefreshTokenRepository refreshTokenRepository,
+		UserRepository userRepository) {
+		byte[] accessKeyBytes = Decoders.BASE64URL.decode(accessTokenKey);
+		byte[] refreshKeyBytes = Decoders.BASE64URL.decode(refreshTokenKey);
+		this.accessTokenKey = Keys.hmacShaKeyFor(accessKeyBytes);
+		this.refreshTokenKey = Keys.hmacShaKeyFor(refreshKeyBytes);
 		this.redisService = redisService;
+		this.refreshTokenRepository = refreshTokenRepository;
+		this.userRepository = userRepository;
 	}
 
-	public JwtDTO generateToken(Authentication authentication) {
+	public JwtDTO generateTokens(Authentication authentication) {
+		String loginId = UUID.randomUUID().toString();
+		return JwtDTO.builder()
+			.grantType("Bearer")
+			.accessToken(generateAccessToken(loginId, authentication))
+			.refreshToken(generateRefreshToken(loginId, authentication))
+			.build();
+	}
+
+	public String generateAccessToken(String loginId, Authentication authentication) {
 		String authorities = authentication.getAuthorities().stream()
 			.map(GrantedAuthority::getAuthority)
 			.collect(Collectors.joining(","));
 
 		long now = (new Date().getTime());
 
-		Date tokenExpireDate = new Date(now + this.tokenExpiration);
-		String token = Jwts.builder()
+		Date tokenExpireDate = new Date(now + this.accessTokenExpirationTime);
+		return Jwts.builder()
 			.setSubject(authentication.getName())
 			.claim("auth", authorities)
+			.claim("loginId", loginId)
 			.setExpiration(tokenExpireDate)
-			.signWith(key, SignatureAlgorithm.HS256)
+			.signWith(accessTokenKey, SignatureAlgorithm.HS256)
+			.compact();
+	}
+
+	public String generateRefreshToken(String loginId, Authentication authentication) {
+		long now = (new Date().getTime());
+		Date expirationTime = new Date(now + this.refreshTokenExpirationTime);
+		String refreshToken = Jwts.builder()
+			.setSubject(authentication.getName())
+			.signWith(refreshTokenKey, SignatureAlgorithm.HS256)
 			.compact();
 
-		return JwtDTO.builder()
-			.grantType("Bearer")
-			.token(token)
-			.build();
+		com.gamzabat.algohub.feature.user.domain.User user = userRepository.findByEmail(authentication.getName())
+			.orElseThrow(() -> new CannotFoundUserException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 유저입니다."));
+
+		refreshTokenRepository.save(
+			RefreshToken.builder()
+				.refreshToken(refreshToken)
+				.user(user)
+				.loginId(loginId)
+				.expirationDateTime(expirationTime)
+				.build()
+		);
+		return refreshToken;
 	}
 
 	public Authentication getAuthentication(String token) {
@@ -90,7 +132,7 @@ public class TokenProvider {
 			if (logout(token))
 				throw new JwtRequestException(HttpStatus.FORBIDDEN.value(), "FORBIDDEN", "로그아웃 된 토큰입니다.");
 			Jwts.parserBuilder()
-				.setSigningKey(key)
+				.setSigningKey(accessTokenKey)
 				.build().parseClaimsJws(token);
 			return true;
 		} catch (SecurityException | MalformedJwtException e) {
@@ -106,7 +148,7 @@ public class TokenProvider {
 
 	private Claims parseClaims(String token) {
 		return Jwts.parserBuilder()
-			.setSigningKey(key)
+			.setSigningKey(accessTokenKey)
 			.build()
 			.parseClaimsJws(token)
 			.getBody();
@@ -114,7 +156,7 @@ public class TokenProvider {
 
 	public String getUserEmail(String authToken) {
 		String token = authToken.replace("Bearer", "").trim();
-		Jws<Claims> claimsJws = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+		Jws<Claims> claimsJws = Jwts.parserBuilder().setSigningKey(accessTokenKey).build().parseClaimsJws(token);
 		return claimsJws.getBody().getSubject();
 	}
 

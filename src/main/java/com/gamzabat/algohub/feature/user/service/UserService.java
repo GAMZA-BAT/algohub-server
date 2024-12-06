@@ -75,7 +75,7 @@ public class UserService {
 		log.info("success to register");
 	}
 
-	@Transactional(readOnly = true)
+	@Transactional
 	public SignInResponse signIn(SignInRequest request) {
 		UsernamePasswordAuthenticationToken authenticationToken
 			= new UsernamePasswordAuthenticationToken(request.email(), request.password());
@@ -85,8 +85,9 @@ public class UserService {
 		} catch (BadCredentialsException e) {
 			throw new UncorrectedPasswordException("비밀번호가 틀렸습니다.");
 		}
-		JwtDTO token = tokenProvider.generateToken(authenticate);
-		return new SignInResponse(token.getToken());
+		JwtDTO result = tokenProvider.generateTokens(authenticate);
+		log.info("success to sign in");
+		return new SignInResponse(result.getAccessToken(), result.getRefreshToken());
 	}
 
 	@Transactional(readOnly = true)
@@ -131,7 +132,7 @@ public class UserService {
 		if (accessToken == null)
 			throw new JwtRequestException(HttpStatus.BAD_REQUEST.value(), "BAD_REQUEST", "토큰이 비어있습니다.");
 
-		long tokenExpiration = tokenProvider.getTokenExpiration();
+		long tokenExpiration = tokenProvider.getAccessTokenExpirationTime();
 		redisService.setValues(accessToken, "logout", Duration.ofMillis(tokenExpiration));
 		log.info("success to logout");
 	}
