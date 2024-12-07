@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -223,5 +224,10 @@ public class TokenProvider {
 
 	private boolean logout(String token) {
 		return redisService.getValues(token).equals("logout");
+	}
+
+	@Scheduled(cron = "0 0 0 * * *")
+	private void clearExpiredRefreshTokens() {
+		refreshTokenRepository.deleteExpiredRefreshTokens();
 	}
 }

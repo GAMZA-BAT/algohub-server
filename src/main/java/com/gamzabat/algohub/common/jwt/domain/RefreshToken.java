@@ -26,7 +26,7 @@ public class RefreshToken {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "user_id", unique = false)
+	@JoinColumn(name = "user_id")
 	private User user;
 	private String refreshToken;
 	private String loginId;
