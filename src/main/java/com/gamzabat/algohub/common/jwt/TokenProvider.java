@@ -16,19 +16,23 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.amazonaws.util.StringUtils;
 import com.gamzabat.algohub.common.jwt.domain.RefreshToken;
 import com.gamzabat.algohub.common.jwt.dto.JwtDTO;
+import com.gamzabat.algohub.common.jwt.exception.ExpiredTokenException;
+import com.gamzabat.algohub.common.jwt.exception.TokenException;
 import com.gamzabat.algohub.common.jwt.repository.RefreshTokenRepository;
 import com.gamzabat.algohub.common.redis.RedisService;
 import com.gamzabat.algohub.exception.JwtRequestException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundUserException;
+import com.gamzabat.algohub.feature.user.dto.TokenResponse;
 import com.gamzabat.algohub.feature.user.repository.UserRepository;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -81,24 +85,14 @@ public class TokenProvider {
 			.collect(Collectors.joining(","));
 
 		long now = (new Date().getTime());
-
 		Date tokenExpireDate = new Date(now + this.accessTokenExpirationTime);
-		return Jwts.builder()
-			.setSubject(authentication.getName())
-			.claim("auth", authorities)
-			.claim("loginId", loginId)
-			.setExpiration(tokenExpireDate)
-			.signWith(accessTokenKey, SignatureAlgorithm.HS256)
-			.compact();
+		return createNewAccessToken(authentication.getName(), authorities, loginId, tokenExpireDate);
 	}
 
 	public String generateRefreshToken(String loginId, Authentication authentication) {
 		long now = (new Date().getTime());
 		Date expirationTime = new Date(now + this.refreshTokenExpirationTime);
-		String refreshToken = Jwts.builder()
-			.setSubject(authentication.getName())
-			.signWith(refreshTokenKey, SignatureAlgorithm.HS256)
-			.compact();
+		String refreshToken = createNewRefreshToken(authentication.getName());
 
 		com.gamzabat.algohub.feature.user.domain.User user = userRepository.findByEmail(authentication.getName())
 			.orElseThrow(() -> new CannotFoundUserException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 유저입니다."));
@@ -155,9 +149,7 @@ public class TokenProvider {
 	}
 
 	public String getUserEmail(String authToken) {
-		String token = authToken.replace("Bearer", "").trim();
-		Jws<Claims> claimsJws = Jwts.parserBuilder().setSigningKey(accessTokenKey).build().parseClaimsJws(token);
-		return claimsJws.getBody().getSubject();
+		return getClaims(authToken).getSubject();
 	}
 
 	public String resolveToken(HttpServletRequest request) {
@@ -165,6 +157,68 @@ public class TokenProvider {
 		if (StringUtils.hasValue(token) && token.startsWith("Bearer"))
 			return token.substring(7);
 		return null;
+	}
+
+	private Claims getClaims(String expiredToken) {
+		String token = expiredToken.replace("Bearer", "").trim();
+		return parseClaims(token);
+	}
+
+	@Transactional(propagation = Propagation.REQUIRES_NEW, noRollbackFor = ExpiredTokenException.class)
+	public TokenResponse reissueTokens(String expiredToken, String inputRefreshToken) {
+		Claims claims = getClaims(expiredToken);
+		String subject = claims.getSubject();
+		com.gamzabat.algohub.feature.user.domain.User user = userRepository.findByEmail(subject)
+			.orElseThrow(() -> new CannotFoundUserException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 유저입니다."));
+
+		String loginId = (String)claims.get("loginId");
+		RefreshToken refreshToken = refreshTokenRepository.findByLoginIdAndUser(loginId, user)
+			.orElseThrow(() -> new TokenException(HttpStatus.UNAUTHORIZED.value(), "유효하지 않은 리프레시 토큰입니다. 재로그인이 필요합니다."));
+
+		validateTokenPair(inputRefreshToken, loginId, refreshToken);
+
+		long now = (new Date().getTime());
+		Date accessTokenExpireDate = new Date(now + this.accessTokenExpirationTime);
+		String newAccessToken = createNewAccessToken(
+			subject, claims.get("auth").toString(), loginId, accessTokenExpireDate
+		);
+
+		Date refreshTokenExpireDate = new Date(now + this.refreshTokenExpirationTime);
+		String newRefreshToken = createNewRefreshToken(subject);
+		refreshToken.updateRefreshToken(newRefreshToken, refreshTokenExpireDate);
+
+		return new TokenResponse(newAccessToken, newRefreshToken);
+	}
+
+	private void validateTokenPair(String inputRefreshToken, String loginId, RefreshToken refreshToken) {
+		if (!loginId.equals(refreshToken.getLoginId()) || !inputRefreshToken.equals(refreshToken.getRefreshToken())) {
+			throw new TokenException(HttpStatus.FORBIDDEN.value(), "토큰의 로그인 정보가 일치하지 않습니다.");
+		}
+
+		if (refreshToken.getExpirationDateTime().before(new Date())) {
+			refreshTokenRepository.delete(refreshToken);
+			log.info("success to delete refresh token");
+			throw new ExpiredTokenException(HttpStatus.UNAUTHORIZED.value(), "리프레시 토큰의 유효기간이 만료되었습니다. 재로그인이 필요합니다.");
+		}
+	}
+
+	private String createNewAccessToken(String subject, String authorities, String loginId, Date expirationDateTime) {
+		return Jwts.builder()
+			.setSubject(subject)
+			.setIssuedAt(new Date())
+			.claim("auth", authorities)
+			.claim("loginId", loginId)
+			.setExpiration(expirationDateTime)
+			.signWith(accessTokenKey, SignatureAlgorithm.HS256)
+			.compact();
+	}
+
+	private String createNewRefreshToken(String subject) {
+		return Jwts.builder()
+			.setSubject(subject)
+			.setIssuedAt(new Date())
+			.signWith(refreshTokenKey, SignatureAlgorithm.HS256)
+			.compact();
 	}
 
 	private boolean logout(String token) {

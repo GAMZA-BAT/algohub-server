@@ -23,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.gamzabat.algohub.common.jwt.TokenProvider;
 import com.gamzabat.algohub.common.jwt.dto.JwtDTO;
+import com.gamzabat.algohub.common.jwt.dto.ReissueTokenRequest;
 import com.gamzabat.algohub.common.redis.RedisService;
 import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.exception.JwtRequestException;
@@ -34,7 +35,7 @@ import com.gamzabat.algohub.feature.user.dto.DeleteUserRequest;
 import com.gamzabat.algohub.feature.user.dto.EditUserPasswordRequest;
 import com.gamzabat.algohub.feature.user.dto.RegisterRequest;
 import com.gamzabat.algohub.feature.user.dto.SignInRequest;
-import com.gamzabat.algohub.feature.user.dto.SignInResponse;
+import com.gamzabat.algohub.feature.user.dto.TokenResponse;
 import com.gamzabat.algohub.feature.user.dto.UpdateUserRequest;
 import com.gamzabat.algohub.feature.user.dto.UserInfoResponse;
 import com.gamzabat.algohub.feature.user.exception.BOJServerErrorException;
@@ -76,7 +77,7 @@ public class UserService {
 	}
 
 	@Transactional
-	public SignInResponse signIn(SignInRequest request) {
+	public TokenResponse signIn(SignInRequest request) {
 		UsernamePasswordAuthenticationToken authenticationToken
 			= new UsernamePasswordAuthenticationToken(request.email(), request.password());
 		Authentication authenticate;
@@ -87,7 +88,7 @@ public class UserService {
 		}
 		JwtDTO result = tokenProvider.generateTokens(authenticate);
 		log.info("success to sign in");
-		return new SignInResponse(result.getAccessToken(), result.getRefreshToken());
+		return new TokenResponse(result.getAccessToken(), result.getRefreshToken());
 	}
 
 	@Transactional(readOnly = true)
@@ -204,5 +205,15 @@ public class UserService {
 	private boolean isInvalidNicknameForm(String nickname) {
 		String regex = "[^a-zA-Z0-9가-힣ㄱ-ㅎㅏ-ㅣ]";
 		return nickname.length() < 3 || nickname.length() > 16 || Pattern.compile(regex).matcher(nickname).find();
+	}
+
+	@Transactional
+	public TokenResponse reissueToken(ReissueTokenRequest request) {
+		String expiredToken = request.expiredAccessToken();
+		String refreshToken = request.refreshToken();
+
+		TokenResponse response = tokenProvider.reissueTokens(expiredToken, refreshToken);
+		log.info("success to reissue tokens");
+		return response;
 	}
 }

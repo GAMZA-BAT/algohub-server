@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.gamzabat.algohub.common.annotation.AuthedUser;
+import com.gamzabat.algohub.common.jwt.dto.ReissueTokenRequest;
 import com.gamzabat.algohub.exception.RequestException;
 import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.dto.CheckEmailRequest;
@@ -23,7 +24,7 @@ import com.gamzabat.algohub.feature.user.dto.DeleteUserRequest;
 import com.gamzabat.algohub.feature.user.dto.EditUserPasswordRequest;
 import com.gamzabat.algohub.feature.user.dto.RegisterRequest;
 import com.gamzabat.algohub.feature.user.dto.SignInRequest;
-import com.gamzabat.algohub.feature.user.dto.SignInResponse;
+import com.gamzabat.algohub.feature.user.dto.TokenResponse;
 import com.gamzabat.algohub.feature.user.dto.UpdateUserRequest;
 import com.gamzabat.algohub.feature.user.dto.UserInfoResponse;
 import com.gamzabat.algohub.feature.user.service.UserService;
@@ -53,10 +54,20 @@ public class UserController {
 
 	@PostMapping(value = "/auth/sign-in")
 	@Operation(summary = "로그인 API")
-	public ResponseEntity<SignInResponse> signIn(@Valid @RequestBody SignInRequest request, Errors errors) {
+	public ResponseEntity<TokenResponse> signIn(@Valid @RequestBody SignInRequest request, Errors errors) {
 		if (errors.hasErrors())
 			throw new RequestException("로그인 요청이 올바르지 않습니다.", errors);
-		SignInResponse response = userService.signIn(request);
+		TokenResponse response = userService.signIn(request);
+		return ResponseEntity.ok().body(response);
+	}
+
+	@PostMapping(value = "/auth/reissue-token")
+	@Operation(summary = "토큰 재발급 API")
+	public ResponseEntity<TokenResponse> reissueToken(@Valid @RequestBody ReissueTokenRequest request,
+		Errors errors) {
+		if (errors.hasErrors())
+			throw new RequestException("토큰 재발급 요청이 올바르지 않습니다.", errors);
+		TokenResponse response = userService.reissueToken(request);
 		return ResponseEntity.ok().body(response);
 	}
 
