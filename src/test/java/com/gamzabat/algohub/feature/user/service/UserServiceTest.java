@@ -46,7 +46,7 @@ import com.gamzabat.algohub.feature.user.dto.DeleteUserRequest;
 import com.gamzabat.algohub.feature.user.dto.EditUserPasswordRequest;
 import com.gamzabat.algohub.feature.user.dto.RegisterRequest;
 import com.gamzabat.algohub.feature.user.dto.SignInRequest;
-import com.gamzabat.algohub.feature.user.dto.SignInResponse;
+import com.gamzabat.algohub.feature.user.dto.TokenResponse;
 import com.gamzabat.algohub.feature.user.dto.UpdateUserRequest;
 import com.gamzabat.algohub.feature.user.dto.UserInfoResponse;
 import com.gamzabat.algohub.feature.user.exception.BOJServerErrorException;
@@ -147,7 +147,7 @@ class UserServiceTest {
 			authentication);
 		when(tokenProvider.generateTokens(authentication)).thenReturn(jwtDTO);
 		// when
-		SignInResponse response = userService.signIn(request);
+		TokenResponse response = userService.signIn(request);
 		// then
 		assertThat(response.accessToken()).isEqualTo(accessToken);
 		assertThat(response.refreshToken()).isEqualTo(refreshToken);

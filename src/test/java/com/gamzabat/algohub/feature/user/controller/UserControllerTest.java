@@ -39,7 +39,7 @@ import com.gamzabat.algohub.feature.user.dto.CheckEmailRequest;
 import com.gamzabat.algohub.feature.user.dto.DeleteUserRequest;
 import com.gamzabat.algohub.feature.user.dto.RegisterRequest;
 import com.gamzabat.algohub.feature.user.dto.SignInRequest;
-import com.gamzabat.algohub.feature.user.dto.SignInResponse;
+import com.gamzabat.algohub.feature.user.dto.TokenResponse;
 import com.gamzabat.algohub.feature.user.dto.UpdateUserRequest;
 import com.gamzabat.algohub.feature.user.dto.UserInfoResponse;
 import com.gamzabat.algohub.feature.user.exception.BOJServerErrorException;
@@ -182,7 +182,7 @@ class UserControllerTest {
 	void signIn() throws Exception {
 		// given
 		SignInRequest request = new SignInRequest("email", "password");
-		SignInResponse response = new SignInResponse("access-token", "refresh-token");
+		TokenResponse response = new TokenResponse("access-token", "refresh-token");
 		when(userService.signIn(any(SignInRequest.class))).thenReturn(response);
 		// when, then
 		mockMvc.perform(post("/api/auth/sign-in")
