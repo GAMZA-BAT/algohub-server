@@ -24,6 +24,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockMultipartFile;
 
 import com.gamzabat.algohub.common.DateFormatUtil;
+import com.gamzabat.algohub.enums.ImageType;
 import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.exception.UserValidationException;
@@ -208,7 +209,8 @@ class StudyGroupServiceTest {
 		MockMultipartFile profileImage = new MockMultipartFile("image", new byte[] {1, 2, 3});
 		CreateGroupRequest request = new CreateGroupRequest(name, LocalDate.now(), LocalDate.now().plusDays(5),
 			"introduction");
-		when(imageService.saveImage(profileImage)).thenReturn(imageUrl);
+		when(imageService.saveImage(ImageType.GROUP, String.valueOf(groupId), profileImage)).thenReturn(imageUrl);
+		when(studyGroupRepository.save(any(StudyGroup.class))).thenReturn(group);
 		// when
 		studyGroupService.createGroup(user, request, profileImage);
 		// then
@@ -218,7 +220,6 @@ class StudyGroupServiceTest {
 		assertThat(result.getStartDate()).isEqualTo(LocalDate.now());
 		assertThat(result.getEndDate()).isEqualTo(LocalDate.now().plusDays(5));
 		assertThat(result.getIntroduction()).isEqualTo("introduction");
-		assertThat(result.getGroupImage()).isEqualTo(imageUrl);
 		verify(groupMemberRepository, times(1)).save(any(GroupMember.class));
 		verify(notificationSettingRepository, times(1)).save(any(NotificationSetting.class));
 	}
@@ -454,14 +455,13 @@ class StudyGroupServiceTest {
 		EditGroupRequest request = new EditGroupRequest("editName", LocalDate.now().plusDays(10),
 			LocalDate.now().plusDays(10), "editIntroduction");
 		MockMultipartFile editImage = new MockMultipartFile("editImage", new byte[] {1, 2, 3});
-		when(imageService.saveImage(editImage)).thenReturn("editImage");
 		when(studyGroupRepository.findById(anyLong())).thenReturn(Optional.ofNullable(group));
 		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
 		// when
-		studyGroupService.editGroup(user, 10L, request, editImage);
+		studyGroupService.editGroup(user, 10L, request, null);
 		// then
 		assertThat(group.getName()).isEqualTo("editName");
-		assertThat(group.getGroupImage()).isEqualTo("editImage");
+		assertThat(group.getGroupImage()).isNull();
 		assertThat(group.getStartDate()).isEqualTo(LocalDate.now().plusDays(10));
 		assertThat(group.getEndDate()).isEqualTo(LocalDate.now().plusDays(10));
 		assertThat(group.getIntroduction()).isEqualTo("editIntroduction");

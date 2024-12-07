@@ -2,6 +2,8 @@ package com.gamzabat.algohub.feature.group.studygroup.service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -16,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import com.gamzabat.algohub.constants.BOJResultConstants;
+import com.gamzabat.algohub.enums.ImageType;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.group.ranking.domain.Ranking;
@@ -87,18 +90,15 @@ public class StudyGroupService {
 
 	@Transactional
 	public GroupCodeResponse createGroup(User user, CreateGroupRequest request, MultipartFile profileImage) {
-		String imageUrl = imageService.saveImage(profileImage);
 		String inviteCode = NanoIdUtils.randomNanoId();
 
-		StudyGroup group = StudyGroup.builder()
+		StudyGroup group = groupRepository.save(StudyGroup.builder()
 			.name(request.name())
 			.startDate(request.startDate())
 			.endDate(request.endDate())
 			.introduction(request.introduction())
-			.groupImage(imageUrl)
 			.groupCode(inviteCode)
-			.build();
-		groupRepository.save(group);
+			.build());
 
 		GroupMember member = GroupMember.builder()
 			.studyGroup(group)
@@ -118,6 +118,8 @@ public class StudyGroupService {
 		notificationSettingRepository.save(
 			NotificationSetting.builder().member(member).build()
 		);
+
+		saveGroupImage(profileImage, group);
 		log.info("success to save study group");
 		return new GroupCodeResponse(inviteCode);
 	}
@@ -305,12 +307,7 @@ public class StudyGroupService {
 		if (!RoleOfGroupMember.isOwner(groupMember))
 			throw new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "그룹 정보 수정에 대한 권한이 없습니다.");
 
-		if (groupImage != null) {
-			if (group.getGroupImage() != null)
-				imageService.deleteImage(group.getGroupImage());
-			String imageUrl = imageService.saveImage(groupImage);
-			group.editGroupImage(imageUrl);
-		}
+		editGroupImage(groupImage, group);
 		group.editGroupInfo(
 			request.name(),
 			request.startDate(),
@@ -318,6 +315,42 @@ public class StudyGroupService {
 			request.introduction()
 		);
 		log.info("success to edit group info");
+	}
+
+	private void editGroupImage(MultipartFile inputImage, StudyGroup group) {
+		if (inputImage == null || inputImage.isEmpty()) {
+			handleNullInputImage(group);
+			return;
+		}
+
+		if (group.getGroupImage() != null) {
+			if (isEqualToGroupImage(group, inputImage)) {
+				return;
+			}
+			imageService.deleteImage(group.getGroupImage());
+		}
+
+		saveGroupImage(inputImage, group);
+		log.info("success to edit group image");
+	}
+
+	private void saveGroupImage(MultipartFile inputImage, StudyGroup group) {
+		String imageUrl = imageService.saveImage(ImageType.GROUP, String.valueOf(group.getId()), inputImage);
+		group.editGroupImage(imageUrl);
+	}
+
+	private void handleNullInputImage(StudyGroup group) {
+		if (group.getGroupImage() != null) {
+			imageService.deleteImage(group.getGroupImage());
+			group.editGroupImage(null);
+		}
+	}
+
+	private boolean isEqualToGroupImage(StudyGroup group, MultipartFile inputImage) {
+		String inputImageUrl = imageService.getImageName(ImageType.GROUP, String.valueOf(group.getId()), inputImage);
+		String groupImageUrl = URLDecoder.decode(imageService.parseImageName(group.getGroupImage()),
+			StandardCharsets.UTF_8);
+		return inputImageUrl.equals(groupImageUrl);
 	}
 
 	@Transactional(readOnly = true)

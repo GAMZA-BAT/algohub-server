@@ -227,7 +227,7 @@ public class TokenProvider {
 	}
 
 	@Scheduled(cron = "0 0 0 * * *")
-	private void clearExpiredRefreshTokens() {
+	public void clearExpiredRefreshTokens() {
 		refreshTokenRepository.deleteExpiredRefreshTokens();
 	}
 }

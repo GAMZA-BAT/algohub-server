@@ -1,5 +1,6 @@
 package com.gamzabat.algohub.feature.notice.service;
 
+import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -72,7 +73,8 @@ public class NoticeCommentService implements CommentService<CreateNoticeCommentR
 		Notice notice = validateNotice(user, noticeId);
 		List<NoticeComment> notices = noticeCommentRepository.findAllByNotice(notice);
 		log.info("success to get notice comment list. noticeId: {}", noticeId);
-		return notices.stream().map(GetCommentResponse::toDTO).toList();
+		return notices.stream().map(GetCommentResponse::toDTO).sorted(Comparator.comparing(
+			GetCommentResponse::createdAt).reversed()).toList();
 	}
 
 	@Override

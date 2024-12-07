@@ -3,6 +3,7 @@ package com.gamzabat.algohub.feature.group.studygroup.domain;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
@@ -19,6 +20,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @SQLRestriction("deleted_at IS NULL")
 @SQLDelete(sql = "UPDATE study_group SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@DynamicUpdate
 public class StudyGroup {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
