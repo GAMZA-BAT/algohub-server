@@ -13,8 +13,8 @@ import org.springframework.stereotype.Repository;
 
 import com.gamzabat.algohub.feature.group.ranking.domain.Ranking;
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
-import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.JPAExpressions;
+import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import lombok.AllArgsConstructor;
@@ -30,7 +30,7 @@ public class CustomRankingRepositoryImpl implements CustomRankingRepository {
 			.orderBy(ranking.currentRank.asc())
 			.offset(pageable.getOffset())
 			.limit(pageable.getPageSize());
-		JPAQuery<Long> countQuery = rankingCountQuery();
+		JPAQuery<Long> countQuery = rankingCountQuery(studyGroup);
 
 		return PageableExecutionUtils.getPage(query.fetch(), pageable, countQuery::fetchOne);
 	}
@@ -47,9 +47,12 @@ public class CustomRankingRepositoryImpl implements CustomRankingRepository {
 			.where(ranking.member.studyGroup.eq(studyGroup));
 	}
 
-	private JPAQuery<Long> rankingCountQuery() {
+	private JPAQuery<Long> rankingCountQuery(StudyGroup studyGroup) {
 		return queryFactory.select(ranking.count())
-			.from(ranking);
+			.from(ranking)
+			.join(ranking.member, groupMember)
+			.join(groupMember.user, user)
+			.where(ranking.member.studyGroup.eq(studyGroup));
 	}
 
 	@Override
