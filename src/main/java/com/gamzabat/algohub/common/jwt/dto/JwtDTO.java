@@ -9,5 +9,6 @@ import lombok.Data;
 @AllArgsConstructor
 public class JwtDTO {
 	private String grantType;
-	private String token;
+	private String accessToken;
+	private String refreshToken;
 }

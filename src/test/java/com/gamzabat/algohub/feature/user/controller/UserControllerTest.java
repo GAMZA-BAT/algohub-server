@@ -39,7 +39,7 @@ import com.gamzabat.algohub.feature.user.dto.CheckEmailRequest;
 import com.gamzabat.algohub.feature.user.dto.DeleteUserRequest;
 import com.gamzabat.algohub.feature.user.dto.RegisterRequest;
 import com.gamzabat.algohub.feature.user.dto.SignInRequest;
-import com.gamzabat.algohub.feature.user.dto.SignInResponse;
+import com.gamzabat.algohub.feature.user.dto.TokenResponse;
 import com.gamzabat.algohub.feature.user.dto.UpdateUserRequest;
 import com.gamzabat.algohub.feature.user.dto.UserInfoResponse;
 import com.gamzabat.algohub.feature.user.exception.BOJServerErrorException;
@@ -97,7 +97,7 @@ class UserControllerTest {
 
 		doNothing().when(userService).register(any(RegisterRequest.class), any(MultipartFile.class));
 		// when, then
-		mockMvc.perform(multipart("/api/users/sign-up")
+		mockMvc.perform(multipart("/api/auth/sign-up")
 				.file(requestPart)
 				.file(profileImage)
 				.contentType(MediaType.MULTIPART_FORM_DATA))
@@ -117,7 +117,7 @@ class UserControllerTest {
 
 		doNothing().when(userService).register(any(RegisterRequest.class), any());
 		// when, then
-		mockMvc.perform(multipart("/api/users/sign-up")
+		mockMvc.perform(multipart("/api/auth/sign-up")
 				.file(requestPart)
 				.contentType(MediaType.MULTIPART_FORM_DATA))
 			.andExpect(status().isOk());
@@ -143,7 +143,7 @@ class UserControllerTest {
 		MockMultipartFile profileImage = new MockMultipartFile("profileImage", "profile.jpg", "image/jpeg",
 			"image".getBytes());
 		// when, then
-		mockMvc.perform(multipart("/api/users/sign-up")
+		mockMvc.perform(multipart("/api/auth/sign-up")
 				.file(requestPart)
 				.file(profileImage)
 				.contentType(MediaType.MULTIPART_FORM_DATA))
@@ -166,7 +166,7 @@ class UserControllerTest {
 		doThrow(new UserValidationException("이미 사용 중인 이메일 입니다.")).when(userService)
 			.register(any(RegisterRequest.class), any(MultipartFile.class));
 		// when, then
-		mockMvc.perform(multipart("/api/users/sign-up")
+		mockMvc.perform(multipart("/api/auth/sign-up")
 				.file(requestPart)
 				.file(profileImage)
 				.contentType(MediaType.MULTIPART_FORM_DATA))
@@ -182,14 +182,15 @@ class UserControllerTest {
 	void signIn() throws Exception {
 		// given
 		SignInRequest request = new SignInRequest("email", "password");
-		SignInResponse response = new SignInResponse("token");
+		TokenResponse response = new TokenResponse("access-token", "refresh-token");
 		when(userService.signIn(any(SignInRequest.class))).thenReturn(response);
 		// when, then
-		mockMvc.perform(post("/api/users/sign-in")
+		mockMvc.perform(post("/api/auth/sign-in")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.token").value("token"));
+			.andExpect(jsonPath("$.accessToken").value("access-token"))
+			.andExpect(jsonPath("$.refreshToken").value("refresh-token"));
 
 		verify(userService, times(1)).signIn(request);
 	}
@@ -204,7 +205,7 @@ class UserControllerTest {
 		// given
 		SignInRequest request = new SignInRequest(email, password);
 		// when, then
-		mockMvc.perform(post("/api/users/sign-in")
+		mockMvc.perform(post("/api/auth/sign-in")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isBadRequest())
@@ -220,7 +221,7 @@ class UserControllerTest {
 		SignInRequest request = new SignInRequest("invalidEmail", "password");
 		doThrow(new UserValidationException("존재하지 않는 회원 입니다.")).when(userService).signIn(any(SignInRequest.class));
 		// when, then
-		mockMvc.perform(post("/api/users/sign-in")
+		mockMvc.perform(post("/api/auth/sign-in")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isBadRequest())
@@ -236,7 +237,7 @@ class UserControllerTest {
 		SignInRequest request = new SignInRequest("email", "invalidPassword");
 		doThrow(new UncorrectedPasswordException("비밀번호가 틀렸습니다.")).when(userService).signIn(any(SignInRequest.class));
 		// when, then
-		mockMvc.perform(post("/api/users/sign-in")
+		mockMvc.perform(post("/api/auth/sign-in")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isBadRequest())

@@ -5,6 +5,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import com.gamzabat.algohub.common.jwt.exception.ExpiredTokenException;
+import com.gamzabat.algohub.common.jwt.exception.TokenException;
 import com.gamzabat.algohub.feature.comment.exception.CommentValidationException;
 import com.gamzabat.algohub.feature.group.ranking.exception.CannotFoundRankingException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundGroupException;
@@ -146,6 +148,18 @@ public class CustomExceptionHandler {
 
 	@ExceptionHandler(CannotFoundUserException.class)
 	protected ResponseEntity<ErrorResponse> handler(CannotFoundUserException e) {
+		return ResponseEntity.status(e.getCode())
+			.body(new ErrorResponse(e.getCode(), e.getError(), null));
+	}
+
+	@ExceptionHandler(TokenException.class)
+	protected ResponseEntity<ErrorResponse> handler(TokenException e) {
+		return ResponseEntity.status(e.getCode())
+			.body(new ErrorResponse(e.getCode(), e.getError(), null));
+	}
+
+	@ExceptionHandler(ExpiredTokenException.class)
+	protected ResponseEntity<ErrorResponse> handler(ExpiredTokenException e) {
 		return ResponseEntity.status(e.getCode())
 			.body(new ErrorResponse(e.getCode(), e.getError(), null));
 	}

@@ -25,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.gamzabat.algohub.common.jwt.TokenProvider;
 import com.gamzabat.algohub.common.jwt.dto.JwtDTO;
+import com.gamzabat.algohub.common.jwt.dto.ReissueTokenRequest;
 import com.gamzabat.algohub.common.redis.RedisService;
 import com.gamzabat.algohub.enums.ImageType;
 import com.gamzabat.algohub.enums.Role;
@@ -37,7 +38,7 @@ import com.gamzabat.algohub.feature.user.dto.DeleteUserRequest;
 import com.gamzabat.algohub.feature.user.dto.EditUserPasswordRequest;
 import com.gamzabat.algohub.feature.user.dto.RegisterRequest;
 import com.gamzabat.algohub.feature.user.dto.SignInRequest;
-import com.gamzabat.algohub.feature.user.dto.SignInResponse;
+import com.gamzabat.algohub.feature.user.dto.TokenResponse;
 import com.gamzabat.algohub.feature.user.dto.UpdateUserRequest;
 import com.gamzabat.algohub.feature.user.dto.UserInfoResponse;
 import com.gamzabat.algohub.feature.user.exception.BOJServerErrorException;
@@ -85,8 +86,8 @@ public class UserService {
 		user.editProfileImage(imageUrl);
 	}
 
-	@Transactional(readOnly = true)
-	public SignInResponse signIn(SignInRequest request) {
+	@Transactional
+	public TokenResponse signIn(SignInRequest request) {
 		UsernamePasswordAuthenticationToken authenticationToken
 			= new UsernamePasswordAuthenticationToken(request.email(), request.password());
 		Authentication authenticate;
@@ -95,8 +96,9 @@ public class UserService {
 		} catch (BadCredentialsException e) {
 			throw new UncorrectedPasswordException("비밀번호가 틀렸습니다.");
 		}
-		JwtDTO token = tokenProvider.generateToken(authenticate);
-		return new SignInResponse(token.getToken());
+		JwtDTO result = tokenProvider.generateTokens(authenticate);
+		log.info("success to sign in");
+		return new TokenResponse(result.getAccessToken(), result.getRefreshToken());
 	}
 
 	@Transactional(readOnly = true)
@@ -112,10 +114,10 @@ public class UserService {
 		if (!updateUserRequest.getNickname().isEmpty()) {
 			user.editNickname(updateUserRequest.getNickname());
 		}
-		if (!updateUserRequest.getBjNickname().isEmpty()) {
+		if (updateUserRequest.getBjNickname() != null && !updateUserRequest.getBjNickname().isEmpty()) {
 			user.editBjNickname(updateUserRequest.getBjNickname());
 		}
-		if (!updateUserRequest.getDescription().isEmpty()) {
+		if (updateUserRequest.getDescription() != null && !updateUserRequest.getDescription().isEmpty()) {
 			user.editDescription(updateUserRequest.getDescription());
 		}
 
@@ -169,7 +171,7 @@ public class UserService {
 		if (accessToken == null)
 			throw new JwtRequestException(HttpStatus.BAD_REQUEST.value(), "BAD_REQUEST", "토큰이 비어있습니다.");
 
-		long tokenExpiration = tokenProvider.getTokenExpiration();
+		long tokenExpiration = tokenProvider.getAccessTokenExpirationTime();
 		redisService.setValues(accessToken, "logout", Duration.ofMillis(tokenExpiration));
 		log.info("success to logout");
 	}
@@ -241,5 +243,15 @@ public class UserService {
 	private boolean isInvalidNicknameForm(String nickname) {
 		String regex = "[^a-zA-Z0-9가-힣ㄱ-ㅎㅏ-ㅣ]";
 		return nickname.length() < 3 || nickname.length() > 16 || Pattern.compile(regex).matcher(nickname).find();
+	}
+
+	@Transactional
+	public TokenResponse reissueToken(ReissueTokenRequest request) {
+		String expiredToken = request.expiredAccessToken();
+		String refreshToken = request.refreshToken();
+
+		TokenResponse response = tokenProvider.reissueTokens(expiredToken, refreshToken);
+		log.info("success to reissue tokens");
+		return response;
 	}
 }
