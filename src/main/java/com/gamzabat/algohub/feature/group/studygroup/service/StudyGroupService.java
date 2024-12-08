@@ -287,7 +287,7 @@ public class StudyGroupService {
 	private GetStudyGroupResponse getStudyGroupResponseDTO(User user, StudyGroup group) {
 		GroupMember member = groupMemberRepository.findByUserAndStudyGroup(user, group)
 			.orElseThrow(() -> new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 스터디 그룹입니다."));
-		return GetStudyGroupResponse.toDTO(group, user, isBookmarked(user, group), getStudyGroupOwner(group),
+		return GetStudyGroupResponse.toDTO(group, member, isBookmarked(user, group), getStudyGroupOwner(group),
 			member.getIsVisible());
 	}
 
@@ -447,8 +447,9 @@ public class StudyGroupService {
 				() -> new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(), "참여하지 않은 그룹 입니다."));
 
 		GetGroupResponse response = new GetGroupResponse(group.getId(), group.getName(), group.getStartDate(),
-			group.getEndDate(), group.getIntroduction(), group.getGroupImage(), RoleOfGroupMember.isOwner(member),
+			group.getEndDate(), group.getIntroduction(), group.getGroupImage(), member.getRole(),
 			getStudyGroupOwner(group).getNickname());
+		log.info("success to get study group");
 		return response;
 	}
 
