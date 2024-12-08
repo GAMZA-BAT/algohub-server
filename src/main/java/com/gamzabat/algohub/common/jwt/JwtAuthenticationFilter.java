@@ -21,7 +21,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	private final TokenProvider tokenProvider;
-	private final List<String> excludedPaths = Arrays.asList("/api/users/sign-in", "/api/users/sign-up");
+	private final List<String> excludedPaths = Arrays.asList("/api/auth/sign-in", "/api/auth/sign-up",
+		"/api/auth/reissue-token");
 
 	@Override
 	protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
