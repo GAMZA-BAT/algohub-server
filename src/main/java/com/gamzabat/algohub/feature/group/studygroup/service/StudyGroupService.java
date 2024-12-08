@@ -509,6 +509,10 @@ public class StudyGroupService {
 				() -> new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(), "해당 스터디 그룹에 참여하지 않은 회원입니다."));
 
 		member.updateRole(RoleOfGroupMember.fromValue(request.role()));
+
+		if (RoleOfGroupMember.isOwner(member)) {
+			owner.updateRole(RoleOfGroupMember.PARTICIPANT);
+		}
 		log.info("success to update group member role");
 	}
 

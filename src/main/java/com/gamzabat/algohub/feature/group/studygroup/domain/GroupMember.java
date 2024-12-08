@@ -2,6 +2,8 @@ package com.gamzabat.algohub.feature.group.studygroup.domain;
 
 import java.time.LocalDate;
 
+import org.hibernate.annotations.DynamicUpdate;
+
 import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
 import com.gamzabat.algohub.feature.user.domain.User;
 
@@ -22,6 +24,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor
+@DynamicUpdate
 public class GroupMember {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
