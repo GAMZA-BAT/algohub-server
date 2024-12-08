@@ -142,11 +142,15 @@ public class TokenProvider {
 	}
 
 	private Claims parseClaims(String token) {
-		return Jwts.parserBuilder()
-			.setSigningKey(accessTokenKey)
-			.build()
-			.parseClaimsJws(token)
-			.getBody();
+		try {
+			return Jwts.parserBuilder()
+				.setSigningKey(accessTokenKey)
+				.build()
+				.parseClaimsJws(token)
+				.getBody();
+		} catch (ExpiredJwtException e) {
+			return e.getClaims();
+		}
 	}
 
 	public String getUserEmail(String authToken) {
