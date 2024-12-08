@@ -418,7 +418,7 @@ class StudyGroupServiceTest {
 			assertThat(done.get(i).startDate()).isEqualTo(DateFormatUtil.formatDate(LocalDate.now().minusDays(i + 30)));
 			assertThat(done.get(i).endDate()).isEqualTo(DateFormatUtil.formatDate(LocalDate.now().minusDays(30)));
 			assertThat(done.get(i).isBookmarked()).isTrue();
-			assertThat(done.get(i).isOwner()).isTrue();
+			assertThat(done.get(i).role()).isEqualTo(RoleOfGroupMember.OWNER);
 		}
 		for (int i = 0; i < 10; i++) {
 			assertThat(inProgress.get(i).name()).isEqualTo("name" + i);
@@ -427,7 +427,7 @@ class StudyGroupServiceTest {
 				DateFormatUtil.formatDate(LocalDate.now().minusDays(i)));
 			assertThat(inProgress.get(i).endDate()).isEqualTo(DateFormatUtil.formatDate(LocalDate.now().plusDays(i)));
 			assertThat(inProgress.get(i).isBookmarked()).isFalse();
-			assertThat(inProgress.get(i).isOwner()).isTrue();
+			assertThat(inProgress.get(i).role()).isEqualTo(RoleOfGroupMember.OWNER);
 		}
 		for (int i = 0; i < 10; i++) {
 			assertThat(queued.get(i).name()).isEqualTo("name" + i);
@@ -435,7 +435,7 @@ class StudyGroupServiceTest {
 			assertThat(queued.get(i).startDate()).isEqualTo(DateFormatUtil.formatDate(LocalDate.now().plusDays(30)));
 			assertThat(queued.get(i).endDate()).isEqualTo(DateFormatUtil.formatDate(LocalDate.now().plusDays(i + 30)));
 			assertThat(queued.get(i).isBookmarked()).isFalse();
-			assertThat(queued.get(i).isOwner()).isFalse();
+			assertThat(queued.get(i).role()).isEqualTo(RoleOfGroupMember.OWNER);
 		}
 		for (int i = 0; i < 10; i++) {
 			assertThat(bookmarked.get(i).name()).isEqualTo("name" + i);
@@ -444,7 +444,7 @@ class StudyGroupServiceTest {
 				DateFormatUtil.formatDate(LocalDate.now().minusDays(i + 30)));
 			assertThat(bookmarked.get(i).endDate()).isEqualTo(DateFormatUtil.formatDate(LocalDate.now().minusDays(30)));
 			assertThat(bookmarked.get(i).isBookmarked()).isTrue();
-			assertThat(bookmarked.get(i).isOwner()).isTrue();
+			assertThat(bookmarked.get(i).role()).isEqualTo(RoleOfGroupMember.OWNER);
 		}
 	}
 
@@ -824,7 +824,7 @@ class StudyGroupServiceTest {
 			assertThat(done.get(i).startDate()).isEqualTo(DateFormatUtil.formatDate(LocalDate.now().minusDays(i + 30)));
 			assertThat(done.get(i).endDate()).isEqualTo(DateFormatUtil.formatDate(LocalDate.now().minusDays(30)));
 			assertThat(done.get(i).isBookmarked()).isTrue();
-			assertThat(done.get(i).isOwner()).isTrue();
+			assertThat(done.get(i).role()).isEqualTo(RoleOfGroupMember.OWNER);
 		}
 		for (int i = 0; i < 10; i++) {
 			assertThat(inProgress.get(i).name()).isEqualTo("name" + i);
@@ -833,7 +833,7 @@ class StudyGroupServiceTest {
 				DateFormatUtil.formatDate(LocalDate.now().minusDays(i)));
 			assertThat(inProgress.get(i).endDate()).isEqualTo(DateFormatUtil.formatDate(LocalDate.now().plusDays(i)));
 			assertThat(inProgress.get(i).isBookmarked()).isFalse();
-			assertThat(inProgress.get(i).isOwner()).isTrue();
+			assertThat(inProgress.get(i).role()).isEqualTo(RoleOfGroupMember.OWNER);
 		}
 		for (int i = 0; i < 10; i++) {
 			assertThat(queued.get(i).name()).isEqualTo("name" + i);
@@ -841,7 +841,7 @@ class StudyGroupServiceTest {
 			assertThat(queued.get(i).startDate()).isEqualTo(DateFormatUtil.formatDate(LocalDate.now().plusDays(30)));
 			assertThat(queued.get(i).endDate()).isEqualTo(DateFormatUtil.formatDate(LocalDate.now().plusDays(i + 30)));
 			assertThat(queued.get(i).isBookmarked()).isFalse();
-			assertThat(queued.get(i).isOwner()).isFalse();
+			assertThat(queued.get(i).role()).isEqualTo(RoleOfGroupMember.OWNER);
 		}
 		for (int i = 0; i < 10; i++) {
 			assertThat(bookmarked.get(i).name()).isEqualTo("name" + i);
@@ -850,7 +850,7 @@ class StudyGroupServiceTest {
 				DateFormatUtil.formatDate(LocalDate.now().minusDays(i + 30)));
 			assertThat(bookmarked.get(i).endDate()).isEqualTo(DateFormatUtil.formatDate(LocalDate.now().minusDays(30)));
 			assertThat(bookmarked.get(i).isBookmarked()).isTrue();
-			assertThat(bookmarked.get(i).isOwner()).isTrue();
+			assertThat(bookmarked.get(i).role()).isEqualTo(RoleOfGroupMember.OWNER);
 		}
 	}
 

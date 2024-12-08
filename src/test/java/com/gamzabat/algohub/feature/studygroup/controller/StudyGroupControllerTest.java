@@ -216,7 +216,7 @@ class StudyGroupControllerTest {
 			bookmarked.add(new GetStudyGroupResponse(
 				(long)i, "name" + i, "groupImage" + 1,
 				DateFormatUtil.formatDate(LocalDate.now()), DateFormatUtil.formatDate(LocalDate.now().plusDays(i)),
-				"introduction" + 1, "nickname", true, true, true
+				"introduction" + 1, "nickname", RoleOfGroupMember.OWNER, true, true
 			));
 		}
 
@@ -224,21 +224,21 @@ class StudyGroupControllerTest {
 			done.add(new GetStudyGroupResponse(
 				(long)i, "name" + i, "groupImage" + 1,
 				DateFormatUtil.formatDate(LocalDate.now()), DateFormatUtil.formatDate(LocalDate.now().plusDays(i)),
-				"introduction" + 1, "nickname", true, true, true
+				"introduction" + 1, "nickname", RoleOfGroupMember.ADMIN, true, true
 			));
 		}
 		for (int i = 0; i < 10; i++) {
 			inProgress.add(new GetStudyGroupResponse(
 				(long)i, "name" + i, "groupImage" + 1,
 				DateFormatUtil.formatDate(LocalDate.now()), DateFormatUtil.formatDate(LocalDate.now().plusDays(i)),
-				"introduction" + 1, "nickname", true, true, true
+				"introduction" + 1, "nickname", RoleOfGroupMember.PARTICIPANT, true, true
 			));
 		}
 		for (int i = 0; i < 10; i++) {
 			queued.add(new GetStudyGroupResponse(
 				(long)i, "name" + i, "groupImage" + 1,
 				DateFormatUtil.formatDate(LocalDate.now()), DateFormatUtil.formatDate(LocalDate.now().plusDays(i)),
-				"introduction" + 1, "nickname", true, true, true
+				"introduction" + 1, "nickname", RoleOfGroupMember.PARTICIPANT, true, true
 			));
 		}
 		GetStudyGroupListsResponse response = new GetStudyGroupListsResponse(bookmarked, done, inProgress, queued);
