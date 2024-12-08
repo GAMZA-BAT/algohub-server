@@ -604,7 +604,7 @@ class StudyGroupServiceTest {
 
 	@Test
 	@DisplayName("스터디 그룹 멤버 역할 수정 성공")
-	void updateGroupMemberRole() {
+	void updateGroupMemberRole_1() {
 		// given
 		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(2L, "ADMIN");
 		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
@@ -617,6 +617,24 @@ class StudyGroupServiceTest {
 		assertThat(groupMember2.getUser()).isEqualTo(user2);
 		assertThat(groupMember2.getStudyGroup()).isEqualTo(group);
 		assertThat(groupMember2.getRole()).isEqualTo(RoleOfGroupMember.ADMIN);
+	}
+
+	@Test
+	@DisplayName("스터디 그룹 멤버 역할 수정 성공 : OWNER로 수정")
+	void updateGroupMemberRole_2() {
+		// given
+		UpdateGroupMemberRoleRequest request = new UpdateGroupMemberRoleRequest(2L, "OWNER");
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
+		when(groupMemberRepository.findByUserAndStudyGroup(user2, group)).thenReturn(Optional.ofNullable(groupMember2));
+		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.ofNullable(group));
+		when(userRepository.findById(anyLong())).thenReturn(Optional.ofNullable(user2));
+		// when
+		studyGroupService.updateGroupMemberRole(user, groupId, request);
+		// then
+		assertThat(groupMember2.getUser()).isEqualTo(user2);
+		assertThat(groupMember2.getStudyGroup()).isEqualTo(group);
+		assertThat(groupMember2.getRole()).isEqualTo(RoleOfGroupMember.OWNER);
+		assertThat(groupMember1.getRole()).isEqualTo(RoleOfGroupMember.PARTICIPANT);
 	}
 
 	@Test
