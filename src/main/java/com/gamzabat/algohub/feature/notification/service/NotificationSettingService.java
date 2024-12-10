@@ -45,7 +45,7 @@ public class NotificationSettingService {
 		NotificationSetting setting = notificationSettingRepository.findByMember(member)
 			.orElseThrow(() -> new CannotFoundNotificationSettingException("알림 설정 정보를 가져올 수 없습니다."));
 
-		setting.editSettings(request.all(),
+		setting.editSettings(request.allNotifications(),
 			request.newProblem(),
 			request.newComment(),
 			request.newMember(),
