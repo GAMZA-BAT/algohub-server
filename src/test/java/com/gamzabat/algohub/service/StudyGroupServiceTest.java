@@ -37,6 +37,7 @@ import com.gamzabat.algohub.feature.group.studygroup.dto.CreateGroupRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupVisibilityRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupMemberResponse;
+import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupSettingResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupListsResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.UpdateBookmarkResponse;
@@ -98,8 +99,6 @@ class StudyGroupServiceTest {
 	private RankingRepository rankingRepository;
 	@Mock
 	private ObjectProvider<StudyGroupService> studyGroupServiceObjectProvider;
-	@InjectMocks
-	private StudyGroupService groupService = mock(StudyGroupService.class);
 	@Mock
 	private ImageService imageService;
 	private User user, owner, user2, user3;
@@ -870,6 +869,59 @@ class StudyGroupServiceTest {
 			assertThat(bookmarked.get(i).isBookmarked()).isTrue();
 			assertThat(bookmarked.get(i).role()).isEqualTo(RoleOfGroupMember.OWNER);
 		}
+	}
+
+	@Test
+	@DisplayName("그룹 설정 목록 조회 성공")
+	void getStudyGroupSettings() {
+		// given
+		StudyGroup queued = StudyGroup.builder()
+			.name("queued")
+			.startDate(LocalDate.now().plusDays(10))
+			.endDate(LocalDate.now().plusDays(30))
+			.build();
+		GroupMember queuedMember = GroupMember.builder()
+			.studyGroup(queued)
+			.user(user)
+			.role(RoleOfGroupMember.PARTICIPANT)
+			.build();
+		when(groupMemberRepository.findByUserAndStudyGroup(user, queued)).thenReturn(Optional.of(queuedMember));
+		when(bookmarkedStudyGroupRepository.existsByUserAndStudyGroup(user, queued)).thenReturn(false);
+		StudyGroup inProgress = StudyGroup.builder()
+			.name("inProgress")
+			.startDate(LocalDate.now().minusDays(10))
+			.endDate(LocalDate.now().plusDays(30))
+			.build();
+		GroupMember inProgressMember = GroupMember.builder()
+			.studyGroup(inProgress)
+			.user(user)
+			.role(RoleOfGroupMember.ADMIN)
+			.build();
+		when(groupMemberRepository.findByUserAndStudyGroup(user, inProgress)).thenReturn(Optional.of(inProgressMember));
+		when(bookmarkedStudyGroupRepository.existsByUserAndStudyGroup(user, queued)).thenReturn(true);
+		StudyGroup done = StudyGroup.builder()
+			.name("done")
+			.startDate(LocalDate.now().minusDays(30))
+			.endDate(LocalDate.now().minusDays(10))
+			.build();
+		GroupMember doneMember = GroupMember.builder()
+			.studyGroup(done)
+			.user(user)
+			.role(RoleOfGroupMember.OWNER)
+			.build();
+		when(groupMemberRepository.findByUserAndStudyGroup(user, done)).thenReturn(Optional.of(doneMember));
+		when(bookmarkedStudyGroupRepository.existsByUserAndStudyGroup(user, queued)).thenReturn(false);
+		when(studyGroupRepository.findAllByUser(user)).thenReturn(List.of(queued, inProgress, done));
+		// when
+		List<GetGroupSettingResponse> responses = studyGroupService.getStudyGroupSettings(user);
+		// then
+		assertThat(responses.size()).isEqualTo(3);
+		assertThat(responses.get(0).name()).isEqualTo("queued");
+		assertThat(responses.get(0).status()).isEqualTo("Queued");
+		assertThat(responses.get(1).name()).isEqualTo("inProgress");
+		assertThat(responses.get(1).status()).isEqualTo("InProgress");
+		assertThat(responses.get(2).name()).isEqualTo("done");
+		assertThat(responses.get(2).status()).isEqualTo("Done");
 	}
 
 }
