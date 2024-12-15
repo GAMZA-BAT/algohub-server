@@ -1,6 +1,7 @@
 package com.gamzabat.algohub.feature.group.studygroup.dto;
 
 import com.gamzabat.algohub.common.DateFormatUtil;
+import com.gamzabat.algohub.enums.GroupStatus;
 import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
@@ -14,6 +15,7 @@ public record GetStudyGroupResponse(Long id,
 									String introduction,
 									String ownerNickname,
 									RoleOfGroupMember role,
+									String status,
 									boolean isBookmarked,
 									boolean isVisible) {
 	public static GetStudyGroupResponse toDTO(StudyGroup group, GroupMember member, boolean isBookmarked, User owner,
@@ -27,6 +29,7 @@ public record GetStudyGroupResponse(Long id,
 			group.getIntroduction(),
 			owner.getNickname(),
 			member.getRole(),
+			GroupStatus.getStatus(group).getValue(),
 			isBookmarked,
 			isVisible
 		);

@@ -255,34 +255,49 @@ public class StudyGroupService {
 	@Transactional(readOnly = true)
 	public GetStudyGroupListsResponse getStudyGroupList(User user) {
 		List<StudyGroup> groups = groupRepository.findAllByUser(user);
-
-		List<GetStudyGroupResponse> bookmarked = bookmarkedStudyGroupRepository.findAllByUser(user).stream()
-			.map(bookmark -> getStudyGroupResponseDTO(user, bookmark.getStudyGroup()))
-			.toList();
-
 		LocalDate today = LocalDate.now();
 
-		List<GetStudyGroupResponse> done = groups.stream()
-			.filter(group -> group.getEndDate() != null && group.getEndDate().isBefore(today))
+		List<GetStudyGroupResponse> bookmarked = groups.stream()
+			.filter(group -> isBookmarked(user, group))
 			.map(group -> getStudyGroupResponseDTO(user, group))
+			.toList();
+
+		List<GetStudyGroupResponse> done = groups.stream()
+			.filter(group -> isDone(today, group))
+			.map(group -> getStudyGroupResponseDTO(user, group))
+			.filter(response -> !bookmarked.contains(response))
 			.toList();
 
 		List<GetStudyGroupResponse> inProgress = groups.stream()
 			.filter(
-				group -> !(group.getStartDate() == null || group.getStartDate().isAfter(today))
-					&& !(group.getEndDate() == null || group.getEndDate().isBefore(today)))
+				group -> isInProgress(today, group))
 			.map(group -> getStudyGroupResponseDTO(user, group))
+			.filter(response -> !bookmarked.contains(response))
 			.toList();
 
 		List<GetStudyGroupResponse> queued = groups.stream()
-			.filter(group -> group.getStartDate() != null && group.getStartDate().isAfter(today))
+			.filter(group -> isQueued(today, group))
 			.map(group -> getStudyGroupResponseDTO(user, group))
+			.filter(response -> !bookmarked.contains(response))
 			.toList();
 
 		GetStudyGroupListsResponse response = new GetStudyGroupListsResponse(bookmarked, done, inProgress, queued);
 
-		log.info("success to get study group list");
+		log.info("success to get my study group list");
 		return response;
+	}
+
+	private static boolean isDone(LocalDate today, StudyGroup group) {
+		return group.getEndDate() != null && group.getEndDate().isBefore(today);
+	}
+
+	private static boolean isInProgress(LocalDate today, StudyGroup group) {
+		return !(group.getStartDate() == null || group.getStartDate().isAfter(today))
+			&& !(group.getEndDate() == null || group.getEndDate().isBefore(today));
+	}
+
+	private static boolean isQueued(LocalDate today, StudyGroup group) {
+		return group.getStartDate() != null && group.getStartDate().isAfter(today);
 	}
 
 	private GetStudyGroupResponse getStudyGroupResponseDTO(User user, StudyGroup group) {
@@ -547,31 +562,30 @@ public class StudyGroupService {
 			.orElseThrow(() -> new CannotFoundUserException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 유저입니다."));
 		List<StudyGroup> groups = groupRepository.findAllByUser(targetUser);
 
-		List<GetStudyGroupResponse> bookmarked = bookmarkedStudyGroupRepository.findAllByUser(targetUser).stream()
-			.filter(group -> isVisible(group.getStudyGroup(), targetUser))
-			.map(bookmark -> getStudyGroupResponseDTO(targetUser, bookmark.getStudyGroup()))
-			.toList();
-
 		LocalDate today = LocalDate.now();
 
-		List<GetStudyGroupResponse> done = groups.stream()
-			.filter(group -> group.getEndDate() != null && group.getEndDate().isBefore(today) && isVisible(group,
-				targetUser))
+		List<GetStudyGroupResponse> bookmarked = groups.stream()
+			.filter(group -> isBookmarked(targetUser, group) && isVisible(group, targetUser))
 			.map(group -> getStudyGroupResponseDTO(targetUser, group))
+			.toList();
+
+		List<GetStudyGroupResponse> done = groups.stream()
+			.filter(group -> isDone(today, group) && isVisible(group, targetUser))
+			.map(group -> getStudyGroupResponseDTO(targetUser, group))
+			.filter(response -> !bookmarked.contains(response))
 			.toList();
 
 		List<GetStudyGroupResponse> inProgress = groups.stream()
 			.filter(
-				group -> !(group.getStartDate() == null || group.getStartDate().isAfter(today))
-					&& !(group.getEndDate() == null || group.getEndDate().isBefore(today)) && isVisible(group,
-					targetUser))
+				group -> isInProgress(today, group) && isVisible(group, targetUser))
 			.map(group -> getStudyGroupResponseDTO(targetUser, group))
+			.filter(response -> !bookmarked.contains(response))
 			.toList();
 
 		List<GetStudyGroupResponse> queued = groups.stream()
-			.filter(group -> group.getStartDate() != null && group.getStartDate().isAfter(today) && isVisible(group,
-				targetUser))
+			.filter(group -> isQueued(today, group) && isVisible(group, targetUser))
 			.map(group -> getStudyGroupResponseDTO(targetUser, group))
+			.filter(response -> !bookmarked.contains(response))
 			.toList();
 
 		GetStudyGroupListsResponse response = new GetStudyGroupListsResponse(bookmarked, done, inProgress, queued);
