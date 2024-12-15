@@ -25,6 +25,7 @@ import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupVisibilityRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupMemberResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupResponse;
+import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupSettingResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupListsResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupWithCodeResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GroupCodeResponse;
@@ -184,5 +185,12 @@ public class StudyGroupController {
 		@PathVariable String userNickname) {
 		GetStudyGroupListsResponse response = studyGroupService.getOtherStudyGroupList(userNickname);
 		return ResponseEntity.ok().body(response);
+	}
+
+	@GetMapping(value = "/groups/settings")
+	@Operation(summary = "그룹 설정 목록 조회 API", description = "설정 탭에서 그룹 목록을 조회하는 API")
+	public ResponseEntity<List<GetGroupSettingResponse>> getStudyGroupSettings(@AuthedUser User user) {
+		List<GetGroupSettingResponse> responses = studyGroupService.getStudyGroupSettings(user);
+		return ResponseEntity.ok().body(responses);
 	}
 }

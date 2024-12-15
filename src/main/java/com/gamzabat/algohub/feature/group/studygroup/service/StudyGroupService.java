@@ -33,6 +33,7 @@ import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupVisibilityRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupMemberResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupResponse;
+import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupSettingResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupListsResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupWithCodeResponse;
@@ -595,5 +596,19 @@ public class StudyGroupService {
 			NotificationCategory.NEW_MEMBER_JOINED,
 			NotificationCategory.NEW_MEMBER_JOINED.getMessage(newMember.getUser().getNickname())
 		);
+	}
+
+	@Transactional(readOnly = true)
+	public List<GetGroupSettingResponse> getStudyGroupSettings(User user) {
+		List<StudyGroup> groups = groupRepository.findAllByUser(user);
+
+		List<GetGroupSettingResponse> response = groups.stream().map(group -> {
+			GroupMember member = groupMemberRepository.findByUserAndStudyGroup(user, group)
+				.orElseThrow(
+					() -> new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 스터디 그룹입니다."));
+			return GetGroupSettingResponse.toDto(group, member, member.getIsVisible(), isBookmarked(user, group));
+		}).toList();
+		log.info("success to get my study groups settings");
+		return response;
 	}
 }
