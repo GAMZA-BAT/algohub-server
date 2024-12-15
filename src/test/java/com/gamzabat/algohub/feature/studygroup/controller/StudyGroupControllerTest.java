@@ -33,6 +33,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gamzabat.algohub.common.DateFormatUtil;
 import com.gamzabat.algohub.common.jwt.TokenProvider;
 import com.gamzabat.algohub.config.SpringSecurityConfig;
+import com.gamzabat.algohub.enums.GroupStatus;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.controller.StudyGroupController;
@@ -216,7 +217,7 @@ class StudyGroupControllerTest {
 			bookmarked.add(new GetStudyGroupResponse(
 				(long)i, "name" + i, "groupImage" + 1,
 				DateFormatUtil.formatDate(LocalDate.now()), DateFormatUtil.formatDate(LocalDate.now().plusDays(i)),
-				"introduction" + 1, "nickname", RoleOfGroupMember.OWNER, true, true
+				"introduction" + 1, "nickname", RoleOfGroupMember.OWNER, GroupStatus.DONE.getValue(), true, true
 			));
 		}
 
@@ -224,21 +225,22 @@ class StudyGroupControllerTest {
 			done.add(new GetStudyGroupResponse(
 				(long)i, "name" + i, "groupImage" + 1,
 				DateFormatUtil.formatDate(LocalDate.now()), DateFormatUtil.formatDate(LocalDate.now().plusDays(i)),
-				"introduction" + 1, "nickname", RoleOfGroupMember.ADMIN, true, true
+				"introduction" + 1, "nickname", RoleOfGroupMember.ADMIN, GroupStatus.DONE.getValue(), true, true
 			));
 		}
 		for (int i = 0; i < 10; i++) {
 			inProgress.add(new GetStudyGroupResponse(
 				(long)i, "name" + i, "groupImage" + 1,
 				DateFormatUtil.formatDate(LocalDate.now()), DateFormatUtil.formatDate(LocalDate.now().plusDays(i)),
-				"introduction" + 1, "nickname", RoleOfGroupMember.PARTICIPANT, true, true
+				"introduction" + 1, "nickname", RoleOfGroupMember.PARTICIPANT, GroupStatus.IN_PROGRESS.getValue(), true,
+				true
 			));
 		}
 		for (int i = 0; i < 10; i++) {
 			queued.add(new GetStudyGroupResponse(
 				(long)i, "name" + i, "groupImage" + 1,
 				DateFormatUtil.formatDate(LocalDate.now()), DateFormatUtil.formatDate(LocalDate.now().plusDays(i)),
-				"introduction" + 1, "nickname", RoleOfGroupMember.PARTICIPANT, true, true
+				"introduction" + 1, "nickname", RoleOfGroupMember.PARTICIPANT, GroupStatus.QUEUED.getValue(), true, true
 			));
 		}
 		GetStudyGroupListsResponse response = new GetStudyGroupListsResponse(bookmarked, done, inProgress, queued);

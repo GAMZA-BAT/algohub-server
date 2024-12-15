@@ -390,24 +390,13 @@ class StudyGroupServiceTest {
 			when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(
 				Optional.ofNullable(groupMember1));
 		}
-		List<BookmarkedStudyGroup> bookmarks = new ArrayList<>(10);
-		for (int i = 0; i < 10; i++) {
-			bookmarks.add(BookmarkedStudyGroup.builder()
-				.studyGroup(groups.get(i))
-				.user(user)
-				.build());
-			when(bookmarkedStudyGroupRepository.existsByUserAndStudyGroup(user, groups.get(i))).thenReturn(true);
-		}
-		when(bookmarkedStudyGroupRepository.findAllByUser(user)).thenReturn(bookmarks);
 		when(studyGroupRepository.findAllByUser(user)).thenReturn(groups);
 		// when
 		GetStudyGroupListsResponse result = studyGroupService.getStudyGroupList(user);
 		// then
-		List<GetStudyGroupResponse> bookmarked = result.getBookmarked();
 		List<GetStudyGroupResponse> done = result.getDone();
 		List<GetStudyGroupResponse> inProgress = result.getInProgress();
 		List<GetStudyGroupResponse> queued = result.getQueued();
-		assertThat(bookmarked.size()).isEqualTo(10);
 		assertThat(done.size()).isEqualTo(10);
 		assertThat(inProgress.size()).isEqualTo(10);
 		assertThat(queued.size()).isEqualTo(10);
@@ -416,7 +405,7 @@ class StudyGroupServiceTest {
 			assertThat(done.get(i).ownerNickname()).isEqualTo("nickname1");
 			assertThat(done.get(i).startDate()).isEqualTo(DateFormatUtil.formatDate(LocalDate.now().minusDays(i + 30)));
 			assertThat(done.get(i).endDate()).isEqualTo(DateFormatUtil.formatDate(LocalDate.now().minusDays(30)));
-			assertThat(done.get(i).isBookmarked()).isTrue();
+			assertThat(done.get(i).isBookmarked()).isFalse();
 			assertThat(done.get(i).role()).isEqualTo(RoleOfGroupMember.OWNER);
 		}
 		for (int i = 0; i < 10; i++) {
@@ -435,15 +424,6 @@ class StudyGroupServiceTest {
 			assertThat(queued.get(i).endDate()).isEqualTo(DateFormatUtil.formatDate(LocalDate.now().plusDays(i + 30)));
 			assertThat(queued.get(i).isBookmarked()).isFalse();
 			assertThat(queued.get(i).role()).isEqualTo(RoleOfGroupMember.OWNER);
-		}
-		for (int i = 0; i < 10; i++) {
-			assertThat(bookmarked.get(i).name()).isEqualTo("name" + i);
-			assertThat(bookmarked.get(i).ownerNickname()).isEqualTo("nickname1");
-			assertThat(bookmarked.get(i).startDate()).isEqualTo(
-				DateFormatUtil.formatDate(LocalDate.now().minusDays(i + 30)));
-			assertThat(bookmarked.get(i).endDate()).isEqualTo(DateFormatUtil.formatDate(LocalDate.now().minusDays(30)));
-			assertThat(bookmarked.get(i).isBookmarked()).isTrue();
-			assertThat(bookmarked.get(i).role()).isEqualTo(RoleOfGroupMember.OWNER);
 		}
 	}
 
@@ -810,38 +790,22 @@ class StudyGroupServiceTest {
 				Optional.ofNullable(groupMember1));
 			when(groupMemberRepository.existsByUserAndStudyGroupAndIsVisible(user, group, true)).thenReturn(true);
 		}
-		List<BookmarkedStudyGroup> bookmarks = new ArrayList<>(10);
-		for (int i = 0; i < 10; i++) {
-			bookmarks.add(BookmarkedStudyGroup.builder()
-				.studyGroup(groups.get(i))
-				.user(user)
-				.build());
-			when(bookmarkedStudyGroupRepository.existsByUserAndStudyGroup(user, groups.get(i))).thenReturn(true);
-			when(groupMemberRepository.existsByUserAndStudyGroupAndIsVisible(user, groups.get(i), true)).thenReturn(
-				true);
-		}
-		when(bookmarkedStudyGroupRepository.findAllByUser(user)).thenReturn(bookmarks);
 		when(studyGroupRepository.findAllByUser(user)).thenReturn(groups);
 		when(userRepository.findByNickname(user.getNickname())).thenReturn(Optional.of(user));
 		when(studyGroupRepository.findAllByUser(user)).thenReturn(groups);
 		// when
 		GetStudyGroupListsResponse result = studyGroupService.getOtherStudyGroupList(user.getNickname());
 		// then
-		List<GetStudyGroupResponse> bookmarked = result.getBookmarked();
 		List<GetStudyGroupResponse> done = result.getDone();
 		List<GetStudyGroupResponse> inProgress = result.getInProgress();
 		List<GetStudyGroupResponse> queued = result.getQueued();
-		assertThat(bookmarked.size()).isEqualTo(10);
 		assertThat(done.size()).isEqualTo(10);
 		assertThat(inProgress.size()).isEqualTo(10);
 		assertThat(queued.size()).isEqualTo(10);
 		for (int i = 0; i < 10; i++) {
 			assertThat(done.get(i).name()).isEqualTo("name" + i);
 			assertThat(done.get(i).ownerNickname()).isEqualTo("nickname1");
-			assertThat(done.get(i).startDate()).isEqualTo(DateFormatUtil.formatDate(LocalDate.now().minusDays(i + 30)));
-			assertThat(done.get(i).endDate()).isEqualTo(DateFormatUtil.formatDate(LocalDate.now().minusDays(30)));
-			assertThat(done.get(i).isBookmarked()).isTrue();
-			assertThat(done.get(i).role()).isEqualTo(RoleOfGroupMember.OWNER);
+			assertThat(done.get(i).isBookmarked()).isFalse();
 		}
 		for (int i = 0; i < 10; i++) {
 			assertThat(inProgress.get(i).name()).isEqualTo("name" + i);
@@ -859,15 +823,6 @@ class StudyGroupServiceTest {
 			assertThat(queued.get(i).endDate()).isEqualTo(DateFormatUtil.formatDate(LocalDate.now().plusDays(i + 30)));
 			assertThat(queued.get(i).isBookmarked()).isFalse();
 			assertThat(queued.get(i).role()).isEqualTo(RoleOfGroupMember.OWNER);
-		}
-		for (int i = 0; i < 10; i++) {
-			assertThat(bookmarked.get(i).name()).isEqualTo("name" + i);
-			assertThat(bookmarked.get(i).ownerNickname()).isEqualTo("nickname1");
-			assertThat(bookmarked.get(i).startDate()).isEqualTo(
-				DateFormatUtil.formatDate(LocalDate.now().minusDays(i + 30)));
-			assertThat(bookmarked.get(i).endDate()).isEqualTo(DateFormatUtil.formatDate(LocalDate.now().minusDays(30)));
-			assertThat(bookmarked.get(i).isBookmarked()).isTrue();
-			assertThat(bookmarked.get(i).role()).isEqualTo(RoleOfGroupMember.OWNER);
 		}
 	}
 
