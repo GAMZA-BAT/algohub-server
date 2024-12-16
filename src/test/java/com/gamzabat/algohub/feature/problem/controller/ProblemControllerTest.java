@@ -3,6 +3,7 @@ package com.gamzabat.algohub.feature.problem.controller;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.anyLong;
+import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -304,14 +305,16 @@ class ProblemControllerTest {
 		// given
 		Pageable pageable = PageRequest.of(0, 20, Sort.by("endDate").descending());
 		Page<GetProblemResponse> response = new PageImpl<>(new ArrayList<>());
-		when(problemService.getInProgressProblems(any(User.class), anyLong(), any(Pageable.class))).thenReturn(
+		when(problemService.getInProgressProblems(any(User.class), anyLong(), eq(false),
+			any(Pageable.class))).thenReturn(
 			response);
 		// when, then
 		mockMvc.perform(get("/api/groups/{groupId}/problems/in-progress", groupId)
-				.header("Authorization", token))
+				.header("Authorization", token)
+				.param("unsolved-only", String.valueOf(false)))
 			.andExpect(status().isOk())
 			.andExpect(content().string(objectMapper.writeValueAsString(response)));
-		verify(problemService, times(1)).getInProgressProblems(user, groupId, pageable);
+		verify(problemService, times(1)).getInProgressProblems(user, groupId, false, pageable);
 	}
 
 	@Test
@@ -319,14 +322,16 @@ class ProblemControllerTest {
 	void getProblemListFailed_1() throws Exception {
 		// given
 		Pageable pageable = PageRequest.of(0, 20, Sort.by("endDate").descending());
-		when(problemService.getInProgressProblems(any(User.class), anyLong(), any(Pageable.class))).thenThrow(
+		when(
+			problemService.getInProgressProblems(any(User.class), anyLong(), eq(false), any(Pageable.class))).thenThrow(
 			new ProblemValidationException(HttpStatus.FORBIDDEN.value(), "문제를 조회할 권한이 없습니다."));
 		// when, then
 		mockMvc.perform(get("/api/groups/{groupId}/problems/in-progress", groupId)
-				.header("Authorization", token))
+				.header("Authorization", token)
+				.param("unsolved-only", String.valueOf(false)))
 			.andExpect(status().isForbidden())
 			.andExpect(jsonPath("$.error").value("문제를 조회할 권한이 없습니다."));
-		verify(problemService, times(1)).getInProgressProblems(user, groupId, pageable);
+		verify(problemService, times(1)).getInProgressProblems(user, groupId, false, pageable);
 	}
 
 	@Test

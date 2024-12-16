@@ -453,14 +453,14 @@ class ProblemServiceTest {
 
 		Page<Problem> problemPage = new PageImpl<>(list.subList(0, 10), pageable, list.size());
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
-		when(problemRepository.findAllByStudyGroupAndEndDateGreaterThanEqual(eq(group), eq(LocalDate.now()),
+		when(problemRepository.findAllInProgressProblem(any(User.class), any(StudyGroup.class), eq(false),
 			any(Pageable.class))).thenReturn(problemPage);
 		when(groupMemberRepository.existsByUserAndStudyGroup(user, group)).thenReturn(true);
 		when(solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(anyLong(),
 			anyString())).thenReturn(8);
 		when(solutionRepository.countDistinctUsersByProblemId(anyLong())).thenReturn(10);
 		// when
-		Page<GetProblemResponse> result = problemService.getInProgressProblems(user, 10L, pageable);
+		Page<GetProblemResponse> result = problemService.getInProgressProblems(user, 10L, false, pageable);
 		// then
 		for (int i = 0; i < 10; i++) {
 			assertThat(result.getContent().get(i).getProblemId()).isEqualTo(i);
@@ -494,14 +494,14 @@ class ProblemServiceTest {
 
 		Page<Problem> problemPage = new PageImpl<>(list.subList(0, 10), pageable, list.size());
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
-		when(problemRepository.findAllByStudyGroupAndEndDateGreaterThanEqual(eq(group), eq(LocalDate.now()),
+		when(problemRepository.findAllByStudyGroupAndEndDateBefore(eq(group), eq(LocalDate.now()),
 			any(Pageable.class))).thenReturn(problemPage);
 		when(groupMemberRepository.existsByUserAndStudyGroup(user, group)).thenReturn(true);
 		when(solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(anyLong(),
 			anyString())).thenReturn(8);
 		when(solutionRepository.countDistinctUsersByProblemId(anyLong())).thenReturn(10);
 		// when
-		Page<GetProblemResponse> result = problemService.getInProgressProblems(user, 10L, pageable);
+		Page<GetProblemResponse> result = problemService.getExpiredProblems(user, 10L, pageable);
 		// then
 		for (int i = 0; i < 10; i++) {
 			assertThat(result.getContent().get(i).getProblemId()).isEqualTo(i);
@@ -518,7 +518,7 @@ class ProblemServiceTest {
 		// given
 		when(groupRepository.findById(10L)).thenReturn(Optional.empty());
 		// when, then
-		assertThatThrownBy(() -> problemService.getInProgressProblems(user, 10L, any(Pageable.class)))
+		assertThatThrownBy(() -> problemService.getInProgressProblems(user, 10L, false, any(Pageable.class)))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.NOT_FOUND.value())
 			.hasFieldOrPropertyWithValue("error", "존재하지 않는 그룹 입니다.");
@@ -531,7 +531,7 @@ class ProblemServiceTest {
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user2, group)).thenReturn(false);
 		// when, then
-		assertThatThrownBy(() -> problemService.getInProgressProblems(user2, 10L, any(Pageable.class)))
+		assertThatThrownBy(() -> problemService.getInProgressProblems(user2, 10L, false, any(Pageable.class)))
 			.isInstanceOf(ProblemValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "문제를 조회할 권한이 없습니다.");
