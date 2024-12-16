@@ -175,7 +175,7 @@ class ProblemServiceTest {
 		assertThat(result.getLevel()).isEqualTo(1);
 		assertThat(result.getStartDate()).isEqualTo(LocalDate.now());
 		assertThat(result.getEndDate()).isEqualTo(LocalDate.now().plusDays(10));
-		verify(notificationService, times(1)).sendNotificationToMembers(any(), any(), any(), any());
+		verify(notificationService, times(1)).sendNotificationToMembers(any(), any(), any(), any(), any(), any());
 	}
 
 	@Test
@@ -777,7 +777,7 @@ class ProblemServiceTest {
 		// when
 		problemService.dailyProblemScheduler();
 		// then
-		verify(notificationService, times(20)).sendNotificationToMembers(any(), any(), any(), any());
+		verify(notificationService, times(20)).sendNotificationToMembers(any(), any(), any(), any(), any(), any());
 	}
 
 	@Test

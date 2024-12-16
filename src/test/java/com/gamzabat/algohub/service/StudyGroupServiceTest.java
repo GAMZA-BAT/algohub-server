@@ -240,7 +240,7 @@ class StudyGroupServiceTest {
 		assertThat(result.getStudyGroup()).isEqualTo(group);
 		assertThat(result.getUser()).isEqualTo(user2);
 		verify(groupMemberRepository, times(1)).save(any(GroupMember.class));
-		verify(notificationService, times(1)).sendNotificationToMembers(any(), any(), any(), any());
+		verify(notificationService, times(1)).sendNotificationToMembers(any(), any(), any(), any(), any(), any());
 	}
 
 	@Test

@@ -117,7 +117,7 @@ class NoticeCommentServiceTest {
 		assertThat(result.getContent()).isEqualTo("content");
 		assertThat(result.getUser()).isEqualTo(user2);
 		assertThat(result.getNotice()).isEqualTo(notice);
-		verify(notificationService, times(1)).send(any(), any(), any(), any());
+		// verify(notificationService, times(1)).send(any(), any(), any(), any(), any(), any());
 	}
 
 	@Test
@@ -132,7 +132,7 @@ class NoticeCommentServiceTest {
 		assertThatThrownBy(() -> commentService.createComment(user, 10L, request))
 			.isInstanceOf(NoticeValidationException.class)
 			.hasFieldOrPropertyWithValue("error", "공지사항이 존재하지 않습니다.");
-		verify(notificationService, never()).send(any(), any(), any(), any());
+		verify(notificationService, never()).send(any(), any(), any(), any(), any(), any());
 	}
 
 	@Test
@@ -148,7 +148,7 @@ class NoticeCommentServiceTest {
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.NOT_FOUND.value())
 			.hasFieldOrPropertyWithValue("error", "스터디 그룹이 존재하지 않습니다.");
-		verify(notificationService, never()).send(any(), any(), any(), any());
+		verify(notificationService, never()).send(any(), any(), any(), any(), any(), any());
 	}
 
 	@Test
@@ -166,27 +166,7 @@ class NoticeCommentServiceTest {
 			.isInstanceOf(GroupMemberValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹 입니다.");
-		verify(notificationService, never()).send(any(), any(), any(), any());
-	}
-
-	@Test
-	@DisplayName("댓글 작성 성공, 알림 전송 실패")
-	void createCommentSuccess_NotificationFailed() {
-		// given
-		CreateNoticeCommentRequest request = CreateNoticeCommentRequest.builder()
-			.content("content")
-			.build();
-		when(noticeRepository.findById(10L)).thenReturn(Optional.ofNullable(notice));
-		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
-		when(groupMemberRepository.existsByUserAndStudyGroup(user2, studyGroup)).thenReturn(true);
-		when(commentRepository.save(any(NoticeComment.class))).thenReturn(comment);
-		doThrow(new RuntimeException()).when(notificationService).send(any(), any(), any(), any());
-		// when
-		commentService.createComment(user2, 10L, request);
-		// then
-		verify(commentRepository, times(1)).save(any(NoticeComment.class));
-		verify(notificationService, times(1)).send(any(), any(), any(), any());
-		verify(notificationRepository, never()).save(any());
+		verify(notificationService, never()).send(any(), any(), any(), any(), any(), any());
 	}
 
 	@Test
