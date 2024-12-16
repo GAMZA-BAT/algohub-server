@@ -3,6 +3,8 @@ package com.gamzabat.algohub.feature.notification.domain;
 import java.time.LocalDateTime;
 
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
+import com.gamzabat.algohub.feature.problem.domain.Problem;
+import com.gamzabat.algohub.feature.solution.domain.Solution;
 import com.gamzabat.algohub.feature.user.domain.User;
 
 import jakarta.persistence.Entity;
@@ -30,16 +32,24 @@ public class Notification {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "study_group_id")
 	private StudyGroup studyGroup;
-
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "problem_id")
+	private Problem problem;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "solution_id")
+	private Solution solution;
 	private String message;
 	private boolean isRead;
 	private String subContent;
 	private LocalDateTime createdAt;
 
 	@Builder
-	public Notification(User user, StudyGroup studyGroup, String message, boolean isRead, String subContent) {
+	public Notification(User user, StudyGroup studyGroup, Problem problem, Solution solution, String message,
+		boolean isRead, String subContent) {
 		this.user = user;
 		this.studyGroup = studyGroup;
+		this.problem = problem;
+		this.solution = solution;
 		this.message = message;
 		this.isRead = isRead;
 		this.subContent = subContent;

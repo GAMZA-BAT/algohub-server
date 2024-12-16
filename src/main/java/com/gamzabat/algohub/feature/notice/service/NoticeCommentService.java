@@ -23,7 +23,6 @@ import com.gamzabat.algohub.feature.notice.dto.CreateNoticeCommentRequest;
 import com.gamzabat.algohub.feature.notice.exception.NoticeValidationException;
 import com.gamzabat.algohub.feature.notice.repository.NoticeCommentRepository;
 import com.gamzabat.algohub.feature.notice.repository.NoticeRepository;
-import com.gamzabat.algohub.feature.notification.service.NotificationService;
 import com.gamzabat.algohub.feature.user.domain.User;
 
 import lombok.RequiredArgsConstructor;
@@ -37,7 +36,6 @@ public class NoticeCommentService implements CommentService<CreateNoticeCommentR
 	private final NoticeCommentRepository noticeCommentRepository;
 	private final StudyGroupRepository studyGroupRepository;
 	private final GroupMemberRepository groupMemberRepository;
-	private final NotificationService notificationService;
 
 	@Override
 	@Transactional
@@ -50,21 +48,7 @@ public class NoticeCommentService implements CommentService<CreateNoticeCommentR
 			.content(request.content())
 			.build());
 
-		sendCommentNotification(notice, user, request.content());
 		log.info("success to create notice comment. commentId: {}, noticeId: {}", comment.getId(), notice.getId());
-	}
-
-	private void sendCommentNotification(Notice notice, User user, String content) {
-		String message = content.length() <= 35 ? content : content.substring(0, 35) + "...";
-		try {
-			notificationService.send(notice.getAuthor().getEmail(),
-				user.getNickname() + "님이 코멘트를 남겼습니다.",
-				notice.getStudyGroup(),
-				message);
-		} catch (Exception e) {
-			log.info("failed to send comment notice notification. noticeId: {}, userId: {}, error: {}",
-				notice.getId(), user.getId(), e.getMessage());
-		}
 	}
 
 	@Override

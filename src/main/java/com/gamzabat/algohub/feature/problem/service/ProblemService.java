@@ -71,7 +71,7 @@ public class ProblemService {
 		int level = getProblemLevel(apiResult);
 		String title = getProblemTitle(apiResult);
 
-		problemRepository.save(Problem.builder()
+		Problem problem = problemRepository.save(Problem.builder()
 			.studyGroup(group)
 			.link(request.link())
 			.number(Integer.parseInt(number))
@@ -85,6 +85,8 @@ public class ProblemService {
 			notificationService.sendNotificationToMembers(
 				group,
 				groupMemberRepository.findAllByStudyGroup(group),
+				problem,
+				null,
 				NotificationCategory.PROBLEM_STARTED,
 				NotificationCategory.PROBLEM_STARTED.getMessage(title)
 			);
@@ -291,6 +293,8 @@ public class ProblemService {
 			notificationService.sendNotificationToMembers(
 				problem.getStudyGroup(),
 				groupMemberRepository.findAllByStudyGroup(problem.getStudyGroup()),
+				problem,
+				null,
 				NotificationCategory.PROBLEM_STARTED,
 				NotificationCategory.PROBLEM_STARTED.getMessage(problem.getTitle())
 			);
@@ -303,6 +307,8 @@ public class ProblemService {
 			notificationService.sendNotificationToMembers(
 				problem.getStudyGroup(),
 				groupMemberRepository.findAllByStudyGroup(problem.getStudyGroup()),
+				problem,
+				null,
 				NotificationCategory.PROBLEM_DEADLINE_REACHED,
 				NotificationCategory.PROBLEM_DEADLINE_REACHED.getMessage(problem.getTitle())
 			);

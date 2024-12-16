@@ -3,7 +3,12 @@ package com.gamzabat.algohub.feature.notification.dto;
 import com.gamzabat.algohub.common.DateFormatUtil;
 import com.gamzabat.algohub.feature.notification.domain.Notification;
 
+import jakarta.annotation.Nullable;
+
 public record GetNotificationResponse(Long id,
+									  Long groupId,
+									  @Nullable Long problemId,
+									  @Nullable Long solutionId,
 									  String groupName,
 									  String groupImage,
 									  String message,
@@ -13,6 +18,9 @@ public record GetNotificationResponse(Long id,
 	public static GetNotificationResponse toDTO(Notification notification) {
 		return new GetNotificationResponse(
 			notification.getId(),
+			notification.getStudyGroup().getId(),
+			notification.getProblem() != null ? notification.getProblem().getId() : null,
+			notification.getSolution() != null ? notification.getSolution().getId() : null,
 			notification.getStudyGroup().getName(),
 			notification.getStudyGroup().getGroupImage(),
 			notification.getMessage(),

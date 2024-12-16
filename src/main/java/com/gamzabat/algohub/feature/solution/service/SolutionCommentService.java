@@ -68,6 +68,8 @@ public class SolutionCommentService implements CommentService<CreateSolutionComm
 		notificationService.sendNotificationToMembers(
 			solution.getProblem().getStudyGroup(),
 			List.of(member),
+			null,
+			solution,
 			NotificationCategory.NEW_COMMENT_POSTED,
 			NotificationCategory.NEW_COMMENT_POSTED.getMessage(commenter.getNickname())
 		);

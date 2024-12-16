@@ -28,6 +28,8 @@ import com.gamzabat.algohub.feature.notification.exception.NotificationValidatio
 import com.gamzabat.algohub.feature.notification.repository.EmitterRepositoryImpl;
 import com.gamzabat.algohub.feature.notification.repository.NotificationRepository;
 import com.gamzabat.algohub.feature.notification.repository.NotificationSettingRepository;
+import com.gamzabat.algohub.feature.problem.domain.Problem;
+import com.gamzabat.algohub.feature.solution.domain.Solution;
 import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.repository.UserRepository;
 
@@ -99,8 +101,9 @@ public class NotificationService {
 	}
 
 	@Transactional
-	public void send(String receiver, String message, StudyGroup studyGroup, String subContent) {
-		Notification notification = createNotification(receiver, message, studyGroup, subContent);
+	public void send(String receiver, String message, StudyGroup studyGroup, Problem problem, Solution solution,
+		String subContent) {
+		Notification notification = createNotification(receiver, message, studyGroup, subContent, problem, solution);
 		notificationRepository.save(notification);
 		Map<String, SseEmitter> sseEmitter = emitterRepository.findAllEmitterStartWithByEmail(receiver);
 		sseEmitter.forEach(
@@ -111,14 +114,15 @@ public class NotificationService {
 		);
 	}
 
-	private void sendList(List receiverList, String message, StudyGroup studyGroup, String subContent) {
+	private void sendList(List receiverList, String message, StudyGroup studyGroup, String subContent, Problem problem,
+		Solution solution) {
 		List<Notification> notifications = new ArrayList<>();
 		Map<String, SseEmitter> sseEmitters;
 		for (int i = 0; i < receiverList.size(); i++) {
 			int finalI = i;
 			sseEmitters = new HashMap<>();
 			Notification notification = createNotification(receiverList.get(i).toString(), message, studyGroup,
-				subContent);
+				subContent, problem, solution);
 			notifications.add(notification);
 			notificationRepository.save(notification);
 			sseEmitters.putAll(emitterRepository.findAllEmitterStartWithByEmail(receiverList.get(i).toString()));
@@ -131,12 +135,15 @@ public class NotificationService {
 		}
 	}
 
-	private Notification createNotification(String receiver, String message, StudyGroup studyGroup, String subContent) {
+	private Notification createNotification(String receiver, String message, StudyGroup studyGroup, String subContent,
+		Problem problem, Solution solution) {
 		return Notification.builder()
 			.user(
 				userRepository.findByEmail(receiver).orElseThrow(() -> new UserValidationException("존재 하지 않는 회원 입니다.")))
 			.message(message)
 			.studyGroup(studyGroup)
+			.problem(problem)
+			.solution(solution)
 			.subContent(subContent)
 			.isRead(false)
 			.build();
@@ -179,7 +186,8 @@ public class NotificationService {
 	}
 
 	@Transactional
-	public void sendNotificationToMembers(StudyGroup group, List<GroupMember> receiver,
+	public void sendNotificationToMembers(StudyGroup group, List<GroupMember> receiver, Problem problem,
+		Solution solution,
 		NotificationCategory category, String message) {
 		List<String> users = new ArrayList<>();
 		for (GroupMember member : receiver) {
@@ -195,7 +203,7 @@ public class NotificationService {
 		}
 
 		try {
-			sendList(users, message, group, null);
+			sendList(users, message, group, null, problem, solution);
 		} catch (Exception e) {
 			log.warn("failed to send notification", e);
 		}

@@ -222,14 +222,16 @@ public class SolutionService {
 				rankingUpdateService.updateRanking(studyGroup);
 			}
 
-			sendNewSolutionNotification(studyGroup, member.get());
+			sendNewSolutionNotification(studyGroup, member.get(), problem);
 		}
 	}
 
-	private void sendNewSolutionNotification(StudyGroup group, GroupMember solver) {
+	private void sendNewSolutionNotification(StudyGroup group, GroupMember solver, Problem problem) {
 		notificationService.sendNotificationToMembers(
 			group,
 			groupMemberRepository.findAllByStudyGroup(group),
+			problem,
+			null,
 			NotificationCategory.NEW_SOLUTION_POSTED,
 			NotificationCategory.NEW_SOLUTION_POSTED.getMessage(solver.getUser().getNickname())
 		);

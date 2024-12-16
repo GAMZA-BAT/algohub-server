@@ -592,6 +592,7 @@ public class StudyGroupService {
 		notificationService.sendNotificationToMembers(
 			studyGroup,
 			members,
+			null, null,
 			NotificationCategory.NEW_MEMBER_JOINED,
 			NotificationCategory.NEW_MEMBER_JOINED.getMessage(newMember.getUser().getNickname())
 		);
