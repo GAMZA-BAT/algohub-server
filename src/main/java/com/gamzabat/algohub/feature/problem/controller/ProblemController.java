@@ -66,10 +66,11 @@ public class ProblemController {
 	@Operation(summary = "진행 중인 문제 목록 조회 API", description = "특정 그룹에 대한 문제를 모두 조회하는 API")
 	public ResponseEntity<Page<GetProblemResponse>> getInProgressProblemList(@AuthedUser User user,
 		@PathVariable Long groupId,
+		@RequestParam(name = "unsolved-only") Boolean unsolvedOnly,
 		@RequestParam(defaultValue = "0") int page,
 		@RequestParam(defaultValue = "20") int size) {
 		Pageable pageable = PageRequest.of(page, size, Sort.by(PROBLEM_SORT_BY).descending());
-		Page<GetProblemResponse> response = problemService.getInProgressProblems(user, groupId, pageable);
+		Page<GetProblemResponse> response = problemService.getInProgressProblems(user, groupId, unsolvedOnly, pageable);
 		return ResponseEntity.ok().body(response);
 	}
 

@@ -12,8 +12,9 @@ import org.springframework.data.repository.query.Param;
 
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
+import com.gamzabat.algohub.feature.problem.repository.querydsl.CustomProblemRepository;
 
-public interface ProblemRepository extends JpaRepository<Problem, Long> {
+public interface ProblemRepository extends JpaRepository<Problem, Long>, CustomProblemRepository {
 	Page<Problem> findAllByStudyGroup(StudyGroup studyGroup, Pageable pageable);
 
 	List<Problem> findAllByNumber(Integer Number);
@@ -32,9 +33,6 @@ public interface ProblemRepository extends JpaRepository<Problem, Long> {
 	@Modifying
 	@Query("delete from Problem p where p.studyGroup = :studyGroup")
 	void deleteAllByStudyGroup(StudyGroup studyGroup);
-
-	Page<Problem> findAllByStudyGroupAndEndDateGreaterThanEqual(StudyGroup studyGroup, LocalDate now,
-		Pageable pageable);
 
 	Page<Problem> findAllByStudyGroupAndEndDateBefore(StudyGroup studyGroup, LocalDate now, Pageable pageable);
 }

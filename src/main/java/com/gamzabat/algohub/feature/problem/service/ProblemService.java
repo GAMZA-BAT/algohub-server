@@ -125,16 +125,17 @@ public class ProblemService {
 	}
 
 	@Transactional(readOnly = true)
-	public Page<GetProblemResponse> getInProgressProblems(User user, Long groupId, Pageable pageable) {
+	public Page<GetProblemResponse> getInProgressProblems(User user, Long groupId, Boolean unsolvedOnly,
+		Pageable pageable) {
 		StudyGroup group = getGroup(groupId);
 		if (!groupMemberRepository.existsByUserAndStudyGroup(user, group)) {
 			throw new ProblemValidationException(HttpStatus.FORBIDDEN.value(), "문제를 조회할 권한이 없습니다.");
 		}
 
-		Page<Problem> problems = problemRepository.findAllByStudyGroupAndEndDateGreaterThanEqual(group, LocalDate.now(),
+		Page<Problem> problems = problemRepository.findAllInProgressProblem(user, group, unsolvedOnly,
 			pageable);
 
-		return problems.map(problem -> getGetProblemResponse(user, groupId, problem));
+		return problems.map(problem -> getGetProblemResponse(user, groupId, problem, unsolvedOnly));
 	}
 
 	@Transactional(readOnly = true)
@@ -147,11 +148,11 @@ public class ProblemService {
 		Page<Problem> problems = problemRepository.findAllByStudyGroupAndEndDateBefore(group, LocalDate.now(),
 			pageable);
 
-		return problems.map(problem -> getGetProblemResponse(user, groupId, problem));
+		return problems.map(problem -> getGetProblemResponse(user, groupId, problem, false));
 	}
 
-	private GetProblemResponse getGetProblemResponse(User user, Long groupId, Problem problem) {
-		boolean solved = solutionRepository.existsByUserAndProblemAndResult(user, problem,
+	private GetProblemResponse getGetProblemResponse(User user, Long groupId, Problem problem, boolean unsolvedOnly) {
+		boolean solved = unsolvedOnly ? false : solutionRepository.existsByUserAndProblemAndResult(user, problem,
 			BOJResultConstants.CORRECT);
 		Integer correctCount = solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(problem.getId(),
 			BOJResultConstants.CORRECT);
