@@ -621,7 +621,7 @@ public class StudyGroupService {
 			GroupMember member = groupMemberRepository.findByUserAndStudyGroup(user, group)
 				.orElseThrow(
 					() -> new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 스터디 그룹입니다."));
-			return GetGroupSettingResponse.toDto(group, member, member.getIsVisible(), isBookmarked(user, group));
+			return GetGroupSettingResponse.toDto(group, member, isBookmarked(user, group), member.getIsVisible());
 		}).toList();
 		log.info("success to get my study groups settings");
 		return response;
