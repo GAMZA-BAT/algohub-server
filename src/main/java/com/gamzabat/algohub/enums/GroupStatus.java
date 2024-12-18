@@ -10,9 +10,9 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum GroupStatus {
-	QUEUED("Queued"),
-	IN_PROGRESS("InProgress"),
-	DONE("Done");
+	QUEUED("queued"),
+	IN_PROGRESS("inProgress"),
+	DONE("done");
 
 	private final String value;
 
