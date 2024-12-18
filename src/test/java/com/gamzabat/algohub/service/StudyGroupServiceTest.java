@@ -872,11 +872,11 @@ class StudyGroupServiceTest {
 		// then
 		assertThat(responses.size()).isEqualTo(3);
 		assertThat(responses.get(0).name()).isEqualTo("queued");
-		assertThat(responses.get(0).status()).isEqualTo("Queued");
+		assertThat(responses.get(0).status()).isEqualTo("queued");
 		assertThat(responses.get(1).name()).isEqualTo("inProgress");
-		assertThat(responses.get(1).status()).isEqualTo("InProgress");
+		assertThat(responses.get(1).status()).isEqualTo("inProgress");
 		assertThat(responses.get(2).name()).isEqualTo("done");
-		assertThat(responses.get(2).status()).isEqualTo("Done");
+		assertThat(responses.get(2).status()).isEqualTo("done");
 	}
 
 }
