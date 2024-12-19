@@ -40,12 +40,12 @@ public class CustomProblemRepositoryImpl implements CustomProblemRepository {
 		query.offset(pageable.getOffset())
 			.limit(pageable.getPageSize());
 
-		JPAQuery<Long> countQuery = problemCountQuery(query);
+		JPAQuery<Long> countQuery = problemCountQuery(user, group, unsolvedOnly);
 
 		return PageableExecutionUtils.getPage(query.fetch(), pageable, countQuery::fetchOne);
 	}
 
-	private void addUnsolvedProblemFilter(JPAQuery<Problem> query, User user) {
+	private void addUnsolvedProblemFilter(JPAQuery<?> query, User user) {
 		query
 			.where(
 				JPAExpressions.selectFrom(solution)
@@ -57,11 +57,16 @@ public class CustomProblemRepositoryImpl implements CustomProblemRepository {
 			);
 	}
 
-	private JPAQuery<Long> problemCountQuery(JPAQuery<Problem> query) {
-		return queryFactory.select(problem.count())
+	private JPAQuery<Long> problemCountQuery(User user, StudyGroup group, boolean unsolvedOnly) {
+		JPAQuery<Long> query = queryFactory.select(problem.count())
 			.from(problem)
-			.join(solution).fetchJoin()
-			.on(solution.problem.eq(problem))
-			.where(query.getMetadata().getWhere());
+			.where(problem.studyGroup.eq(group)
+				.and(problem.startDate.loe(LocalDate.now()))
+				.and(problem.endDate.goe(LocalDate.now())));
+
+		if (unsolvedOnly) {
+			addUnsolvedProblemFilter(query, user);
+		}
+		return query;
 	}
 }
