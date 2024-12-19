@@ -109,4 +109,37 @@ class NotificationServiceTest {
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "알림의 주인이 일치하지 않습니다.");
 	}
+
+	@Test
+	@DisplayName("알림 단건 삭제 성공")
+	void deleteNotification() {
+		// given
+		when(notificationRepository.findById(notificationId)).thenReturn(Optional.ofNullable(notification1));
+		// when
+		notificationService.deleteNotification(user, notificationId);
+		// then
+		verify(notificationRepository, times(1)).delete(notification1);
+	}
+
+	@Test
+	@DisplayName("알림 단건 삭제 실패 : 존재하지 않는 알림")
+	void deleteNotificationFailed_1() {
+		// given
+		when(notificationRepository.findById(notificationId)).thenReturn(Optional.empty());
+		// when, then
+		assertThatThrownBy(() -> notificationService.deleteNotification(user, notificationId))
+			.isInstanceOf(CannotFoundNotificationException.class)
+			.hasFieldOrPropertyWithValue("error", "존재하지 않는 알림입니다.");
+	}
+
+	@Test
+	@DisplayName("알림 단건 삭제 실패 : 주인 불일치")
+	void deleteNotificationFailed_2() {
+		// given
+		when(notificationRepository.findById(notificationId)).thenReturn(Optional.ofNullable(notification1));
+		// when, then
+		assertThatThrownBy(() -> notificationService.deleteNotification(user2, notificationId))
+			.isInstanceOf(NotificationValidationException.class)
+			.hasFieldOrPropertyWithValue("error", "알림을 삭제할 권한이 없습니다.");
+	}
 }
