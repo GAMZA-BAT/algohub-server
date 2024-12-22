@@ -152,7 +152,7 @@ public class SolutionService {
 	private GetSolutionWithGroupIdResponse getGetSolutionWithGroupIdResponse(Solution solution) {
 		Integer correctCount = getCorrectCount(solution);
 		Integer submitMemberCount = solutionRepository.countDistinctUsersByProblemId(solution.getProblem().getId());
-		Integer totalMemberCount = groupMemberRepository.countMembersByStudyGroupId(getGroupId(solution)) + 1;
+		Integer totalMemberCount = groupMemberRepository.countMembersByStudyGroup(getGroup(solution)) + 1;
 		Integer accuracy = calculateAccuracy(submitMemberCount, correctCount);
 		long commentCount = commentRepository.countCommentsBySolutionId(solution.getId());
 		return GetSolutionWithGroupIdResponse.toDTO(solution, accuracy, submitMemberCount, totalMemberCount,
@@ -162,7 +162,7 @@ public class SolutionService {
 	private GetSolutionResponse getGetSolutionResponse(Solution solution) {
 		Integer correctCount = getCorrectCount(solution);
 		Integer submitMemberCount = solutionRepository.countDistinctUsersByProblemId(solution.getProblem().getId());
-		Integer totalMemberCount = groupMemberRepository.countMembersByStudyGroupId(getGroupId(solution)) + 1;
+		Integer totalMemberCount = groupMemberRepository.countMembersByStudyGroup(getGroup(solution)) + 1;
 		Integer accuracy = calculateAccuracy(submitMemberCount, correctCount);
 		long commentCount = commentRepository.countCommentsBySolutionId(solution.getId());
 		return GetSolutionResponse.toDTO(solution, accuracy, submitMemberCount, totalMemberCount, commentCount);
@@ -251,7 +251,7 @@ public class SolutionService {
 		return tempAccuracy.intValue();
 	}
 
-	private static Long getGroupId(Solution solution) {
-		return solution.getProblem().getStudyGroup().getId();
+	private StudyGroup getGroup(Solution solution) {
+		return solution.getProblem().getStudyGroup();
 	}
 }

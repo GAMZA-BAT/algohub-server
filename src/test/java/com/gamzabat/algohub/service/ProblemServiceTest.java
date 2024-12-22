@@ -793,7 +793,7 @@ class ProblemServiceTest {
 		when(groupMemberRepository.existsByUserAndStudyGroup(user, group)).thenReturn(true);
 		when(solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(anyLong(),
 			anyString())).thenReturn(8);
-		when(groupMemberRepository.countMembersByStudyGroupId(group.getId())).thenReturn(3);
+		when(groupMemberRepository.countMembersByStudyGroup(group)).thenReturn(3);
 		when(solutionRepository.countDistinctUsersByProblemId(anyLong())).thenReturn(10);
 		// when
 		GetProblemResponse response = problemService.getProblem(user, problemId);

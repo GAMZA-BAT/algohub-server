@@ -137,7 +137,7 @@ public class ProblemService {
 		Page<Problem> problems = problemRepository.findAllInProgressProblem(user, group, unsolvedOnly,
 			pageable);
 
-		return problems.map(problem -> getGetProblemResponse(user, groupId, problem, unsolvedOnly));
+		return problems.map(problem -> getGetProblemResponse(user, group, problem, unsolvedOnly));
 	}
 
 	@Transactional(readOnly = true)
@@ -150,16 +150,17 @@ public class ProblemService {
 		Page<Problem> problems = problemRepository.findAllByStudyGroupAndEndDateBefore(group, LocalDate.now(),
 			pageable);
 
-		return problems.map(problem -> getGetProblemResponse(user, groupId, problem, false));
+		return problems.map(problem -> getGetProblemResponse(user, group, problem, false));
 	}
 
-	private GetProblemResponse getGetProblemResponse(User user, Long groupId, Problem problem, boolean unsolvedOnly) {
+	private GetProblemResponse getGetProblemResponse(User user, StudyGroup group, Problem problem,
+		boolean unsolvedOnly) {
 		boolean solved = unsolvedOnly ? false : solutionRepository.existsByUserAndProblemAndResult(user, problem,
 			BOJResultConstants.CORRECT);
 		Integer correctCount = solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(problem.getId(),
 			BOJResultConstants.CORRECT);
 		Integer submitMemberCount = solutionRepository.countDistinctUsersByProblemId(problem.getId());
-		Integer groupMemberCount = groupMemberRepository.countMembersByStudyGroupId(groupId);
+		Integer groupMemberCount = groupMemberRepository.countMembersByStudyGroup(group);
 		Integer accuracy = calculateAccuracy(submitMemberCount, correctCount);
 
 		return new GetProblemResponse(
@@ -203,7 +204,7 @@ public class ProblemService {
 			Integer correctCount = solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(problem.getId(),
 				BOJResultConstants.CORRECT);
 			Integer submitMemberCount = solutionRepository.countDistinctUsersByProblemId(problem.getId());
-			Integer groupMemberCount = groupMemberRepository.countMembersByStudyGroupId(groupId);
+			Integer groupMemberCount = groupMemberRepository.countMembersByStudyGroup(group);
 			Integer accuracy = calculateAccuracy(submitMemberCount, correctCount);
 
 			return new GetProblemResponse(
@@ -244,7 +245,7 @@ public class ProblemService {
 				Integer level = problem.getLevel();
 				boolean solved = false;
 				Integer submitMemberCount = 0;
-				Integer groupMemberCount = groupMemberRepository.countMembersByStudyGroupId(groupId);
+				Integer groupMemberCount = groupMemberRepository.countMembersByStudyGroup(group);
 				Integer accuracy = 0;
 
 				return new GetProblemResponse(title, problemId, link, startDate, endDate, level, solved,
@@ -266,7 +267,7 @@ public class ProblemService {
 			BOJResultConstants.CORRECT);
 		Integer submitMemberCount = solutionRepository.countDistinctUsersByProblemId(problem.getId());
 		Integer groupMemberCount =
-			groupMemberRepository.countMembersByStudyGroupId(problem.getStudyGroup().getId());
+			groupMemberRepository.countMembersByStudyGroup(problem.getStudyGroup());
 		Integer accuracy = calculateAccuracy(submitMemberCount, correctCount);
 
 		GetProblemResponse response = new GetProblemResponse(
@@ -381,9 +382,5 @@ public class ProblemService {
 		Double tempSubmitMemberCount = submitMemberCount.doubleValue();
 		Double tempAccuracy = ((tempCorrectCount / tempSubmitMemberCount) * 100);
 		return tempAccuracy.intValue();
-	}
-
-	private Boolean isInProgress(Problem problem) {
-		return problem.getEndDate() != null && !LocalDate.now().isAfter(problem.getEndDate());
 	}
 }

@@ -8,7 +8,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
@@ -29,8 +28,8 @@ public interface ProblemRepository extends JpaRepository<Problem, Long>, CustomP
 		+ "and p.startDate = :startDate")
 	List<Problem> findAllByStartDate(LocalDate startDate);
 
-	@Query("SELECT COUNT(p) FROM Problem p WHERE p.studyGroup.deletedAt IS NULL AND p.studyGroup.id = :groupId")
-	Long countProblemsByGroupId(@Param("groupId") Long groupId);
+	@Query("SELECT COUNT(p) FROM Problem p WHERE p.studyGroup.deletedAt IS NULL AND p.studyGroup = :group")
+	Long countProblemsByGroup(StudyGroup group);
 
 	@Query("select p from Problem p "
 		+ "where p.studyGroup.deletedAt is null "

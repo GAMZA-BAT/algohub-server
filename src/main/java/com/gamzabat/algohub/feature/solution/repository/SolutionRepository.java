@@ -24,9 +24,9 @@ public interface SolutionRepository extends JpaRepository<Solution, Long>, Custo
 	@Query("SELECT COUNT(DISTINCT s.problem.id) FROM Solution s " +
 		"JOIN s.problem p " +
 		"WHERE s.user = :user " +
-		"AND p.studyGroup.id = :groupId " +
+		"AND p.studyGroup = :group " +
 		"AND s.result = :correct")
-	Long countDistinctCorrectSolutionsByUserAndGroup(@Param("user") User user, @Param("groupId") Long groupId,
+	Long countDistinctCorrectSolutionsByUserAndGroup(@Param("user") User user, StudyGroup group,
 		@Param("correct") String correct);
 
 	@Modifying

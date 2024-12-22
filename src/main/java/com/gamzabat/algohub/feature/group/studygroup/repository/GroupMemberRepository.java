@@ -6,7 +6,6 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
@@ -22,10 +21,8 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> 
 
 	List<GroupMember> findAllByStudyGroup(StudyGroup studyGroup);
 
-	@Query("SELECT COUNT(gm) FROM GroupMember gm WHERE gm.studyGroup.id = :studyGroupId")
-	Integer countMembersByStudyGroupId(@Param("studyGroupId") Long studyGroupId);
-
-	GroupMember findByUser(User user);
+	@Query("SELECT COUNT(gm) FROM GroupMember gm WHERE gm.studyGroup = :studyGroup")
+	Integer countMembersByStudyGroup(StudyGroup studyGroup);
 
 	GroupMember findByStudyGroupAndRole(StudyGroup group, RoleOfGroupMember role);
 
