@@ -1,6 +1,7 @@
 package com.gamzabat.algohub.feature.notification.repository.querydsl;
 
 import static com.gamzabat.algohub.feature.group.studygroup.domain.QGroupMember.*;
+import static com.gamzabat.algohub.feature.group.studygroup.domain.QStudyGroup.*;
 import static com.gamzabat.algohub.feature.notification.domain.QNotificationSetting.*;
 
 import java.util.List;
@@ -23,7 +24,10 @@ public class CustomNotificationSettingRepositoryImpl implements CustomNotificati
 	@Override
 	public List<NotificationSetting> findAllByUser(User user) {
 		return query.selectFrom(notificationSetting)
-			.where(notificationSetting.member.user.eq(user))
+			.join(notificationSetting.member, groupMember).fetchJoin()
+			.join(groupMember.studyGroup, studyGroup).fetchJoin()
+			.where(notificationSetting.member.user.eq(user)
+				.and(notificationSetting.member.studyGroup.deletedAt.isNull()))
 			.fetch();
 	}
 

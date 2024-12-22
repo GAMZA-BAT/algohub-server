@@ -278,7 +278,6 @@ class StudyGroupServiceTest {
 		verify(rankingRepository, times(1)).deleteAllByStudyGroup(group);
 		verify(notificationSettingRepository, times(1)).deleteAllByStudyGroup(group);
 		verify(groupMemberRepository, times(1)).deleteAllByStudyGroup(group);
-		verify(notificationRepository, times(1)).deleteAllByStudyGroup(group);
 		verify(studyGroupRepository, times(1)).delete(group);
 	}
 
@@ -312,8 +311,6 @@ class StudyGroupServiceTest {
 		// given
 		when(studyGroupRepository.findById(10L)).thenReturn(Optional.of(group));
 		when(groupMemberRepository.findByUserAndStudyGroup(user2, group)).thenReturn(Optional.ofNullable(groupMember2));
-		// when(groupMemberRepository.findAllByStudyGroup(group)).thenReturn(
-		// 	List.of(groupMember2, groupMember3));
 		when(studyGroupServiceObjectProvider.getObject()).thenReturn(studyGroupService);
 		// when
 		studyGroupService.exitGroup(user2, 10L);
@@ -321,8 +318,6 @@ class StudyGroupServiceTest {
 		verify(rankingRepository, times(1)).deleteByMember(groupMember2);
 		verify(notificationSettingRepository, times(1)).deleteByMember(groupMember2);
 		verify(groupMemberRepository, times(1)).delete(groupMember2);
-		verify(notificationRepository, times(1)).deleteAllByUserAndStudyGroup(user2, group);
-		// assertThat(groupMember3.getRole()).isEqualTo(RoleOfGroupMember.OWNER);
 	}
 
 	@Test

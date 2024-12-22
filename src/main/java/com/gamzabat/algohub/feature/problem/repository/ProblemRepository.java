@@ -17,17 +17,24 @@ import com.gamzabat.algohub.feature.problem.repository.querydsl.CustomProblemRep
 public interface ProblemRepository extends JpaRepository<Problem, Long>, CustomProblemRepository {
 	Page<Problem> findAllByStudyGroup(StudyGroup studyGroup, Pageable pageable);
 
-	List<Problem> findAllByNumber(Integer Number);
+	@Query("select p from Problem p where p.studyGroup.deletedAt is null and p.number = :number")
+	List<Problem> findAllByNumber(Integer number);
 
 	List<Problem> findAllByStudyGroupAndEndDateBetween(StudyGroup studyGroup, LocalDate now, LocalDate tomorrow);
 
 	Page<Problem> findAllByStudyGroupAndStartDateAfter(StudyGroup studyGroup, LocalDate startDate, Pageable pageable);
 
+	@Query("select p from Problem p "
+		+ "where p.studyGroup.deletedAt is null "
+		+ "and p.startDate = :startDate")
 	List<Problem> findAllByStartDate(LocalDate startDate);
 
-	@Query("SELECT COUNT(p) FROM Problem p WHERE p.studyGroup.id = :groupId")
+	@Query("SELECT COUNT(p) FROM Problem p WHERE p.studyGroup.deletedAt IS NULL AND p.studyGroup.id = :groupId")
 	Long countProblemsByGroupId(@Param("groupId") Long groupId);
 
+	@Query("select p from Problem p "
+		+ "where p.studyGroup.deletedAt is null "
+		+ "and p.endDate = :endDate")
 	List<Problem> findAllByEndDate(LocalDate endDate);
 
 	@Modifying

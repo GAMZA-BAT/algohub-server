@@ -180,7 +180,6 @@ public class StudyGroupService {
 		bookmarkedStudyGroupRepository.deleteAllByStudyGroup(group);
 		rankingRepository.deleteAllByStudyGroup(group);
 		notificationSettingRepository.deleteAllByStudyGroup(group);
-		notificationRepository.deleteAllByStudyGroup(group);
 		noticeCommentRepository.deleteAllByStudyGroup(group);
 		noticeReadRepository.deleteAllByStudyGroup(group);
 		noticeRepository.deleteAllByStudyGroup(group);
@@ -247,7 +246,6 @@ public class StudyGroupService {
 		rankingRepository.deleteByMember(groupMember);
 		notificationSettingRepository.deleteByMember(groupMember);
 		noticeReadRepository.deleteAllByStudyGroupAndUser(studyGroup, user);
-		notificationRepository.deleteAllByUserAndStudyGroup(user, studyGroup);
 		groupMemberRepository.delete(groupMember);
 		log.info("success to delete group member");
 	}
