@@ -14,6 +14,7 @@ import com.gamzabat.algohub.constants.BOJResultConstants;
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.user.domain.User;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -30,6 +31,7 @@ public class CustomProblemRepositoryImpl implements CustomProblemRepository {
 		Pageable pageable) {
 		JPAQuery<Problem> query = queryFactory.selectFrom(problem)
 			.where(problem.studyGroup.eq(group)
+				.and(problem.deletedAt.isNull())
 				.and(problem.startDate.loe(LocalDate.now()))
 				.and(problem.endDate.goe(LocalDate.now())));
 
@@ -43,6 +45,45 @@ public class CustomProblemRepositoryImpl implements CustomProblemRepository {
 		JPAQuery<Long> countQuery = problemCountQuery(user, group, unsolvedOnly);
 
 		return PageableExecutionUtils.getPage(query.fetch(), pageable, countQuery::fetchOne);
+	}
+
+	@Override
+	public Page<Problem> findAllExpiredProblem(StudyGroup group, Pageable pageable) {
+		BooleanExpression condition = problem.studyGroup.eq(group)
+			.and(problem.deletedAt.isNull())
+			.and(problem.endDate.before(LocalDate.now()));
+
+		JPAQuery<Problem> query = getSelectQuery(pageable,
+			condition);
+
+		JPAQuery<Long> countQuery = queryFactory.select(problem.count())
+			.from(problem)
+			.where(condition);
+
+		return PageableExecutionUtils.getPage(query.fetch(), pageable, countQuery::fetchOne);
+	}
+
+	@Override
+	public Page<Problem> findAllQueuedProblem(StudyGroup group, Pageable pageable) {
+		BooleanExpression condition = problem.studyGroup.eq(group)
+			.and(problem.deletedAt.isNull())
+			.and(problem.startDate.after(LocalDate.now()));
+
+		JPAQuery<Problem> query = getSelectQuery(pageable,
+			condition);
+
+		JPAQuery<Long> countQuery = queryFactory.select(problem.count())
+			.from(problem)
+			.where(condition);
+
+		return PageableExecutionUtils.getPage(query.fetch(), pageable, countQuery::fetchOne);
+	}
+
+	private JPAQuery<Problem> getSelectQuery(Pageable pageable, BooleanExpression condition) {
+		return queryFactory.selectFrom(problem)
+			.where(condition)
+			.offset(pageable.getOffset())
+			.limit(pageable.getPageSize());
 	}
 
 	private void addUnsolvedProblemFilter(JPAQuery<?> query, User user) {

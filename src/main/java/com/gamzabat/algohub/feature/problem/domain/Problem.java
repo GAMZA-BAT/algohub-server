@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLRestriction;
 
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 
@@ -22,7 +21,6 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor
-@SQLRestriction("deleted_at IS NULL")
 @SQLDelete(sql = "UPDATE problem SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
 public class Problem {
 	@Id

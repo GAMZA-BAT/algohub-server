@@ -151,7 +151,7 @@ public class SolutionService {
 
 	private GetSolutionWithGroupIdResponse getGetSolutionWithGroupIdResponse(Solution solution) {
 		Integer correctCount = getCorrectCount(solution);
-		Integer submitMemberCount = solutionRepository.countDistinctUsersByProblemId(solution.getProblem().getId());
+		Integer submitMemberCount = solutionRepository.countDistinctUsersByProblem(solution.getProblem());
 		Integer totalMemberCount = groupMemberRepository.countMembersByStudyGroup(getGroup(solution)) + 1;
 		Integer accuracy = calculateAccuracy(submitMemberCount, correctCount);
 		long commentCount = commentRepository.countCommentsBySolutionId(solution.getId());
@@ -161,7 +161,7 @@ public class SolutionService {
 
 	private GetSolutionResponse getGetSolutionResponse(Solution solution) {
 		Integer correctCount = getCorrectCount(solution);
-		Integer submitMemberCount = solutionRepository.countDistinctUsersByProblemId(solution.getProblem().getId());
+		Integer submitMemberCount = solutionRepository.countDistinctUsersByProblem(solution.getProblem());
 		Integer totalMemberCount = groupMemberRepository.countMembersByStudyGroup(getGroup(solution)) + 1;
 		Integer accuracy = calculateAccuracy(submitMemberCount, correctCount);
 		long commentCount = commentRepository.countCommentsBySolutionId(solution.getId());

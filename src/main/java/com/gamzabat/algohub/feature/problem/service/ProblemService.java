@@ -147,8 +147,7 @@ public class ProblemService {
 			throw new ProblemValidationException(HttpStatus.FORBIDDEN.value(), "문제를 조회할 권한이 없습니다.");
 		}
 
-		Page<Problem> problems = problemRepository.findAllByStudyGroupAndEndDateBefore(group, LocalDate.now(),
-			pageable);
+		Page<Problem> problems = problemRepository.findAllExpiredProblem(group, pageable);
 
 		return problems.map(problem -> getGetProblemResponse(user, group, problem, false));
 	}
@@ -159,7 +158,7 @@ public class ProblemService {
 			BOJResultConstants.CORRECT);
 		Integer correctCount = solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(problem.getId(),
 			BOJResultConstants.CORRECT);
-		Integer submitMemberCount = solutionRepository.countDistinctUsersByProblemId(problem.getId());
+		Integer submitMemberCount = solutionRepository.countDistinctUsersByProblem(problem);
 		Integer groupMemberCount = groupMemberRepository.countMembersByStudyGroup(group);
 		Integer accuracy = calculateAccuracy(submitMemberCount, correctCount);
 
@@ -203,7 +202,7 @@ public class ProblemService {
 		return problems.stream().map(problem -> {
 			Integer correctCount = solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(problem.getId(),
 				BOJResultConstants.CORRECT);
-			Integer submitMemberCount = solutionRepository.countDistinctUsersByProblemId(problem.getId());
+			Integer submitMemberCount = solutionRepository.countDistinctUsersByProblem(problem);
 			Integer groupMemberCount = groupMemberRepository.countMembersByStudyGroup(group);
 			Integer accuracy = calculateAccuracy(submitMemberCount, correctCount);
 
@@ -233,8 +232,7 @@ public class ProblemService {
 				"예정 문제를 조회할 권한이 없습니다. : 그룹의 방장과 부방장만 볼 수 있습니다.");
 		}
 
-		Page<Problem> problems = problemRepository.findAllByStudyGroupAndStartDateAfter(group,
-			LocalDate.now(), pageable);
+		Page<Problem> problems = problemRepository.findAllQueuedProblem(group, pageable);
 		return problems
 			.map(problem -> {
 				String title = problem.getTitle();
@@ -265,7 +263,7 @@ public class ProblemService {
 			BOJResultConstants.CORRECT);
 		Integer correctCount = solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(problem.getId(),
 			BOJResultConstants.CORRECT);
-		Integer submitMemberCount = solutionRepository.countDistinctUsersByProblemId(problem.getId());
+		Integer submitMemberCount = solutionRepository.countDistinctUsersByProblem(problem);
 		Integer groupMemberCount =
 			groupMemberRepository.countMembersByStudyGroup(problem.getStudyGroup());
 		Integer accuracy = calculateAccuracy(submitMemberCount, correctCount);
@@ -282,7 +280,7 @@ public class ProblemService {
 		return response;
 	}
 
-	@Scheduled(cron = "0 0 0 * * *")
+	@Scheduled(cron = "0 0 0 * * ?", zone = "Asia/Seoul")
 	public void dailyProblemScheduler() {
 		LocalDate now = LocalDate.now();
 		notifyProblemStartsToday(now);

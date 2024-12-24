@@ -7,5 +7,4 @@ import com.gamzabat.algohub.feature.user.domain.User;
 
 public interface CustomStudyGroupRepository {
 	List<StudyGroup> findAllByUser(User user);
-
 }

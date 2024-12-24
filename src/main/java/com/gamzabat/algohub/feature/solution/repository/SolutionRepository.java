@@ -14,8 +14,10 @@ import com.gamzabat.algohub.feature.user.domain.User;
 public interface SolutionRepository extends JpaRepository<Solution, Long>, CustomSolutionRepository {
 	Boolean existsByUserAndProblem(User user, Problem problem);
 
-	@Query("SELECT COUNT(DISTINCT s.user) FROM Solution s WHERE s.problem.id = :problemId")
-	Integer countDistinctUsersByProblemId(@Param("problemId") Long problemId);
+	@Query("SELECT COUNT(DISTINCT s.user) "
+		+ "FROM Solution s "
+		+ "WHERE s.problem = :problem")
+	Integer countDistinctUsersByProblem(Problem problem);
 
 	@Query("SELECT COUNT(DISTINCT s.user) FROM Solution s WHERE s.problem.id = :problemId AND s.result = :correct")
 	Integer countDistinctUsersWithCorrectSolutionsByProblemId(@Param("problemId") Long problemId,
