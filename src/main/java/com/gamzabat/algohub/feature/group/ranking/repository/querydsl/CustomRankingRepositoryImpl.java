@@ -44,7 +44,8 @@ public class CustomRankingRepositoryImpl implements CustomRankingRepository {
 		return queryFactory.selectFrom(ranking)
 			.join(ranking.member, groupMember).fetchJoin()
 			.join(groupMember.user, user).fetchJoin()
-			.where(ranking.member.studyGroup.eq(studyGroup));
+			.where(ranking.member.studyGroup.eq(studyGroup)
+				.and(ranking.solvedCount.gt(0)));
 	}
 
 	private JPAQuery<Long> rankingCountQuery(StudyGroup studyGroup) {
