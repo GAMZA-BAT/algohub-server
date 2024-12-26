@@ -1,5 +1,7 @@
 package com.gamzabat.algohub.feature.solution.repository;
 
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -12,6 +14,11 @@ import com.gamzabat.algohub.feature.solution.repository.querydsl.CustomSolutionR
 import com.gamzabat.algohub.feature.user.domain.User;
 
 public interface SolutionRepository extends JpaRepository<Solution, Long>, CustomSolutionRepository {
+	@Query("SELECT s FROM Solution s "
+		+ "WHERE s.id = :id "
+		+ "AND s.deletedAt IS NULL")
+	Optional<Solution> findById(Long id);
+
 	Boolean existsByUserAndProblem(User user, Problem problem);
 
 	@Query("SELECT COUNT(DISTINCT s.user) "
@@ -32,6 +39,19 @@ public interface SolutionRepository extends JpaRepository<Solution, Long>, Custo
 		@Param("correct") String correct);
 
 	@Modifying
-	@Query("DELETE FROM Solution s WHERE s.problem.studyGroup = :studyGroup")
+	@Query("UPDATE Solution s " +
+		"SET s.deletedAt = CURRENT_TIMESTAMP " +
+		"WHERE s.problem IN ("
+		+ "SELECT p "
+		+ "FROM Problem p "
+		+ "WHERE p.studyGroup = :studyGroup)")
 	void deleteAllByStudyGroup(StudyGroup studyGroup);
+
+	@Modifying
+	@Query("UPDATE Solution s SET s.deletedAt = CURRENT_TIMESTAMP WHERE s.problem = :problem")
+	void deleteAllByProblem(Problem problem);
+
+	@Modifying
+	@Query("UPDATE Solution s SET s.deletedAt = CURRENT_TIMESTAMP WHERE s.user = :user")
+	void deleteAllByUser(User user);
 }

@@ -185,6 +185,7 @@ public class ProblemService {
 				"문제 삭제 권한이 없습니다. 방장, 부방장일 경우에만 삭제가 가능합니다.");
 		}
 
+		solutionRepository.deleteAllByProblem(problem);
 		problemRepository.delete(problem);
 		log.info("success to delete problem");
 	}
