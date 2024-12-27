@@ -52,6 +52,12 @@ public interface SolutionRepository extends JpaRepository<Solution, Long>, Custo
 	void deleteAllByProblem(Problem problem);
 
 	@Modifying
-	@Query("UPDATE Solution s SET s.deletedAt = CURRENT_TIMESTAMP WHERE s.user = :user")
-	void deleteAllByUser(User user);
+	@Query("UPDATE Solution s "
+		+ "SET s.deletedAt = CURRENT_TIMESTAMP "
+		+ "WHERE s.user = :user "
+		+ "AND s.problem IN ("
+		+ "SELECT p "
+		+ "FROM Problem p "
+		+ "WHERE p.studyGroup = :studyGroup)")
+	void deleteAllByStudyGroupAndUser(StudyGroup studyGroup, User user);
 }

@@ -243,7 +243,7 @@ public class StudyGroupService {
 			.ifPresent(bookmarkedStudyGroupRepository::delete);
 		rankingRepository.deleteByMember(groupMember);
 		notificationSettingRepository.deleteByMember(groupMember);
-		solutionRepository.deleteAllByUser(user);
+		solutionRepository.deleteAllByStudyGroupAndUser(studyGroup, user);
 		noticeReadRepository.deleteAllByStudyGroupAndUser(studyGroup, user);
 		groupMemberRepository.delete(groupMember);
 		log.info("success to delete group member");
