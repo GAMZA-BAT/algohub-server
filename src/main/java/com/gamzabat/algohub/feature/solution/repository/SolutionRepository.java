@@ -5,7 +5,6 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
@@ -27,16 +26,16 @@ public interface SolutionRepository extends JpaRepository<Solution, Long>, Custo
 	Integer countDistinctUsersByProblem(Problem problem);
 
 	@Query("SELECT COUNT(DISTINCT s.user) FROM Solution s WHERE s.problem.id = :problemId AND s.result = :correct")
-	Integer countDistinctUsersWithCorrectSolutionsByProblemId(@Param("problemId") Long problemId,
-		@Param("correct") String correct);
+	Integer countDistinctUsersWithCorrectSolutionsByProblemId(Long problemId,
+		String correct);
 
 	@Query("SELECT COUNT(DISTINCT s.problem.id) FROM Solution s " +
 		"JOIN s.problem p " +
 		"WHERE s.user = :user " +
 		"AND p.studyGroup = :group " +
 		"AND s.result = :correct")
-	Long countDistinctCorrectSolutionsByUserAndGroup(@Param("user") User user, StudyGroup group,
-		@Param("correct") String correct);
+	Long countDistinctCorrectSolutionsByUserAndGroup(User user, StudyGroup group,
+		String correct);
 
 	@Modifying
 	@Query("UPDATE Solution s " +

@@ -29,22 +29,16 @@ public class CustomProblemRepositoryImpl implements CustomProblemRepository {
 	@Override
 	public Page<Problem> findAllInProgressProblem(User user, StudyGroup group, Boolean unsolvedOnly,
 		Pageable pageable) {
-		JPAQuery<Problem> query = queryFactory.selectFrom(problem)
-			.where(problem.studyGroup.eq(group)
-				.and(problem.deletedAt.isNull())
-				.and(problem.startDate.loe(LocalDate.now()))
-				.and(problem.endDate.goe(LocalDate.now())));
+		BooleanExpression condition = problem.studyGroup.eq(group)
+			.and(problem.deletedAt.isNull())
+			.and(problem.startDate.loe(LocalDate.now()))
+			.and(problem.endDate.goe(LocalDate.now()));
 
 		if (unsolvedOnly) {
-			addUnsolvedProblemFilter(query, user);
+			condition = addUnsolvedProblemFilter(condition, user);
 		}
 
-		query.offset(pageable.getOffset())
-			.limit(pageable.getPageSize());
-
-		JPAQuery<Long> countQuery = problemCountQuery(user, group, unsolvedOnly);
-
-		return PageableExecutionUtils.getPage(query.fetch(), pageable, countQuery::fetchOne);
+		return findAllProblemByCondition(condition, pageable);
 	}
 
 	@Override
@@ -53,14 +47,7 @@ public class CustomProblemRepositoryImpl implements CustomProblemRepository {
 			.and(problem.deletedAt.isNull())
 			.and(problem.endDate.before(LocalDate.now()));
 
-		JPAQuery<Problem> query = getSelectQuery(pageable,
-			condition);
-
-		JPAQuery<Long> countQuery = queryFactory.select(problem.count())
-			.from(problem)
-			.where(condition);
-
-		return PageableExecutionUtils.getPage(query.fetch(), pageable, countQuery::fetchOne);
+		return findAllProblemByCondition(condition, pageable);
 	}
 
 	@Override
@@ -69,8 +56,11 @@ public class CustomProblemRepositoryImpl implements CustomProblemRepository {
 			.and(problem.deletedAt.isNull())
 			.and(problem.startDate.after(LocalDate.now()));
 
-		JPAQuery<Problem> query = getSelectQuery(pageable,
-			condition);
+		return findAllProblemByCondition(condition, pageable);
+	}
+
+	private Page<Problem> findAllProblemByCondition(BooleanExpression condition, Pageable pageable) {
+		JPAQuery<Problem> query = getSelectQuery(pageable, condition);
 
 		JPAQuery<Long> countQuery = queryFactory.select(problem.count())
 			.from(problem)
@@ -86,9 +76,9 @@ public class CustomProblemRepositoryImpl implements CustomProblemRepository {
 			.limit(pageable.getPageSize());
 	}
 
-	private void addUnsolvedProblemFilter(JPAQuery<?> query, User user) {
-		query
-			.where(
+	private BooleanExpression addUnsolvedProblemFilter(BooleanExpression condition, User user) {
+		return condition
+			.and(
 				JPAExpressions.selectFrom(solution)
 					.where(solution.user.eq(user)
 						.and(solution.problem.eq(problem))
@@ -96,18 +86,5 @@ public class CustomProblemRepositoryImpl implements CustomProblemRepository {
 							.or(solution.result.like("%점"))))
 					.notExists()
 			);
-	}
-
-	private JPAQuery<Long> problemCountQuery(User user, StudyGroup group, boolean unsolvedOnly) {
-		JPAQuery<Long> query = queryFactory.select(problem.count())
-			.from(problem)
-			.where(problem.studyGroup.eq(group)
-				.and(problem.startDate.loe(LocalDate.now()))
-				.and(problem.endDate.goe(LocalDate.now())));
-
-		if (unsolvedOnly) {
-			addUnsolvedProblemFilter(query, user);
-		}
-		return query;
 	}
 }
