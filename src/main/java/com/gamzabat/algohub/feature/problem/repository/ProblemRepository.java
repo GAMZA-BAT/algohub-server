@@ -26,8 +26,7 @@ public interface ProblemRepository extends JpaRepository<Problem, Long>, CustomP
 	@Query("select p from Problem p "
 		+ "where p.deletedAt is null "
 		+ "and p.studyGroup = :studyGroup "
-		+ "and (p.endDate = :start "
-		+ "or p.endDate = :end)")
+		+ "and p.endDate between :start and :end")
 	List<Problem> findAllByStudyGroupAndEndDateBetween(StudyGroup studyGroup, LocalDate start, LocalDate end);
 
 	@Query("select p from Problem p "
