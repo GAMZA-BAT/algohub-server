@@ -13,6 +13,6 @@
         <maxBatchLogEvents>50</maxBatchLogEvents>
         <maxFlushTimeMillis>30000</maxFlushTimeMillis>
         <maxBlockTimeMillis>5000</maxBlockTimeMillis>
-        <retentionTimeDays>0</retentionTimeDays>
+        <retentionTimeDays>60</retentionTimeDays>
     </appender>
 </included>
