@@ -24,7 +24,8 @@ public class CustomStudyGroupRepositoryImpl implements CustomStudyGroupRepositor
 			.from(groupMember)
 			.join(studyGroup)
 			.on(studyGroup.eq(groupMember.studyGroup))
-			.where(groupMember.user.eq(user))
+			.where(groupMember.user.eq(user)
+				.and(groupMember.studyGroup.deletedAt.isNull()))
 			.fetch();
 	}
 }

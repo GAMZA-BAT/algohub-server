@@ -458,7 +458,7 @@ class ProblemServiceTest {
 		when(groupMemberRepository.existsByUserAndStudyGroup(user, group)).thenReturn(true);
 		when(solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(anyLong(),
 			anyString())).thenReturn(8);
-		when(solutionRepository.countDistinctUsersByProblemId(anyLong())).thenReturn(10);
+		when(solutionRepository.countDistinctUsersByProblem(any(Problem.class))).thenReturn(10);
 		// when
 		Page<GetProblemResponse> result = problemService.getInProgressProblems(user, 10L, false, pageable);
 		// then
@@ -494,12 +494,12 @@ class ProblemServiceTest {
 
 		Page<Problem> problemPage = new PageImpl<>(list.subList(0, 10), pageable, list.size());
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
-		when(problemRepository.findAllByStudyGroupAndEndDateBefore(eq(group), eq(LocalDate.now()),
+		when(problemRepository.findAllExpiredProblem(eq(group),
 			any(Pageable.class))).thenReturn(problemPage);
 		when(groupMemberRepository.existsByUserAndStudyGroup(user, group)).thenReturn(true);
 		when(solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(anyLong(),
 			anyString())).thenReturn(8);
-		when(solutionRepository.countDistinctUsersByProblemId(anyLong())).thenReturn(10);
+		when(solutionRepository.countDistinctUsersByProblem(any(Problem.class))).thenReturn(10);
 		// when
 		Page<GetProblemResponse> result = problemService.getExpiredProblems(user, 10L, pageable);
 		// then
@@ -612,7 +612,7 @@ class ProblemServiceTest {
 		Page<Problem> problemPage = new PageImpl<>(list.subList(0, 10), pageable, list.size());
 
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
-		when(problemRepository.findAllByStudyGroupAndStartDateAfter(group, LocalDate.now(), pageable)).thenReturn(
+		when(problemRepository.findAllQueuedProblem(group, pageable)).thenReturn(
 			problemPage);
 		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
 		//when
@@ -654,7 +654,7 @@ class ProblemServiceTest {
 		Page<Problem> problemPage = new PageImpl<>(list.subList(0, 10), pageable, list.size());
 		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
 		when(groupMemberRepository.findByUserAndStudyGroup(user3, group)).thenReturn(Optional.of(groupMember3));
-		when(problemRepository.findAllByStudyGroupAndStartDateAfter(group, LocalDate.now(), pageable)).thenReturn(
+		when(problemRepository.findAllQueuedProblem(group, pageable)).thenReturn(
 			problemPage);
 
 		// when
@@ -793,8 +793,8 @@ class ProblemServiceTest {
 		when(groupMemberRepository.existsByUserAndStudyGroup(user, group)).thenReturn(true);
 		when(solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(anyLong(),
 			anyString())).thenReturn(8);
-		when(groupMemberRepository.countMembersByStudyGroupId(group.getId())).thenReturn(3);
-		when(solutionRepository.countDistinctUsersByProblemId(anyLong())).thenReturn(10);
+		when(groupMemberRepository.countMembersByStudyGroup(group)).thenReturn(3);
+		when(solutionRepository.countDistinctUsersByProblem(any(Problem.class))).thenReturn(10);
 		// when
 		GetProblemResponse response = problemService.getProblem(user, problemId);
 		// then

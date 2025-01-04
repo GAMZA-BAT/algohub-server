@@ -218,4 +218,15 @@ public class NotificationService {
 			case NotificationCategory.NEW_SOLUTION_POSTED -> setting.isNewSolution();
 		};
 	}
+
+	@Transactional
+	public void deleteNotification(User user, Long notificationId) {
+		Notification notification = notificationRepository.findById(notificationId)
+			.orElseThrow(() -> new CannotFoundNotificationException("존재하지 않는 알림입니다."));
+
+		if (!notification.getUser().getId().equals(user.getId()))
+			throw new NotificationValidationException(HttpStatus.FORBIDDEN.value(), "알림을 삭제할 권한이 없습니다.");
+
+		notificationRepository.delete(notification);
+	}
 }

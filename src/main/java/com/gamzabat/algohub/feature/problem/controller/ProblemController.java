@@ -35,7 +35,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @RequestMapping("/api")
 @Tag(name = "문제 API", description = "그룹별 문제 관련 API")
-
 public class ProblemController {
 	private final ProblemService problemService;
 	private final String PROBLEM_SORT_BY = "endDate";

@@ -2,6 +2,8 @@ package com.gamzabat.algohub.feature.solution.domain;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.SQLDelete;
+
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.user.domain.User;
 
@@ -20,6 +22,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor
+@SQLDelete(sql = "UPDATE solution SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
 public class Solution {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,6 +44,7 @@ public class Solution {
 	private Integer executionTime;
 	private String language;
 	private Integer codeLength;
+	private LocalDateTime deletedAt;
 
 	@Builder
 	public Solution(Problem problem, User user, LocalDateTime solvedDateTime, String content, String result,

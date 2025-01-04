@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -77,6 +78,13 @@ public class NotificationController {
 		if (errors.hasErrors())
 			throw new RequestException("알림 설정 수정 요청이 올바르지 않습니다.", errors);
 		notificationSettingService.editNotificationSettings(user, request);
+		return ResponseEntity.ok().build();
+	}
+
+	@DeleteMapping(value = "/{notificationId}")
+	@Operation(summary = "알림 단건 삭제 API")
+	public ResponseEntity<Void> deleteNotification(@AuthedUser User user, @PathVariable Long notificationId) {
+		notificationService.deleteNotification(user, notificationId);
 		return ResponseEntity.ok().build();
 	}
 

@@ -54,7 +54,6 @@ import com.gamzabat.algohub.feature.notice.repository.NoticeReadRepository;
 import com.gamzabat.algohub.feature.notice.repository.NoticeRepository;
 import com.gamzabat.algohub.feature.notification.domain.NotificationSetting;
 import com.gamzabat.algohub.feature.notification.enums.NotificationCategory;
-import com.gamzabat.algohub.feature.notification.repository.NotificationRepository;
 import com.gamzabat.algohub.feature.notification.repository.NotificationSettingRepository;
 import com.gamzabat.algohub.feature.notification.service.NotificationService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
@@ -83,7 +82,6 @@ public class StudyGroupService {
 	private final NoticeRepository noticeRepository;
 	private final NoticeCommentRepository noticeCommentRepository;
 	private final SolutionCommentRepository solutionCommentRepository;
-	private final NotificationRepository notificationRepository;
 	private final NoticeReadRepository noticeReadRepository;
 	private final ObjectProvider<StudyGroupService> studyGroupServiceProvider;
 	private final NotificationSettingRepository notificationSettingRepository;
@@ -180,7 +178,6 @@ public class StudyGroupService {
 		bookmarkedStudyGroupRepository.deleteAllByStudyGroup(group);
 		rankingRepository.deleteAllByStudyGroup(group);
 		notificationSettingRepository.deleteAllByStudyGroup(group);
-		notificationRepository.deleteAllByStudyGroup(group);
 		noticeCommentRepository.deleteAllByStudyGroup(group);
 		noticeReadRepository.deleteAllByStudyGroup(group);
 		noticeRepository.deleteAllByStudyGroup(group);
@@ -246,8 +243,8 @@ public class StudyGroupService {
 			.ifPresent(bookmarkedStudyGroupRepository::delete);
 		rankingRepository.deleteByMember(groupMember);
 		notificationSettingRepository.deleteByMember(groupMember);
+		solutionRepository.deleteAllByStudyGroupAndUser(studyGroup, user);
 		noticeReadRepository.deleteAllByStudyGroupAndUser(studyGroup, user);
-		notificationRepository.deleteAllByUserAndStudyGroup(user, studyGroup);
 		groupMemberRepository.delete(groupMember);
 		log.info("success to delete group member");
 	}
@@ -386,8 +383,8 @@ public class StudyGroupService {
 			LocalDate joinDate = groupMember.getJoinDate();
 
 			Long correctSolution = solutionRepository.countDistinctCorrectSolutionsByUserAndGroup(
-				groupMember.getUser(), id, BOJResultConstants.CORRECT);
-			Long problems = problemRepository.countProblemsByGroupId(id);
+				groupMember.getUser(), group, BOJResultConstants.CORRECT);
+			Long problems = problemRepository.countProblemsByGroup(group);
 			String achivement;
 			if (correctSolution == 0) {
 				achivement = "0%";
@@ -621,7 +618,7 @@ public class StudyGroupService {
 			GroupMember member = groupMemberRepository.findByUserAndStudyGroup(user, group)
 				.orElseThrow(
 					() -> new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 스터디 그룹입니다."));
-			return GetGroupSettingResponse.toDto(group, member, member.getIsVisible(), isBookmarked(user, group));
+			return GetGroupSettingResponse.toDto(group, member, isBookmarked(user, group), member.getIsVisible());
 		}).toList();
 		log.info("success to get my study groups settings");
 		return response;

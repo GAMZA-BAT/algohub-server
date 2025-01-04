@@ -47,9 +47,9 @@ public class NotificationSettingService {
 
 		setting.editSettings(request.allNotifications(),
 			request.newProblem(),
+			request.newSolution(),
 			request.newComment(),
 			request.newMember(),
-			request.newSolution(),
 			request.deadlineReached()
 		);
 

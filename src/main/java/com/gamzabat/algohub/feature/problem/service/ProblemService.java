@@ -137,7 +137,7 @@ public class ProblemService {
 		Page<Problem> problems = problemRepository.findAllInProgressProblem(user, group, unsolvedOnly,
 			pageable);
 
-		return problems.map(problem -> getGetProblemResponse(user, groupId, problem, unsolvedOnly));
+		return problems.map(problem -> getGetProblemResponse(user, group, problem, unsolvedOnly));
 	}
 
 	@Transactional(readOnly = true)
@@ -147,19 +147,19 @@ public class ProblemService {
 			throw new ProblemValidationException(HttpStatus.FORBIDDEN.value(), "문제를 조회할 권한이 없습니다.");
 		}
 
-		Page<Problem> problems = problemRepository.findAllByStudyGroupAndEndDateBefore(group, LocalDate.now(),
-			pageable);
+		Page<Problem> problems = problemRepository.findAllExpiredProblem(group, pageable);
 
-		return problems.map(problem -> getGetProblemResponse(user, groupId, problem, false));
+		return problems.map(problem -> getGetProblemResponse(user, group, problem, false));
 	}
 
-	private GetProblemResponse getGetProblemResponse(User user, Long groupId, Problem problem, boolean unsolvedOnly) {
+	private GetProblemResponse getGetProblemResponse(User user, StudyGroup group, Problem problem,
+		boolean unsolvedOnly) {
 		boolean solved = unsolvedOnly ? false : solutionRepository.existsByUserAndProblemAndResult(user, problem,
 			BOJResultConstants.CORRECT);
 		Integer correctCount = solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(problem.getId(),
 			BOJResultConstants.CORRECT);
-		Integer submitMemberCount = solutionRepository.countDistinctUsersByProblemId(problem.getId());
-		Integer groupMemberCount = groupMemberRepository.countMembersByStudyGroupId(groupId);
+		Integer submitMemberCount = solutionRepository.countDistinctUsersByProblem(problem);
+		Integer groupMemberCount = groupMemberRepository.countMembersByStudyGroup(group);
 		Integer accuracy = calculateAccuracy(submitMemberCount, correctCount);
 
 		return new GetProblemResponse(
@@ -185,6 +185,7 @@ public class ProblemService {
 				"문제 삭제 권한이 없습니다. 방장, 부방장일 경우에만 삭제가 가능합니다.");
 		}
 
+		solutionRepository.deleteAllByProblem(problem);
 		problemRepository.delete(problem);
 		log.info("success to delete problem");
 	}
@@ -202,8 +203,8 @@ public class ProblemService {
 		return problems.stream().map(problem -> {
 			Integer correctCount = solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(problem.getId(),
 				BOJResultConstants.CORRECT);
-			Integer submitMemberCount = solutionRepository.countDistinctUsersByProblemId(problem.getId());
-			Integer groupMemberCount = groupMemberRepository.countMembersByStudyGroupId(groupId);
+			Integer submitMemberCount = solutionRepository.countDistinctUsersByProblem(problem);
+			Integer groupMemberCount = groupMemberRepository.countMembersByStudyGroup(group);
 			Integer accuracy = calculateAccuracy(submitMemberCount, correctCount);
 
 			return new GetProblemResponse(
@@ -232,8 +233,7 @@ public class ProblemService {
 				"예정 문제를 조회할 권한이 없습니다. : 그룹의 방장과 부방장만 볼 수 있습니다.");
 		}
 
-		Page<Problem> problems = problemRepository.findAllByStudyGroupAndStartDateAfter(group,
-			LocalDate.now(), pageable);
+		Page<Problem> problems = problemRepository.findAllQueuedProblem(group, pageable);
 		return problems
 			.map(problem -> {
 				String title = problem.getTitle();
@@ -244,7 +244,7 @@ public class ProblemService {
 				Integer level = problem.getLevel();
 				boolean solved = false;
 				Integer submitMemberCount = 0;
-				Integer groupMemberCount = groupMemberRepository.countMembersByStudyGroupId(groupId);
+				Integer groupMemberCount = groupMemberRepository.countMembersByStudyGroup(group);
 				Integer accuracy = 0;
 
 				return new GetProblemResponse(title, problemId, link, startDate, endDate, level, solved,
@@ -264,9 +264,9 @@ public class ProblemService {
 			BOJResultConstants.CORRECT);
 		Integer correctCount = solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(problem.getId(),
 			BOJResultConstants.CORRECT);
-		Integer submitMemberCount = solutionRepository.countDistinctUsersByProblemId(problem.getId());
+		Integer submitMemberCount = solutionRepository.countDistinctUsersByProblem(problem);
 		Integer groupMemberCount =
-			groupMemberRepository.countMembersByStudyGroupId(problem.getStudyGroup().getId());
+			groupMemberRepository.countMembersByStudyGroup(problem.getStudyGroup());
 		Integer accuracy = calculateAccuracy(submitMemberCount, correctCount);
 
 		GetProblemResponse response = new GetProblemResponse(
@@ -281,7 +281,7 @@ public class ProblemService {
 		return response;
 	}
 
-	@Scheduled(cron = "0 0 0 * * *")
+	@Scheduled(cron = "0 0 0 * * ?", zone = "Asia/Seoul")
 	public void dailyProblemScheduler() {
 		LocalDate now = LocalDate.now();
 		notifyProblemStartsToday(now);
@@ -381,9 +381,5 @@ public class ProblemService {
 		Double tempSubmitMemberCount = submitMemberCount.doubleValue();
 		Double tempAccuracy = ((tempCorrectCount / tempSubmitMemberCount) * 100);
 		return tempAccuracy.intValue();
-	}
-
-	private Boolean isInProgress(Problem problem) {
-		return problem.getEndDate() != null && !LocalDate.now().isAfter(problem.getEndDate());
 	}
 }

@@ -67,6 +67,7 @@ public class CustomSolutionRepositoryImpl implements CustomSolutionRepository {
 			.join(solution.problem, problem).fetchJoin()
 			.join(problem.studyGroup, studyGroup).fetchJoin()
 			.where(solution.problem.studyGroup.eq(group)
+				.and(solution.deletedAt.isNull())
 				.and(solution.user.eq(user)))
 			.orderBy(solution.solvedDateTime.desc());
 
@@ -83,7 +84,8 @@ public class CustomSolutionRepositoryImpl implements CustomSolutionRepository {
 		String language,
 		String result, ProgressCategory category, Pageable pageable) {
 		JPAQuery<Solution> query = queryFactory.selectFrom(solution)
-			.where(solution.user.eq(user))
+			.where(solution.user.eq(user)
+				.and(solution.deletedAt.isNull()))
 			.orderBy(solution.solvedDateTime.desc());
 
 		addMySolutionFilters(problemNumber, language, result, category, query);
