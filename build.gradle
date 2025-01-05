@@ -74,4 +74,5 @@ tasks.named('test') {
 
 test {
     systemProperty 'spring.profiles.active', 'local'
+    systemProperty 'user.timezone', 'Asia/Seoul'
 }
