@@ -5,6 +5,8 @@ import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Field;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +39,7 @@ import com.gamzabat.algohub.common.jwt.dto.JwtDTO;
 import com.gamzabat.algohub.common.redis.RedisService;
 import com.gamzabat.algohub.enums.ImageType;
 import com.gamzabat.algohub.enums.Role;
+import com.gamzabat.algohub.exception.JwtRequestException;
 import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundUserException;
 import com.gamzabat.algohub.feature.image.service.ImageService;
@@ -256,6 +259,20 @@ class UserServiceTest {
 		userService.logout(request);
 		// then
 		verify(redisService, times(1)).setValues(eq(token), eq("logout"), eq(Duration.ofMillis(6000L)));
+	}
+
+	@Test
+	@DisplayName("로그아웃 실패 : 비어있는 토큰")
+	void logoutFailed() {
+		// given
+		HttpServletRequest request = mock(HttpServletRequest.class);
+		when(tokenProvider.resolveToken(request)).thenReturn(null);
+		// when, then
+		assertThatThrownBy(() -> userService.logout(request))
+			.isInstanceOf(JwtRequestException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
+			.hasFieldOrPropertyWithValue("error", "BAD_REQUEST")
+			.hasFieldOrPropertyWithValue("messages", new ArrayList<>(List.of("토큰이 비어있습니다.")));
 	}
 
 	@Test

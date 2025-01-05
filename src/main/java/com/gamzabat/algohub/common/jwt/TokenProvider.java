@@ -161,8 +161,7 @@ public class TokenProvider {
 		String token = request.getHeader("Authorization");
 		if (StringUtils.hasValue(token) && token.startsWith("Bearer"))
 			return token.substring(7);
-
-		throw new JwtRequestException(HttpStatus.BAD_REQUEST.value(), "BAD_REQUEST", "유효한 형태의 토큰이 존재하지 않습니다.");
+		return null;
 	}
 
 	private Claims getClaims(String expiredToken) {
