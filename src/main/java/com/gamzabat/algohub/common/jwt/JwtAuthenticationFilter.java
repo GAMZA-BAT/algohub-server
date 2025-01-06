@@ -3,6 +3,7 @@ package com.gamzabat.algohub.common.jwt;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -34,10 +35,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	@Override
 	protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
 		String path = request.getRequestURI();
-		if (path.startsWith("/api/users/") && request.getMethod().equals("GET"))
-			return !path.equals("/api/users/me");
+		if (excludedPaths.stream().anyMatch(path::startsWith))
+			return true;
 
-		return excludedPaths.stream().anyMatch(path::startsWith);
+		return isOtherUserInfoEndpoint(path);
+	}
+
+	private static boolean isOtherUserInfoEndpoint(String path) {
+		Pattern infoPattern = Pattern.compile("^/api/users/(?!me$)[^/]+$");
+		Pattern groupsPattern = Pattern.compile("^/api/users/(?!me)[^/]+/groups$");
+		return infoPattern.matcher(path).matches() || groupsPattern.matcher(path).matches();
 	}
 
 	@Override
