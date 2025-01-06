@@ -21,12 +21,22 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	private final TokenProvider tokenProvider;
-	private final List<String> excludedPaths = Arrays.asList("/api/auth/sign-in", "/api/auth/sign-up",
-		"/api/auth/reissue-token");
+	private final List<String> excludedPaths = Arrays.asList(
+		"/swagger-ui",
+		"/v3/api-docs",
+		"/api/auth/sign-in",
+		"/api/auth/sign-up",
+		"/api/auth/reissue-token",
+		"/api/users/check-email",
+		"/api/users/check-nickname",
+		"/api/users/check-baekjoon-nickname");
 
 	@Override
 	protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
 		String path = request.getRequestURI();
+		if (path.startsWith("/api/users/") && request.getMethod().equals("GET"))
+			return !path.equals("/api/users/me");
+
 		return excludedPaths.stream().anyMatch(path::startsWith);
 	}
 
