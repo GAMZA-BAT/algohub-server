@@ -1,0 +1,18 @@
+<included>
+    <appender name="ASYNC_AWS_LOGS" class="ca.pjer.logback.AwsLogsAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+        <layout>
+            <pattern>%d{yyyyMMdd'T'HHmmss} %thread %level %logger{15} %msg%n</pattern>
+        </layout>
+
+        <logGroupName>algohub-prod</logGroupName>
+        <logStreamUuidPrefix>algohub-server-</logStreamUuidPrefix>
+        <logRegion>ap-northeast-2</logRegion>
+        <maxBatchLogEvents>50</maxBatchLogEvents>
+        <maxFlushTimeMillis>30000</maxFlushTimeMillis>
+        <maxBlockTimeMillis>5000</maxBlockTimeMillis>
+        <retentionTimeDays>60</retentionTimeDays>
+    </appender>
+</included>
