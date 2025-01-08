@@ -67,9 +67,8 @@ public class UserService {
 	@Transactional
 	public void register(RegisterRequest request, MultipartFile profileImage) {
 		checkEmailDuplication(request.email());
-		if (!isValidEmailForm(request.email()))
-			throw new CheckEmailFormException(HttpStatus.BAD_REQUEST.value(), "이메일 형식이 아닙니다");
 		checkNickname(request.nickname());
+		checkEmailForm(request.email());
 		checkBjNickname(request.bjNickname());
 
 		String encodedPassword = passwordEncoder.encode(request.password());
@@ -261,7 +260,12 @@ public class UserService {
 		return response;
 	}
 
-	private static boolean isValidEmailForm(String email) {
+	private void checkEmailForm(String email) {
+		if (!isValidEmailForm(email))
+			throw new CheckEmailFormException(HttpStatus.BAD_REQUEST.value(), "이메일 형식이 아닙니다");
+	}
+
+	private boolean isValidEmailForm(String email) {
 
 		String EMAIL_REGEX = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
 		Pattern EMAIL_PATTERN = Pattern.compile(EMAIL_REGEX);
