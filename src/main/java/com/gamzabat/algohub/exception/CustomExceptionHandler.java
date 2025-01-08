@@ -25,6 +25,7 @@ import com.gamzabat.algohub.feature.solution.exception.CannotFoundSolutionExcept
 import com.gamzabat.algohub.feature.solution.exception.SolutionValidationException;
 import com.gamzabat.algohub.feature.user.exception.BOJServerErrorException;
 import com.gamzabat.algohub.feature.user.exception.CheckBjNicknameValidationException;
+import com.gamzabat.algohub.feature.user.exception.CheckEmailFormException;
 import com.gamzabat.algohub.feature.user.exception.CheckNicknameValidationException;
 import com.gamzabat.algohub.feature.user.exception.UncorrectedPasswordException;
 
@@ -168,5 +169,11 @@ public class CustomExceptionHandler {
 	protected ResponseEntity<ErrorResponse> handler(AwsS3Exception e) {
 		return ResponseEntity.internalServerError()
 			.body(new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getError(), null));
+	}
+
+	@ExceptionHandler(CheckEmailFormException.class)
+	protected ResponseEntity<ErrorResponse> handler(CheckEmailFormException e) {
+		return ResponseEntity.internalServerError()
+			.body(new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getErrors(), null));
 	}
 }

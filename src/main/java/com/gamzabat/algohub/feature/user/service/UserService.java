@@ -66,6 +66,10 @@ public class UserService {
 	@Transactional
 	public void register(RegisterRequest request, MultipartFile profileImage) {
 		checkEmailDuplication(request.email());
+		if (!isValidEmailForm(request.email()))
+			throw new UserValidationException("이메일 형식이 아닙니다");
+		checkNickname(request.nickname());
+
 		String encodedPassword = passwordEncoder.encode(request.password());
 
 		User user = userRepository.save(User.builder()
@@ -254,4 +258,16 @@ public class UserService {
 		log.info("success to reissue tokens");
 		return response;
 	}
+
+	private static boolean isValidEmailForm(String email) {
+
+		String EMAIL_REGEX = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
+		Pattern EMAIL_PATTERN = Pattern.compile(EMAIL_REGEX);
+
+		if (email == null || email.isEmpty()) {
+			return false;
+		}
+		return EMAIL_PATTERN.matcher(email).matches();
+	}
+
 }
