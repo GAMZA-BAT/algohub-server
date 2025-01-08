@@ -173,7 +173,7 @@ public class CustomExceptionHandler {
 
 	@ExceptionHandler(CheckEmailFormException.class)
 	protected ResponseEntity<ErrorResponse> handler(CheckEmailFormException e) {
-		return ResponseEntity.internalServerError()
-			.body(new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getErrors(), null));
+		return ResponseEntity.status(e.getCode())
+			.body(new ErrorResponse(e.getCode(), e.getErrors(), null));
 	}
 }

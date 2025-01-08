@@ -43,6 +43,7 @@ import com.gamzabat.algohub.feature.user.dto.UpdateUserRequest;
 import com.gamzabat.algohub.feature.user.dto.UserInfoResponse;
 import com.gamzabat.algohub.feature.user.exception.BOJServerErrorException;
 import com.gamzabat.algohub.feature.user.exception.CheckBjNicknameValidationException;
+import com.gamzabat.algohub.feature.user.exception.CheckEmailFormException;
 import com.gamzabat.algohub.feature.user.exception.CheckNicknameValidationException;
 import com.gamzabat.algohub.feature.user.exception.UncorrectedPasswordException;
 import com.gamzabat.algohub.feature.user.repository.UserRepository;
@@ -67,8 +68,9 @@ public class UserService {
 	public void register(RegisterRequest request, MultipartFile profileImage) {
 		checkEmailDuplication(request.email());
 		if (!isValidEmailForm(request.email()))
-			throw new UserValidationException("이메일 형식이 아닙니다");
+			throw new CheckEmailFormException(HttpStatus.BAD_REQUEST.value(), "이메일 형식이 아닙니다");
 		checkNickname(request.nickname());
+		checkBjNickname(request.bjNickname());
 
 		String encodedPassword = passwordEncoder.encode(request.password());
 
