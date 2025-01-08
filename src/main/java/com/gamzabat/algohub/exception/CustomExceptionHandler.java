@@ -38,6 +38,7 @@ public class CustomExceptionHandler {
 
 	@ExceptionHandler(UserValidationException.class)
 	protected ResponseEntity<ErrorResponse> handler(UserValidationException e) {
+
 		return ResponseEntity.badRequest().body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), e.getErrors(), null));
 	}
 
