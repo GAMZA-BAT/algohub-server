@@ -29,7 +29,6 @@ import com.gamzabat.algohub.common.jwt.dto.ReissueTokenRequest;
 import com.gamzabat.algohub.common.redis.RedisService;
 import com.gamzabat.algohub.enums.ImageType;
 import com.gamzabat.algohub.enums.Role;
-import com.gamzabat.algohub.exception.JwtRequestException;
 import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundUserException;
 import com.gamzabat.algohub.feature.image.service.ImageService;
@@ -168,9 +167,6 @@ public class UserService {
 	@Transactional
 	public void logout(HttpServletRequest request) {
 		String accessToken = tokenProvider.resolveToken(request);
-		if (accessToken == null)
-			throw new JwtRequestException(HttpStatus.BAD_REQUEST.value(), "BAD_REQUEST", "토큰이 비어있습니다.");
-
 		long tokenExpiration = tokenProvider.getAccessTokenExpirationTime();
 		redisService.setValues(accessToken, "logout", Duration.ofMillis(tokenExpiration));
 		log.info("success to logout");

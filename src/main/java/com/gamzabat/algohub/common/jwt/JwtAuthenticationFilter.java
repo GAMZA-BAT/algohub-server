@@ -3,6 +3,7 @@ package com.gamzabat.algohub.common.jwt;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,22 +22,34 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	private final TokenProvider tokenProvider;
-	private final List<String> excludedPaths = Arrays.asList("/api/auth/sign-in", "/api/auth/sign-up",
-		"/api/auth/reissue-token");
+	private final List<String> excludedPaths = Arrays.asList(
+		"/swagger-ui",
+		"/v3/api-docs",
+		"/api/auth/sign-in",
+		"/api/auth/sign-up",
+		"/api/auth/reissue-token",
+		"/api/users/check-email",
+		"/api/users/check-nickname",
+		"/api/users/check-baekjoon-nickname");
 
 	@Override
 	protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
 		String path = request.getRequestURI();
-		return excludedPaths.stream().anyMatch(path::startsWith);
+		if (excludedPaths.stream().anyMatch(path::startsWith))
+			return true;
+
+		return isOtherUserInfoEndpoint(path);
+	}
+
+	private static boolean isOtherUserInfoEndpoint(String path) {
+		Pattern infoPattern = Pattern.compile("^/api/users/(?!me$)[^/]+$");
+		Pattern groupsPattern = Pattern.compile("^/api/users/(?!me)[^/]+/groups$");
+		return infoPattern.matcher(path).matches() || groupsPattern.matcher(path).matches();
 	}
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
 		FilterChain filterChain) throws ServletException, IOException {
-		if (shouldNotFilter(request)) {
-			filterChain.doFilter(request, response);
-			return;
-		}
 		try {
 			String token = tokenProvider.resolveToken(request);
 			if (token != null && tokenProvider.validateToken(token)) {
