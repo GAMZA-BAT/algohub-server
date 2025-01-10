@@ -1,13 +1,10 @@
 package com.gamzabat.algohub.auth.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class OAuthInfo {
-	@JsonProperty("access_token")
+public class OAuthAccessTokenDto {
 	private String accessToken;
 }

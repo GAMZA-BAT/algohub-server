@@ -77,4 +77,8 @@ public class User {
 	public void editPassword(String password) {
 		this.password = password;
 	}
+
+	public void editGithubName(String githubName) {
+		this.githubName = githubName;
+	}
 }
