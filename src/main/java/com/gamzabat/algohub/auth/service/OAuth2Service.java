@@ -63,20 +63,24 @@ public class OAuth2Service extends DefaultOAuth2UserService {
 	private void syncWithUser(GithubUserDto githubUser) {
 		Optional<User> optionalUser = userRepository.findByEmail(githubUser.getEmail());
 		if (optionalUser.isEmpty()) {
-			User newUser = userRepository.save(User.builder()
-				.email(githubUser.getEmail())
-				.password(null)
-				.nickname(null)
-				.bjNickname(null)
-				.role(Role.USER)
-				.build());
-			newUser.editNickname(createRandomNickname(githubUser.getLogin(), newUser.getId()));
-			newUser.editGithubName(githubUser.getLogin());
+			register(githubUser);
 		} else {
 			User user = optionalUser.get();
 			if (user.getGithubName() == null || user.getGithubName().isEmpty())
 				user.editGithubName(githubUser.getLogin());
 		}
+	}
+
+	private void register(GithubUserDto githubUser) {
+		User newUser = userRepository.save(User.builder()
+			.email(githubUser.getEmail())
+			.password(null)
+			.nickname(null)
+			.bjNickname(null)
+			.role(Role.USER)
+			.build());
+		newUser.editNickname(createRandomNickname(githubUser.getLogin(), newUser.getId()));
+		newUser.editGithubName(githubUser.getLogin());
 	}
 
 	private String createRandomNickname(String login, Long id) {
@@ -133,7 +137,7 @@ public class OAuth2Service extends DefaultOAuth2UserService {
 	private Authentication createGithubAuthentication(GithubUserDto githubUser) {
 		OAuth2User oAuth2User = new DefaultOAuth2User(
 			Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")),
-			Map.of("email", githubUser.getEmail(), "name", githubUser.getLogin()),
+			Map.of("email", githubUser.getEmail()),
 			"email"
 		);
 
