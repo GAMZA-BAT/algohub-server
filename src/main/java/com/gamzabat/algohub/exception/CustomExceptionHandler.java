@@ -27,6 +27,7 @@ import com.gamzabat.algohub.feature.user.exception.BOJServerErrorException;
 import com.gamzabat.algohub.feature.user.exception.CheckBjNicknameValidationException;
 import com.gamzabat.algohub.feature.user.exception.CheckEmailFormException;
 import com.gamzabat.algohub.feature.user.exception.CheckNicknameValidationException;
+import com.gamzabat.algohub.feature.user.exception.CheckPasswordFormException;
 import com.gamzabat.algohub.feature.user.exception.UncorrectedPasswordException;
 
 @ControllerAdvice
@@ -173,6 +174,12 @@ public class CustomExceptionHandler {
 
 	@ExceptionHandler(CheckEmailFormException.class)
 	protected ResponseEntity<ErrorResponse> handler(CheckEmailFormException e) {
+		return ResponseEntity.status(e.getCode())
+			.body(new ErrorResponse(e.getCode(), e.getErrors(), null));
+	}
+
+	@ExceptionHandler(CheckPasswordFormException.class)
+	protected ResponseEntity<ErrorResponse> handler(CheckPasswordFormException e) {
 		return ResponseEntity.status(e.getCode())
 			.body(new ErrorResponse(e.getCode(), e.getErrors(), null));
 	}

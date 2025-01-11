@@ -45,6 +45,7 @@ import com.gamzabat.algohub.feature.user.exception.BOJServerErrorException;
 import com.gamzabat.algohub.feature.user.exception.CheckBjNicknameValidationException;
 import com.gamzabat.algohub.feature.user.exception.CheckEmailFormException;
 import com.gamzabat.algohub.feature.user.exception.CheckNicknameValidationException;
+import com.gamzabat.algohub.feature.user.exception.CheckPasswordFormException;
 import com.gamzabat.algohub.feature.user.exception.UncorrectedPasswordException;
 import com.gamzabat.algohub.feature.user.repository.UserRepository;
 
@@ -70,6 +71,7 @@ public class UserService {
 		checkNickname(request.nickname());
 		checkEmailForm(request.email());
 		checkBjNickname(request.bjNickname());
+		checkPasswordForm(request.password());
 
 		String encodedPassword = passwordEncoder.encode(request.password());
 
@@ -274,6 +276,22 @@ public class UserService {
 			return false;
 		}
 		return EMAIL_PATTERN.matcher(email).matches();
+	}
+
+	private void checkPasswordForm(String password) {
+		if (!isValidPasswordForm(password))
+			throw new CheckPasswordFormException(HttpStatus.BAD_REQUEST.value(), "올바르지 않은 비밀번호 형식입니다");
+	}
+
+	private boolean isValidPasswordForm(String password) {
+
+		String passwordPattern = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[~!@#$%^&*])[A-Za-z\\d~!@#$%^&*]{8,15}$";
+
+		if (password == null || password.isEmpty()) {
+			return false;
+		}
+		return password.matches(passwordPattern);
+
 	}
 
 }
