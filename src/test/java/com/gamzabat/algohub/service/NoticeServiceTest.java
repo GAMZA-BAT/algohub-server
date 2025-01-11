@@ -129,7 +129,7 @@ public class NoticeServiceTest {
 		assertThat(result.getAuthor()).isEqualTo(user2);
 		assertThat(result.getContent()).isEqualTo("content");
 		assertThat(result.getTitle()).isEqualTo("title");
-		assertThat(result.getCategory()).isEqualTo("category");
+		assertThat(result.getCategory()).isEqualTo("category2");
 		assertThat(result.getStudyGroup()).isEqualTo(studyGroup);
 
 	}
