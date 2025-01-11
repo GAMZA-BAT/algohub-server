@@ -431,11 +431,11 @@ public class StudyGroupService {
 	public GroupCodeResponse getGroupCode(User user, Long groupId) {
 		StudyGroup studyGroup = groupRepository.findById(groupId)
 			.orElseThrow(() -> new CannotFoundGroupException("그룹을 찾지 못했습니다."));
-		GroupMember owner = groupMemberRepository.findByUserAndStudyGroup(user, studyGroup)
+		GroupMember member = groupMemberRepository.findByUserAndStudyGroup(user, studyGroup)
 			.orElseThrow(
 				() -> new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(), "참여하지 않은 그룹 입니다."));
 
-		if (RoleOfGroupMember.isOwner(owner))
+		if (RoleOfGroupMember.isOwner(member) || RoleOfGroupMember.isAdmin(member))
 			return new GroupCodeResponse(studyGroup.getGroupCode());
 		else
 			throw new UserValidationException("초대 코드를 조회할 권한이 없습니다.");
