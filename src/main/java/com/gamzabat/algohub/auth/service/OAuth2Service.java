@@ -136,7 +136,7 @@ public class OAuth2Service extends DefaultOAuth2UserService {
 
 	private Authentication createGithubAuthentication(GithubUserDto githubUser) {
 		OAuth2User oAuth2User = new DefaultOAuth2User(
-			Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")),
+			Collections.singleton(new SimpleGrantedAuthority(Role.USER.toString())),
 			Map.of("email", githubUser.getEmail()),
 			"email"
 		);
