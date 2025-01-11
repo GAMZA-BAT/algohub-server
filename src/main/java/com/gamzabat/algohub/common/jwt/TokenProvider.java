@@ -230,6 +230,7 @@ public class TokenProvider {
 		return redisService.getValues(token).equals("logout");
 	}
 
+	@Transactional
 	@Scheduled(cron = "0 0 0 * * *")
 	public void clearExpiredRefreshTokens() {
 		refreshTokenRepository.deleteExpiredRefreshTokens();
