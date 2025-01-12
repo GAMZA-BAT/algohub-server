@@ -1,7 +1,6 @@
 spring:
   config:
     import:
-      - "aws.yml"
       - "jwt.yml"
       - "webhook.yml"
   profiles:
@@ -65,6 +64,7 @@ spring:
       on-profile: dev
     import:
       - "mysql-dev.yml"
+      - "aws-dev.yml"
   datasource:
     url: jdbc:mysql://${mysql_endpoint}:3306/algohub_${DEV_NAME}?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
   jpa:
@@ -72,6 +72,10 @@ spring:
     properties:
       hibernate:
         format_sql: true
+cloud:
+  aws:
+    s3:
+      path-style-access: true
 ---
 spring:
   config:
@@ -79,6 +83,7 @@ spring:
       on-profile: prod
     import:
       - "mysql-prod.yml"
+      - "aws-prod.yml"
   datasource:
     url: jdbc:mysql://${mysql_endpoint}:3306/algohub?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
   jpa:
@@ -86,3 +91,4 @@ spring:
     properties:
       hibernate:
         format_sql: false
+

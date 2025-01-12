@@ -20,7 +20,8 @@ download_yml() {
   curl -Ss -f -X GET "${webdav_url}/${file_name}"  --user "${CREDENTIAL_NAME}:${CREDENTIAL_PW}" -o "${resources_path}/${file_name}" &
 }
 
-download_yml "aws.yml"
+download_yml "aws-dev.yml"
+download_yml "aws-prod.yml"
 download_yml "jwt.yml"
 download_yml "mysql-dev.yml"
 download_yml "mysql-prod.yml"
