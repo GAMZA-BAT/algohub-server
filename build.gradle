@@ -68,11 +68,32 @@ clean {
     delete file('src/main/generated')
 }
 
+tasks.register("preScript", Exec) {
+    environment "DEV_NAME", System.getenv("DEV_NAME")
+    environment "CREDENTIAL_NAME", System.getenv("CREDENTIAL_NAME")
+    environment "CREDENTIAL_PW", System.getenv("CREDENTIAL_PW")
+    commandLine "sh", "prepare-build.sh"
+}
+
+tasks.named("processResources") {
+    dependsOn("preScript")
+}
+
+tasks.named("bootRun"){
+    dependsOn("preScript")
+}
+
+tasks.named("build") {
+    dependsOn("preScript")
+
+}
+
 tasks.named('test') {
     useJUnitPlatform()
+    dependsOn("preScript")
 }
 
 test {
-    systemProperty 'spring.profiles.active', 'local'
+    systemProperty 'spring.profiles.active', 'dev'
     systemProperty 'user.timezone', 'Asia/Seoul'
 }
