@@ -8,6 +8,8 @@ on:
 
 permissions:
   contents: read
+  checks: write
+  pull-requests: write
 
 
 jobs:
@@ -36,4 +38,10 @@ jobs:
       - name: Test with Gradle
         uses: gradle/gradle-build-action@v2.6.0
         with:
-          arguments: -Dspring.profiles.active=dev test
+          arguments: -Dspring.profiles.active=dev --info test
+
+      - name: Publish Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: ${{ always() }}
+        with:
+          files: build/test-results/**/*.xml
