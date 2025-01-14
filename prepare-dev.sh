@@ -2,7 +2,7 @@
 
 set -e
 
-api_endpoint="https://api.gamzabat.store/create-database"
+api_endpoint="https://api.gamzabat.store"
 is_empty_or_null() {
   [ -z "$1" ] || [ "$1" = "null" ]
 }
@@ -13,6 +13,8 @@ if is_empty_or_null "$DEV_NAME"  || is_empty_or_null "$CREDENTIAL_PW"; then
 fi
 
 DB_NAME="algohub_${DEV_NAME}"
+BUCKET_NAME="algohub-${DEV_NAME}"
 
-curl -Ss -f -X POST "${api_endpoint}?dbName=${DB_NAME}&credential=${CREDENTIAL_PW}"
+curl -Ss -f -X POST "${api_endpoint}/create-database?dbName=${DB_NAME}&credential=${CREDENTIAL_PW}"
+curl -Ss -f -X POST "${api_endpoint}/create-bucket?bucketName=${BUCKET_NAME}&credential=${CREDENTIAL_PW}"
 
