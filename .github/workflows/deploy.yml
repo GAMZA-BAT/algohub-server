@@ -24,7 +24,6 @@ jobs:
 
       - name: CREDENTIAL_NAME, CREDENTIAL_PW
         run: |
-          echo "DEV_NAME=PRODUCTION_DO_NOT_USE" >> $GITHUB_ENV
           echo "CREDENTIAL_NAME=${{ secrets.CREDENTIAL_NAME }}" >> $GITHUB_ENV 
           echo "CREDENTIAL_PW=${{ secrets.CREDENTIAL_PW }}" >> $GITHUB_ENV 
 
