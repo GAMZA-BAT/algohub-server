@@ -77,11 +77,11 @@ public class OAuth2Service {
 			.bjNickname(null)
 			.role(Role.USER)
 			.build());
-		newUser.editNickname(createRandomNickname(githubUser.getLogin(), newUser.getId()));
+		newUser.editNickname(createTemporaryNickname(githubUser.getLogin(), newUser.getId()));
 		newUser.editGithubName(githubUser.getLogin());
 	}
 
-	private String createRandomNickname(String login, Long id) {
+	private String createTemporaryNickname(String login, Long id) {
 		return login + "@" + id;
 	}
 
