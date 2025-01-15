@@ -63,10 +63,10 @@ public class OAuth2Service {
 		Optional<User> optionalUser = userRepository.findByEmail(githubUser.getEmail());
 		if (optionalUser.isEmpty()) {
 			register(githubUser);
-		} else {
-			User user = optionalUser.get();
-			user.editGithubName(githubUser.getLogin());
+			return;
 		}
+		User user = optionalUser.get();
+		user.editGithubName(githubUser.getLogin());
 	}
 
 	private void register(GithubUserDto githubUser) {
