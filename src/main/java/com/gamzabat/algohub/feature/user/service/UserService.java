@@ -269,7 +269,7 @@ public class UserService {
 
 	private boolean isValidEmailForm(String email) {
 
-		String EMAIL_REGEX = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
+		String EMAIL_REGEX = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"; // 문자 사이에 @를 포함하고 최상위 도메인은 2글자 이상이어야 함
 		Pattern EMAIL_PATTERN = Pattern.compile(EMAIL_REGEX);
 
 		if (email == null || email.isEmpty()) {
@@ -285,7 +285,7 @@ public class UserService {
 
 	private boolean isValidPasswordForm(String password) {
 
-		String passwordPattern = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[~!@#$%^&*])[A-Za-z\\d~!@#$%^&*]{8,15}$";
+		String passwordPattern = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[~!@#$%^&*])[A-Za-z\\d~!@#$%^&*]{8,15}$"; // 영문,숫자,특수문자 만으로 이루어져야 하며 모두 포함하여야 하고 8~15글자 사이여야 함
 
 		if (password == null || password.isEmpty()) {
 			return false;
