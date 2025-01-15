@@ -92,8 +92,10 @@ public class OAuth2Service {
 			createAccessTokenRequest(code),
 			OAuthAccessTokenDto.class);
 
-		if (response.getBody() == null)
+		if (response.getBody() == null) {
+			log.error("failed to request GitHub access token : GitHub API response body is null.");
 			throw new GithubApiException("Github access token 응답에 실패했습니다.");
+		}
 
 		return response.getBody().getAccessToken();
 	}
@@ -107,6 +109,7 @@ public class OAuth2Service {
 
 		GithubUserDto user = response.getBody();
 		if (user == null) {
+			log.error("failed to request GitHub user info : GitHub API response body is null.");
 			throw new GithubApiException("Github 사용자 정보를 가져오는데 실패했습니다.");
 		}
 
@@ -126,8 +129,10 @@ public class OAuth2Service {
 			}
 		);
 
-		if (emails.getBody() == null)
+		if (emails.getBody() == null) {
+			log.error("failed to request GitHub user email : GitHub API response body is null.");
 			throw new GithubApiException("Github 유저의 이메일을 가져오는데 실패했습니다.");
+		}
 
 		return emails.getBody().getFirst().getEmail();
 	}
