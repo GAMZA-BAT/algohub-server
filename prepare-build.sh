@@ -26,5 +26,6 @@ download_yml "jwt.yml"
 download_yml "mysql-dev.yml"
 download_yml "mysql-prod.yml"
 download_yml "webhook.yml"
+download_yml "github.yml"
 
 wait

@@ -3,6 +3,7 @@ spring:
     import:
       - "jwt.yml"
       - "webhook.yml"
+      - "github.yml"
   profiles:
     active: dev
     group:
