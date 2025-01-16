@@ -78,7 +78,7 @@ class UserServiceTest {
 	private ArgumentCaptor<User> userCaptor;
 
 	private final String email = "test@email.com";
-	private final String password = "password";
+	private final String password = "password1!";
 	private final String nickname = "nickname";
 	private final String encoded = "encoded";
 	private final String imageUrl = "1_test@email.com_image.jpg";

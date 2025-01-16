@@ -1,0 +1,94 @@
+spring:
+  config:
+    import:
+      - "jwt.yml"
+      - "webhook.yml"
+  profiles:
+    active: dev
+    group:
+      dev:
+        - common
+      prod:
+        - common
+
+---
+spring:
+  config:
+    activate:
+      on-profile: common
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${mysql_username}
+    password: ${mysql_password}
+
+  jpa:
+    database: mysql
+    database-platform: org.hibernate.dialect.MySQLDialect
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  output:
+    ansi:
+      enabled: always
+cloud:
+  aws:
+    s3:
+      bucket: ${aws_bucket_name}
+    stack:
+      auto: false
+    region.static: ap-northeast-2
+    credentials:
+      access-key: ${aws_access_key}
+      secret-key: ${aws_secret_key}
+
+logging:
+  discord:
+    webhook-url: ${webhook_url}
+  config: classpath:logback-spring.xml
+server:
+  port: 8080
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+    import:
+      - "mysql-dev.yml"
+      - "aws-dev.yml"
+  datasource:
+    url: jdbc:mysql://${mysql_endpoint}:3306/algohub_${DEV_NAME}?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+cloud:
+  aws:
+    s3:
+      path-style-access: true
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+    import:
+      - "mysql-prod.yml"
+      - "aws-prod.yml"
+  datasource:
+    url: jdbc:mysql://${mysql_endpoint}:3306/algohub?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+

@@ -42,7 +42,9 @@ import com.gamzabat.algohub.feature.user.dto.UpdateUserRequest;
 import com.gamzabat.algohub.feature.user.dto.UserInfoResponse;
 import com.gamzabat.algohub.feature.user.exception.BOJServerErrorException;
 import com.gamzabat.algohub.feature.user.exception.CheckBjNicknameValidationException;
+import com.gamzabat.algohub.feature.user.exception.CheckEmailFormException;
 import com.gamzabat.algohub.feature.user.exception.CheckNicknameValidationException;
+import com.gamzabat.algohub.feature.user.exception.CheckPasswordFormException;
 import com.gamzabat.algohub.feature.user.exception.UncorrectedPasswordException;
 import com.gamzabat.algohub.feature.user.repository.UserRepository;
 
@@ -65,6 +67,11 @@ public class UserService {
 	@Transactional
 	public void register(RegisterRequest request, MultipartFile profileImage) {
 		checkEmailDuplication(request.email());
+		checkNickname(request.nickname());
+		checkEmailForm(request.email());
+		checkBjNickname(request.bjNickname());
+		checkPasswordForm(request.password());
+
 		String encodedPassword = passwordEncoder.encode(request.password());
 
 		User user = userRepository.save(User.builder()
@@ -250,4 +257,37 @@ public class UserService {
 		log.info("success to reissue tokens");
 		return response;
 	}
+
+	private void checkEmailForm(String email) {
+		if (!isValidEmailForm(email))
+			throw new CheckEmailFormException(HttpStatus.BAD_REQUEST.value(), "이메일 형식이 아닙니다");
+	}
+
+	private boolean isValidEmailForm(String email) {
+
+		String EMAIL_REGEX = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"; // 문자 사이에 @를 포함하고 최상위 도메인은 2글자 이상이어야 함
+		Pattern EMAIL_PATTERN = Pattern.compile(EMAIL_REGEX);
+
+		if (email == null || email.isEmpty()) {
+			return false;
+		}
+		return EMAIL_PATTERN.matcher(email).matches();
+	}
+
+	private void checkPasswordForm(String password) {
+		if (!isValidPasswordForm(password))
+			throw new CheckPasswordFormException(HttpStatus.BAD_REQUEST.value(), "올바르지 않은 비밀번호 형식입니다");
+	}
+
+	private boolean isValidPasswordForm(String password) {
+
+		String passwordPattern = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[~!@#$%^&*])[A-Za-z\\d~!@#$%^&*]{8,15}$"; // 영문,숫자,특수문자 만으로 이루어져야 하며 모두 포함하여야 하고 8~15글자 사이여야 함
+
+		if (password == null || password.isEmpty()) {
+			return false;
+		}
+		return password.matches(passwordPattern);
+
+	}
+
 }
