@@ -23,6 +23,7 @@ import com.gamzabat.algohub.feature.group.studygroup.dto.CheckSolvedProblemRespo
 import com.gamzabat.algohub.feature.group.studygroup.dto.CreateGroupRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupVisibilityRequest;
+import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupIdResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupMemberResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupSettingResponse;
@@ -60,9 +61,9 @@ public class StudyGroupController {
 
 	@PostMapping(value = "/groups/{code}/join")
 	@Operation(summary = "그룹 코드를 사용한 그룹 참여 API")
-	public ResponseEntity<Void> joinGroupWithCode(@AuthedUser User user, @PathVariable String code) {
-		studyGroupService.joinGroupWithCode(user, code);
-		return ResponseEntity.ok().build();
+	public ResponseEntity<GetGroupIdResponse> joinGroupWithCode(@AuthedUser User user, @PathVariable String code) {
+		GetGroupIdResponse groupId = studyGroupService.joinGroupWithCode(user, code);
+		return ResponseEntity.ok().body(groupId);
 	}
 
 	@GetMapping(value = "/users/me/groups")

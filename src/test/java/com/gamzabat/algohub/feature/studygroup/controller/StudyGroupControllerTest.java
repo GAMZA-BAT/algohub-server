@@ -42,6 +42,7 @@ import com.gamzabat.algohub.feature.group.studygroup.dto.CheckSolvedProblemRespo
 import com.gamzabat.algohub.feature.group.studygroup.dto.CreateGroupRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupVisibilityRequest;
+import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupIdResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupMemberResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupListsResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupResponse;
@@ -163,12 +164,14 @@ class StudyGroupControllerTest {
 	@DisplayName("그룹 코드를 사용해 그룹 참여 성공")
 	void joinGroupWithCode() throws Exception {
 		// given
-		doNothing().when(studyGroupService).joinGroupWithCode(any(User.class), anyString());
+		GetGroupIdResponse response = new GetGroupIdResponse(12321L);
+		when(studyGroupService.joinGroupWithCode(any(User.class), anyString())).thenReturn(response);
 		// when, then
 		mockMvc.perform(post("/api/groups/{code}/join", code)
 				.header("Authorization", token)
 				.contentType(MediaType.APPLICATION_JSON))
-			.andExpect(status().isOk());
+			.andExpect(status().isOk())
+			.andExpect(content().json(objectMapper.writeValueAsString(response)));
 
 		verify(studyGroupService, times(1)).joinGroupWithCode(user, code);
 	}

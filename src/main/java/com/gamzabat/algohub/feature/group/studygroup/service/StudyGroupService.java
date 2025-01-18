@@ -31,6 +31,7 @@ import com.gamzabat.algohub.feature.group.studygroup.dto.CheckSolvedProblemRespo
 import com.gamzabat.algohub.feature.group.studygroup.dto.CreateGroupRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupVisibilityRequest;
+import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupIdResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupMemberResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupSettingResponse;
@@ -125,7 +126,7 @@ public class StudyGroupService {
 	}
 
 	@Transactional
-	public void joinGroupWithCode(User user, String code) {
+	public GetGroupIdResponse joinGroupWithCode(User user, String code) {
 		StudyGroup studyGroup = groupRepository.findByGroupCode(code)
 			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다."));
 
@@ -153,8 +154,10 @@ public class StudyGroupService {
 		);
 
 		sendNewMemberNotification(studyGroup, member);
-
 		log.info("success to join study group");
+
+		return new GetGroupIdResponse(studyGroup.getId());
+
 	}
 
 	@Transactional
