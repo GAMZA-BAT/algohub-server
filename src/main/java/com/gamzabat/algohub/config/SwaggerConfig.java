@@ -1,7 +1,7 @@
 package com.gamzabat.algohub.config;
 
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -22,6 +22,9 @@ public class SwaggerConfig {
 	@Value("${server.port}")
 	private String serverPort;
 
+	@Value("${spring.profiles.active:dev}") // 기본값을 local로 설정
+	private String activeProfile;
+
 	@Bean
 	public OpenAPI openAPI() {
 		SecurityScheme scheme = new SecurityScheme()
@@ -29,13 +32,7 @@ public class SwaggerConfig {
 			.in(SecurityScheme.In.HEADER).name("Authorization");
 		SecurityRequirement requirement = new SecurityRequirement().addList("bearerAuth");
 
-		Server prodServer = new Server();
-		prodServer.setDescription("Algohub API");
-		prodServer.setUrl(ApiConstants.SERVER_HTTPS_ENDPOINT);
-
-		Server localServer = new Server();
-		localServer.setDescription("Algohub API for LOCAL");
-		localServer.setUrl("http://localhost:" + serverPort);
+		List<Server> servers = createServers();
 
 		return new OpenAPI()
 			.components(new Components().addSecuritySchemes("bearerAuth", scheme))
@@ -44,7 +41,23 @@ public class SwaggerConfig {
 				.title("AlgoHub API 명세서")
 				.description("AlgoHub API 명세서 입니다.")
 				.version("1.0.0"))
-			.servers(Arrays.asList(localServer, prodServer));
+			.servers(servers);
 
+	}
+
+	private List<Server> createServers() {
+		Server prodServer = new Server()
+			.description("Algohub API")
+			.url(ApiConstants.SERVER_HTTPS_ENDPOINT);
+
+		if ("prod".equalsIgnoreCase(activeProfile)) {
+			return Collections.singletonList(prodServer);
+		}
+
+		Server localServer = new Server()
+			.description("Algohub API for LOCAL")
+			.url("http://localhost:" + serverPort);
+
+		return List.of(localServer, prodServer);
 	}
 }
