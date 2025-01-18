@@ -357,7 +357,7 @@ class UserServiceTest {
 	}
 
 	@ParameterizedTest
-	@ValueSource(strings = {"***asdf", "16글자가초과된nickname입니다", "ab"})
+	@ValueSource(strings = {"***asdf", "16asdfasdfnicknameasdf", "ab"})
 	@DisplayName("닉네임 중복 검사 : 잘못된 형식의 닉네임")
 	void checkNickname_2(String invalidNickname) {
 		// given
@@ -365,7 +365,7 @@ class UserServiceTest {
 		assertThatThrownBy(() -> userService.checkNickname(invalidNickname))
 			.isInstanceOf(CheckNicknameValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
-			.hasFieldOrPropertyWithValue("error", "닉네임은 3글자 이상, 16글자 이하이며 특수문자 불가입니다.");
+			.hasFieldOrPropertyWithValue("error", "닉네임은 영문과 숫자로 구성된 3~16글자여야 합니다.");
 	}
 
 	@Test
