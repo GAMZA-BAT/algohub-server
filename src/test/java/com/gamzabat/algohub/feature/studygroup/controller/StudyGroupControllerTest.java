@@ -46,6 +46,7 @@ import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupMemberResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupListsResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GroupCodeResponse;
+import com.gamzabat.algohub.feature.group.studygroup.dto.GroupRoleResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.UpdateBookmarkResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.UpdateGroupMemberRoleRequest;
 import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
@@ -778,12 +779,13 @@ class StudyGroupControllerTest {
 	@DisplayName("그룹 내 회원 Role 조회 성공")
 	void getRoleInGroup() throws Exception {
 		// given
-		when(studyGroupService.getRoleInGroup(user, groupId)).thenReturn(RoleOfGroupMember.OWNER.getValue());
+		when(studyGroupService.getRoleInGroup(user, groupId)).thenReturn(
+			new GroupRoleResponse(RoleOfGroupMember.OWNER.getValue()));
 		// when, then
 		mockMvc.perform(get("/api/groups/{groupId}/role", groupId)
 				.header("Authorization", token))
 			.andExpect(status().isOk())
-			.andExpect(content().string(RoleOfGroupMember.OWNER.getValue()));
+			.andExpect(jsonPath("$.role").value(RoleOfGroupMember.OWNER.getValue()));
 		verify(studyGroupService, times(1)).getRoleInGroup(user, groupId);
 	}
 

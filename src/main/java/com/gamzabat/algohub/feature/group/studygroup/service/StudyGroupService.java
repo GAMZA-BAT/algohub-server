@@ -38,6 +38,7 @@ import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupListsRespo
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupWithCodeResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GroupCodeResponse;
+import com.gamzabat.algohub.feature.group.studygroup.dto.GroupRoleResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.UpdateBookmarkResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.UpdateGroupMemberRoleRequest;
 import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
@@ -531,14 +532,14 @@ public class StudyGroupService {
 	}
 
 	@Transactional(readOnly = true)
-	public String getRoleInGroup(User user, Long groupId) {
+	public GroupRoleResponse getRoleInGroup(User user, Long groupId) {
 		StudyGroup group = groupRepository.findById(groupId)
 			.orElseThrow(() -> new CannotFoundGroupException("존재하지 않는 그룹입니다."));
 
 		GroupMember member = groupMemberRepository.findByUserAndStudyGroup(user, group)
 			.orElseThrow(() -> new GroupMemberValidationException(HttpStatus.NOT_FOUND.value(), "참여하지 않은 그룹입니다."));
 
-		return member.getRole().getValue();
+		return new GroupRoleResponse(member.getRole().getValue());
 	}
 
 	@Transactional

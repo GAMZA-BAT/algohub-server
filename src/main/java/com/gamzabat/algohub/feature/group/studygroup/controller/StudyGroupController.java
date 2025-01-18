@@ -29,6 +29,7 @@ import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupSettingResponse
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupListsResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupWithCodeResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GroupCodeResponse;
+import com.gamzabat.algohub.feature.group.studygroup.dto.GroupRoleResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.UpdateBookmarkResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.UpdateGroupMemberRoleRequest;
 import com.gamzabat.algohub.feature.group.studygroup.service.StudyGroupService;
@@ -163,8 +164,8 @@ public class StudyGroupController {
 
 	@GetMapping(value = "/groups/{groupId}/role")
 	@Operation(summary = "스터디 그룹 내 유저의 Role 조회 API", description = "특정 스터디 그룹 내에서 유저의 Role을 조회하는 API")
-	public ResponseEntity<String> getGroupRole(@AuthedUser User user, @PathVariable Long groupId) {
-		String response = studyGroupService.getRoleInGroup(user, groupId);
+	public ResponseEntity<GroupRoleResponse> getGroupRole(@AuthedUser User user, @PathVariable Long groupId) {
+		GroupRoleResponse response = studyGroupService.getRoleInGroup(user, groupId);
 		return ResponseEntity.ok().body(response);
 	}
 
