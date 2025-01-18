@@ -225,7 +225,7 @@ public class UserService {
 	public void checkNickname(String nickname) {
 		if (isInvalidNicknameForm(nickname))
 			throw new CheckNicknameValidationException(HttpStatus.BAD_REQUEST.value(),
-				"닉네임은 3글자 이상, 16글자 이하이며 특수문자 불가입니다.");
+				"닉네임은 영문과 숫자로 구성된 3~16글자여야 합니다.");
 
 		if (userRepository.existsByNickname(nickname))
 			throw new CheckNicknameValidationException(HttpStatus.CONFLICT.value(), "이미 사용 중인 닉네임입니다.");
@@ -244,7 +244,7 @@ public class UserService {
 	}
 
 	private boolean isInvalidNicknameForm(String nickname) {
-		String regex = "[^a-zA-Z0-9가-힣ㄱ-ㅎㅏ-ㅣ]";
+		String regex = "[^a-zA-Z0-9]";
 		return nickname.length() < 3 || nickname.length() > 16 || Pattern.compile(regex).matcher(nickname).find();
 	}
 
