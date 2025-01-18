@@ -281,6 +281,7 @@ public class ProblemService {
 		return response;
 	}
 
+	@Transactional
 	@Scheduled(cron = "0 0 0 * * ?", zone = "Asia/Seoul")
 	public void dailyProblemScheduler() {
 		LocalDate now = LocalDate.now();
