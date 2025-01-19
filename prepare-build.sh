@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-webdav_url="https://webdav.gamzabat.store/algohub-server/"
+webdav_url="https://webdav.hwangdo.kr/algohub-server/"
 resources_path="./src/main/resources"
 
 
