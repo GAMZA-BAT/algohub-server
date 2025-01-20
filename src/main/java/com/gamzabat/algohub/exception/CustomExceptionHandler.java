@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import com.gamzabat.algohub.auth.exception.GithubApiException;
 import com.gamzabat.algohub.common.jwt.exception.ExpiredTokenException;
 import com.gamzabat.algohub.common.jwt.exception.TokenException;
 import com.gamzabat.algohub.feature.comment.exception.CommentValidationException;
@@ -182,5 +183,11 @@ public class CustomExceptionHandler {
 	protected ResponseEntity<ErrorResponse> handler(CheckPasswordFormException e) {
 		return ResponseEntity.status(e.getCode())
 			.body(new ErrorResponse(e.getCode(), e.getErrors(), null));
+	}
+
+	@ExceptionHandler(GithubApiException.class)
+	protected ResponseEntity<ErrorResponse> handler(GithubApiException e) {
+		return ResponseEntity.internalServerError()
+			.body(new ErrorResponse(HttpStatus.SERVICE_UNAVAILABLE.value(), e.getMessage(), null));
 	}
 }

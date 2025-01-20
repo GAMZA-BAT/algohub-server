@@ -42,10 +42,12 @@ import com.gamzabat.algohub.feature.group.studygroup.dto.CheckSolvedProblemRespo
 import com.gamzabat.algohub.feature.group.studygroup.dto.CreateGroupRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupVisibilityRequest;
+import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupIdResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupMemberResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupListsResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GroupCodeResponse;
+import com.gamzabat.algohub.feature.group.studygroup.dto.GroupRoleResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.UpdateBookmarkResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.UpdateGroupMemberRoleRequest;
 import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
@@ -162,12 +164,14 @@ class StudyGroupControllerTest {
 	@DisplayName("그룹 코드를 사용해 그룹 참여 성공")
 	void joinGroupWithCode() throws Exception {
 		// given
-		doNothing().when(studyGroupService).joinGroupWithCode(any(User.class), anyString());
+		GetGroupIdResponse response = new GetGroupIdResponse(12321L);
+		when(studyGroupService.joinGroupWithCode(any(User.class), anyString())).thenReturn(response);
 		// when, then
 		mockMvc.perform(post("/api/groups/{code}/join", code)
 				.header("Authorization", token)
 				.contentType(MediaType.APPLICATION_JSON))
-			.andExpect(status().isOk());
+			.andExpect(status().isOk())
+			.andExpect(content().json(objectMapper.writeValueAsString(response)));
 
 		verify(studyGroupService, times(1)).joinGroupWithCode(user, code);
 	}
@@ -778,12 +782,13 @@ class StudyGroupControllerTest {
 	@DisplayName("그룹 내 회원 Role 조회 성공")
 	void getRoleInGroup() throws Exception {
 		// given
-		when(studyGroupService.getRoleInGroup(user, groupId)).thenReturn(RoleOfGroupMember.OWNER.getValue());
+		when(studyGroupService.getRoleInGroup(user, groupId)).thenReturn(
+			new GroupRoleResponse(RoleOfGroupMember.OWNER.getValue()));
 		// when, then
 		mockMvc.perform(get("/api/groups/{groupId}/role", groupId)
 				.header("Authorization", token))
 			.andExpect(status().isOk())
-			.andExpect(content().string(RoleOfGroupMember.OWNER.getValue()));
+			.andExpect(jsonPath("$.role").value(RoleOfGroupMember.OWNER.getValue()));
 		verify(studyGroupService, times(1)).getRoleInGroup(user, groupId);
 	}
 

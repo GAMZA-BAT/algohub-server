@@ -41,6 +41,7 @@ public class User {
 	private String description = "";
 
 	private LocalDateTime deletedAt;
+	private String githubName;
 
 	@Enumerated(EnumType.STRING)
 	private Role role;
@@ -54,6 +55,7 @@ public class User {
 		this.profileImage = profileImage;
 		this.role = role;
 		this.deletedAt = null;
+		this.githubName = null;
 	}
 
 	public void editDescription(String description) {
@@ -74,5 +76,9 @@ public class User {
 
 	public void editPassword(String password) {
 		this.password = password;
+	}
+
+	public void editGithubName(String githubName) {
+		this.githubName = githubName;
 	}
 }

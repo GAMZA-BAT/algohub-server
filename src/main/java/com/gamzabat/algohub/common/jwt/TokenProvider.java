@@ -164,8 +164,8 @@ public class TokenProvider {
 		throw new JwtRequestException(HttpStatus.BAD_REQUEST.value(), "BAD_REQUEST", "유효한 형태의 토큰이 존재하지 않습니다.");
 	}
 
-	private Claims getClaims(String expiredToken) {
-		String token = expiredToken.replace("Bearer", "").trim();
+	private Claims getClaims(String inputToken) {
+		String token = inputToken.replace("Bearer", "").trim();
 		return parseClaims(token);
 	}
 

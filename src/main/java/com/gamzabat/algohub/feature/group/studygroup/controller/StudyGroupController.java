@@ -23,12 +23,14 @@ import com.gamzabat.algohub.feature.group.studygroup.dto.CheckSolvedProblemRespo
 import com.gamzabat.algohub.feature.group.studygroup.dto.CreateGroupRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupVisibilityRequest;
+import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupIdResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupMemberResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupSettingResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupListsResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupWithCodeResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GroupCodeResponse;
+import com.gamzabat.algohub.feature.group.studygroup.dto.GroupRoleResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.UpdateBookmarkResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.UpdateGroupMemberRoleRequest;
 import com.gamzabat.algohub.feature.group.studygroup.service.StudyGroupService;
@@ -59,9 +61,9 @@ public class StudyGroupController {
 
 	@PostMapping(value = "/groups/{code}/join")
 	@Operation(summary = "그룹 코드를 사용한 그룹 참여 API")
-	public ResponseEntity<Void> joinGroupWithCode(@AuthedUser User user, @PathVariable String code) {
-		studyGroupService.joinGroupWithCode(user, code);
-		return ResponseEntity.ok().build();
+	public ResponseEntity<GetGroupIdResponse> joinGroupWithCode(@AuthedUser User user, @PathVariable String code) {
+		GetGroupIdResponse groupId = studyGroupService.joinGroupWithCode(user, code);
+		return ResponseEntity.ok().body(groupId);
 	}
 
 	@GetMapping(value = "/users/me/groups")
@@ -163,8 +165,8 @@ public class StudyGroupController {
 
 	@GetMapping(value = "/groups/{groupId}/role")
 	@Operation(summary = "스터디 그룹 내 유저의 Role 조회 API", description = "특정 스터디 그룹 내에서 유저의 Role을 조회하는 API")
-	public ResponseEntity<String> getGroupRole(@AuthedUser User user, @PathVariable Long groupId) {
-		String response = studyGroupService.getRoleInGroup(user, groupId);
+	public ResponseEntity<GroupRoleResponse> getGroupRole(@AuthedUser User user, @PathVariable Long groupId) {
+		GroupRoleResponse response = studyGroupService.getRoleInGroup(user, groupId);
 		return ResponseEntity.ok().body(response);
 	}
 

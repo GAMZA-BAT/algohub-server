@@ -40,6 +40,7 @@ import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupMemberResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupSettingResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupListsResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupResponse;
+import com.gamzabat.algohub.feature.group.studygroup.dto.GroupRoleResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.UpdateBookmarkResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.UpdateGroupMemberRoleRequest;
 import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
@@ -674,9 +675,9 @@ class StudyGroupServiceTest {
 		when(studyGroupRepository.findById(groupId)).thenReturn(Optional.of(group));
 		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
 		// when
-		String result = studyGroupService.getRoleInGroup(user, groupId);
+		GroupRoleResponse result = studyGroupService.getRoleInGroup(user, groupId);
 		// then
-		assertThat(result).isEqualTo(RoleOfGroupMember.OWNER.getValue());
+		assertThat(result.role()).isEqualTo(RoleOfGroupMember.OWNER.getValue());
 	}
 
 	@Test

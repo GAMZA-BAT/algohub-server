@@ -62,6 +62,8 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.1'
     // Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    // OAuth2
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 }
 
 clean {
@@ -72,8 +74,12 @@ tasks.register("preScript", Exec) {
     environment "DEV_NAME", System.getenv("DEV_NAME")
     environment "CREDENTIAL_NAME", System.getenv("CREDENTIAL_NAME")
     environment "CREDENTIAL_PW", System.getenv("CREDENTIAL_PW")
-    if (System.properties['os.name'].toLowerCase().contains('win')) {
-        commandLine "C:\\Program Files\\Git\\bin\\bash.exe", "--login", "-c", "./prepare-build.sh"
+
+    if (System.getProperty('os.name').toLowerCase().contains('win')) {
+        // For windows
+        commandLine 'C:\\Program Files\\Git\\bin\\bash.exe', '-c', './prepare-build.sh'
+    } else {
+        commandLine "sh", "prepare-build.sh"
     }
 }
 
@@ -81,7 +87,7 @@ tasks.named("processResources") {
     dependsOn("preScript")
 }
 
-tasks.named("bootRun") {
+tasks.named("bootRun"){
     dependsOn("preScript")
 }
 

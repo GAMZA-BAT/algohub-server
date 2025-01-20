@@ -31,6 +31,7 @@ import com.gamzabat.algohub.feature.group.studygroup.dto.CheckSolvedProblemRespo
 import com.gamzabat.algohub.feature.group.studygroup.dto.CreateGroupRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupVisibilityRequest;
+import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupIdResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupMemberResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupSettingResponse;
@@ -38,6 +39,7 @@ import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupListsRespo
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupWithCodeResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GroupCodeResponse;
+import com.gamzabat.algohub.feature.group.studygroup.dto.GroupRoleResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.UpdateBookmarkResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.UpdateGroupMemberRoleRequest;
 import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
@@ -124,7 +126,7 @@ public class StudyGroupService {
 	}
 
 	@Transactional
-	public void joinGroupWithCode(User user, String code) {
+	public GetGroupIdResponse joinGroupWithCode(User user, String code) {
 		StudyGroup studyGroup = groupRepository.findByGroupCode(code)
 			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다."));
 
@@ -152,8 +154,10 @@ public class StudyGroupService {
 		);
 
 		sendNewMemberNotification(studyGroup, member);
-
 		log.info("success to join study group");
+
+		return new GetGroupIdResponse(studyGroup.getId());
+
 	}
 
 	@Transactional
@@ -531,14 +535,14 @@ public class StudyGroupService {
 	}
 
 	@Transactional(readOnly = true)
-	public String getRoleInGroup(User user, Long groupId) {
+	public GroupRoleResponse getRoleInGroup(User user, Long groupId) {
 		StudyGroup group = groupRepository.findById(groupId)
 			.orElseThrow(() -> new CannotFoundGroupException("존재하지 않는 그룹입니다."));
 
 		GroupMember member = groupMemberRepository.findByUserAndStudyGroup(user, group)
 			.orElseThrow(() -> new GroupMemberValidationException(HttpStatus.NOT_FOUND.value(), "참여하지 않은 그룹입니다."));
 
-		return member.getRole().getValue();
+		return new GroupRoleResponse(member.getRole().getValue());
 	}
 
 	@Transactional
