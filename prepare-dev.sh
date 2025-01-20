@@ -2,7 +2,7 @@
 
 set -e
 
-api_endpoint="https://api.gamzabat.store"
+api_endpoint="https://api.hwangdo.kr"
 is_empty_or_null() {
   [ -z "$1" ] || [ "$1" = "null" ]
 }

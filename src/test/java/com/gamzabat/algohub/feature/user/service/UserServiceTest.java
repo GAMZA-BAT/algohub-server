@@ -208,7 +208,7 @@ class UserServiceTest {
 	@DisplayName("회원 정보 수정 : 프로필 이미지를 null로 설정")
 	void userUpdateWithoutImage() {
 		// given
-		UpdateUserRequest request = new UpdateUserRequest("newNickname", "newBjNickname", "I am Batman");
+		UpdateUserRequest request = new UpdateUserRequest("newNickname", "newBjNickname", "I am Batman", true);
 		doNothing().when(imageService).deleteImage(imageUrl);
 		// when
 		userService.userUpdate(user, request, null);

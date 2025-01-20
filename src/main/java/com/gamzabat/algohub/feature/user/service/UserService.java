@@ -115,7 +115,8 @@ public class UserService {
 
 	@Transactional
 	public void userUpdate(User user, UpdateUserRequest updateUserRequest, MultipartFile profileImage) {
-		editUserProfileImage(user, profileImage);
+		editUserProfileImage(user, profileImage, updateUserRequest.getIsDefaultImage());
+		checkNickname(updateUserRequest.getNickname());
 
 		if (!updateUserRequest.getNickname().isEmpty()) {
 			user.editNickname(updateUserRequest.getNickname());
@@ -131,13 +132,19 @@ public class UserService {
 		log.info("success to update user");
 	}
 
-	private void editUserProfileImage(User user, MultipartFile inputImage) {
-		if (inputImage == null || inputImage.isEmpty()) {
+	private void editUserProfileImage(User user, MultipartFile inputImage, Boolean isDefaultImage) {
+		if (inputImage == null && isDefaultImage) {
 			handleNullInputImage(user);
+			log.info("change user profile image as default image");
 			return;
 		}
 
-		if (user.getProfileImage() != null) {
+		if (inputImage == null && !isDefaultImage) {
+			log.info("user profile image does not change : {}", user.getProfileImage());
+			return;
+		}
+
+		if (user.getProfileImage() != null && !isDefaultImage) {
 			if (isEqualToProfileImage(user, inputImage))
 				return;
 			imageService.deleteImage(user.getProfileImage());

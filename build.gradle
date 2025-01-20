@@ -72,14 +72,16 @@ tasks.register("preScript", Exec) {
     environment "DEV_NAME", System.getenv("DEV_NAME")
     environment "CREDENTIAL_NAME", System.getenv("CREDENTIAL_NAME")
     environment "CREDENTIAL_PW", System.getenv("CREDENTIAL_PW")
-    commandLine "sh", "prepare-build.sh"
+    if (System.properties['os.name'].toLowerCase().contains('win')) {
+        commandLine "C:\\Program Files\\Git\\bin\\bash.exe", "--login", "-c", "./prepare-build.sh"
+    }
 }
 
 tasks.named("processResources") {
     dependsOn("preScript")
 }
 
-tasks.named("bootRun"){
+tasks.named("bootRun") {
     dependsOn("preScript")
 }
 
