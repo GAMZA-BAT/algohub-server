@@ -135,12 +135,12 @@ public class UserService {
 	private void editUserProfileImage(User user, MultipartFile inputImage, Boolean isDefaultImage) {
 		if (inputImage == null && isDefaultImage) {
 			handleNullInputImage(user);
-			log.info("change user profile image as default image");
+			log.info("user profile image change as default image");
 			return;
 		}
 
 		if (inputImage == null && !isDefaultImage) {
-			log.info("user profile image does not change : {}", user.getProfileImage());
+			log.info("user profile image does not change ");
 			return;
 		}
 

@@ -324,7 +324,7 @@ public class StudyGroupService {
 		if (!RoleOfGroupMember.isOwner(groupMember))
 			throw new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "그룹 정보 수정에 대한 권한이 없습니다.");
 
-		editGroupImage(groupImage, group);
+		editGroupImage(groupImage, group, request.isDefaultImage());
 		group.editGroupInfo(
 			request.name(),
 			request.startDate(),
@@ -334,13 +334,18 @@ public class StudyGroupService {
 		log.info("success to edit group info");
 	}
 
-	private void editGroupImage(MultipartFile inputImage, StudyGroup group) {
-		if (inputImage == null || inputImage.isEmpty()) {
+	private void editGroupImage(MultipartFile inputImage, StudyGroup group, Boolean isDefaultImage) {
+		if (inputImage == null && isDefaultImage) {
 			handleNullInputImage(group);
+			log.info("group image change as default image ");
+			return;
+		}
+		if (inputImage == null && !isDefaultImage) {
+			log.info("group image does not change ");
 			return;
 		}
 
-		if (group.getGroupImage() != null) {
+		if (group.getGroupImage() != null && !isDefaultImage) {
 			if (isEqualToGroupImage(group, inputImage)) {
 				return;
 			}
@@ -348,7 +353,7 @@ public class StudyGroupService {
 		}
 
 		saveGroupImage(inputImage, group);
-		log.info("success to edit group image");
+		log.info("success to edit group image : {}", group.getGroupImage());
 	}
 
 	private void saveGroupImage(MultipartFile inputImage, StudyGroup group) {
