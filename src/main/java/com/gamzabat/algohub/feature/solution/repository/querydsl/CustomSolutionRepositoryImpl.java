@@ -155,6 +155,24 @@ public class CustomSolutionRepositoryImpl implements CustomSolutionRepository {
 			case "Rust":
 				query.where(solution.language.in(LanguageConstants.RUST_BOUNDARY));
 				break;
+			case "Scripting":
+				query.where(solution.language.in(LanguageConstants.SCRIPT_BOUNDARY));
+				break;
+			case "System Programming":
+				query.where(solution.language.in(LanguageConstants.SYSTEM_BOUNDARY));
+				break;
+			case "Web/Application":
+				query.where(solution.language.in(LanguageConstants.WEBAPP_BOUNDARY));
+				break;
+			case "Functional":
+				query.where(solution.language.in(LanguageConstants.FUNCTION_BOUNDARY));
+				break;
+			case "Assembly and Low-Level":
+				query.where(solution.language.in(LanguageConstants.LOW_BOUNDARY));
+				break;
+			case "Others":
+				query.where(solution.language.in(LanguageConstants.OTHER_BOUNDARY));
+				break;
 		}
 
 	}
