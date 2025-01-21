@@ -140,37 +140,37 @@ public class CustomSolutionRepositoryImpl implements CustomSolutionRepository {
 
 	private void languageFilter(JPAQuery<Solution> query, String language) {
 		switch (language) {
-			case "C":
+			case LanguageConstants.C:
 				query.where(solution.language.in(LanguageConstants.C_BOUNDARY));
 				break;
-			case "C++":
+			case LanguageConstants.CPP:
 				query.where(solution.language.in(LanguageConstants.CPP_BOUNDARY));
 				break;
-			case "Java":
+			case LanguageConstants.JAVA:
 				query.where(solution.language.in(LanguageConstants.JAVA_BOUNDARY));
 				break;
-			case "Python":
+			case LanguageConstants.PYTHON:
 				query.where(solution.language.in(LanguageConstants.PYTHON_BOUNDARY));
 				break;
-			case "Rust":
+			case LanguageConstants.RUST:
 				query.where(solution.language.in(LanguageConstants.RUST_BOUNDARY));
 				break;
-			case "Scripting":
+			case LanguageConstants.SCRIPT:
 				query.where(solution.language.in(LanguageConstants.SCRIPT_BOUNDARY));
 				break;
-			case "System Programming":
+			case LanguageConstants.SYSTEM:
 				query.where(solution.language.in(LanguageConstants.SYSTEM_BOUNDARY));
 				break;
-			case "Web/Application":
+			case LanguageConstants.WEBAPP:
 				query.where(solution.language.in(LanguageConstants.WEBAPP_BOUNDARY));
 				break;
-			case "Functional":
+			case LanguageConstants.FUNCTION:
 				query.where(solution.language.in(LanguageConstants.FUNCTION_BOUNDARY));
 				break;
-			case "Assembly and Low-Level":
+			case LanguageConstants.LOW:
 				query.where(solution.language.in(LanguageConstants.LOW_BOUNDARY));
 				break;
-			case "Others":
+			case LanguageConstants.OTHER:
 				query.where(solution.language.in(LanguageConstants.OTHER_BOUNDARY));
 				break;
 		}

@@ -43,6 +43,18 @@ public class LanguageConstants {
 		"Befunge", "아희", "SystemVerilog", "bc"
 	};
 
+	public static final String C = "C";
+	public static final String CPP = "C++";
+	public static final String PYTHON = "Python";
+	public static final String JAVA = "Java";
+	public static final String RUST = "Rust";
+	public static final String SCRIPT = "Script Language";
+	public static final String SYSTEM = "System Programming Language";
+	public static final String WEBAPP = "Web/Application Language";
+	public static final String FUNCTION = "Functional Language";
+	public static final String LOW = "Assembly and Low-Level Language";
+	public static final String OTHER = "Others";
+
 	private LanguageConstants() {
 		throw new RuntimeException("Can not instantiate : LanguageConstants");
 	}
