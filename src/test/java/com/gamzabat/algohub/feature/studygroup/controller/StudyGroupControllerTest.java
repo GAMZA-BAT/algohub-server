@@ -398,7 +398,7 @@ class StudyGroupControllerTest {
 	void editGroup() throws Exception {
 		// given
 		EditGroupRequest request = new EditGroupRequest("name", LocalDate.now(), LocalDate.now().plusDays(30),
-			"editedIntroduction");
+			"editedIntroduction", false);
 		MockMultipartFile requestPart = new MockMultipartFile("request", "", "application/json",
 			objectMapper.writeValueAsBytes(request));
 		MockMultipartFile groupImage = new MockMultipartFile("groupImage", "group.jpg", "image/jpeg",
@@ -427,7 +427,7 @@ class StudyGroupControllerTest {
 		// given
 		EditGroupRequest request = new EditGroupRequest("이름이너무긴스터디이름이네요하하", LocalDate.now(),
 			LocalDate.now().plusDays(30),
-			"editedIntroduction"); // 16글자
+			"editedIntroduction", false); // 16글자
 		MockMultipartFile requestPart = new MockMultipartFile("request", "", "application/json",
 			objectMapper.writeValueAsBytes(request));
 		MockMultipartFile groupImage = new MockMultipartFile("groupImage", "group.jpg", "image/jpeg",
@@ -453,7 +453,7 @@ class StudyGroupControllerTest {
 	void editGroupFailed_2() throws Exception {
 		// given
 		EditGroupRequest request = new EditGroupRequest("name", LocalDate.now(), LocalDate.now().plusDays(30),
-			"editedIntroduction");
+			"editedIntroduction", false);
 		MockMultipartFile requestPart = new MockMultipartFile("request", "", "application/json",
 			objectMapper.writeValueAsBytes(request));
 		MockMultipartFile groupImage = new MockMultipartFile("groupImage", "group.jpg", "image/jpeg",
@@ -483,7 +483,7 @@ class StudyGroupControllerTest {
 	void editGroupFailed_3() throws Exception {
 		// given
 		EditGroupRequest request = new EditGroupRequest("name", LocalDate.now(), LocalDate.now().plusDays(30),
-			"editedIntroduction");
+			"editedIntroduction", false);
 		MockMultipartFile requestPart = new MockMultipartFile("request", "", "application/json",
 			objectMapper.writeValueAsBytes(request));
 		MockMultipartFile groupImage = new MockMultipartFile("groupImage", "group.jpg", "image/jpeg",
