@@ -428,7 +428,7 @@ class StudyGroupServiceTest {
 	void editGroup() {
 		// given
 		EditGroupRequest request = new EditGroupRequest("editName", LocalDate.now().plusDays(10),
-			LocalDate.now().plusDays(10), "editIntroduction", false);
+			LocalDate.now().plusDays(10), "editIntroduction", true);
 		MockMultipartFile editImage = new MockMultipartFile("editImage", new byte[] {1, 2, 3});
 		when(studyGroupRepository.findById(anyLong())).thenReturn(Optional.ofNullable(group));
 		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
