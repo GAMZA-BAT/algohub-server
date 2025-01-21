@@ -67,11 +67,6 @@ public class ImageService {
 		log.info("delete image from S3 bucket. image url : {}", imageUrl);
 	}
 
-	// public String parseImageName(String imageUrl) {
-	// 	if (imageUrl.startsWith(bucketUrl))
-	// 		return imageUrl.substring(bucketUrl.length());
-	// 	return null;
-	// }
 	public String parseImageName(String imageUrl) {
 		if (imageUrl.startsWith(bucketUrl))
 			return imageUrl.substring(imageUrl.lastIndexOf("/") + 1);

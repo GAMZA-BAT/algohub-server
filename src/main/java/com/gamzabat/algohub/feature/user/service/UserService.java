@@ -133,27 +133,18 @@ public class UserService {
 	}
 
 	private void editUserProfileImage(User user, MultipartFile inputImage, Boolean isDefaultImage) {
-		if (inputImage == null && isDefaultImage) {
-			handleNullInputImage(user);
-			log.info("user profile image change as default image");
-			return;
-		}
-
-		if (inputImage == null && !isDefaultImage) {
-			log.info("user profile image does not change : input image is null");
-			return;
-		}
-
-		if (user.getProfileImage() != null) {
-			if (isEqualToProfileImage(user, inputImage)) {
-				log.info("user image does not change : same image ");
-				return;
+		if (inputImage != null) {
+			if (user.getProfileImage() != null) {
+				imageService.deleteImage(user.getProfileImage());
 			}
-			imageService.deleteImage(user.getProfileImage());
+			saveProfileImage(inputImage, user);
+			log.info("success to update user profile image. profile image : {}", user.getProfileImage());
+			return;
+		}
+		if (isDefaultImage) {
+			handleNullInputImage(user);
 		}
 
-		saveProfileImage(inputImage, user);
-		log.info("success to edit user profile image. profile image : {}", user.getProfileImage());
 	}
 
 	private void handleNullInputImage(User user) {

@@ -1,5 +1,6 @@
 package com.gamzabat.algohub.feature.user.dto;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 
 @Getter
@@ -9,7 +10,7 @@ public class UpdateUserRequest {
 	private final String description;
 	private final Boolean isDefaultImage;
 
-	public UpdateUserRequest(String nickname, String bjNickname, String description, Boolean isDefaultImage) {
+	public UpdateUserRequest(String nickname, String bjNickname, String description, @NotNull Boolean isDefaultImage) {
 		this.nickname = nickname;
 		this.bjNickname = bjNickname;
 		this.description = description;

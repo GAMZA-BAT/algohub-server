@@ -335,26 +335,18 @@ public class StudyGroupService {
 	}
 
 	private void editGroupImage(MultipartFile inputImage, StudyGroup group, Boolean isDefaultImage) {
-		if (inputImage == null && isDefaultImage) {
-			handleNullInputImage(group);
-			log.info("group image change as default image");
-			return;
-		}
-		if (inputImage == null && !isDefaultImage) {
-			log.info("group image does not change : input image is null");
-			return;
-		}
-
-		if (group.getGroupImage() != null) {
-			if (isEqualToGroupImage(group, inputImage)) {
-				log.info("group image does not change : same image");
-				return;
+		if (inputImage != null) {
+			if (group.getGroupImage() != null) {
+				imageService.deleteImage(group.getGroupImage());
 			}
-			imageService.deleteImage(group.getGroupImage());
+			saveGroupImage(inputImage, group);
+			log.info("success to edit group image. group image: {}", group.getGroupImage());
+			return;
+		}
+		if (isDefaultImage) {
+			handleNullInputImage(group);
 		}
 
-		saveGroupImage(inputImage, group);
-		log.info("success to edit group image : {}", group.getGroupImage());
 	}
 
 	private void saveGroupImage(MultipartFile inputImage, StudyGroup group) {
