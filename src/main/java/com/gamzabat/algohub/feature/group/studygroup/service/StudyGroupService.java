@@ -337,16 +337,17 @@ public class StudyGroupService {
 	private void editGroupImage(MultipartFile inputImage, StudyGroup group, Boolean isDefaultImage) {
 		if (inputImage == null && isDefaultImage) {
 			handleNullInputImage(group);
-			log.info("group image change as default image ");
+			log.info("group image change as default image");
 			return;
 		}
 		if (inputImage == null && !isDefaultImage) {
-			log.info("group image does not change ");
+			log.info("group image does not change : input image is null");
 			return;
 		}
 
-		if (group.getGroupImage() != null && !isDefaultImage) {
+		if (group.getGroupImage() != null) {
 			if (isEqualToGroupImage(group, inputImage)) {
+				log.info("group image does not change : same image");
 				return;
 			}
 			imageService.deleteImage(group.getGroupImage());

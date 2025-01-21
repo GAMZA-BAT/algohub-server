@@ -140,13 +140,15 @@ public class UserService {
 		}
 
 		if (inputImage == null && !isDefaultImage) {
-			log.info("user profile image does not change ");
+			log.info("user profile image does not change : input image is null");
 			return;
 		}
 
-		if (user.getProfileImage() != null && !isDefaultImage) {
-			if (isEqualToProfileImage(user, inputImage))
+		if (user.getProfileImage() != null) {
+			if (isEqualToProfileImage(user, inputImage)) {
+				log.info("user image does not change : same image ");
 				return;
+			}
 			imageService.deleteImage(user.getProfileImage());
 		}
 
