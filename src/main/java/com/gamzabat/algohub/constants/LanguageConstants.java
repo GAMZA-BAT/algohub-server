@@ -49,10 +49,10 @@ public class LanguageConstants {
 	public static final String JAVA = "Java";
 	public static final String RUST = "Rust";
 	public static final String SCRIPT = "Script Language";
-	public static final String SYSTEM = "System Programming Language";
-	public static final String WEBAPP = "Web/Application Language";
+	public static final String SYSTEM = "System Language";
+	public static final String WEBAPP = "Web/App Language";
 	public static final String FUNCTION = "Functional Language";
-	public static final String LOW = "Assembly and Low-Level Language";
+	public static final String LOW = "Low-Level Language";
 	public static final String OTHER = "Others";
 
 	private LanguageConstants() {
