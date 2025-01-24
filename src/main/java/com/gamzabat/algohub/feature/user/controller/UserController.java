@@ -80,7 +80,7 @@ public class UserController {
 
 	@PatchMapping(value = "/users/me", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(summary = "회원 정보 수정 API")
-	public ResponseEntity<Void> updateInfo(@AuthedUser User user, @RequestPart UpdateUserRequest request,
+	public ResponseEntity<Void> updateInfo(@AuthedUser User user, @RequestPart @Valid UpdateUserRequest request,
 		@RequestPart(required = false) MultipartFile profileImage) {
 
 		userService.userUpdate(user, request, profileImage);
