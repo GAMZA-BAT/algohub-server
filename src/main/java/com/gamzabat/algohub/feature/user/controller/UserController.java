@@ -81,7 +81,11 @@ public class UserController {
 	@PatchMapping(value = "/users/me", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(summary = "회원 정보 수정 API")
 	public ResponseEntity<Void> updateInfo(@AuthedUser User user, @RequestPart @Valid UpdateUserRequest request,
+		Errors errors,
 		@RequestPart(required = false) MultipartFile profileImage) {
+		if (errors.hasErrors()) {
+			throw new RequestException("올바르지 않은 요청입니다.", errors);
+		}
 
 		userService.userUpdate(user, request, profileImage);
 		return ResponseEntity.ok().build();
