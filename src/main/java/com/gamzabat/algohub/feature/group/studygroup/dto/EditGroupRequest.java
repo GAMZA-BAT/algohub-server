@@ -9,5 +9,5 @@ public record EditGroupRequest(@Size(min = 1, max = 15, message = "스터디 이
 							   LocalDate startDate,
 							   LocalDate endDate,
 							   String introduction,
-							   @NotNull Boolean isDefaultImage) {
+							   @NotNull(message = "기본 이미지 여부는 필수 입니다") Boolean isDefaultImage) {
 }
