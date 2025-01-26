@@ -43,10 +43,16 @@ public class StudyGroup {
 		this.groupCode = groupCode;
 	}
 
-	public void editGroupInfo(String name, LocalDate startDate, LocalDate endDate, String introduction) {
-		this.name = name;
+	public void editGroupDate(LocalDate startDate, LocalDate endDate) {
 		this.startDate = startDate;
 		this.endDate = endDate;
+	}
+
+	public void editGroupName(String name) {
+		this.name = name;
+	}
+
+	public void editGroupIntroduction(String introduction) {
 		this.introduction = introduction;
 	}
 

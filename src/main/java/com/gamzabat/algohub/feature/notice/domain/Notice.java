@@ -54,11 +54,20 @@ public class Notice {
 		this.createdAt = createdAt;
 	}
 
-	public void updateNotice(String title, String content, String category) {
+	public void updateTitle(String title) {
 		this.title = title;
+	}
+
+	public void updateContent(String content) {
 		this.content = content;
+	}
+
+	public void updateCategory(String category) {
 		this.category = category;
-		this.updatedAt = LocalDateTime.now();
+	}
+
+	public void updateUpdatedAt(LocalDateTime updatedAt) {
+		this.updatedAt = updatedAt;
 	}
 
 }

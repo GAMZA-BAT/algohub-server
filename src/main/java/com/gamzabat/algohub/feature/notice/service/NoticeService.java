@@ -107,8 +107,16 @@ public class NoticeService {
 		validateStudyGroupExists(notice);
 		if (!user.getId().equals(notice.getAuthor().getId()))
 			throw new UserValidationException("공지를 수정할 수 있는 권한이 없습니다");
-
-		notice.updateNotice(request.title(), request.content(), request.category());
+		if (request.title() != null) {
+			notice.updateTitle(request.title());
+		}
+		if (request.content() != null) {
+			notice.updateContent(request.content());
+		}
+		if (request.category() != null) {
+			notice.updateCategory(request.category());
+		}
+		log.info("success to update notice");
 	}
 
 	@Transactional
