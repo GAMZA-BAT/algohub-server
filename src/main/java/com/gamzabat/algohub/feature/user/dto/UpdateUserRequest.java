@@ -1,12 +1,16 @@
 package com.gamzabat.algohub.feature.user.dto;
 
+import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 
 @Getter
 public class UpdateUserRequest {
+	@Nullable
 	private final String nickname;
+	@Nullable
 	private final String bjNickname;
+	@Nullable
 	private final String description;
 	@NotNull(message = "기본 이미지 여부는 필수 입니다")
 	private final Boolean isDefaultImage;

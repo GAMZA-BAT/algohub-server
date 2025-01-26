@@ -225,6 +225,7 @@ public class UserService {
 	public void checkNickname(String nickname) {
 		if (nickname == null)
 			return;
+
 		if (isInvalidNicknameForm(nickname))
 			throw new CheckNicknameValidationException(HttpStatus.BAD_REQUEST.value(),
 				"닉네임은 영문과 숫자로 구성된 3~16글자여야 합니다.");
