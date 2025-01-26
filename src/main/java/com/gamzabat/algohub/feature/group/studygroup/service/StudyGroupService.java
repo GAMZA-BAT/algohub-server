@@ -329,9 +329,9 @@ public class StudyGroupService {
 			request.startDate(),
 			request.endDate()
 		);
-		if (request.name() != null && request.name().isEmpty())
+		if (request.name() != null && !request.name().isEmpty())
 			group.editGroupName(request.name());
-		if (request.introduction() != null && request.introduction().isEmpty())
+		if (request.introduction() != null && !request.introduction().isEmpty())
 			group.editGroupIntroduction(request.introduction());
 
 		log.info("success to edit group info");
