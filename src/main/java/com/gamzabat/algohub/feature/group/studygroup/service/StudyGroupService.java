@@ -531,7 +531,7 @@ public class StudyGroupService {
 
 		member.updateRole(RoleOfGroupMember.fromValue(request.role()));
 
-		if (RoleOfGroupMember.isOwner(member)) {
+		if (RoleOfGroupMember.isOwner(member) && request.role() != null) {
 			owner.updateRole(RoleOfGroupMember.PARTICIPANT);
 		}
 		log.info("success to update group member role");
@@ -555,8 +555,9 @@ public class StudyGroupService {
 
 		GroupMember member = groupMemberRepository.findByUserAndStudyGroup(user, group)
 			.orElseThrow(() -> new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹입니다."));
-
-		member.updateVisibility(request.isVisible());
+		if (request.isVisible() != null) {
+			member.updateVisibility(request.isVisible());
+		}
 		log.info("success to update group visibility ( userId : {} )", user.getId());
 	}
 

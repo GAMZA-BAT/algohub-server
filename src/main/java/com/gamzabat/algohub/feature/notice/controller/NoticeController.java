@@ -72,10 +72,7 @@ public class NoticeController {
 	@Operation(summary = "공지 수정 API")
 	public ResponseEntity<Void> updateNotice(@AuthedUser User user,
 		@PathVariable Long noticeId,
-		@Valid @RequestBody UpdateNoticeRequest request,
-		Errors errors) {
-		if (errors.hasErrors())
-			throw new RequestException("올바르지 않은 수정 요청입니다", errors);
+		@RequestBody UpdateNoticeRequest request) {
 		noticeService.updateNotice(user, noticeId, request);
 		return ResponseEntity.ok().build();
 	}
