@@ -555,9 +555,7 @@ public class StudyGroupService {
 
 		GroupMember member = groupMemberRepository.findByUserAndStudyGroup(user, group)
 			.orElseThrow(() -> new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹입니다."));
-		if (request.isVisible() != null) {
-			member.updateVisibility(request.isVisible());
-		}
+		member.updateVisibility(request.isVisible());
 		log.info("success to update group visibility ( userId : {} )", user.getId());
 	}
 
