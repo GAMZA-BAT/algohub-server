@@ -325,8 +325,10 @@ public class StudyGroupService {
 			throw new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "그룹 정보 수정에 대한 권한이 없습니다.");
 
 		editGroupImage(groupImage, group, request.isDefaultImage());
-		group.editGroupDate(
-			request.startDate(),
+		group.editGroupStartDate(
+			request.startDate()
+		);
+		group.editGroupEndDate(
 			request.endDate()
 		);
 		if (request.name() != null && !request.name().isEmpty())

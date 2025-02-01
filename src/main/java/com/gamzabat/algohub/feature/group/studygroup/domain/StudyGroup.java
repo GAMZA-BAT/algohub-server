@@ -43,8 +43,11 @@ public class StudyGroup {
 		this.groupCode = groupCode;
 	}
 
-	public void editGroupDate(LocalDate startDate, LocalDate endDate) {
+	public void editGroupStartDate(LocalDate startDate) {
 		this.startDate = startDate;
+	}
+
+	public void editGroupEndDate(LocalDate endDate) {
 		this.endDate = endDate;
 	}
 
