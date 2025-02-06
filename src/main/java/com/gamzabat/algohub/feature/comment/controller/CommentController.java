@@ -23,7 +23,7 @@ public interface CommentController<T extends CreateCommentRequest> {
 
 	@Operation(summary = "댓글 수정 API")
 	ResponseEntity<Void> modifyComment(User user,
-		Long baseId, UpdateCommentRequest request, Errors errors);
+		Long baseId, UpdateCommentRequest request);
 
 	@Operation(summary = "댓글 삭제 API")
 	ResponseEntity<Void> deleteComment(User user, Long commentId);

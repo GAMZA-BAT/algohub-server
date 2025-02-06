@@ -70,7 +70,9 @@ public class NoticeCommentService implements CommentService<CreateNoticeCommentR
 		if (!comment.getUser().getId().equals(user.getId()))
 			throw new UserValidationException("댓글 작성자만 수정할 수 있습니다.");
 
-		comment.updateComment(request.content());
+		if(request.content()!=null){
+			comment.updateComment(request.content());
+		}
 		log.info("success to update notice comment. commentId: {}", comment.getId());
 
 	}

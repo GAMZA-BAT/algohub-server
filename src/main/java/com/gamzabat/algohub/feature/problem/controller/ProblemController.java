@@ -54,9 +54,7 @@ public class ProblemController {
 	@Operation(summary = "문제 마감 기한 수정 API")
 	public ResponseEntity<Void> editProblemDeadline(@AuthedUser User user,
 		@PathVariable Long problemId,
-		@Valid @RequestBody EditProblemRequest request, Errors errors) {
-		if (errors.hasErrors())
-			throw new RequestException("문제 마감 기한 수정 요청이 올바르지 않습니다.", errors);
+		@RequestBody EditProblemRequest request) {
 		problemService.editProblem(user, problemId, request);
 		return ResponseEntity.ok().build();
 	}

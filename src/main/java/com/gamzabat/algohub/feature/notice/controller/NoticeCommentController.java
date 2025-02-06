@@ -63,10 +63,8 @@ public class NoticeCommentController implements CommentController<CreateNoticeCo
 	@PatchMapping("/notices/comments/{commentId}")
 	public ResponseEntity<Void> modifyComment(@AuthedUser User user,
 		@PathVariable Long commentId,
-		@Valid @RequestBody UpdateCommentRequest request, Errors errors) {
-		if (errors.hasErrors())
-			throw new RequestException("수정 요청이 올바르지 않습니다", errors);
-		commentService.updateComment(user, commentId, request);
+		@Valid @RequestBody UpdateCommentRequest request) {
+			commentService.updateComment(user, commentId, request);
 		return ResponseEntity.ok().build();
 	}
 
