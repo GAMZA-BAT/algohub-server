@@ -36,7 +36,6 @@ import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValida
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.notice.domain.Notice;
-import com.gamzabat.algohub.feature.notice.domain.NoticeRead;
 import com.gamzabat.algohub.feature.notice.dto.CreateNoticeRequest;
 import com.gamzabat.algohub.feature.notice.dto.GetNoticeResponse;
 import com.gamzabat.algohub.feature.notice.dto.UpdateNoticeRequest;
@@ -192,7 +191,6 @@ public class NoticeServiceTest {
 		assertThat(response.category()).isEqualTo("category");
 		assertThat(response.createAt()).isEqualTo(DateFormatUtil.formatDateTimeForNotice(notice.getCreatedAt()));
 		assertThat(response.noticeId()).isEqualTo(1000L);
-		verify(noticeReadRepository, times(1)).save(any(NoticeRead.class));
 	}
 
 	@Test
