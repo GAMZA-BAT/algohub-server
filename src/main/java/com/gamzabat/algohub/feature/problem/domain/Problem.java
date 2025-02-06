@@ -49,8 +49,11 @@ public class Problem {
 		this.studyGroup = studyGroup;
 	}
 
-	public void editProblemInfo(LocalDate startDate, LocalDate endDate) {
+	public void editProblemStartDate(LocalDate startDate) {
 		this.startDate = startDate;
+	}
+
+	public void editProblemEndDate(LocalDate endDate) {
 		this.endDate = endDate;
 	}
 }

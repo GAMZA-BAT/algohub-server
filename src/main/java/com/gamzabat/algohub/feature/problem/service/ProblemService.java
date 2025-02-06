@@ -109,7 +109,13 @@ public class ProblemService {
 
 		checkProblemPeriodRequest(request, problem);
 
-		problem.editProblemInfo(request.startDate(), request.endDate());
+		if (request.startDate() != null) {
+			problem.editProblemStartDate(request.startDate());
+		}
+		if (request.endDate() != null) {
+			problem.editProblemEndDate(request.endDate());
+		}
+
 		log.info("success to edit problem deadline");
 	}
 
