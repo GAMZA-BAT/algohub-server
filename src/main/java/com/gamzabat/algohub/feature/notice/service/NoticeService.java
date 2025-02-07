@@ -79,7 +79,7 @@ public class NoticeService {
 			.title(notice.getTitle())
 			.content(notice.getContent())
 			.category(notice.getCategory())
-			.createAt(DateFormatUtil.formatDateTimeForNotice(notice.getCreatedAt()))
+			.createdAt(DateFormatUtil.formatDateTimeForNotice(notice.getCreatedAt()))
 			.isRead(true)
 			.build();
 	}
@@ -88,7 +88,7 @@ public class NoticeService {
 	public void getNoticeRead(@AuthedUser User user, Long noticeId) {
 		Notice notice = noticeRepository.findById(noticeId)
 			.orElseThrow(() -> new NoticeValidationException("존재하지 않는 게시글입니다"));
-		if (!groupMemberRepository.existsByUserAndStudyGroup(user,notice.getStudyGroup()))
+		if (!groupMemberRepository.existsByUserAndStudyGroup(user, notice.getStudyGroup()))
 			throw new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 스터디 그룹 입니다.");
 
 		markNoticeAsRead(user, notice);

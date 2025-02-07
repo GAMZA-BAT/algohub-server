@@ -12,7 +12,7 @@ public record GetNoticeResponse(String author,
 								String content,
 								String title,
 								String category,
-								String createAt,
+								String createdAt,
 								boolean isRead) {
 
 	public static GetNoticeResponse toDTO(Notice notice, boolean isRead) {
@@ -23,7 +23,7 @@ public record GetNoticeResponse(String author,
 			.title(notice.getTitle())
 			.content(notice.getContent())
 			.category(notice.getCategory())
-			.createAt(DateFormatUtil.formatDateTimeForNotice(notice.getCreatedAt()))
+			.createdAt(DateFormatUtil.formatDateTimeForNotice(notice.getCreatedAt()))
 			.isRead(isRead)
 			.build();
 	}

@@ -189,7 +189,7 @@ public class NoticeServiceTest {
 		assertThat(response.content()).isEqualTo("content");
 		assertThat(response.title()).isEqualTo("title");
 		assertThat(response.category()).isEqualTo("category");
-		assertThat(response.createAt()).isEqualTo(DateFormatUtil.formatDateTimeForNotice(notice.getCreatedAt()));
+		assertThat(response.createdAt()).isEqualTo(DateFormatUtil.formatDateTimeForNotice(notice.getCreatedAt()));
 		assertThat(response.noticeId()).isEqualTo(1000L);
 	}
 
