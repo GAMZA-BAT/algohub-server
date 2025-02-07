@@ -369,7 +369,7 @@ class ProblemServiceTest {
 			.endDate(LocalDate.now().plusDays(10))
 			.build();
 		EditProblemRequest request = EditProblemRequest.builder()
-			.startDate(LocalDate.now().plusDays(1))
+			.startDate(problem.getStartDate())
 			.endDate(LocalDate.now().plusDays(7))
 			.build();
 		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
@@ -417,7 +417,7 @@ class ProblemServiceTest {
 			.endDate(LocalDate.now())
 			.build();
 		EditProblemRequest request = EditProblemRequest.builder()
-			.startDate(LocalDate.now().minusDays(10))
+			// .startDate(LocalDate.now().minusDays(10)) // 이전과 같은 요청은 null
 			.endDate(LocalDate.now().minusDays(2))
 			.build();
 		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
@@ -428,6 +428,30 @@ class ProblemServiceTest {
 			.isInstanceOf(ProblemValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
 			.hasFieldOrPropertyWithValue("error", "문제 마감 날짜는 오늘 이전의 날짜로 수정할 수 없습니다.");
+	}
+
+	@Test
+	@DisplayName("문제 정보 수정 실패 : 마감 날짜가 시작 날짜 보다 전인 경우")
+	void editProblemFailed_8() {
+		//given
+		Problem problem = Problem.builder()
+			.studyGroup(group)
+			.link("link")
+			.startDate(LocalDate.now().plusDays(10))
+			.endDate(LocalDate.now().plusDays(10))
+			.build();
+		EditProblemRequest request = EditProblemRequest.builder()
+			.endDate(problem.getEndDate().minusDays(2))
+			.build();
+		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
+		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
+		//when, then
+		assertThatThrownBy(() -> problemService.editProblem(user, 20L, request))
+			.isInstanceOf(ProblemValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
+			.hasFieldOrPropertyWithValue("error", "문제 마감 날짜는 시작 날짜 이전으로 수정할 수 없습니다.");
+
 	}
 
 	@Test

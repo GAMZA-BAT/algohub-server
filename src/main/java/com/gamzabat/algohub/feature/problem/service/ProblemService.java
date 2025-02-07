@@ -120,16 +120,40 @@ public class ProblemService {
 	}
 
 	private void checkProblemPeriodRequest(EditProblemRequest request, Problem problem) {
-		if (!request.startDate().equals(problem.getStartDate()) && request.startDate().isBefore(LocalDate.now()))
-			throw new ProblemValidationException(HttpStatus.BAD_REQUEST.value(), "문제 시작 날짜는 오늘 이전의 날짜로 수정할 수 없습니다.");
+		if (request.startDate() == null && request.endDate() != null) {
+			if (request.endDate().isBefore(LocalDate.now()))
+				throw new ProblemValidationException(HttpStatus.BAD_REQUEST.value(),
+					"문제 마감 날짜는 오늘 이전의 날짜로 수정할 수 없습니다.");
+			if (request.endDate().isBefore(problem.getStartDate()))
+				throw new ProblemValidationException(HttpStatus.BAD_REQUEST.value(),
+					"문제 마감 날짜는 시작 날짜 이전으로 수정할 수 없습니다.");
+		}
+		if (request.startDate() != null && request.endDate() == null) {
+			if (request.startDate().isBefore(LocalDate.now()))
+				throw new ProblemValidationException(HttpStatus.BAD_REQUEST.value(),
+					"문제 시작 날짜는 오늘 이전의 날짜로 수정할 수 없습니다.");
+			if (request.startDate().isAfter(problem.getEndDate()))
+				throw new ProblemValidationException(HttpStatus.BAD_REQUEST.value(),
+					"문제 시작 날짜가 마감 날짜 이후입니다.");
+			if (request.startDate().equals(problem.getStartDate()) || request.startDate()
+				.isBefore(LocalDate.now()))
+				throw new ProblemValidationException(HttpStatus.FORBIDDEN.value(),
+					"문제 시작 날짜 수정이 불가합니다. : 이미 진행 중인 문제입니다.");
+		}
 
-		if (!request.endDate().equals(problem.getEndDate()) && request.endDate().isBefore(LocalDate.now()))
-			throw new ProblemValidationException(HttpStatus.BAD_REQUEST.value(), "문제 마감 날짜는 오늘 이전의 날짜로 수정할 수 없습니다.");
+		if (request.startDate() != null && request.endDate() != null) {
+			if (request.startDate().isBefore(LocalDate.now()))
+				throw new ProblemValidationException(HttpStatus.BAD_REQUEST.value(),
+					"문제 시작 날짜는 오늘 이전의 날짜로 수정할 수 없습니다.");
+			if (request.startDate().isAfter(problem.getEndDate()))
+				throw new ProblemValidationException(HttpStatus.BAD_REQUEST.value(),
+					"문제 시작 날짜가 마감 날짜 이후입니다.");
+			if (request.startDate().equals(problem.getStartDate()) || request.startDate()
+				.isBefore(LocalDate.now()))
+				throw new ProblemValidationException(HttpStatus.FORBIDDEN.value(),
+					"문제 시작 날짜 수정이 불가합니다. : 이미 진행 중인 문제입니다.");
+		}
 
-		if (!problem.getStartDate().isAfter(LocalDate.now()) && !request.startDate()
-			.isEqual(problem.getStartDate()))
-			throw new ProblemValidationException(HttpStatus.FORBIDDEN.value(),
-				"문제 시작 날짜 수정이 불가합니다. : 이미 진행 중인 문제입니다.");
 	}
 
 	@Transactional(readOnly = true)
