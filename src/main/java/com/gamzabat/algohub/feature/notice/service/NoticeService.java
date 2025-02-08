@@ -84,8 +84,8 @@ public class NoticeService {
 			.build();
 	}
 
-	@Transactional(readOnly = false)
-	public void getNoticeRead(@AuthedUser User user, Long noticeId) {
+	@Transactional
+	public void saveNoticeRead(@AuthedUser User user, Long noticeId) {
 		Notice notice = noticeRepository.findById(noticeId)
 			.orElseThrow(() -> new NoticeValidationException("존재하지 않는 게시글입니다"));
 		if (!groupMemberRepository.existsByUserAndStudyGroup(user, notice.getStudyGroup()))
