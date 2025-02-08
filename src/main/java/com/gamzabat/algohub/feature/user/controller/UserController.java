@@ -23,6 +23,7 @@ import com.gamzabat.algohub.feature.user.dto.CheckEmailRequest;
 import com.gamzabat.algohub.feature.user.dto.DeleteUserRequest;
 import com.gamzabat.algohub.feature.user.dto.EditUserPasswordRequest;
 import com.gamzabat.algohub.feature.user.dto.RegisterRequest;
+import com.gamzabat.algohub.feature.user.dto.ResetPasswordRequest;
 import com.gamzabat.algohub.feature.user.dto.SignInRequest;
 import com.gamzabat.algohub.feature.user.dto.TokenResponse;
 import com.gamzabat.algohub.feature.user.dto.UpdateUserRequest;
@@ -150,5 +151,21 @@ public class UserController {
 		@PathVariable String userNickname) {
 		UserInfoResponse userInfo = userService.otherUserInfo(userNickname);
 		return ResponseEntity.ok().body(userInfo);
+	}
+
+	@PostMapping(value = "/auth/reset-password")
+	@Operation(summary = "비밀번호 초기화 메일 발송 API")
+	public ResponseEntity<Void> sendResetPasswordMail(@RequestParam String email) {
+		userService.sendResetPasswordMail(email);
+		return ResponseEntity.ok().build();
+	}
+
+	@PatchMapping("/auth/reset-password")
+	@Operation(summary = "비밀번호 재설정 API")
+	public ResponseEntity<Void> resetPassword(@RequestBody ResetPasswordRequest request, Errors errors) {
+		if (errors.hasErrors())
+			throw new RequestException("비밀번호 재설정 요청이 올바르지 않습니다.", errors);
+		userService.resetPassword(request);
+		return ResponseEntity.ok().build();
 	}
 }

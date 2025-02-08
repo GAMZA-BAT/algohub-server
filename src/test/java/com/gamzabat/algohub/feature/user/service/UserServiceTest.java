@@ -5,7 +5,9 @@ import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Field;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,6 +19,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -40,10 +43,12 @@ import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundUserException;
 import com.gamzabat.algohub.feature.image.service.ImageService;
+import com.gamzabat.algohub.feature.user.domain.ResetPassword;
 import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.dto.DeleteUserRequest;
 import com.gamzabat.algohub.feature.user.dto.EditUserPasswordRequest;
 import com.gamzabat.algohub.feature.user.dto.RegisterRequest;
+import com.gamzabat.algohub.feature.user.dto.ResetPasswordRequest;
 import com.gamzabat.algohub.feature.user.dto.SignInRequest;
 import com.gamzabat.algohub.feature.user.dto.TokenResponse;
 import com.gamzabat.algohub.feature.user.dto.UpdateUserRequest;
@@ -51,7 +56,10 @@ import com.gamzabat.algohub.feature.user.dto.UserInfoResponse;
 import com.gamzabat.algohub.feature.user.exception.BOJServerErrorException;
 import com.gamzabat.algohub.feature.user.exception.CheckBjNicknameValidationException;
 import com.gamzabat.algohub.feature.user.exception.CheckNicknameValidationException;
+import com.gamzabat.algohub.feature.user.exception.CheckPasswordFormException;
+import com.gamzabat.algohub.feature.user.exception.ResetPasswordValidationError;
 import com.gamzabat.algohub.feature.user.exception.UncorrectedPasswordException;
+import com.gamzabat.algohub.feature.user.repository.ResetPasswordRepository;
 import com.gamzabat.algohub.feature.user.repository.UserRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -74,8 +82,14 @@ class UserServiceTest {
 	private RedisService redisService;
 	@Mock
 	private RestTemplate restTemplate;
+	@Mock
+	private ResetPasswordRepository resetPasswordRepository;
+	@Mock
+	private EmailService emailService;
 	@Captor
 	private ArgumentCaptor<User> userCaptor;
+	@Captor
+	private ArgumentCaptor<ResetPassword> passwordCaptor;
 
 	private final String email = "test@email.com";
 	private final String password = "password1!";
@@ -83,7 +97,9 @@ class UserServiceTest {
 	private final String encoded = "encoded";
 	private final String imageUrl = "1_test@email.com_image.jpg";
 	private final String bjNickname = "bjNickname";
+	private final String RESET_PASSWORD_TOKEN = "RESET_PASSWORD_TOKEN";
 	private User user;
+	private ResetPassword resetPassword;
 
 	@BeforeEach
 	void setUp() throws NoSuchFieldException, IllegalAccessException {
@@ -99,6 +115,14 @@ class UserServiceTest {
 		Field userId = User.class.getDeclaredField("id");
 		userId.setAccessible(true);
 		userId.set(user, 1L);
+
+		resetPassword = ResetPassword.builder()
+			.user(user)
+			.token(RESET_PASSWORD_TOKEN)
+			.build();
+		Field resetId = ResetPassword.class.getDeclaredField("id");
+		resetId.setAccessible(true);
+		resetId.set(resetPassword, 1L);
 	}
 
 	@Test
@@ -416,6 +440,116 @@ class UserServiceTest {
 				assertThat(ex.getCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
 				assertThat(ex.getError()).isEqualTo("해당 유저는 존재하지 않습니다.");
 			});
+	}
+
+	@Test
+	@DisplayName("비밀번호 변경 메일 발송 실패 : 존재하지 않는 유저 ")
+	void resetPasswordEmail_failed1() {
+		//given
+		when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
+
+		//when, then
+		assertThatThrownBy(() -> userService.sendResetPasswordMail(email))
+			.isInstanceOf(CannotFoundUserException.class)
+			.satisfies(exception -> {
+				CannotFoundUserException ex = (CannotFoundUserException)exception;
+				assertThat(ex.getCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
+				assertThat(ex.getError()).isEqualTo("존재하지 않는 이메일의 유저입니다.");
+			});
+	}
+
+	@Test
+	@DisplayName("비밀번호 변경 메일 발송 성공")
+	void resetPasswordEmail_suceess() {
+		//give
+		when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+		when(emailService.sendResetPasswordMail(eq(email), anyString())).thenReturn(
+			CompletableFuture.completedFuture(null));
+
+		//when
+		userService.sendResetPasswordMail(email);
+
+		//then
+		verify(resetPasswordRepository, times(1)).save(passwordCaptor.capture());
+		ResetPassword resetPassword = passwordCaptor.getValue();
+		assertThat(resetPassword.getUser()).isEqualTo(user);
+
+		verify(emailService, times(1)).sendResetPasswordMail(anyString(), anyString());
+
+	}
+
+	@Test
+	@DisplayName("비밀번호 변경 실패 : 없는 Token")
+	void resetPassword_failed1() {
+		//give
+		ResetPasswordRequest request = new ResetPasswordRequest(RESET_PASSWORD_TOKEN, password);
+		when(resetPasswordRepository.findByToken(RESET_PASSWORD_TOKEN)).thenReturn(Optional.empty());
+
+		//when, then
+		assertThatThrownBy(() -> userService.resetPassword(request))
+			.isInstanceOf(ResetPasswordValidationError.class)
+			.hasFieldOrPropertyWithValue("message", "유효하지 않은 요청입니다.");
+	}
+
+	@Test
+	@DisplayName("비밀번호 변경 실패 : 만료된 요청")
+	void resetPassword_failed2() {
+		//give
+		LocalDateTime now = LocalDateTime.now();
+		ResetPasswordRequest request = new ResetPasswordRequest(RESET_PASSWORD_TOKEN, password);
+		when(resetPasswordRepository.findByToken(RESET_PASSWORD_TOKEN)).thenReturn(Optional.of(resetPassword));
+
+		//when, then
+		try (MockedStatic<LocalDateTime> mockedStatic = mockStatic(LocalDateTime.class)) {
+			mockedStatic.when(LocalDateTime::now).thenReturn(now.plusHours(3));
+			assertThatThrownBy(() -> userService.resetPassword(request))
+				.isInstanceOf(ResetPasswordValidationError.class)
+				.hasFieldOrPropertyWithValue("message", "기한이 만료된 비밀번호 수정 요청입니다.");
+		}
+
+	}
+
+	@Test
+	@DisplayName("비밀번호 변경 실패 : 이미 완료된 토큰")
+	void resetPassword_failed3() {
+		//give
+		ResetPasswordRequest request = new ResetPasswordRequest(RESET_PASSWORD_TOKEN, password);
+		when(resetPasswordRepository.findByToken(RESET_PASSWORD_TOKEN)).thenReturn(Optional.of(resetPassword));
+		resetPassword.makeDone();
+		//when, then
+		assertThatThrownBy(() -> userService.resetPassword(request))
+			.isInstanceOf(ResetPasswordValidationError.class)
+			.hasFieldOrPropertyWithValue("message", "이미 수정이 완료된 요청입니다.");
+	}
+
+	@Test
+	@DisplayName("비밀번호 변경 실패 : 비밀번호 조건 만족 안함")
+	void resetPassword_failed4() {
+		//give
+		ResetPasswordRequest request = new ResetPasswordRequest(RESET_PASSWORD_TOKEN, "pass");
+		when(resetPasswordRepository.findByToken(RESET_PASSWORD_TOKEN)).thenReturn(Optional.of(resetPassword));
+		//when, then
+		assertThatThrownBy(() -> userService.resetPassword(request))
+			.isInstanceOf(CheckPasswordFormException.class)
+			.satisfies(exception -> {
+				CheckPasswordFormException ex = (CheckPasswordFormException)exception;
+				assertThat(ex.getCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+				assertThat(ex.getErrors()).isEqualTo("올바르지 않은 비밀번호 형식입니다");
+			});
+	}
+
+	@Test
+	@DisplayName("비밀번호 변경 성공")
+	void resetPassword_success() {
+		//give
+		ResetPasswordRequest request = new ResetPasswordRequest(RESET_PASSWORD_TOKEN, password);
+		when(resetPasswordRepository.findByToken(RESET_PASSWORD_TOKEN)).thenReturn(Optional.of(resetPassword));
+		//when
+		userService.resetPassword(request);
+		//then
+		verify(passwordEncoder, times(1)).encode(password);
+		assertThat(resetPassword.getDone()).isTrue();
+		assertThat(user.getPassword()).isEqualTo(passwordEncoder.encode(password));
 	}
 
 }

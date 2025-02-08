@@ -29,6 +29,7 @@ import com.gamzabat.algohub.feature.user.exception.CheckBjNicknameValidationExce
 import com.gamzabat.algohub.feature.user.exception.CheckEmailFormException;
 import com.gamzabat.algohub.feature.user.exception.CheckNicknameValidationException;
 import com.gamzabat.algohub.feature.user.exception.CheckPasswordFormException;
+import com.gamzabat.algohub.feature.user.exception.ResetPasswordValidationError;
 import com.gamzabat.algohub.feature.user.exception.UncorrectedPasswordException;
 
 @ControllerAdvice
@@ -189,5 +190,11 @@ public class CustomExceptionHandler {
 	protected ResponseEntity<ErrorResponse> handler(GithubApiException e) {
 		return ResponseEntity.internalServerError()
 			.body(new ErrorResponse(HttpStatus.SERVICE_UNAVAILABLE.value(), e.getMessage(), null));
+	}
+
+	@ExceptionHandler(ResetPasswordValidationError.class)
+	protected ResponseEntity<ErrorResponse> handler(ResetPasswordValidationError e) {
+		return ResponseEntity.badRequest()
+			.body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null));
 	}
 }

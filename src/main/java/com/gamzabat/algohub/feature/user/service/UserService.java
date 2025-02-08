@@ -4,7 +4,10 @@ import static com.gamzabat.algohub.constants.ApiConstants.*;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.regex.Pattern;
 
 import org.springframework.http.HttpEntity;
@@ -32,10 +35,12 @@ import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundUserException;
 import com.gamzabat.algohub.feature.image.service.ImageService;
+import com.gamzabat.algohub.feature.user.domain.ResetPassword;
 import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.dto.DeleteUserRequest;
 import com.gamzabat.algohub.feature.user.dto.EditUserPasswordRequest;
 import com.gamzabat.algohub.feature.user.dto.RegisterRequest;
+import com.gamzabat.algohub.feature.user.dto.ResetPasswordRequest;
 import com.gamzabat.algohub.feature.user.dto.SignInRequest;
 import com.gamzabat.algohub.feature.user.dto.TokenResponse;
 import com.gamzabat.algohub.feature.user.dto.UpdateUserRequest;
@@ -45,7 +50,9 @@ import com.gamzabat.algohub.feature.user.exception.CheckBjNicknameValidationExce
 import com.gamzabat.algohub.feature.user.exception.CheckEmailFormException;
 import com.gamzabat.algohub.feature.user.exception.CheckNicknameValidationException;
 import com.gamzabat.algohub.feature.user.exception.CheckPasswordFormException;
+import com.gamzabat.algohub.feature.user.exception.ResetPasswordValidationError;
 import com.gamzabat.algohub.feature.user.exception.UncorrectedPasswordException;
+import com.gamzabat.algohub.feature.user.repository.ResetPasswordRepository;
 import com.gamzabat.algohub.feature.user.repository.UserRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -63,6 +70,8 @@ public class UserService {
 	private final AuthenticationManagerBuilder authManager;
 	private final RedisService redisService;
 	private final RestTemplate restTemplate;
+	private final ResetPasswordRepository resetPasswordRepository;
+	private final EmailService emailService;
 
 	@Transactional
 	public void register(RegisterRequest request, MultipartFile profileImage) {
@@ -261,6 +270,40 @@ public class UserService {
 		return response;
 	}
 
+	@Transactional
+	public void sendResetPasswordMail(String email) {
+		User user = userRepository.findByEmail(email)
+			.orElseThrow(() -> new CannotFoundUserException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 이메일의 유저입니다."));
+		String token = UserService.generateSecureToken();
+		ResetPassword resetPassword = ResetPassword.builder()
+			.user(user)
+			.token(token)
+			.build();
+		resetPasswordRepository.save(resetPassword);
+		log.info("success to create reset password token. Token: {}", resetPassword.getToken());
+
+		emailService.sendResetPasswordMail(user.getEmail(), token).thenAccept(unused ->
+			log.info("success to send reset password mail.")
+		);
+	}
+
+	@Transactional
+	public void resetPassword(ResetPasswordRequest request) {
+		ResetPassword resetPassword = resetPasswordRepository.findByToken(request.token())
+			.orElseThrow(() -> new ResetPasswordValidationError("유효하지 않은 요청입니다."));
+		if (resetPassword.getExpiredAt().isBefore(LocalDateTime.now()))
+			throw new ResetPasswordValidationError("기한이 만료된 비밀번호 수정 요청입니다.");
+		if (resetPassword.getDone())
+			throw new ResetPasswordValidationError("이미 수정이 완료된 요청입니다.");
+		checkPasswordForm(request.password());
+
+		String encodedPassword = passwordEncoder.encode(request.password());
+		resetPassword.getUser().editPassword(encodedPassword);
+		resetPassword.makeDone();
+		log.info("success to reset password.");
+
+	}
+
 	private void checkEmailForm(String email) {
 		if (!isValidEmailForm(email))
 			throw new CheckEmailFormException(HttpStatus.BAD_REQUEST.value(), "이메일 형식이 아닙니다");
@@ -291,6 +334,13 @@ public class UserService {
 		}
 		return password.matches(passwordPattern);
 
+	}
+
+	private static String generateSecureToken() {
+		final int TOKEN_LENGTH = 32;
+		byte[] bytes = new byte[TOKEN_LENGTH];
+		new SecureRandom().nextBytes(bytes);
+		return Base64.getEncoder().withoutPadding().encodeToString(bytes);
 	}
 
 }

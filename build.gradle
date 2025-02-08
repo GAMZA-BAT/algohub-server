@@ -64,8 +64,11 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     // OAuth2
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    //email
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'org.springframework.retry:spring-retry'
 }
-
 clean {
     delete file('src/main/generated')
 }
@@ -87,7 +90,7 @@ tasks.named("processResources") {
     dependsOn("preScript")
 }
 
-tasks.named("bootRun"){
+tasks.named("bootRun") {
     dependsOn("preScript")
 }
 
