@@ -31,4 +31,7 @@ public class SolutionComment extends Comment {
 		this.isRead = isRead;
 	}
 
+	public void markAsRead() {
+		this.isRead = true;
+	}
 }

@@ -81,6 +81,7 @@ public class SolutionCommentService implements CommentService<CreateSolutionComm
 	public List<GetCommentResponse> getCommentList(User user, Long solutionId) {
 		Solution solution = checkSolutionValidation(user, solutionId);
 		List<SolutionComment> list = commentRepository.findAllBySolution(solution);
+		updateCommentRead(list);
 		List<GetCommentResponse> result = list.stream().map(GetCommentResponse::toDTO)
 			.sorted((s1, s2) -> s2.createdAt().compareTo(s1.createdAt())).toList();
 		log.info("success to get solution comment list. solutionId: {}", solutionId);
@@ -128,4 +129,11 @@ public class SolutionCommentService implements CommentService<CreateSolutionComm
 		return solution;
 	}
 
+	private void updateCommentRead(List<SolutionComment> commentList) {
+		for (SolutionComment comment : commentList) {
+			if (!comment.isRead()) {
+				comment.markAsRead();
+			}
+		}
+	}
 }
