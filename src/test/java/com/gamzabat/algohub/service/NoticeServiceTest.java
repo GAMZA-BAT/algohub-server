@@ -36,6 +36,7 @@ import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValida
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.notice.domain.Notice;
+import com.gamzabat.algohub.feature.notice.domain.NoticeRead;
 import com.gamzabat.algohub.feature.notice.dto.CreateNoticeRequest;
 import com.gamzabat.algohub.feature.notice.dto.GetNoticeResponse;
 import com.gamzabat.algohub.feature.notice.dto.UpdateNoticeRequest;
@@ -217,6 +218,51 @@ public class NoticeServiceTest {
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "참여하지 않은 스터디 그룹 입니다.");
+	}
+
+	@Test
+	@DisplayName("공지 읽음 실패(존재하지 않는 공지)")
+	void saveNoticeReadFailed_1() {
+		//given
+		when(noticeRepository.findById(1001L)).thenReturn(Optional.empty());
+
+		//when, then
+		assertThatThrownBy(() -> noticeService.saveNoticeRead(user, 1001L))
+			.isInstanceOf(NoticeValidationException.class)
+			.hasFieldOrPropertyWithValue("error", "존재하지 않는 게시글입니다");
+
+	}
+
+	@Test
+	@DisplayName("공지 읽음 실패(그룹에 참여하지 않은 유저)")
+	void saveNoticeReadFailed_2() {
+		//given
+		when(noticeRepository.findById(1000L)).thenReturn(Optional.ofNullable(notice));
+		when(groupMemberRepository.existsByUserAndStudyGroup(user4, notice.getStudyGroup())).thenReturn(false);
+		//when
+		assertThatThrownBy(() -> noticeService.saveNoticeRead(user4, 1000L))
+			.isInstanceOf(StudyGroupValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
+			.hasFieldOrPropertyWithValue("error", "참여하지 않은 스터디 그룹 입니다.");
+	}
+
+	@Test
+	@DisplayName("공지 읽음 성공")
+	void saveNoticeReadSuccess() {
+		// Given
+		when(noticeRepository.findById(1000L)).thenReturn(Optional.of(notice));
+		when(groupMemberRepository.existsByUserAndStudyGroup(user2, studyGroup)).thenReturn(true);
+		when(noticeReadRepository.existsByNoticeAndUser(notice, user2)).thenReturn(false); // 사용자가 아직 안 읽음
+
+		// When
+		noticeService.saveNoticeRead(user2, 1000L);
+
+		// Then
+		// ✅ 올바른 메서드 호출 검증
+		verify(noticeRepository, times(1)).findById(1000L);
+		verify(groupMemberRepository, times(1)).existsByUserAndStudyGroup(user2, studyGroup);
+		verify(noticeReadRepository, times(1)).existsByNoticeAndUser(notice, user2);
+		verify(noticeReadRepository, times(1)).save(any(NoticeRead.class));
 	}
 
 	@Test
