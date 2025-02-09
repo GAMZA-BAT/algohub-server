@@ -87,8 +87,8 @@ class SolutionCommentServiceTest {
 		studyGroup = StudyGroup.builder().build();
 		problem = Problem.builder().studyGroup(studyGroup).build();
 		solution = Solution.builder().problem(problem).user(user).content("solution").build();
-		comment = SolutionComment.builder().user(user).content("content").solution(solution).build();
-		comment2 = SolutionComment.builder().user(user2).content("content").solution(solution).build();
+		comment = SolutionComment.builder().user(user).content("content").solution(solution).isRead(false).build();
+		comment2 = SolutionComment.builder().user(user2).content("content").solution(solution).isRead(false).build();
 
 		Field userField = User.class.getDeclaredField("id");
 		userField.setAccessible(true);
@@ -222,6 +222,7 @@ class SolutionCommentServiceTest {
 				.solution(solution)
 				.user(user)
 				.content("content" + i)
+				.isRead(true)
 				.build());
 		when(solutionRepository.findById(10L)).thenReturn(Optional.ofNullable(solution));
 		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));

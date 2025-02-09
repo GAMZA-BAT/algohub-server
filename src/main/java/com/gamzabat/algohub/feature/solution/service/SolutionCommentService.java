@@ -53,6 +53,7 @@ public class SolutionCommentService implements CommentService<CreateSolutionComm
 			.user(user)
 			.solution(solution)
 			.content(request.content())
+			.isRead(false)
 			.build());
 
 		sendCommentNotification(user, solution);
