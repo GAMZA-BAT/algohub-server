@@ -59,8 +59,8 @@ public class NoticeController {
 
 	@PostMapping("/notices/{noticeId}/read")
 	@Operation(summary = "공지 읽음 API")
-	public ResponseEntity<Void> saveNoticeRead(@AuthedUser User user, @PathVariable Long noticeId) {
-		noticeService.saveNoticeRead(user, noticeId);
+	public ResponseEntity<Void> markNoticeAsRead(@AuthedUser User user, @PathVariable Long noticeId) {
+		noticeService.markNoticeAsRead(user, noticeId);
 		return ResponseEntity.ok().build();
 	}
 
