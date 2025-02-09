@@ -58,7 +58,8 @@ public class EmailService {
 	@Recover
 	public CompletableFuture<Void> failedToSendResetPasswordMail(MessagingRuntimeException e, String to, String token) {
 		log.error("Failed to send reset password email to {} after retries. Exception: {}", to, e.getMessage(), e);
-
-		return CompletableFuture.completedFuture(null);
+		CompletableFuture<Void> failedFuture = new CompletableFuture<>();
+		failedFuture.completeExceptionally(e);
+		return failedFuture;
 	}
 }
