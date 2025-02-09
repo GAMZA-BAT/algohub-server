@@ -132,7 +132,7 @@ public class ProblemService {
 		if (request.startDate().isBefore(LocalDate.now()))
 			throw new ProblemValidationException(HttpStatus.BAD_REQUEST.value(),
 				"문제 시작 날짜는 오늘 이전의 날짜로 수정할 수 없습니다.");
-		if (request.startDate().equals(problem.getStartDate()))
+		if (request.startDate().isAfter(LocalDate.now()))
 			throw new ProblemValidationException(HttpStatus.FORBIDDEN.value(),
 				"문제 시작 날짜 수정이 불가합니다. : 이미 진행 중인 문제입니다.");
 		if (request.startDate().isAfter(problem.getEndDate()))

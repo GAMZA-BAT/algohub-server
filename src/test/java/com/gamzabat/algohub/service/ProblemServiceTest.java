@@ -369,7 +369,7 @@ class ProblemServiceTest {
 			.endDate(LocalDate.now().plusDays(10))
 			.build();
 		EditProblemRequest request = EditProblemRequest.builder()
-			.startDate(problem.getStartDate())
+			.startDate(LocalDate.now().plusDays(1))
 			.endDate(LocalDate.now().plusDays(7))
 			.build();
 		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
