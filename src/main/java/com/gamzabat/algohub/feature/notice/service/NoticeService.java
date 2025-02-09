@@ -21,6 +21,7 @@ import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupReposi
 import com.gamzabat.algohub.feature.notice.domain.Notice;
 import com.gamzabat.algohub.feature.notice.domain.NoticeRead;
 import com.gamzabat.algohub.feature.notice.dto.CreateNoticeRequest;
+import com.gamzabat.algohub.feature.notice.dto.CreateNoticeResponse;
 import com.gamzabat.algohub.feature.notice.dto.GetNoticeResponse;
 import com.gamzabat.algohub.feature.notice.dto.UpdateNoticeRequest;
 import com.gamzabat.algohub.feature.notice.exception.NoticeValidationException;
@@ -44,7 +45,7 @@ public class NoticeService {
 	private final NoticeReadRepository noticeReadRepository;
 
 	@Transactional
-	public void createNotice(@AuthedUser User user, Long groupId, CreateNoticeRequest request) {
+	public CreateNoticeResponse createNotice(@AuthedUser User user, Long groupId, CreateNoticeRequest request) {
 		StudyGroup studyGroup = studyGroupRepository.findById(groupId)
 			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.BAD_REQUEST.value(), "존재하지 않는 스터디 그룹입니다"));
 		GroupMember groupMember = groupMemberRepository.findByUserAndStudyGroup(user, studyGroup)
@@ -54,7 +55,7 @@ public class NoticeService {
 		if (RoleOfGroupMember.isParticipant(groupMember))
 			throw new UserValidationException("공지 작성 권한이 없습니다");
 
-		noticeRepository.save(Notice.builder()
+		Notice notice = noticeRepository.save(Notice.builder()
 			.author(user)
 			.studyGroup(studyGroup)
 			.title(request.title())
@@ -63,6 +64,7 @@ public class NoticeService {
 			.createdAt(LocalDateTime.now())
 			.build());
 		log.info("success to create notice");
+		return new CreateNoticeResponse(notice.getId());
 	}
 
 	@Transactional(readOnly = false)

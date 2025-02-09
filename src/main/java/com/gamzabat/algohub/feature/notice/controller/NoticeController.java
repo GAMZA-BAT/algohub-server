@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.gamzabat.algohub.common.annotation.AuthedUser;
 import com.gamzabat.algohub.exception.RequestException;
 import com.gamzabat.algohub.feature.notice.dto.CreateNoticeRequest;
+import com.gamzabat.algohub.feature.notice.dto.CreateNoticeResponse;
 import com.gamzabat.algohub.feature.notice.dto.GetNoticeResponse;
 import com.gamzabat.algohub.feature.notice.dto.UpdateNoticeRequest;
 import com.gamzabat.algohub.feature.notice.service.NoticeService;
@@ -40,14 +41,14 @@ public class NoticeController {
 
 	@PostMapping("/groups/{groupId}/notices")
 	@Operation(summary = "공지 작성 API")
-	public ResponseEntity<Void> createNotice(@AuthedUser User user,
+	public ResponseEntity<CreateNoticeResponse> createNotice(@AuthedUser User user,
 		@PathVariable Long groupId,
 		@Valid @RequestBody CreateNoticeRequest request,
 		Errors errors) {
 		if (errors.hasErrors())
 			throw new RequestException("올바르지 않은 공지 생성 요청입니다", errors);
-		noticeService.createNotice(user, groupId, request);
-		return ResponseEntity.ok().build();
+		CreateNoticeResponse noticeResponse = noticeService.createNotice(user, groupId, request);
+		return ResponseEntity.ok().body(noticeResponse);
 	}
 
 	@GetMapping("/notices/{noticeId}")

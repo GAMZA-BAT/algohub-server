@@ -38,6 +38,7 @@ import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupReposi
 import com.gamzabat.algohub.feature.notice.domain.Notice;
 import com.gamzabat.algohub.feature.notice.domain.NoticeRead;
 import com.gamzabat.algohub.feature.notice.dto.CreateNoticeRequest;
+import com.gamzabat.algohub.feature.notice.dto.CreateNoticeResponse;
 import com.gamzabat.algohub.feature.notice.dto.GetNoticeResponse;
 import com.gamzabat.algohub.feature.notice.dto.UpdateNoticeRequest;
 import com.gamzabat.algohub.feature.notice.exception.NoticeValidationException;
@@ -121,11 +122,13 @@ public class NoticeServiceTest {
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
 		when(groupMemberRepository.findByUserAndStudyGroup(user2, studyGroup)).thenReturn(
 			Optional.ofNullable(groupMember2));
+		when(noticeRepository.save(any(Notice.class))).thenReturn(notice);
 		//when
-		noticeService.createNotice(user2, 30L, request);
+		CreateNoticeResponse noticeResponse = noticeService.createNotice(user2, 30L, request);
 		//then
 		verify(noticeRepository, times(1)).save(noticeCaptor.capture());
 		Notice result = noticeCaptor.getValue();
+		assertThat(noticeResponse.noticeId()).isEqualTo(notice.getId());
 		assertThat(result.getAuthor()).isEqualTo(user2);
 		assertThat(result.getContent()).isEqualTo("content");
 		assertThat(result.getTitle()).isEqualTo("title");
