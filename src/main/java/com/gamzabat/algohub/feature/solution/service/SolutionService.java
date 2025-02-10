@@ -29,6 +29,7 @@ import com.gamzabat.algohub.feature.notification.service.NotificationService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.solution.domain.Solution;
+import com.gamzabat.algohub.feature.solution.domain.SolutionComment;
 import com.gamzabat.algohub.feature.solution.dto.CreateSolutionRequest;
 import com.gamzabat.algohub.feature.solution.dto.GetSolutionResponse;
 import com.gamzabat.algohub.feature.solution.dto.GetSolutionWithGroupIdResponse;
@@ -55,6 +56,7 @@ public class SolutionService {
 	private final SolutionCommentRepository commentRepository;
 	private final RankingService rankingService;
 	private final RankingUpdateService rankingUpdateService;
+	private final SolutionCommentRepository solutionCommentRepository;
 
 	@Transactional(readOnly = true)
 	public Page<GetSolutionResponse> getSolutionList(User user, Long problemId, String nickname,
@@ -72,7 +74,8 @@ public class SolutionService {
 		Page<Solution> solutions = solutionRepository.findAllFilteredSolutions(problem, nickname, language, result,
 			pageable);
 
-		return solutions.map(this::getGetSolutionResponse);
+		return solutions.map(solution -> this.getGetSolutionResponse(user, solution));
+
 	}
 
 	@Transactional(readOnly = true)
@@ -83,7 +86,7 @@ public class SolutionService {
 		StudyGroup group = solution.getProblem().getStudyGroup();
 
 		if (groupMemberRepository.existsByUserAndStudyGroup(user, group)) {
-			return getGetSolutionResponse(solution);
+			return getGetSolutionResponse(user, solution);
 		} else {
 			throw new UserValidationException("해당 풀이를 확인 할 권한이 없습니다.");
 		}
@@ -101,7 +104,7 @@ public class SolutionService {
 
 		Page<GetSolutionResponse> inProgressSolutions = solutionRepository.findAllFilteredMySolutionsInGroup(user,
 				group, problemNumber, language, result, ProgressCategory.IN_PROGRESS, pageable)
-			.map(this::getGetSolutionResponse);
+			.map(solution -> this.getGetSolutionResponse(user, solution));
 
 		log.info("success to get my in-progress solutions in group {}", groupId);
 		return inProgressSolutions;
@@ -118,7 +121,8 @@ public class SolutionService {
 		}
 
 		Page<GetSolutionResponse> expiredSolutions = solutionRepository.findAllFilteredMySolutionsInGroup(user, group,
-			problemNumber, language, result, ProgressCategory.EXPIRED, pageable).map(this::getGetSolutionResponse);
+				problemNumber, language, result, ProgressCategory.EXPIRED, pageable)
+			.map(solution -> this.getGetSolutionResponse(user, solution));
 
 		log.info("success to get my expired solutions in group {}", groupId);
 		return expiredSolutions;
@@ -130,9 +134,10 @@ public class SolutionService {
 		String result,
 		Pageable pageable) {
 		Page<GetSolutionWithGroupIdResponse> inProgressSolutions = solutionRepository.findAllFilteredMySolutions(user,
-			problemNumber,
-			language,
-			result, ProgressCategory.IN_PROGRESS, pageable).map(this::getGetSolutionWithGroupIdResponse);
+				problemNumber,
+				language,
+				result, ProgressCategory.IN_PROGRESS, pageable)
+			.map(solution -> this.getGetSolutionWithGroupIdResponse(user, solution));
 		log.info("success to get my in-progress solutions.");
 		return inProgressSolutions;
 	}
@@ -142,30 +147,42 @@ public class SolutionService {
 		String result,
 		Pageable pageable) {
 		Page<GetSolutionWithGroupIdResponse> expiredSolutions = solutionRepository.findAllFilteredMySolutions(user,
-			problemNumber,
-			language,
-			result, ProgressCategory.EXPIRED, pageable).map(this::getGetSolutionWithGroupIdResponse);
+				problemNumber,
+				language,
+				result, ProgressCategory.EXPIRED, pageable)
+			.map(solution -> this.getGetSolutionWithGroupIdResponse(user, solution));
 		log.info("success to get my expired solutions.");
 		return expiredSolutions;
 	}
 
-	private GetSolutionWithGroupIdResponse getGetSolutionWithGroupIdResponse(Solution solution) {
+	private GetSolutionWithGroupIdResponse getGetSolutionWithGroupIdResponse(User user, Solution solution) {
 		Integer correctCount = getCorrectCount(solution);
 		Integer submitMemberCount = solutionRepository.countDistinctUsersByProblem(solution.getProblem());
 		Integer totalMemberCount = groupMemberRepository.countMembersByStudyGroup(getGroup(solution)) + 1;
 		Integer accuracy = calculateAccuracy(submitMemberCount, correctCount);
 		long commentCount = commentRepository.countCommentsBySolutionId(solution.getId());
+		boolean isRead = true;
+
+		if (isMySolution(user, solution)) {
+			isRead = !hasUnreadComment(solution);
+		}
 		return GetSolutionWithGroupIdResponse.toDTO(solution, accuracy, submitMemberCount, totalMemberCount,
-			commentCount);
+			commentCount, isRead);
 	}
 
-	private GetSolutionResponse getGetSolutionResponse(Solution solution) {
+	private GetSolutionResponse getGetSolutionResponse(User user, Solution solution) {
 		Integer correctCount = getCorrectCount(solution);
 		Integer submitMemberCount = solutionRepository.countDistinctUsersByProblem(solution.getProblem());
 		Integer totalMemberCount = groupMemberRepository.countMembersByStudyGroup(getGroup(solution)) + 1;
 		Integer accuracy = calculateAccuracy(submitMemberCount, correctCount);
 		long commentCount = commentRepository.countCommentsBySolutionId(solution.getId());
-		return GetSolutionResponse.toDTO(solution, accuracy, submitMemberCount, totalMemberCount, commentCount);
+		boolean isRead = true;
+
+		if (isMySolution(user, solution)) {
+			isRead = !hasUnreadComment(solution);
+		}
+
+		return GetSolutionResponse.toDTO(solution, accuracy, submitMemberCount, totalMemberCount, commentCount, isRead);
 	}
 
 	private Integer getCorrectCount(Solution solution) {
@@ -253,5 +270,20 @@ public class SolutionService {
 
 	private StudyGroup getGroup(Solution solution) {
 		return solution.getProblem().getStudyGroup();
+	}
+
+	private boolean isMySolution(User user, Solution solution) {
+		return solution.getUser() == user;
+	}
+
+	private boolean hasUnreadComment(Solution solution) {
+		List<SolutionComment> comments = solutionCommentRepository.findAllBySolution(solution);
+
+		for (SolutionComment solutionComment : comments) {
+			if (!solutionComment.isRead())
+				return true;
+		}
+
+		return false;
 	}
 }

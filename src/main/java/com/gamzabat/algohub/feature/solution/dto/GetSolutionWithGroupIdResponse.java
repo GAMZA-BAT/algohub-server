@@ -12,7 +12,7 @@ public class GetSolutionWithGroupIdResponse extends GetSolutionResponse {
 	private final Long groupId;
 
 	public static GetSolutionWithGroupIdResponse toDTO(Solution solution, Integer accuracy, Integer submitMemberCount,
-		Integer totalMemberCount, Long commentCount) {
+		Integer totalMemberCount, Long commentCount, Boolean isRead) {
 		return GetSolutionWithGroupIdResponse.builder()
 			.solutionId(solution.getId())
 			.problemTitle(solution.getProblem().getTitle())
@@ -30,6 +30,7 @@ public class GetSolutionWithGroupIdResponse extends GetSolutionResponse {
 			.language(solution.getLanguage())
 			.codeLength(solution.getCodeLength())
 			.commentCount(commentCount)
+			.isRead(isRead)
 			.groupId(solution.getProblem().getStudyGroup().getId())
 			.build();
 	}

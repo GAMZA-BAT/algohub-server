@@ -26,9 +26,10 @@ public class GetSolutionResponse {
 	private final String language;
 	private final Integer codeLength;
 	private final Long commentCount;
+	private final Boolean isRead;
 
 	public static GetSolutionResponse toDTO(Solution solution, Integer accuracy, Integer submitMemberCount,
-		Integer totalMemberCount, Long commentCount) {
+		Integer totalMemberCount, Long commentCount, Boolean isRead) {
 		return GetSolutionResponse.builder()
 			.solutionId(solution.getId())
 			.problemTitle(solution.getProblem().getTitle())
@@ -46,6 +47,7 @@ public class GetSolutionResponse {
 			.language(solution.getLanguage())
 			.codeLength(solution.getCodeLength())
 			.commentCount(commentCount)
+			.isRead(isRead)
 			.build();
 	}
 
