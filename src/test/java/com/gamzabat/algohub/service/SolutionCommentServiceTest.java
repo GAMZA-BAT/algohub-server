@@ -217,12 +217,19 @@ class SolutionCommentServiceTest {
 	void getComment_1() {
 		// given
 		List<SolutionComment> list = new ArrayList<>(30);
-		for (int i = 0; i < 30; i++)
+		for (int i = 0; i < 15; i++)
 			list.add(SolutionComment.builder()
 				.solution(solution)
 				.user(user)
 				.content("content" + i)
 				.isRead(true)
+				.build());
+		for (int i = 15; i < 30; i++)
+			list.add(SolutionComment.builder()
+				.solution(solution)
+				.user(user)
+				.content("content" + i)
+				.isRead(false)
 				.build());
 		when(solutionRepository.findById(10L)).thenReturn(Optional.ofNullable(solution));
 		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
@@ -235,6 +242,11 @@ class SolutionCommentServiceTest {
 		assertThat(result.size()).isEqualTo(30);
 		for (int i = 0; i < 30; i++)
 			assertThat(result.get(i).content()).isEqualTo("content" + i);
+
+		for (SolutionComment comment : list) {
+			assertThat(comment.isRead()).isTrue();
+		}
+		
 	}
 
 	@Test
