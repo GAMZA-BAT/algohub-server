@@ -24,8 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 public class EmailService {
 	private static final String FROM_ADDRESS = "noreply@algohub.kr";
 	private static final String RESET_PASSWORD_SUBJECT = "[AlgoHub] 비밀번호 찾기";
-	//TODO: When the work is completed on the client side, it needs to be replaced with the appropriate URL.
-	private static final String RESET_PASSWORD_CLIENT_ENDPOINT = "https://algohub.kr";
+	private static final String RESET_PASSWORD_CLIENT_ENDPOINT = "https://algohub.kr/reset-password";
 	private final JavaMailSender mailSender;
 	private final TemplateEngine templateEngine;
 
