@@ -660,6 +660,7 @@ class SolutionServiceTest {
 				.language("Java 11")
 				.solvedDateTime(fixedDateTime)
 				.build();
+			inProgress.add(solution);
 			for (int j = 0; j < 10; j++)
 				comments.add(SolutionComment.builder()
 					.solution(solution)
