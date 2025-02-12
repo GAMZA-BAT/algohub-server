@@ -273,7 +273,7 @@ public class SolutionService {
 	}
 
 	private boolean isMySolution(User user, Solution solution) {
-		return solution.getUser() == user;
+		return solution.getUser().getId().equals(user.getId());
 	}
 
 	private boolean hasUnreadComment(Solution solution) {

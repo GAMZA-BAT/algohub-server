@@ -38,6 +38,7 @@ import com.gamzabat.algohub.feature.notification.service.NotificationService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.solution.domain.Solution;
+import com.gamzabat.algohub.feature.solution.domain.SolutionComment;
 import com.gamzabat.algohub.feature.solution.dto.CreateSolutionRequest;
 import com.gamzabat.algohub.feature.solution.dto.GetSolutionResponse;
 import com.gamzabat.algohub.feature.solution.dto.GetSolutionWithGroupIdResponse;
@@ -72,6 +73,7 @@ class SolutionServiceTest {
 	private StudyGroup group, group1;
 	private Long groupId = 30L;
 	private Integer problemNumber = 1010;
+	private SolutionComment solutionComment;
 	DateTimeFormatter formatter;
 
 	@BeforeEach
@@ -128,20 +130,31 @@ class SolutionServiceTest {
 		// given
 		Pageable pageable = PageRequest.of(0, 10);
 		List<Solution> list = new ArrayList<>();
-
+		List<SolutionComment> commentList = new ArrayList<>();
 		LocalDateTime fixedDateTime = LocalDateTime.now();
 
-		setTestSolutionList(list, fixedDateTime);
+		setTestSolutionAndCommentList(list, commentList, fixedDateTime);
 
 		Page<Solution> compileErrorPage = new PageImpl<>(list.subList(0, 10), pageable, 10);
 		Page<Solution> correctPage = new PageImpl<>(list.subList(10, 20), pageable, 10);
+		List<SolutionComment> readComments = new ArrayList<>(commentList.subList(0, 25));
+		List<SolutionComment> unReadComments = new ArrayList<>(commentList.subList(25, 50));
+
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(group));
 		when(problemRepository.findById(10L)).thenReturn(Optional.ofNullable(problem));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user, group)).thenReturn(true);
 		when(solutionRepository.findAllFilteredSolutions(problem, null, null, "컴파일 에러", pageable)).thenReturn(
 			compileErrorPage);
+		for (int i = 0; i < 5; i++) {
+			when(solutionCommentRepository.findAllBySolution(compileErrorPage.getContent().get(i))).thenReturn(
+				readComments.subList(i * 5, i * 5 + 5));
+		}
 		when(solutionRepository.findAllFilteredSolutions(problem, null, null, "맞았습니다!!", pageable)).thenReturn(
 			correctPage);
+		for (int i = 0; i < 5; i++) {
+			when(solutionCommentRepository.findAllBySolution(correctPage.getContent().get(i))).thenReturn(
+				unReadComments.subList(i * 5, i * 5 + 5));
+		}
 		// when
 		Page<GetSolutionResponse> compileErrorResult = solutionService.getSolutionList(user, 10L, null, null, "컴파일 에러",
 			pageable);
@@ -158,6 +171,7 @@ class SolutionServiceTest {
 			assertThat(compileErrorResult.getContent().get(i).getExecutionTime()).isEqualTo(i);
 			assertThat(compileErrorResult.getContent().get(i).getNickname()).isEqualTo("nickname1");
 			assertThat(compileErrorResult.getContent().get(i).getLanguage()).isEqualTo("Java 11");
+			assertThat(compileErrorResult.getContent().get(i).getIsRead()).isEqualTo(true);
 			assertThat(compileErrorResult.getContent().get(i).getSolvedDateTime()).isEqualTo(
 				DateFormatUtil.formatDateTime(fixedDateTime));
 		}
@@ -168,6 +182,7 @@ class SolutionServiceTest {
 			assertThat(compileErrorResult.getContent().get(i).getExecutionTime()).isEqualTo(i);
 			assertThat(compileErrorResult.getContent().get(i).getNickname()).isEqualTo("nickname2");
 			assertThat(compileErrorResult.getContent().get(i).getLanguage()).isEqualTo("C++17");
+			assertThat(compileErrorResult.getContent().get(i).getIsRead()).isEqualTo(true);
 			assertThat(compileErrorResult.getContent().get(i).getSolvedDateTime()).isEqualTo(
 				DateFormatUtil.formatDateTime(fixedDateTime));
 		}
@@ -181,6 +196,7 @@ class SolutionServiceTest {
 			assertThat(correctResult.getContent().get(i).getExecutionTime()).isEqualTo(i + 10);
 			assertThat(correctResult.getContent().get(i).getNickname()).isEqualTo("nickname1");
 			assertThat(correctResult.getContent().get(i).getLanguage()).isEqualTo("Java 11");
+			assertThat(correctResult.getContent().get(i).getIsRead()).isEqualTo(false);
 			assertThat(correctResult.getContent().get(i).getSolvedDateTime()).isEqualTo(
 				DateFormatUtil.formatDateTime(fixedDateTime));
 		}
@@ -191,6 +207,7 @@ class SolutionServiceTest {
 			assertThat(correctResult.getContent().get(i).getExecutionTime()).isEqualTo(i + 10);
 			assertThat(correctResult.getContent().get(i).getNickname()).isEqualTo("nickname2");
 			assertThat(correctResult.getContent().get(i).getLanguage()).isEqualTo("PyPy3");
+			assertThat(correctResult.getContent().get(i).getIsRead()).isEqualTo(true);
 			assertThat(correctResult.getContent().get(i).getSolvedDateTime()).isEqualTo(
 				DateFormatUtil.formatDateTime(fixedDateTime));
 		}
@@ -202,10 +219,10 @@ class SolutionServiceTest {
 		// given
 		Pageable pageable = PageRequest.of(0, 10);
 		List<Solution> list = new ArrayList<>();
-
+		List<SolutionComment> commentList = new ArrayList<>();
 		LocalDateTime fixedDateTime = LocalDateTime.now();
 
-		setTestSolutionList(list, fixedDateTime);
+		setTestSolutionAndCommentList(list, commentList, fixedDateTime);
 
 		Page<Solution> solutionPage = new PageImpl<>(list.subList(10, 15), pageable, 5);
 
@@ -214,6 +231,7 @@ class SolutionServiceTest {
 		when(groupMemberRepository.existsByUserAndStudyGroup(user2, group)).thenReturn(true);
 		when(solutionRepository.findAllFilteredSolutions(problem, "nickname1", "Java", null, pageable)).thenReturn(
 			solutionPage);
+
 		// when
 		Page<GetSolutionResponse> result = solutionService.getSolutionList(user2, 10L, "nickname1", "Java", null,
 			pageable);
@@ -227,6 +245,7 @@ class SolutionServiceTest {
 			assertThat(result.getContent().get(i).getExecutionTime()).isEqualTo(i + 10);
 			assertThat(result.getContent().get(i).getNickname()).isEqualTo("nickname1");
 			assertThat(result.getContent().get(i).getLanguage()).isEqualTo("Java 11");
+			assertThat(result.getContent().get(i).getIsRead()).isEqualTo(true);
 			assertThat(result.getContent().get(i).getSolvedDateTime()).isEqualTo(
 				DateFormatUtil.formatDateTime(fixedDateTime));
 		}
@@ -289,8 +308,18 @@ class SolutionServiceTest {
 			.codeLength(10)
 			.solvedDateTime(LocalDateTime.now())
 			.build();
+		List<SolutionComment> commentList = new ArrayList<>();
+		for (int j = 0; j < 5; j++)
+			commentList.add(SolutionComment.builder()
+				.solution(solution)
+				.user(user)
+				.content("content" + j)
+				.isRead(false)
+				.build());
+
 		when(solutionRepository.findById(anyLong())).thenReturn(Optional.ofNullable(solution));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user, group)).thenReturn(true);
+		when(solutionCommentRepository.findAllBySolution(solution)).thenReturn(commentList);
 		// when
 		GetSolutionResponse response = solutionService.getSolution(user, 10L);
 		// then
@@ -303,6 +332,7 @@ class SolutionServiceTest {
 		assertThat(response.getLanguage()).isEqualTo("Java");
 		assertThat(response.getCodeLength()).isEqualTo(10);
 		assertThat(response.getCommentCount()).isEqualTo(0);
+		assertThat(response.getIsRead()).isEqualTo(false);
 		assertThat(response.getSolvedDateTime()).isEqualTo(DateFormatUtil.formatDateTime(LocalDateTime.now()));
 	}
 
@@ -321,6 +351,15 @@ class SolutionServiceTest {
 			.codeLength(10)
 			.solvedDateTime(LocalDateTime.now())
 			.build();
+		List<SolutionComment> commentList = new ArrayList<>();
+		for (int j = 0; j < 5; j++)
+			commentList.add(SolutionComment.builder()
+				.solution(solution)
+				.user(user)
+				.content("content" + j)
+				.isRead(false)
+				.build());
+
 		when(solutionRepository.findById(anyLong())).thenReturn(Optional.ofNullable(solution));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user2, group)).thenReturn(true);
 		// when
@@ -335,6 +374,7 @@ class SolutionServiceTest {
 		assertThat(response.getLanguage()).isEqualTo("Java");
 		assertThat(response.getCodeLength()).isEqualTo(10);
 		assertThat(response.getCommentCount()).isEqualTo(0);
+		assertThat(response.getIsRead()).isEqualTo(true);
 		assertThat(response.getSolvedDateTime()).isEqualTo(DateFormatUtil.formatDateTime(LocalDateTime.now()));
 	}
 
@@ -372,9 +412,10 @@ class SolutionServiceTest {
 			.hasFieldOrPropertyWithValue("errors", "해당 풀이를 확인 할 권한이 없습니다.");
 	}
 
-	private void setTestSolutionList(List<Solution> list, LocalDateTime fixedDateTime) {
+	private void setTestSolutionAndCommentList(List<Solution> list, List<SolutionComment> commentList,
+		LocalDateTime fixedDateTime) {
 		for (int i = 0; i < 5; i++) {
-			list.add(Solution.builder()
+			Solution solution = Solution.builder()
 				.problem(problem)
 				.content("content" + i)
 				.user(user)
@@ -384,7 +425,15 @@ class SolutionServiceTest {
 				.language("Java 11")
 				.codeLength(i)
 				.solvedDateTime(fixedDateTime)
-				.build());
+				.build();
+			list.add(solution);
+			for (int j = 0; j < 5; j++)
+				commentList.add(SolutionComment.builder()
+					.solution(solution)
+					.user(user)
+					.content("content" + j)
+					.isRead(true)
+					.build());
 		}
 		for (int i = 5; i < 10; i++) {
 			list.add(Solution.builder()
@@ -400,7 +449,7 @@ class SolutionServiceTest {
 				.build());
 		}
 		for (int i = 10; i < 15; i++) {
-			list.add(Solution.builder()
+			Solution solution = Solution.builder()
 				.problem(problem)
 				.content("content" + i)
 				.user(user)
@@ -410,7 +459,16 @@ class SolutionServiceTest {
 				.language("Java 11")
 				.codeLength(i)
 				.solvedDateTime(fixedDateTime)
-				.build());
+				.build();
+			list.add(solution);
+			for (int j = 5; j < 10; j++)
+				commentList.add(SolutionComment.builder()
+					.solution(solution)
+					.user(user)
+					.content("content" + j)
+					.isRead(false)
+					.build());
+
 		}
 		for (int i = 15; i < 20; i++) {
 			list.add(Solution.builder()
@@ -478,16 +536,32 @@ class SolutionServiceTest {
 		Pageable pageable = PageRequest.of(0, 10);
 		List<Solution> inProgress = new ArrayList<>();
 		LocalDateTime fixedDateTime = LocalDateTime.now();
+		List<SolutionComment> comments = new ArrayList<>();
 
 		for (int i = 0; i < 5; i++) {
-			inProgress.add(Solution.builder()
+			Solution solution = Solution.builder()
 				.problem(problem)
 				.user(user)
 				.codeLength(i)
 				.result("맞았습니다!!")
 				.language("Java 11")
 				.solvedDateTime(fixedDateTime)
-				.build());
+				.build();
+			inProgress.add(solution);
+			for (int j = 0; j < 5; j++)
+				comments.add(SolutionComment.builder()
+					.solution(solution)
+					.user(user)
+					.content("content" + j)
+					.isRead(false)
+					.build());
+			for (int j = 0; j < 5; j++)
+				comments.add(SolutionComment.builder()
+					.solution(solution)
+					.user(user)
+					.content("content" + j)
+					.isRead(true)
+					.build());
 		}
 
 		Page<Solution> inProgressPages = new PageImpl<>(inProgress, pageable, 10);
@@ -496,6 +570,10 @@ class SolutionServiceTest {
 		when(solutionRepository.findAllFilteredMySolutionsInGroup(user, group, problemNumber, null, null,
 			ProgressCategory.IN_PROGRESS,
 			pageable)).thenReturn(inProgressPages);
+		for (int i = 0; i < 5; i++) {
+			when(solutionCommentRepository.findAllBySolution(inProgressPages.getContent().get(i))).thenReturn(
+				comments.subList(i * 10, i * 10 + 10));
+		}
 		// when
 		Page<GetSolutionResponse> responses = solutionService.getMySolutionsInGroupInProgress(user, groupId,
 			problemNumber, null,
@@ -504,6 +582,7 @@ class SolutionServiceTest {
 		for (int i = 0; i < 5; i++) {
 			assertThat(responses.getContent().get(i).getNickname()).isEqualTo("nickname1");
 			assertThat(responses.getContent().get(i).getProblemLevel()).isEqualTo(problem.getLevel());
+			assertThat(responses.getContent().get(i).getIsRead()).isEqualTo(false);
 		}
 	}
 
@@ -513,16 +592,32 @@ class SolutionServiceTest {
 		// given
 		Pageable pageable = PageRequest.of(0, 10);
 		List<Solution> expired = new ArrayList<>();
+		List<SolutionComment> comments = new ArrayList<>();
 		LocalDateTime fixedDateTime = LocalDateTime.now();
 		for (int i = 0; i < 5; i++) {
-			expired.add(Solution.builder()
+			Solution solution = Solution.builder()
 				.problem(problem1)
 				.user(user)
 				.codeLength(i)
 				.result("틀렸습니다")
 				.language("Java 11")
 				.solvedDateTime(fixedDateTime)
-				.build());
+				.build();
+			expired.add(solution);
+			for (int j = 0; j < 5; j++)
+				comments.add(SolutionComment.builder()
+					.solution(solution)
+					.user(user)
+					.content("content" + j)
+					.isRead(false)
+					.build());
+			for (int j = 0; j < 5; j++)
+				comments.add(SolutionComment.builder()
+					.solution(solution)
+					.user(user)
+					.content("content" + j)
+					.isRead(true)
+					.build());
 		}
 
 		Page<Solution> expiredPages = new PageImpl<>(expired, pageable, 10);
@@ -531,6 +626,10 @@ class SolutionServiceTest {
 		when(solutionRepository.findAllFilteredMySolutionsInGroup(user, group, problemNumber, null, null,
 			ProgressCategory.EXPIRED,
 			pageable)).thenReturn(expiredPages);
+		for (int i = 0; i < 5; i++) {
+			when(solutionCommentRepository.findAllBySolution(expiredPages.getContent().get(i))).thenReturn(
+				comments.subList(i * 10, i * 10 + 10));
+		}
 		// when
 		Page<GetSolutionResponse> responses = solutionService.getMySolutionsInGroupExpired(user, groupId,
 			problemNumber, null,
@@ -538,6 +637,7 @@ class SolutionServiceTest {
 		// then
 		for (int i = 0; i < 5; i++) {
 			assertThat(responses.getContent().get(i).getNickname()).isEqualTo("nickname1");
+			assertThat(responses.getContent().get(i).getIsRead()).isEqualTo(false);
 			assertThat(responses.getContent().get(i).getProblemLevel()).isEqualTo(problem1.getLevel());
 		}
 	}
@@ -548,29 +648,42 @@ class SolutionServiceTest {
 		// given
 		Pageable pageable = PageRequest.of(0, 10);
 		List<Solution> inProgress = new ArrayList<>();
+		List<SolutionComment> comments = new ArrayList<>();
 		LocalDateTime fixedDateTime = LocalDateTime.now();
 
 		for (int i = 0; i < 5; i++) {
-			inProgress.add(Solution.builder()
+			Solution solution = Solution.builder()
 				.problem(problem)
 				.user(user)
 				.codeLength(i)
 				.result("맞았습니다!!")
 				.language("Java 11")
 				.solvedDateTime(fixedDateTime)
-				.build());
+				.build();
+			for (int j = 0; j < 10; j++)
+				comments.add(SolutionComment.builder()
+					.solution(solution)
+					.user(user)
+					.content("content" + j)
+					.isRead(true)
+					.build());
 		}
 
 		Page<Solution> inProgressPages = new PageImpl<>(inProgress, pageable, 10);
 
 		when(solutionRepository.findAllFilteredMySolutions(user, null, null, null,
 			ProgressCategory.IN_PROGRESS, pageable)).thenReturn(inProgressPages);
+		for (int i = 0; i < 5; i++) {
+			when(solutionCommentRepository.findAllBySolution(inProgressPages.getContent().get(i))).thenReturn(
+				comments.subList(i * 10, i * 10 + 10));
+		}
 		// when
 		Page<GetSolutionWithGroupIdResponse> responses = solutionService.getMySolutionsInProgress(user, null, null,
 			null, pageable);
 		// then
 		for (int i = 0; i < 5; i++) {
 			assertThat(responses.getContent().get(i).getNickname()).isEqualTo("nickname1");
+			assertThat(responses.getContent().get(i).getIsRead()).isEqualTo(true);
 			assertThat(responses.getContent().get(i).getGroupId()).isEqualTo(
 				problem.getStudyGroup().getId());
 		}
@@ -582,29 +695,50 @@ class SolutionServiceTest {
 		// given
 		Pageable pageable = PageRequest.of(0, 10);
 		List<Solution> expired = new ArrayList<>();
+		List<SolutionComment> comments = new ArrayList<>();
 		LocalDateTime fixedDateTime = LocalDateTime.now();
 
 		for (int i = 0; i < 5; i++) {
-			expired.add(Solution.builder()
+			Solution solution = Solution.builder()
 				.problem(problem2)
 				.user(user)
 				.codeLength(i)
 				.result("컴파일 에러")
 				.language("Java 11")
 				.solvedDateTime(fixedDateTime)
-				.build());
+				.build();
+			expired.add(solution);
+			for (int j = 0; j < 5; j++)
+				comments.add(SolutionComment.builder()
+					.solution(solution)
+					.user(user)
+					.content("content" + j)
+					.isRead(true)
+					.build());
+			for (int j = 5; j < 10; j++)
+				comments.add(SolutionComment.builder()
+					.solution(solution)
+					.user(user)
+					.content("content" + j)
+					.isRead(false)
+					.build());
 		}
 
 		Page<Solution> expiredPages = new PageImpl<>(expired, pageable, 10);
 
 		when(solutionRepository.findAllFilteredMySolutions(user, null, null, null,
 			ProgressCategory.EXPIRED, pageable)).thenReturn(expiredPages);
+		for (int i = 0; i < 5; i++) {
+			when(solutionCommentRepository.findAllBySolution(expiredPages.getContent().get(i))).thenReturn(
+				comments.subList(i * 10, i * 10 + 10));
+		}
 		// when
 		Page<GetSolutionWithGroupIdResponse> responses = solutionService.getMySolutionsExpired(user, null, null,
 			null, pageable);
 		// then
 		for (int i = 0; i < 5; i++) {
 			assertThat(responses.getContent().get(i).getNickname()).isEqualTo("nickname1");
+			assertThat(responses.getContent().get(i).getIsRead()).isEqualTo(false);
 			assertThat(responses.getContent().get(i).getGroupId()).isEqualTo(
 				problem2.getStudyGroup().getId());
 		}
