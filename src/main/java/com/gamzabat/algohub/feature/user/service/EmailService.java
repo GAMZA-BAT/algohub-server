@@ -36,7 +36,7 @@ public class EmailService {
 	)
 	public CompletableFuture<Void> sendResetPasswordMail(String to, String token) {
 		Context context = new Context();
-		context.setVariable("verificationUrl", RESET_PASSWORD_CLIENT_ENDPOINT + "?token=" + token);
+		context.setVariable("resetUrl", RESET_PASSWORD_CLIENT_ENDPOINT + "?token=" + token);
 		String emailContent = templateEngine.process("reset-password", context);
 		MimeMessage message = mailSender.createMimeMessage();
 
