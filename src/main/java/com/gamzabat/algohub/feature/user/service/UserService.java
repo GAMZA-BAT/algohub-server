@@ -289,19 +289,27 @@ public class UserService {
 
 	@Transactional
 	public void resetPassword(ResetPasswordRequest request) {
-		ResetPassword resetPassword = resetPasswordRepository.findByToken(request.token())
-			.orElseThrow(() -> new ResetPasswordValidationError("유효하지 않은 요청입니다."));
-		if (resetPassword.getExpiredAt().isBefore(LocalDateTime.now()))
-			throw new ResetPasswordValidationError("기한이 만료된 비밀번호 수정 요청입니다.");
-		if (resetPassword.getDone())
-			throw new ResetPasswordValidationError("이미 수정이 완료된 요청입니다.");
+		ResetPassword resetPassword = getValidatedResetPassword(request.token());
 		checkPasswordForm(request.password());
 
 		String encodedPassword = passwordEncoder.encode(request.password());
 		resetPassword.getUser().editPassword(encodedPassword);
 		resetPassword.makeDone();
 		log.info("success to reset password.");
+	}
 
+	public void validateResetPasswordToken(String token) {
+		this.getValidatedResetPassword(token);
+	}
+
+	private ResetPassword getValidatedResetPassword(String token) {
+		ResetPassword resetPassword = resetPasswordRepository.findByToken(token)
+			.orElseThrow(() -> new ResetPasswordValidationError(HttpStatus.BAD_REQUEST.value(), "유효하지 않은 요청입니다."));
+		if (resetPassword.getExpiredAt().isBefore(LocalDateTime.now()))
+			throw new ResetPasswordValidationError(HttpStatus.GONE.value(), "기한이 만료된 비밀번호 수정 요청입니다.");
+		if (resetPassword.getDone())
+			throw new ResetPasswordValidationError(HttpStatus.CONFLICT.value(), "이미 수정이 완료된 요청입니다.");
+		return resetPassword;
 	}
 
 	private void checkEmailForm(String email) {

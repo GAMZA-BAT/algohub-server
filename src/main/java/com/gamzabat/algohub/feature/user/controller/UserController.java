@@ -168,4 +168,11 @@ public class UserController {
 		userService.resetPassword(request);
 		return ResponseEntity.ok().build();
 	}
+
+	@GetMapping("/auth/check-password-token")
+	@Operation(summary = "비밀번호 재설정 토큰 유효성 검증 API")
+	public ResponseEntity<Void> checkPasswordToken(@RequestParam String token) {
+		userService.validateResetPasswordToken(token);
+		return ResponseEntity.ok().build();
+	}
 }

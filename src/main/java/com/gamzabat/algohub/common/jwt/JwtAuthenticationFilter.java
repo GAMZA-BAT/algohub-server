@@ -30,6 +30,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		"/api/auth/reissue-token",
 		"/api/solutions",
 		"/api/auth/reset-password",
+		"/api/auth/check-password-token",
 		"/api/users/check-email",
 		"/api/users/check-nickname",
 		"/api/users/check-baekjoon-nickname",

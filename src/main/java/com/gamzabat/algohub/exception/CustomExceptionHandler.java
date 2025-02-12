@@ -195,6 +195,6 @@ public class CustomExceptionHandler {
 	@ExceptionHandler(ResetPasswordValidationError.class)
 	protected ResponseEntity<ErrorResponse> handler(ResetPasswordValidationError e) {
 		return ResponseEntity.badRequest()
-			.body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null));
+			.body(new ErrorResponse(e.getCode(), e.getErrors(), null));
 	}
 }

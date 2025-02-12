@@ -488,7 +488,11 @@ class UserServiceTest {
 		//when, then
 		assertThatThrownBy(() -> userService.resetPassword(request))
 			.isInstanceOf(ResetPasswordValidationError.class)
-			.hasFieldOrPropertyWithValue("message", "유효하지 않은 요청입니다.");
+			.satisfies(exception -> {
+				ResetPasswordValidationError ex = (ResetPasswordValidationError)exception;
+				assertThat(ex.getCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+				assertThat(ex.getErrors()).isEqualTo("유효하지 않은 요청입니다.");
+			});
 	}
 
 	@Test
@@ -504,7 +508,11 @@ class UserServiceTest {
 			mockedStatic.when(LocalDateTime::now).thenReturn(now.plusHours(3));
 			assertThatThrownBy(() -> userService.resetPassword(request))
 				.isInstanceOf(ResetPasswordValidationError.class)
-				.hasFieldOrPropertyWithValue("message", "기한이 만료된 비밀번호 수정 요청입니다.");
+				.satisfies(exception -> {
+					ResetPasswordValidationError ex = (ResetPasswordValidationError)exception;
+					assertThat(ex.getCode()).isEqualTo(HttpStatus.GONE.value());
+					assertThat(ex.getErrors()).isEqualTo("기한이 만료된 비밀번호 수정 요청입니다.");
+				});
 		}
 
 	}
@@ -519,7 +527,11 @@ class UserServiceTest {
 		//when, then
 		assertThatThrownBy(() -> userService.resetPassword(request))
 			.isInstanceOf(ResetPasswordValidationError.class)
-			.hasFieldOrPropertyWithValue("message", "이미 수정이 완료된 요청입니다.");
+			.satisfies(exception -> {
+				ResetPasswordValidationError ex = (ResetPasswordValidationError)exception;
+				assertThat(ex.getCode()).isEqualTo(HttpStatus.CONFLICT.value());
+				assertThat(ex.getErrors()).isEqualTo("이미 수정이 완료된 요청입니다.");
+			});
 	}
 
 	@Test
