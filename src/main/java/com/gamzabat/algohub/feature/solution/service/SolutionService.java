@@ -164,7 +164,7 @@ public class SolutionService {
 		boolean isRead = true;
 
 		if (isMySolution(user, solution)) {
-			isRead = !hasUnreadComment(solution);
+			isRead = !isAllRead(solution);
 		}
 		return GetSolutionWithGroupIdResponse.toDTO(solution, accuracy, submitMemberCount, totalMemberCount,
 			commentCount, isRead);
@@ -179,7 +179,7 @@ public class SolutionService {
 		boolean isRead = true;
 
 		if (isMySolution(user, solution)) {
-			isRead = !hasUnreadComment(solution);
+			isRead = !isAllRead(solution);
 		}
 
 		return GetSolutionResponse.toDTO(solution, accuracy, submitMemberCount, totalMemberCount, commentCount, isRead);
@@ -276,7 +276,7 @@ public class SolutionService {
 		return solution.getUser().getId().equals(user.getId());
 	}
 
-	private boolean hasUnreadComment(Solution solution) {
+	private boolean isAllRead(Solution solution) {
 		List<SolutionComment> comments = solutionCommentRepository.findAllBySolution(solution);
 
 		for (SolutionComment solutionComment : comments) {
