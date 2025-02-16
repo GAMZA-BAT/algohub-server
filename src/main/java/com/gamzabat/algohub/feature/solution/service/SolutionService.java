@@ -179,7 +179,7 @@ public class SolutionService {
 		boolean isRead = true;
 
 		if (isMySolution(user, solution)) {
-			isRead = !isAllRead(solution);
+			isRead = isAllRead(solution);
 		}
 
 		return GetSolutionResponse.toDTO(solution, accuracy, submitMemberCount, totalMemberCount, commentCount, isRead);
@@ -281,9 +281,9 @@ public class SolutionService {
 
 		for (SolutionComment solutionComment : comments) {
 			if (!solutionComment.isRead())
-				return true;
+				return false;
 		}
 
-		return false;
+		return true;
 	}
 }
