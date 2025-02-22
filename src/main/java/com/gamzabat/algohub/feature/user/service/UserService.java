@@ -348,7 +348,7 @@ public class UserService {
 		final int TOKEN_LENGTH = 32;
 		byte[] bytes = new byte[TOKEN_LENGTH];
 		new SecureRandom().nextBytes(bytes);
-		return Base64.getEncoder().withoutPadding().encodeToString(bytes);
+		return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
 	}
 
 }
