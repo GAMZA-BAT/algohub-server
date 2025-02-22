@@ -35,6 +35,7 @@ public class User {
 	private String password;
 	private String nickname;
 	private String bjNickname;
+	@Column(length = 512)
 	private String profileImage;
 	@Column(nullable = false)
 	@NotNull
