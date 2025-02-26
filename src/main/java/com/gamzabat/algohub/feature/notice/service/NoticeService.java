@@ -63,7 +63,7 @@ public class NoticeService {
 			.category(request.category())
 			.createdAt(LocalDateTime.now())
 			.build());
-		log.info("success to create notice");
+		log.info("success to create notice user_id={}", user.getId());
 		return new CreateNoticeResponse(notice.getId());
 	}
 
@@ -131,7 +131,7 @@ public class NoticeService {
 		if (request.category() != null) {
 			notice.updateCategory(request.category());
 		}
-		log.info("success to update notice");
+		log.info("success to update notice user_id={}", user.getId());
 	}
 
 	@Transactional
