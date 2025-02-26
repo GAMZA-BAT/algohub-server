@@ -92,7 +92,7 @@ public class UserService {
 			.build());
 
 		saveProfileImage(profileImage, user);
-		log.info("success to register");
+		log.info("success to register user_id={}", user.getId());
 	}
 
 	private void saveProfileImage(MultipartFile profileImage, User user) {
@@ -138,7 +138,7 @@ public class UserService {
 		}
 
 		userRepository.save(user);
-		log.info("success to update user");
+		log.info("success to update user user_id={}", user.getId());
 	}
 
 	private void editUserProfileImage(User user, MultipartFile inputImage, Boolean isDefaultImage) {
@@ -178,6 +178,7 @@ public class UserService {
 			throw new UncorrectedPasswordException("비밀번호가 틀렸습니다.");
 		}
 		userRepository.delete(user);
+		log.info("success to delete user user_id={}", user.getId());
 	}
 
 	@Transactional
@@ -198,6 +199,7 @@ public class UserService {
 		user.editPassword(encodedPassword);
 
 		userRepository.save(user);
+		log.info("success to edit password user_id={}", user.getId());
 	}
 
 	@Transactional(readOnly = true)
@@ -221,7 +223,7 @@ public class UserService {
 			log.error("BOJ server error occurred : " + e.getMessage());
 			throw new BOJServerErrorException("현재 백준 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
 		}
-		log.info("success to check baekjoon nickname validity");
+		log.info("success to check baekjoon nickname validity nickname={}", bjNickname);
 	}
 
 	@Transactional(readOnly = true)
@@ -242,7 +244,7 @@ public class UserService {
 		if (userRepository.existsByNickname(nickname))
 			throw new CheckNicknameValidationException(HttpStatus.CONFLICT.value(), "이미 사용 중인 닉네임입니다.");
 
-		log.info("success to check nickname validity");
+		log.info("success to check nickname validity nickname={}", nickname);
 	}
 
 	@Transactional(readOnly = true)
