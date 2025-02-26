@@ -91,7 +91,7 @@ public class ProblemService {
 				NotificationCategory.PROBLEM_STARTED.getMessage(title)
 			);
 
-		log.info("success to create problem");
+		log.info("success to create problem user_id={}", user.getId());
 	}
 
 	@Transactional
@@ -118,7 +118,7 @@ public class ProblemService {
 			problem.editProblemEndDate(request.endDate());
 		}
 
-		log.info("success to edit problem deadline");
+		log.info("success to edit problem deadline user_id={}", user.getId());
 	}
 
 	private void checkProblemValidation(Problem problem) {
@@ -212,7 +212,7 @@ public class ProblemService {
 
 		solutionRepository.deleteAllByProblem(problem);
 		problemRepository.delete(problem);
-		log.info("success to delete problem");
+		log.info("success to delete problem user_id={}", user.getId());
 	}
 
 	@Transactional(readOnly = true)
