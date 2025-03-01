@@ -103,8 +103,15 @@ public class UserService {
 
 	@Transactional
 	public TokenResponse signIn(SignInRequest request) {
+		String loginEmail = request.email();
+		if (userRepository.existsByNickname(request.email())) {
+			User loginUser = userRepository.findByNickname(request.email())
+				.orElseThrow(() -> new CannotFoundUserException(HttpStatus.NOT_FOUND.value(), "해당 유저는 존재하지 않습니다."));
+			loginEmail = loginUser.getEmail();
+		}
+
 		UsernamePasswordAuthenticationToken authenticationToken
-			= new UsernamePasswordAuthenticationToken(request.email(), request.password());
+			= new UsernamePasswordAuthenticationToken(loginEmail, request.password());
 		Authentication authenticate;
 		try {
 			authenticate = authManager.getObject().authenticate(authenticationToken);
