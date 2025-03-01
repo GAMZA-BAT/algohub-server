@@ -163,8 +163,8 @@ class UserServiceTest {
 	}
 
 	@Test
-	@DisplayName("로그인 성공")
-	void signIn() {
+	@DisplayName("로그인 성공 : 이메일")
+	void signInSuccessByEmail() {
 		// given
 		SignInRequest request = new SignInRequest(email, password);
 		String accessToken = "access-token";
@@ -176,6 +176,30 @@ class UserServiceTest {
 		when(authManager.getObject().authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(
 			authentication);
 		when(tokenProvider.generateTokens(authentication)).thenReturn(jwtDTO);
+		when(userRepository.existsByNickname(email)).thenReturn(false);
+		// when
+		TokenResponse response = userService.signIn(request);
+		// then
+		assertThat(response.accessToken()).isEqualTo(accessToken);
+		assertThat(response.refreshToken()).isEqualTo(refreshToken);
+	}
+
+	@Test
+	@DisplayName("로그인 성공 : 닉네임")
+	void signInSuccessByNickname() {
+		// given
+		SignInRequest request = new SignInRequest(nickname, password);
+		String accessToken = "access-token";
+		String refreshToken = "refresh-token";
+		Authentication authentication = mock(Authentication.class);
+		JwtDTO jwtDTO = new JwtDTO("Baerer", accessToken, refreshToken);
+		AuthenticationManager authenticationManager = mock(AuthenticationManager.class);
+		when(authManager.getObject()).thenReturn(authenticationManager);
+		when(authManager.getObject().authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(
+			authentication);
+		when(tokenProvider.generateTokens(authentication)).thenReturn(jwtDTO);
+		when(userRepository.existsByNickname(nickname)).thenReturn(true);
+		when(userRepository.findByNickname(nickname)).thenReturn(Optional.of(user));
 		// when
 		TokenResponse response = userService.signIn(request);
 		// then
