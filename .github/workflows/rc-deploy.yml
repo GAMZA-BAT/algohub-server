@@ -1,0 +1,54 @@
+name: algohub server rc-deploy
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  rc-deploy:
+    runs-on: ubuntu-22.04-arm
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: JDK 21 Setup
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup environment variable from WebDAV
+        run: |
+          curl -u ${{ secrets.CREDENTIAL_NAME }}:${{ secrets.CREDENTIAL_PW }} -X GET https://webdav.hwangdo.kr/docker-registry/rc-deploy.txt -o docker.txt
+          echo "DOCKER_USERNAME=$(sed -n '1p' docker.txt)" >> $GITHUB_ENV
+          echo "DOCKER_PASSWORD=$(sed -n '2p' docker.txt)" >> $GITHUB_ENV
+
+      - name: CREDENTIAL_NAME, CREDENTIAL_PW
+        run: |
+          echo "CREDENTIAL_NAME=${{ secrets.CREDENTIAL_NAME }}" >> $GITHUB_ENV 
+          echo "CREDENTIAL_PW=${{ secrets.CREDENTIAL_PW }}" >> $GITHUB_ENV 
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build with Gradle
+        uses: gradle/gradle-build-action@v2.6.0
+        with:
+          arguments: bootJar --no-daemon
+
+      - name: Log in to Docker registry
+        uses: docker/login-action@v2
+        with:
+          registry: docker.hwangdo.kr
+          username: ${{ env.DOCKER_USERNAME }}
+          password: ${{ env.DOCKER_PASSWORD }}
+
+      - name: Build backend docker image
+        run: |
+          docker build -t docker.hwangdo.kr/algohub-server-rc:latest .
+
+      - name: Push backend docker image
+        run: |
+          docker push docker.hwangdo.kr/algohub-server-rc:latest

@@ -54,6 +54,14 @@ public class SwaggerConfig {
 			return Collections.singletonList(prodServer);
 		}
 
+		Server rcServer = new Server()
+			.description("Algohub RC API")
+			.url(ApiConstants.RC_SERVER_HTTPS_ENDPOINT);
+
+		if ("rc".equalsIgnoreCase(activeProfile)) {
+			return Collections.singletonList(rcServer);
+		}
+
 		Server localServer = new Server()
 			.description("Algohub API for LOCAL")
 			.url("http://localhost:" + serverPort);

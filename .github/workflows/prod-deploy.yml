@@ -1,9 +1,9 @@
-name: ALGOHUB Deploy
+name: ALGOHUB production Deploy
 
 on:
   push:
     branches:
-      - develop
+      - deploy
 
 permissions:
   contents: read
@@ -33,7 +33,7 @@ jobs:
       - name: Build with Gradle
         uses: gradle/gradle-build-action@v2.6.0
         with:
-          arguments: build -Dspring.profiles.active=prod -x test
+          arguments: bootJar --no-daemon
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
