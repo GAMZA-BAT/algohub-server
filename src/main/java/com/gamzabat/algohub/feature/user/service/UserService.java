@@ -50,6 +50,7 @@ import com.gamzabat.algohub.feature.user.exception.CheckBjNicknameValidationExce
 import com.gamzabat.algohub.feature.user.exception.CheckEmailFormException;
 import com.gamzabat.algohub.feature.user.exception.CheckNicknameValidationException;
 import com.gamzabat.algohub.feature.user.exception.CheckPasswordFormException;
+import com.gamzabat.algohub.feature.user.exception.InvalidEmailException;
 import com.gamzabat.algohub.feature.user.exception.ResetPasswordValidationError;
 import com.gamzabat.algohub.feature.user.exception.UncorrectedPasswordException;
 import com.gamzabat.algohub.feature.user.repository.ResetPasswordRepository;
@@ -75,6 +76,10 @@ public class UserService {
 
 	@Transactional
 	public void register(RegisterRequest request, MultipartFile profileImage) {
+		if (checkEmailVerification(request.email())) {
+			throw new InvalidEmailException("이메일이 유효하지 않습니다.");
+		}
+
 		checkEmailDuplication(request.email());
 		checkNickname(request.nickname());
 		checkEmailForm(request.email());
@@ -315,6 +320,28 @@ public class UserService {
 	private void checkEmailForm(String email) {
 		if (!isValidEmailForm(email))
 			throw new CheckEmailFormException(HttpStatus.BAD_REQUEST.value(), "이메일 형식이 아닙니다");
+	}
+
+	private boolean checkEmailVerification(String email) {
+		String authCode = createCode();
+		redisService.setValues(email, authCode, Duration.ofMinutes(5));
+		String userCode = emailService.checkEmailVerification(email, authCode);
+		String redisAuthCode = redisService.getValues(email);
+		boolean authResult = redisService.checkExistsValue(redisAuthCode) && redisAuthCode.equals(userCode);
+
+		return authResult;
+	}
+
+	private String createCode() {
+		int length = 6;
+		SecureRandom random = new SecureRandom(); // ✅ 기본 생성자 사용 (예외 발생 X)
+		StringBuilder builder = new StringBuilder();
+
+		for (int i = 0; i < length; i++) {
+			builder.append(random.nextInt(10)); // 0~9 랜덤 숫자 추가
+		}
+
+		return builder.toString();
 	}
 
 	private boolean isValidEmailForm(String email) {

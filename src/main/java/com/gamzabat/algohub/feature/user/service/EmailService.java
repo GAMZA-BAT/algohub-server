@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class EmailService {
 	private static final String FROM_ADDRESS = "noreply@algohub.kr";
+	private static final String EMAIL_VERIFICATION_SUBJECT = "[AlgoHub] 이메일 유효성 검사";
 	private static final String RESET_PASSWORD_SUBJECT = "[AlgoHub] 비밀번호 찾기";
 	private static final String RESET_PASSWORD_CLIENT_ENDPOINT = "https://algohub.kr/reset-password";
 	private final JavaMailSender mailSender;
@@ -60,5 +61,9 @@ public class EmailService {
 		CompletableFuture<Void> failedFuture = new CompletableFuture<>();
 		failedFuture.completeExceptionally(e);
 		return failedFuture;
+	}
+
+	public String checkEmailVerification(String email, String verificationCode) {
+		return null;
 	}
 }

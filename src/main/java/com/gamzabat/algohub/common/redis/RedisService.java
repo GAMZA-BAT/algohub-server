@@ -31,4 +31,8 @@ public class RedisService {
 	public void deleteValues(String key) {
 		redisTemplate.delete(key);
 	}
+
+	public boolean checkExistsValue(String key) {
+		return Boolean.TRUE.equals(redisTemplate.hasKey(key)); // Redis에 key 존재 여부 반환
+	}
 }
