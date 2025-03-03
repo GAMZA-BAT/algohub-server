@@ -175,9 +175,7 @@ class UserServiceTest {
 		when(authManager.getObject()).thenReturn(authenticationManager);
 		when(authManager.getObject().authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(
 			authentication);
-		when(tokenProvider.generateTokens(authentication)).thenReturn(jwtDTO);
-		when(userRepository.existsByNickname(email)).thenReturn(false);
-		// when
+		when(tokenProvider.generateTokens(authentication)).thenReturn(jwtDTO);// when
 		TokenResponse response = userService.signIn(request);
 		// then
 		assertThat(response.accessToken()).isEqualTo(accessToken);
@@ -198,8 +196,6 @@ class UserServiceTest {
 		when(authManager.getObject().authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(
 			authentication);
 		when(tokenProvider.generateTokens(authentication)).thenReturn(jwtDTO);
-		when(userRepository.existsByNickname(nickname)).thenReturn(true);
-		when(userRepository.findByNickname(nickname)).thenReturn(Optional.of(user));
 		// when
 		TokenResponse response = userService.signIn(request);
 		// then
