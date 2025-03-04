@@ -54,9 +54,9 @@ public class UserController {
 		return ResponseEntity.ok().build();
 	}
 
-	@PostMapping(value = "/users/bjnickname")
+	@PatchMapping(value = "/users/bjnickname")
 	@Operation(summary = "백준 아이디 입력 API")
-	public ResponseEntity<Void> enterBjNickName(@Valid @RequestParam RegisterBjNickNameRequest request,
+	public ResponseEntity<Void> registerBjNickName(@Valid @RequestBody RegisterBjNickNameRequest request,
 		@AuthedUser User user, Errors errors) {
 		if (errors.hasErrors())
 			throw new RequestException("올바르지 않은 요청입니다.", errors);

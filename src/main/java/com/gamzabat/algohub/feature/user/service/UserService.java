@@ -188,7 +188,7 @@ public class UserService {
 		userRepository.save(user);
 	}
 
-	@Transactional(readOnly = true)
+	@Transactional
 	public void registerBjNickName(User user, RegisterBjNickNameRequest request) {
 		String bjUserUrl = BOJ_USER_PROFILE_URL + request.bjNickName();
 
@@ -210,6 +210,8 @@ public class UserService {
 			throw new BOJServerErrorException("현재 백준 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
 		}
 		user.editBjNickname(request.bjNickName());
+		userRepository.save(user);
+
 		log.info("success to register baekjoon nickname user_id = {}", user.getId());
 	}
 
