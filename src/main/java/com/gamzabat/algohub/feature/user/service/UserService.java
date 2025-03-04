@@ -1,7 +1,5 @@
 package com.gamzabat.algohub.feature.user.service;
 
-import static com.gamzabat.algohub.constants.ApiConstants.*;
-
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
@@ -10,9 +8,6 @@ import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.regex.Pattern;
 
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -21,8 +16,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -45,8 +38,6 @@ import com.gamzabat.algohub.feature.user.dto.SignInRequest;
 import com.gamzabat.algohub.feature.user.dto.TokenResponse;
 import com.gamzabat.algohub.feature.user.dto.UpdateUserRequest;
 import com.gamzabat.algohub.feature.user.dto.UserInfoResponse;
-import com.gamzabat.algohub.feature.user.exception.BOJServerErrorException;
-import com.gamzabat.algohub.feature.user.exception.CheckBjNicknameValidationException;
 import com.gamzabat.algohub.feature.user.exception.CheckEmailFormException;
 import com.gamzabat.algohub.feature.user.exception.CheckNicknameValidationException;
 import com.gamzabat.algohub.feature.user.exception.CheckPasswordFormException;
@@ -78,7 +69,6 @@ public class UserService {
 		checkEmailDuplication(request.email());
 		checkNickname(request.nickname());
 		checkEmailForm(request.email());
-		checkBjNickname(request.bjNickname());
 		checkPasswordForm(request.password());
 
 		String encodedPassword = passwordEncoder.encode(request.password());
@@ -87,7 +77,6 @@ public class UserService {
 			.email(request.email())
 			.password(encodedPassword)
 			.nickname(request.nickname())
-			.bjNickname(request.bjNickname())
 			.role(Role.USER)
 			.build());
 
@@ -198,30 +187,6 @@ public class UserService {
 		user.editPassword(encodedPassword);
 
 		userRepository.save(user);
-	}
-
-	@Transactional(readOnly = true)
-	public void checkBjNickname(String bjNickname) {
-		String bjUserUrl = BOJ_USER_PROFILE_URL + bjNickname;
-
-		HttpHeaders headers = new HttpHeaders();
-		headers.set("User-Agent",
-			"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36");
-		HttpEntity<String> entity = new HttpEntity<>(headers);
-
-		try {
-			restTemplate.exchange(bjUserUrl, HttpMethod.GET, entity, String.class);
-			// TODO : 백준 본인 인증 관련 사항 확정 후 로직 수정
-			// if (userRepository.existsByBjNickname(bjNickname))
-			// 	throw new CheckBjNicknameValidationException(HttpStatus.CONFLICT.value(), "이미 가입된 백준 닉네임 입니다.");
-		} catch (HttpClientErrorException e) {
-			if (e.getStatusCode() == HttpStatus.NOT_FOUND)
-				throw new CheckBjNicknameValidationException(HttpStatus.NOT_FOUND.value(), "백준 닉네임이 유효하지 않습니다.");
-		} catch (HttpServerErrorException e) {
-			log.error("BOJ server error occurred : " + e.getMessage());
-			throw new BOJServerErrorException("현재 백준 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
-		}
-		log.info("success to check baekjoon nickname validity");
 	}
 
 	@Transactional(readOnly = true)
