@@ -37,6 +37,7 @@ import com.gamzabat.algohub.feature.user.domain.ResetPassword;
 import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.dto.DeleteUserRequest;
 import com.gamzabat.algohub.feature.user.dto.EditUserPasswordRequest;
+import com.gamzabat.algohub.feature.user.dto.RegisterBjNickNameRequest;
 import com.gamzabat.algohub.feature.user.dto.RegisterRequest;
 import com.gamzabat.algohub.feature.user.dto.ResetPasswordRequest;
 import com.gamzabat.algohub.feature.user.dto.SignInRequest;
@@ -188,8 +189,8 @@ public class UserService {
 	}
 
 	@Transactional(readOnly = true)
-	public void checkBjNickname(String bjNickname) {
-		String bjUserUrl = BOJ_USER_PROFILE_URL + bjNickname;
+	public void registerBjNickName(User user, RegisterBjNickNameRequest request) {
+		String bjUserUrl = BOJ_USER_PROFILE_URL + request.bjNickName();
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.set("User-Agent",
@@ -208,7 +209,8 @@ public class UserService {
 			log.error("BOJ server error occurred : " + e.getMessage());
 			throw new BOJServerErrorException("현재 백준 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
 		}
-		log.info("success to check baekjoon nickname validity");
+		user.editBjNickname(request.bjNickName());
+		log.info("success to register baekjoon nickname user_id = {}", user.getId());
 	}
 
 	@Transactional(readOnly = true)

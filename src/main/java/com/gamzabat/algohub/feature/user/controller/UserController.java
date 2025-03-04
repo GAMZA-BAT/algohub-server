@@ -22,6 +22,7 @@ import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.dto.CheckEmailRequest;
 import com.gamzabat.algohub.feature.user.dto.DeleteUserRequest;
 import com.gamzabat.algohub.feature.user.dto.EditUserPasswordRequest;
+import com.gamzabat.algohub.feature.user.dto.RegisterBjNickNameRequest;
 import com.gamzabat.algohub.feature.user.dto.RegisterRequest;
 import com.gamzabat.algohub.feature.user.dto.ResetPasswordRequest;
 import com.gamzabat.algohub.feature.user.dto.SignInRequest;
@@ -50,6 +51,16 @@ public class UserController {
 		if (errors.hasErrors())
 			throw new RequestException("올바르지 않은 요청입니다.", errors);
 		userService.register(request, profileImage);
+		return ResponseEntity.ok().build();
+	}
+
+	@PostMapping(value = "/users/bjnickname")
+	@Operation(summary = "백준 아이디 입력 API")
+	public ResponseEntity<Void> enterBjNickName(@Valid @RequestParam RegisterBjNickNameRequest request,
+		@AuthedUser User user, Errors errors) {
+		if (errors.hasErrors())
+			throw new RequestException("올바르지 않은 요청입니다.", errors);
+		userService.registerBjNickName(user, request);
 		return ResponseEntity.ok().build();
 	}
 
@@ -107,13 +118,6 @@ public class UserController {
 	@Operation(summary = "로그아웃 API")
 	public ResponseEntity<Void> logout(HttpServletRequest request) {
 		userService.logout(request);
-		return ResponseEntity.ok().build();
-	}
-
-	@GetMapping("/users/check-baekjoon-nickname")
-	@Operation(summary = "백준 닉네임 유효성 검증 API", description = "회원가입 진행 시, 백준 닉네임이 유효한지 검증하는 API")
-	public ResponseEntity<Void> checkBjNickname(@RequestParam String bjNickname) {
-		userService.checkBjNickname(bjNickname);
 		return ResponseEntity.ok().build();
 	}
 
