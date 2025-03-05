@@ -47,6 +47,7 @@ import com.gamzabat.algohub.feature.user.domain.ResetPassword;
 import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.dto.DeleteUserRequest;
 import com.gamzabat.algohub.feature.user.dto.EditUserPasswordRequest;
+import com.gamzabat.algohub.feature.user.dto.RegisterBjNickNameRequest;
 import com.gamzabat.algohub.feature.user.dto.RegisterRequest;
 import com.gamzabat.algohub.feature.user.dto.ResetPasswordRequest;
 import com.gamzabat.algohub.feature.user.dto.SignInRequest;
@@ -223,7 +224,6 @@ class UserServiceTest {
 		assertThat(response.getEmail()).isEqualTo(email);
 		assertThat(response.getNickname()).isEqualTo(nickname);
 		assertThat(response.getProfileImage()).isEqualTo(imageUrl);
-		assertThat(response.getBjNickname()).isEqualTo(bjNickname);
 		assertThat(response.getDescription()).isEqualTo("");
 	}
 
@@ -285,12 +285,13 @@ class UserServiceTest {
 	@DisplayName("백준 닉네임 유효성 검증 : 사용 가능한 백준 닉네임")
 	void checkBjNickname_1() {
 		// given
+		RegisterBjNickNameRequest request = new RegisterBjNickNameRequest("bjNickname");
 		String bjNickname = "bjNickname";
 		when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
 			.thenReturn(new ResponseEntity<>(HttpStatus.OK));
 		// when(userRepository.existsByBjNickname(bjNickname)).thenReturn(false);
 		// when
-		userService.checkBjNickname(bjNickname);
+		userService.registerBjNickName(user, request);
 		// then
 		// verify(userRepository, times(1)).existsByBjNickname(bjNickname);
 	}
@@ -299,11 +300,11 @@ class UserServiceTest {
 	@DisplayName("백준 닉네임 유효성 검증 : 유효하지 않은 백준 닉네임")
 	void checkBjNickname_2() {
 		// given
-		String bjNickname = "bjNickname";
+		RegisterBjNickNameRequest request = new RegisterBjNickNameRequest("bjNickname");
 		when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
 			.thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
 		// when, then
-		assertThatThrownBy(() -> userService.checkBjNickname(bjNickname))
+		assertThatThrownBy(() -> userService.registerBjNickName(user, request))
 			.isInstanceOf(CheckBjNicknameValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.NOT_FOUND.value())
 			.hasFieldOrPropertyWithValue("error", "백준 닉네임이 유효하지 않습니다.");
@@ -313,11 +314,11 @@ class UserServiceTest {
 	@DisplayName("백준 닉네임 유효성 검증 실패 : 백준 서버 오류 발생")
 	void checkBjNickname_4() {
 		// given
-		String bjNickname = "bjNickname";
+		RegisterBjNickNameRequest request = new RegisterBjNickNameRequest("bjNickname");
 		when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
 			.thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
 		// when, then
-		assertThatThrownBy(() -> userService.checkBjNickname(bjNickname))
+		assertThatThrownBy(() -> userService.registerBjNickName(user, request))
 			.isInstanceOf(BOJServerErrorException.class)
 			.hasFieldOrPropertyWithValue("error", "현재 백준 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
 	}
@@ -504,7 +505,7 @@ class UserServiceTest {
 
 		//when, then
 		try (MockedStatic<LocalDateTime> mockedStatic = mockStatic(LocalDateTime.class)) {
-			mockedStatic.when(LocalDateTime::now).thenReturn(now.plusHours(3));
+			mockedStatic.when(LocalDateTime::now).thenReturn(now.plusHours(4));
 			assertThatThrownBy(() -> userService.resetPassword(request))
 				.isInstanceOf(ResetPasswordValidationError.class)
 				.satisfies(exception -> {

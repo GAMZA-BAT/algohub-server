@@ -37,6 +37,7 @@ import com.gamzabat.algohub.feature.image.service.ImageService;
 import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.dto.CheckEmailRequest;
 import com.gamzabat.algohub.feature.user.dto.DeleteUserRequest;
+import com.gamzabat.algohub.feature.user.dto.RegisterBjNickNameRequest;
 import com.gamzabat.algohub.feature.user.dto.RegisterRequest;
 import com.gamzabat.algohub.feature.user.dto.SignInRequest;
 import com.gamzabat.algohub.feature.user.dto.TokenResponse;
@@ -88,7 +89,7 @@ class UserControllerTest {
 	@DisplayName("회원 가입 성공")
 	void register() throws Exception {
 		// given
-		RegisterRequest request = new RegisterRequest("email", "password", "nickname", "bojNickname");
+		RegisterRequest request = new RegisterRequest("email", "password", "nickname");
 		String requestJson = objectMapper.writeValueAsString(request);
 		MockMultipartFile requestPart = new MockMultipartFile("request", "", "application/json",
 			requestJson.getBytes());
@@ -110,7 +111,7 @@ class UserControllerTest {
 	@DisplayName("회원 가입 성공 : 프로필 사진 X")
 	void register_2() throws Exception {
 		// given
-		RegisterRequest request = new RegisterRequest("email", "password", "nickname", "bojNickname");
+		RegisterRequest request = new RegisterRequest("email", "password", "nickname");
 		String requestJson = objectMapper.writeValueAsString(request);
 		MockMultipartFile requestPart = new MockMultipartFile("request", "", "application/json",
 			requestJson.getBytes());
@@ -127,16 +128,15 @@ class UserControllerTest {
 
 	@ParameterizedTest
 	@CsvSource(value = {
-		" ' ', password, nickname, bjNickname, email : 이메일은 필수 입력입니다.",
-		"email, ' ', nickname, bjNickname, password : 비밀번호는 필수 입력입니다.",
-		"email, password, ' ', bjNickname, nickname : 닉네임은 필수 입력입니다.",
-		"email, password, nickname, ' ', bjNickname : 백준 닉네임은 필수 입력입니다."
+		" ' ', password, nickname, email : 이메일은 필수 입력입니다.",
+		"email, ' ', nickname, password : 비밀번호는 필수 입력입니다.",
+		"email, password, ' ', nickname : 닉네임은 필수 입력입니다.",
 	}, nullValues = "null")
 	@DisplayName("회원 가입 실패 : 잘못된 요청")
-	void registerFailed_1(String email, String password, String nickname, String bjNickname,
+	void registerFailed_1(String email, String password, String nickname,
 		String exceptionMessage) throws Exception {
 		// given
-		RegisterRequest request = new RegisterRequest(email, password, nickname, bjNickname);
+		RegisterRequest request = new RegisterRequest(email, password, nickname);
 		String requestJson = objectMapper.writeValueAsString(request);
 		MockMultipartFile requestPart = new MockMultipartFile("request", "", "application/json",
 			requestJson.getBytes());
@@ -157,7 +157,7 @@ class UserControllerTest {
 	@DisplayName("회원가입 실패 : 이미 가입 된 이메일")
 	void registerFailed_2() throws Exception {
 		// given
-		RegisterRequest request = new RegisterRequest("duplicatedEmail", "password", "nickname", "bjNickname");
+		RegisterRequest request = new RegisterRequest("duplicatedEmail", "password", "nickname");
 		String requestJson = objectMapper.writeValueAsString(request);
 		MockMultipartFile requestPart = new MockMultipartFile("request", "", "application/json",
 			requestJson.getBytes());
@@ -338,61 +338,52 @@ class UserControllerTest {
 	}
 
 	@Test
-	@DisplayName("백준 닉네임 검증 : 사용 가능한 백준 닉네임")
-	void checkBjNickname() throws Exception {
+	@DisplayName("백준 닉네임 연결 성공 : 사용 가능한 백준 닉네임")
+	void registerBjNickName() throws Exception {
 		// given
-		String bjNickname = "bjNickname";
-		doNothing().when(userService).checkBjNickname(bjNickname);
+		RegisterBjNickNameRequest request = new RegisterBjNickNameRequest("bjNickName");
+		doNothing().when(userService).registerBjNickName(user, request);
 		// when, then
-		mockMvc.perform(get("/api/users/check-baekjoon-nickname")
-				.param("bjNickname", bjNickname))
+		mockMvc.perform(patch("/api/users/bjnickname")
+				.header("Authorization", token)
+				.content(objectMapper.writeValueAsString(request))
+				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk());
-		verify(userService, times(1)).checkBjNickname(bjNickname);
+		verify(userService, times(1)).registerBjNickName(user, request);
 	}
 
 	@Test
-	@DisplayName("백준 닉네임 검증 : 유효하지 않은 백준 닉네임")
+	@DisplayName("백준 닉네임 연결 실패 : 유효하지 않은 백준 닉네임")
 	void checkBjNicknameFailed_1() throws Exception {
 		// given
-		String bjNickname = "bjNickname";
+		RegisterBjNickNameRequest request = new RegisterBjNickNameRequest("bjNickName");
 		doThrow(new CheckBjNicknameValidationException(HttpStatus.NOT_FOUND.value(), "백준 닉네임이 유효하지 않습니다.")).when(
-			userService).checkBjNickname(bjNickname);
+			userService).registerBjNickName(user, request);
 		// when, then
-		mockMvc.perform(get("/api/users/check-baekjoon-nickname")
-				.param("bjNickname", bjNickname))
+		mockMvc.perform(patch("/api/users/bjnickname")
+				.header("Authorization", token)
+				.content(objectMapper.writeValueAsString(request))
+				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.error").value("백준 닉네임이 유효하지 않습니다."));
-		verify(userService, times(1)).checkBjNickname(bjNickname);
+		verify(userService, times(1)).registerBjNickName(user, request);
 	}
 
 	@Test
-	@DisplayName("백준 닉네임 검증 : 이미 가입된 백준 닉네임")
-	void checkBjNicknameFailed_2() throws Exception {
-		// given
-		String bjNickname = "bjNickname";
-		doThrow(new CheckBjNicknameValidationException(HttpStatus.CONFLICT.value(), "이미 가입된 백준 닉네임 입니다.")).when(
-			userService).checkBjNickname(bjNickname);
-		// when, then
-		mockMvc.perform(get("/api/users/check-baekjoon-nickname")
-				.param("bjNickname", bjNickname))
-			.andExpect(status().isConflict())
-			.andExpect(jsonPath("$.error").value("이미 가입된 백준 닉네임 입니다."));
-		verify(userService, times(1)).checkBjNickname(bjNickname);
-	}
-
-	@Test
-	@DisplayName("백준 닉네임 검증 실패: 백준 서버 오류 발생")
+	@DisplayName("백준 닉네임 연결 실패: 백준 서버 오류 발생")
 	void checkBjNicknameFailed_3() throws Exception {
 		// given
-		String bjNickname = "bjNickname";
+		RegisterBjNickNameRequest request = new RegisterBjNickNameRequest("bjNickName");
 		doThrow(new BOJServerErrorException("현재 백준 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요."))
-			.when(userService).checkBjNickname(bjNickname);
+			.when(userService).registerBjNickName(user, request);
 		// when, then
-		mockMvc.perform(get("/api/users/check-baekjoon-nickname")
-				.param("bjNickname", bjNickname))
+		mockMvc.perform(patch("/api/users/bjnickname")
+				.header("Authorization", token)
+				.content(objectMapper.writeValueAsString(request))
+				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isServiceUnavailable())
 			.andExpect(jsonPath("$.error").value("현재 백준 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요."));
-		verify(userService, times(1)).checkBjNickname(bjNickname);
+		verify(userService, times(1)).registerBjNickName(user, request);
 	}
 
 	@Test
