@@ -24,10 +24,12 @@ import com.gamzabat.algohub.feature.user.dto.DeleteUserRequest;
 import com.gamzabat.algohub.feature.user.dto.EditUserPasswordRequest;
 import com.gamzabat.algohub.feature.user.dto.RegisterRequest;
 import com.gamzabat.algohub.feature.user.dto.ResetPasswordRequest;
+import com.gamzabat.algohub.feature.user.dto.SendVerificationCodeRequest;
 import com.gamzabat.algohub.feature.user.dto.SignInRequest;
 import com.gamzabat.algohub.feature.user.dto.TokenResponse;
 import com.gamzabat.algohub.feature.user.dto.UpdateUserRequest;
 import com.gamzabat.algohub.feature.user.dto.UserInfoResponse;
+import com.gamzabat.algohub.feature.user.service.EmailService;
 import com.gamzabat.algohub.feature.user.service.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -42,6 +44,7 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "회원 API", description = "회원 관련된 API 명세서")
 public class UserController {
 	private final UserService userService;
+	private final EmailService emailService;
 
 	@PostMapping(value = "/auth/sign-up", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(summary = "회원 가입 API")
@@ -60,6 +63,20 @@ public class UserController {
 			throw new RequestException("로그인 요청이 올바르지 않습니다.", errors);
 		TokenResponse response = userService.signIn(request);
 		return ResponseEntity.ok().body(response);
+	}
+
+	@PostMapping("/auth/verify/send")
+	@Operation(summary = "이메일 인증 코드 전송")
+	public ResponseEntity<Void> sendVerificationCode(@Valid @RequestBody SendVerificationCodeRequest request) {
+		emailService.sendVerificationCode(request.email());
+		return ResponseEntity.ok().build();
+	}
+
+	@GetMapping("/auth/verify")
+	@Operation(summary = "이메일 인증 코드 검증")
+	public ResponseEntity<Void> verifyEmail(@RequestParam String email, @RequestParam String verificationCode) {
+		userService.checkEmailVerification(email, verificationCode);
+		return ResponseEntity.ok().build();
 	}
 
 	@PostMapping(value = "/auth/reissue-token")

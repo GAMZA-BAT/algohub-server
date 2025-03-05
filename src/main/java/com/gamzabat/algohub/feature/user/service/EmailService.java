@@ -1,5 +1,7 @@
 package com.gamzabat.algohub.feature.user.service;
 
+import java.security.SecureRandom;
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 
 import org.springframework.mail.javamail.JavaMailSender;
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
+import com.gamzabat.algohub.common.redis.RedisService;
 import com.gamzabat.algohub.exception.MessagingRuntimeException;
 
 import jakarta.mail.MessagingException;
@@ -28,6 +31,7 @@ public class EmailService {
 	private static final String RESET_PASSWORD_CLIENT_ENDPOINT = "https://algohub.kr/reset-password";
 	private final JavaMailSender mailSender;
 	private final TemplateEngine templateEngine;
+	private final RedisService redisService;
 
 	@Async
 	@Retryable(
@@ -63,7 +67,43 @@ public class EmailService {
 		return failedFuture;
 	}
 
-	public String checkEmailVerification(String email, String verificationCode) {
-		return null;
+	@Async
+	@Retryable(
+		retryFor = {MessagingException.class},
+		backoff = @org.springframework.retry.annotation.Backoff(delay = 3000)
+	)
+	public void sendVerificationCode(String email) {
+		String authCode = createCode();
+
+		redisService.setValues("AUTH_CODE:" + email, authCode, Duration.ofMinutes(5));
+		log.info(redisService.getValues("AUTH_CODE:" + email));
+		Context context = new Context();
+		context.setVariable("verificationCode", authCode);
+		String emailContent = templateEngine.process("verification-code", context);
+
+		MimeMessage message = mailSender.createMimeMessage();
+		try {
+			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+			helper.setTo(email);
+			helper.setFrom(FROM_ADDRESS);
+			helper.setSubject("이메일 인증번호");
+			helper.setText(emailContent, true);
+			mailSender.send(message);
+		} catch (MessagingException e) {
+			log.warn("Failed to send verification email, retry. : {}", e.toString());
+			throw new MessagingRuntimeException(e);
+		}
+	}
+
+	private String createCode() {
+		int length = 6;
+		SecureRandom random = new SecureRandom();
+		StringBuilder builder = new StringBuilder();
+
+		for (int i = 0; i < length; i++) {
+			builder.append(random.nextInt(10));
+		}
+
+		return builder.toString();
 	}
 }

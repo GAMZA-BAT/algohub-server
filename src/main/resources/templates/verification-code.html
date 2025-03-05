@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>이메일 인증</title>
+    <style type="text/css">
+        @import url('//fonts.googleapis.com/earlyaccess/notosanskr.css');
+
+        @font-face {
+            font-family: 'Pretendard-Regular';
+            src: url('https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
+            font-weight: 400;
+            font-style: normal;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', 'Pretendard-Regular', sans-serif;
+        }
+    </style>
+</head>
+<body style="background-color: #161C24;">
+
+<div style="display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 40px; padding: 10px; background-color: #161C24; min-height: 768px;">
+    <a href="https://algohub.kr">
+        <img src="https://storage.hwangdo.kr/algohub-static-asset/logo.svg" alt="logo"
+             style="width: 161px; height: 41px;">
+    </a>
+
+    <div style="
+            display: flex;
+            width: 610px;
+            padding: 80px 60px;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+            border-radius: 10px;
+            background: #222734;
+            box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.25);">
+
+        <div style="
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 20px;
+                align-self: stretch;">
+
+            <div style="
+                    color: #FFF;
+                    font-size: 24px;
+                    font-style: normal;
+                    font-weight: 600;
+                    line-height: 140%;
+                    letter-spacing: -0.36px;">
+                이메일 인증 요청
+            </div>
+
+            <div style="
+                    font-family: 'Pretendard-Regular', sans-serif;
+                    color: #BCC0CD;
+                    font-size: 16px;
+                    font-style: normal;
+                    font-weight: 500;
+                    line-height: 155%;
+                    letter-spacing: -0.4px;
+                    text-align: center;">
+                아래 인증번호를 입력하여 이메일 인증을 완료해주세요. <br/>
+                인증번호는 <strong style="color: #FFD700;">5분</strong> 동안만 유효합니다.
+            </div>
+        </div>
+
+        <div style="
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                background: #FFF;
+                padding: 15px 30px;
+                font-size: 32px;
+                font-weight: bold;
+                color: #333;
+                border-radius: 8px;
+                letter-spacing: 4px;">
+            <span th:text="${verificationCode}"></span>
+        </div>
+
+        <div style="
+                font-family: 'Pretendard-Regular', sans-serif;
+                color: #BCC0CD;
+                font-size: 14px;
+                text-align: center;">
+            인증번호 입력이 완료되면, 회원가입을 계속 진행할 수 있습니다.
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>
