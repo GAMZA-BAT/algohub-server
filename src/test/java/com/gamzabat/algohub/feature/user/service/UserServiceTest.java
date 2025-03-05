@@ -54,9 +54,12 @@ import com.gamzabat.algohub.feature.user.dto.TokenResponse;
 import com.gamzabat.algohub.feature.user.dto.UpdateUserRequest;
 import com.gamzabat.algohub.feature.user.dto.UserInfoResponse;
 import com.gamzabat.algohub.feature.user.exception.BOJServerErrorException;
+import com.gamzabat.algohub.feature.user.exception.CannotFoundVerificationCodeException;
 import com.gamzabat.algohub.feature.user.exception.CheckBjNicknameValidationException;
 import com.gamzabat.algohub.feature.user.exception.CheckNicknameValidationException;
 import com.gamzabat.algohub.feature.user.exception.CheckPasswordFormException;
+import com.gamzabat.algohub.feature.user.exception.InvalidEmailException;
+import com.gamzabat.algohub.feature.user.exception.InvalidVerificationCodeException;
 import com.gamzabat.algohub.feature.user.exception.ResetPasswordValidationError;
 import com.gamzabat.algohub.feature.user.exception.UncorrectedPasswordException;
 import com.gamzabat.algohub.feature.user.repository.ResetPasswordRepository;
@@ -98,6 +101,11 @@ class UserServiceTest {
 	private final String imageUrl = "1_test@email.com_image.jpg";
 	private final String bjNickname = "bjNickname";
 	private final String RESET_PASSWORD_TOKEN = "RESET_PASSWORD_TOKEN";
+	private final String VERIFIED_EMAIL_KEY = "VERIFIED:test@email.com";
+	private final String VERIFIED_EMAIL_VALUE = "true";
+	private final String EMAIL_VERIFICATION_KEY = "AUTH_CODE:test@email.com";
+	private final String EMAIL_VERIFICATION_VALUE = "123456";
+
 	private User user;
 	private ResetPassword resetPassword;
 
@@ -137,6 +145,7 @@ class UserServiceTest {
 		when(imageService.saveImage(ImageType.USER, prefix,
 			profileImage)).thenReturn(imageUrl);
 		when(passwordEncoder.encode(password)).thenReturn(encoded);
+		when(redisService.checkExistsValue(VERIFIED_EMAIL_KEY)).thenReturn(true);
 		// when
 		userService.register(request, profileImage);
 		// then
@@ -156,10 +165,26 @@ class UserServiceTest {
 		RegisterRequest request = new RegisterRequest(email, password, nickname, bjNickname);
 		MockMultipartFile profileImage = new MockMultipartFile("image", "image.jpg", "image/jpeg", "test".getBytes());
 		when(userRepository.existsByEmail(email)).thenReturn(true);
+		when(redisService.checkExistsValue(VERIFIED_EMAIL_KEY)).thenReturn(true);
 		// when, then
 		assertThatThrownBy(() -> userService.register(request, profileImage))
 			.isInstanceOf(UserValidationException.class)
 			.hasFieldOrPropertyWithValue("errors", "이미 사용 중인 이메일 입니다.");
+	}
+
+	@Test
+	@DisplayName("회원가입 실패 : 유효하지 않은 이메일")
+	void registerFailed_2() {
+		//given
+		RegisterRequest request = new RegisterRequest(email, password, nickname, bjNickname);
+		MockMultipartFile profileImage = new MockMultipartFile("image", "image.jpg", "image/jpeg", "test".getBytes());
+		when(redisService.checkExistsValue(VERIFIED_EMAIL_KEY)).thenReturn(false);
+
+		// when, then
+		assertThatThrownBy(() -> userService.register(request, profileImage))
+			.isInstanceOf(InvalidEmailException.class)
+			.hasFieldOrPropertyWithValue("errors", "이메일 인증을 먼저 완료해야 합니다.");
+
 	}
 
 	@Test
@@ -564,4 +589,45 @@ class UserServiceTest {
 		assertThat(user.getPassword()).isEqualTo(passwordEncoder.encode(password));
 	}
 
+	@Test
+	@DisplayName("이메일 검증 실패 : 인증번호가 없거나 만료된 경우")
+	void checkEmailVerification_failed() {
+		//given
+		when(redisService.getValues(EMAIL_VERIFICATION_KEY)).thenReturn(null);
+		when(redisService.checkExistsValue(EMAIL_VERIFICATION_KEY)).thenReturn(false);
+
+		//when, then
+		assertThatThrownBy(() -> userService.checkEmailVerification(email, EMAIL_VERIFICATION_VALUE))
+			.isInstanceOf(CannotFoundVerificationCodeException.class)
+			.hasFieldOrPropertyWithValue("errors", "인증번호가 없거나 만료되었습니다.");
+	}
+
+	@Test
+	@DisplayName("이메일 검증 실패 : 인증번호가 틀린 경우")
+	void checkEmailVerification_failed2() {
+		String wrongValue = "654321";
+		//given
+		when(redisService.getValues(EMAIL_VERIFICATION_KEY)).thenReturn(EMAIL_VERIFICATION_VALUE);
+		when(redisService.checkExistsValue(EMAIL_VERIFICATION_KEY)).thenReturn(true);
+
+		//when, then
+		assertThatThrownBy(() -> userService.checkEmailVerification(email, wrongValue))
+			.isInstanceOf(InvalidVerificationCodeException.class)
+			.hasFieldOrPropertyWithValue("errors", "인증버호가 틀렸습니다.");
+	}
+
+	@Test
+	@DisplayName("이메일 검증 성공")
+	void checkEmailVerification_success() {
+		//given
+		when(redisService.getValues(EMAIL_VERIFICATION_KEY)).thenReturn(EMAIL_VERIFICATION_VALUE);
+		when(redisService.checkExistsValue(EMAIL_VERIFICATION_KEY)).thenReturn(true);
+
+		//when
+		userService.checkEmailVerification(email, EMAIL_VERIFICATION_VALUE);
+
+		//then
+		verify(redisService).deleteValues(EMAIL_VERIFICATION_KEY);
+		verify(redisService).setValues(VERIFIED_EMAIL_KEY, VERIFIED_EMAIL_VALUE, Duration.ofMinutes(30));
+	}
 }

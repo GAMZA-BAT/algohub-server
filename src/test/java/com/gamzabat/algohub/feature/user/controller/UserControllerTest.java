@@ -47,6 +47,7 @@ import com.gamzabat.algohub.feature.user.exception.CheckBjNicknameValidationExce
 import com.gamzabat.algohub.feature.user.exception.CheckNicknameValidationException;
 import com.gamzabat.algohub.feature.user.exception.UncorrectedPasswordException;
 import com.gamzabat.algohub.feature.user.repository.UserRepository;
+import com.gamzabat.algohub.feature.user.service.EmailService;
 import com.gamzabat.algohub.feature.user.service.UserService;
 
 @WebMvcTest(UserController.class)
@@ -71,6 +72,8 @@ class UserControllerTest {
 	private AuthenticationManagerBuilder authManager;
 	@Autowired
 	private AuthedUserResolver authedUserResolver;
+	@MockBean
+	private EmailService emailService;
 
 	private User user;
 	private String token;
