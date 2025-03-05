@@ -107,7 +107,6 @@ class UserServiceTest {
 			.email(email)
 			.password(encoded)
 			.nickname(nickname)
-			.bjNickname(bjNickname)
 			.profileImage(imageUrl)
 			.role(Role.USER)
 			.build();
@@ -130,7 +129,7 @@ class UserServiceTest {
 	void register() {
 		// given
 		String prefix = "1_test@email.com";
-		RegisterRequest request = new RegisterRequest(email, password, nickname, bjNickname);
+		RegisterRequest request = new RegisterRequest(email, password, nickname);
 		MockMultipartFile profileImage = new MockMultipartFile("image", "image.jpg", "image/jpeg", "test".getBytes());
 		when(userRepository.save(any(User.class))).thenReturn(user);
 		when(imageService.createImagePrefix(user.getId(), user.getEmail())).thenReturn(prefix);
@@ -153,7 +152,7 @@ class UserServiceTest {
 	@DisplayName("회원가입 실패 : 이미 가입 된 이메일")
 	void registerFailed_1() {
 		// given
-		RegisterRequest request = new RegisterRequest(email, password, nickname, bjNickname);
+		RegisterRequest request = new RegisterRequest(email, password, nickname);
 		MockMultipartFile profileImage = new MockMultipartFile("image", "image.jpg", "image/jpeg", "test".getBytes());
 		when(userRepository.existsByEmail(email)).thenReturn(true);
 		// when, then
