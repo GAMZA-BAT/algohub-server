@@ -282,8 +282,8 @@ class UserServiceTest {
 	}
 
 	@Test
-	@DisplayName("백준 닉네임 유효성 검증 : 사용 가능한 백준 닉네임")
-	void checkBjNickname_1() {
+	@DisplayName("백준 닉네임 등록 성공 : 사용 가능한 백준 닉네임")
+	void registerBjNickname_1() {
 		// given
 		RegisterBjNickNameRequest request = new RegisterBjNickNameRequest("bjNickname");
 		String bjNickname = "bjNickname";
@@ -291,20 +291,21 @@ class UserServiceTest {
 			.thenReturn(new ResponseEntity<>(HttpStatus.OK));
 		// when(userRepository.existsByBjNickname(bjNickname)).thenReturn(false);
 		// when
-		userService.registerBjNickName(user, request);
+		userService.registerBjNickname(user, request);
+		assertThat(user.getBjNickname()).isEqualTo(bjNickname);
 		// then
 		// verify(userRepository, times(1)).existsByBjNickname(bjNickname);
 	}
 
 	@Test
 	@DisplayName("백준 닉네임 유효성 검증 : 유효하지 않은 백준 닉네임")
-	void checkBjNickname_2() {
+	void registerBjNickname_2() {
 		// given
 		RegisterBjNickNameRequest request = new RegisterBjNickNameRequest("bjNickname");
 		when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
 			.thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
 		// when, then
-		assertThatThrownBy(() -> userService.registerBjNickName(user, request))
+		assertThatThrownBy(() -> userService.registerBjNickname(user, request))
 			.isInstanceOf(CheckBjNicknameValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.NOT_FOUND.value())
 			.hasFieldOrPropertyWithValue("error", "백준 닉네임이 유효하지 않습니다.");
@@ -318,7 +319,7 @@ class UserServiceTest {
 		when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
 			.thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
 		// when, then
-		assertThatThrownBy(() -> userService.registerBjNickName(user, request))
+		assertThatThrownBy(() -> userService.registerBjNickname(user, request))
 			.isInstanceOf(BOJServerErrorException.class)
 			.hasFieldOrPropertyWithValue("error", "현재 백준 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
 	}
@@ -505,7 +506,7 @@ class UserServiceTest {
 
 		//when, then
 		try (MockedStatic<LocalDateTime> mockedStatic = mockStatic(LocalDateTime.class)) {
-			mockedStatic.when(LocalDateTime::now).thenReturn(now.plusHours(4));
+			mockedStatic.when(LocalDateTime::now).thenReturn(now.plusHours(3));
 			assertThatThrownBy(() -> userService.resetPassword(request))
 				.isInstanceOf(ResetPasswordValidationError.class)
 				.satisfies(exception -> {
