@@ -289,6 +289,7 @@ class UserServiceTest {
 		String bjNickname = "bjNickname";
 		when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
 			.thenReturn(new ResponseEntity<>(HttpStatus.OK));
+		when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
 		// when(userRepository.existsByBjNickname(bjNickname)).thenReturn(false);
 		// when
 		userService.registerBjNickname(user, request);
@@ -304,6 +305,8 @@ class UserServiceTest {
 		RegisterBjNickNameRequest request = new RegisterBjNickNameRequest("bjNickname");
 		when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
 			.thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
+		when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+
 		// when, then
 		assertThatThrownBy(() -> userService.registerBjNickname(user, request))
 			.isInstanceOf(CheckBjNicknameValidationException.class)
@@ -318,6 +321,8 @@ class UserServiceTest {
 		RegisterBjNickNameRequest request = new RegisterBjNickNameRequest("bjNickname");
 		when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
 			.thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
+		when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+
 		// when, then
 		assertThatThrownBy(() -> userService.registerBjNickname(user, request))
 			.isInstanceOf(BOJServerErrorException.class)
