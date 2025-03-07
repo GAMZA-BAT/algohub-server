@@ -54,7 +54,7 @@ public class UserController {
 		return ResponseEntity.ok().build();
 	}
 
-	@PatchMapping(value = "/users/bjnickname")
+	@PatchMapping(value = "/users/baekjoon-nickname")
 	@Operation(summary = "백준 아이디 입력 API")
 	public ResponseEntity<Void> registerBjNickName(@Valid @RequestBody RegisterBjNickNameRequest request,
 		@AuthedUser User user, Errors errors) {
