@@ -35,7 +35,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		"/api/users/check-nickname",
 		"/api/users/check-baekjoon-nickname",
 		"/api/oauth/github/sign-in",
-		"/api/auth/verify/send",
 		"/api/auth/verify");
 
 	@Override

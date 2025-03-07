@@ -79,7 +79,7 @@ public class UserService {
 	@Transactional
 	public void register(RegisterRequest request, MultipartFile profileImage) {
 
-		Boolean isVerified = redisService.checkExistsValue("VERIFIED:" + request.email());
+		boolean isVerified = redisService.checkExistsValue("VERIFIED:" + request.email());
 		if (!isVerified) {
 			throw new InvalidEmailException("이메일 인증을 먼저 완료해야 합니다.");
 		}
@@ -330,12 +330,11 @@ public class UserService {
 	public void checkEmailVerification(String email, String verificationCode) {
 
 		String redisAuthCode = redisService.getValues("AUTH_CODE:" + email);
-		boolean authResult =
-			redisService.checkExistsValue("AUTH_CODE:" + email) && redisAuthCode.equals(verificationCode);
-
 		if (redisAuthCode == null) {
 			throw new CannotFoundVerificationCodeException("인증번호가 없거나 만료되었습니다.");
 		}
+
+		boolean authResult = redisAuthCode.equals(verificationCode);
 
 		if (!authResult) {
 			throw new InvalidVerificationCodeException("인증버호가 틀렸습니다.");
@@ -372,7 +371,7 @@ public class UserService {
 
 	}
 
-	private static String generateSecureToken() {
+	public static String generateSecureToken() {
 		final int TOKEN_LENGTH = 32;
 		byte[] bytes = new byte[TOKEN_LENGTH];
 		new SecureRandom().nextBytes(bytes);

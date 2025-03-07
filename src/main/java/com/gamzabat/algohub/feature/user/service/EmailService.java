@@ -1,6 +1,5 @@
 package com.gamzabat.algohub.feature.user.service;
 
-import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 
@@ -68,12 +67,8 @@ public class EmailService {
 	}
 
 	@Async
-	@Retryable(
-		retryFor = {MessagingException.class},
-		backoff = @org.springframework.retry.annotation.Backoff(delay = 3000)
-	)
 	public void sendVerificationCode(String email) {
-		String authCode = createCode();
+		String authCode = UserService.generateSecureToken();
 
 		redisService.setValues("AUTH_CODE:" + email, authCode, Duration.ofMinutes(5));
 		log.info(redisService.getValues("AUTH_CODE:" + email));
@@ -95,15 +90,4 @@ public class EmailService {
 		}
 	}
 
-	private String createCode() {
-		int length = 6;
-		SecureRandom random = new SecureRandom();
-		StringBuilder builder = new StringBuilder();
-
-		for (int i = 0; i < length; i++) {
-			builder.append(random.nextInt(10));
-		}
-
-		return builder.toString();
-	}
 }

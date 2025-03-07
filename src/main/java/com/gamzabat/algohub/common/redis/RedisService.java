@@ -33,6 +33,6 @@ public class RedisService {
 	}
 
 	public boolean checkExistsValue(String key) {
-		return Boolean.TRUE.equals(redisTemplate.hasKey(key)); // Redis에 key 존재 여부 반환
+		return redisTemplate.hasKey(key);
 	}
 }

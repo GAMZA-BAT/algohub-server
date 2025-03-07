@@ -594,7 +594,6 @@ class UserServiceTest {
 	void checkEmailVerification_failed() {
 		//given
 		when(redisService.getValues(EMAIL_VERIFICATION_KEY)).thenReturn(null);
-		when(redisService.checkExistsValue(EMAIL_VERIFICATION_KEY)).thenReturn(false);
 
 		//when, then
 		assertThatThrownBy(() -> userService.checkEmailVerification(email, EMAIL_VERIFICATION_VALUE))
@@ -608,7 +607,6 @@ class UserServiceTest {
 		String wrongValue = "654321";
 		//given
 		when(redisService.getValues(EMAIL_VERIFICATION_KEY)).thenReturn(EMAIL_VERIFICATION_VALUE);
-		when(redisService.checkExistsValue(EMAIL_VERIFICATION_KEY)).thenReturn(true);
 
 		//when, then
 		assertThatThrownBy(() -> userService.checkEmailVerification(email, wrongValue))
@@ -621,7 +619,6 @@ class UserServiceTest {
 	void checkEmailVerification_success() {
 		//given
 		when(redisService.getValues(EMAIL_VERIFICATION_KEY)).thenReturn(EMAIL_VERIFICATION_VALUE);
-		when(redisService.checkExistsValue(EMAIL_VERIFICATION_KEY)).thenReturn(true);
 
 		//when
 		userService.checkEmailVerification(email, EMAIL_VERIFICATION_VALUE);
