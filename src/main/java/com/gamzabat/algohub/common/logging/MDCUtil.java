@@ -8,6 +8,7 @@ import org.slf4j.spi.MDCAdapter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.WebUtils;
 
+import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -20,6 +21,7 @@ public class MDCUtil {
 	public static final String MDC_REQUEST_BODY = "requestBody";
 	public static final String MDC_HEADER = "header";
 	public static final String MDC_PARAMETER = "parameter";
+	public static final String MDC_REQUEST_ID = "requestId";
 
 	private static final ObjectMapper mapper = new ObjectMapper();
 	private static final MDCAdapter mdcAdapter = MDC.getMDCAdapter();
@@ -46,6 +48,10 @@ public class MDCUtil {
 
 	public static String getRequestUri(HttpServletRequest request) {
 		return request.getRequestURI();
+	}
+
+	public static String createRequestId() {
+		return NanoIdUtils.randomNanoId();
 	}
 
 	public static Map<String, String> getHeader(HttpServletRequest request) {
