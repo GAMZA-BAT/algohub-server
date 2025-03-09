@@ -154,7 +154,7 @@ public class StudyGroupService {
 		);
 
 		sendNewMemberNotification(studyGroup, member);
-		log.info("success to join study group user_id={} ", user.getId());
+		log.info("success to join study group user_id={} code = {} ", user.getId(), code);
 
 		return new GetGroupIdResponse(studyGroup.getId());
 
@@ -216,7 +216,7 @@ public class StudyGroupService {
 			}
 		}
 
-		log.info("success to exit study group user_id={}", user.getId());
+		log.info("success to exit study group user_id = {} , group_id = {}", user.getId(), groupId);
 	}
 
 	@Transactional
@@ -237,7 +237,7 @@ public class StudyGroupService {
 					() -> new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(), "이미 참여하지 않은 회원입니다."));
 
 			studyGroupServiceProvider.getObject().deleteMemberFromStudyGroup(user, groupMember, group);
-			log.info("success to delete member user_id={}", user.getId());
+			log.info("success to delete member user_id={} , group_id = {}", user.getId(), groupId);
 		} else {
 			throw new UserValidationException("멤버를 삭제 할 권한이 없습니다.");
 		}
@@ -251,7 +251,7 @@ public class StudyGroupService {
 		solutionRepository.deleteAllByStudyGroupAndUser(studyGroup, user);
 		noticeReadRepository.deleteAllByStudyGroupAndUser(studyGroup, user);
 		groupMemberRepository.delete(groupMember);
-		log.info("success to delete group member user_id = {}", user.getId());
+		log.info("success to delete group member user_id = {}, group_id = {}", user.getId(), studyGroup.getId());
 	}
 
 	@Transactional(readOnly = true)
@@ -337,7 +337,7 @@ public class StudyGroupService {
 		if (request.introduction() != null && !request.introduction().isEmpty())
 			group.editGroupIntroduction(request.introduction());
 
-		log.info("success to edit group info user_id={}", user.getId());
+		log.info("success to edit group info user_id={} , group_id = {}", user.getId(), groupId);
 	}
 
 	private void editGroupImage(MultipartFile inputImage, StudyGroup group, Boolean isDefaultImage) {
@@ -535,7 +535,7 @@ public class StudyGroupService {
 		if (RoleOfGroupMember.isOwner(member) && request.role() != null) {
 			owner.updateRole(RoleOfGroupMember.PARTICIPANT);
 		}
-		log.info("success to update group member role user_id={}", user.getId());
+		log.info("success to update group member role user_id={} , group_id = {}", user.getId(), group.getId());
 	}
 
 	@Transactional(readOnly = true)
@@ -557,7 +557,7 @@ public class StudyGroupService {
 		GroupMember member = groupMemberRepository.findByUserAndStudyGroup(user, group)
 			.orElseThrow(() -> new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹입니다."));
 		member.updateVisibility(request.isVisible());
-		log.info("success to update group visibility ( userId : {} )", user.getId());
+		log.info("success to update group visibility user_id = {}, group_id = {}", user.getId(), groupId);
 	}
 
 	@Transactional(readOnly = true)
