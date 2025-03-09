@@ -57,7 +57,7 @@ public class SolutionCommentService implements CommentService<CreateSolutionComm
 			.build());
 
 		sendCommentNotification(user, solution);
-		log.info("success to create solution comment. commentId: {}, solutionId: {}", comment.getId(),
+		log.info("success to create solution comment. comment_id = {}, solution_id = {}", comment.getId(),
 			solution.getId());
 	}
 
@@ -88,7 +88,7 @@ public class SolutionCommentService implements CommentService<CreateSolutionComm
 		}
 		List<GetCommentResponse> result = list.stream().map(GetCommentResponse::toDTO)
 			.sorted((s1, s2) -> s2.createdAt().compareTo(s1.createdAt())).toList();
-		log.info("success to get solution comment list. solutionId: {}", solutionId);
+		log.info("success to get solution comment list. solution_id = {} , user_id = {}", solutionId, user.getId());
 		return result;
 	}
 
@@ -101,7 +101,7 @@ public class SolutionCommentService implements CommentService<CreateSolutionComm
 			throw new UserValidationException("댓글 작성자가 아닙니다.");
 
 		comment.updateComment(request.content());
-		log.info("success to update solution comment. commentId: {}", commentId);
+		log.info("success to update solution comment. comment_id = {}, user_id = {}", commentId, user.getId());
 	}
 
 	@Override
@@ -114,7 +114,7 @@ public class SolutionCommentService implements CommentService<CreateSolutionComm
 
 		checkSolutionValidation(user, comment.getSolution().getId());
 		commentRepository.delete(comment);
-		log.info("success to delete solution comment. commentId: {}", commentId);
+		log.info("success to delete solution comment. comment_id = {}, user_id = {}", commentId, user.getId());
 	}
 
 	private Solution checkSolutionValidation(User user, Long solutionId) {

@@ -112,7 +112,7 @@ public class UserService {
 			throw new UncorrectedPasswordException("비밀번호가 틀렸습니다.");
 		}
 		JwtDTO result = tokenProvider.generateTokens(authenticate);
-		log.info("success to sign in");
+		log.info("success to sign in email = {}", request.email());
 		return new TokenResponse(result.getAccessToken(), result.getRefreshToken());
 	}
 
@@ -147,7 +147,6 @@ public class UserService {
 				imageService.deleteImage(user.getProfileImage());
 			}
 			saveProfileImage(inputImage, user);
-			log.info("success to update user profile image. profile image : {}", user.getProfileImage());
 			return;
 		}
 		if (isDefaultImage) {
@@ -230,6 +229,7 @@ public class UserService {
 	public void checkEmailDuplication(String email) {
 		if (userRepository.existsByEmail(email))
 			throw new UserValidationException("이미 사용 중인 이메일 입니다.");
+		log.info("success to validity email = {}", email);
 	}
 
 	@Transactional(readOnly = true)
@@ -285,7 +285,7 @@ public class UserService {
 		log.info("success to create reset password token. Token: {}", resetPassword.getToken());
 
 		emailService.sendResetPasswordMail(user.getEmail(), token).thenAccept(unused ->
-			log.info("success to send reset password mail.")
+			log.info("success to send reset password mail. mail = {}", email)
 		);
 	}
 
