@@ -78,6 +78,7 @@ public class DiscordLogAppender extends AppenderBase<ILoggingEvent> {
 		fields.add(createField("HTTP 메서드", escape(mdcPropertyMap.get(MDCUtil.MDC_REQUEST_METHOD)), true));
 		fields.add(createField("파라미터", escape(mdcPropertyMap.get(MDCUtil.MDC_PARAMETER)), true));
 		fields.add(createField("요청 Body", escape(mdcPropertyMap.get(MDCUtil.MDC_REQUEST_BODY)), true));
+		fields.add(createField("Request ID", escape(mdcPropertyMap.get(MDCUtil.MDC_REQUEST_ID)), true));
 
 		// Stacktrace
 		String exceptionDetail = ThrowableProxyUtil.asString(throwable);
