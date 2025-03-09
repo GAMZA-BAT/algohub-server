@@ -48,7 +48,7 @@ public class NoticeCommentService implements CommentService<CreateNoticeCommentR
 			.content(request.content())
 			.build());
 
-		log.info("success to create notice comment. commentId: {}, noticeId: {}", comment.getId(), notice.getId());
+		log.info("success to create notice comment. comment_id = {}, notice_id = {}", comment.getId(), notice.getId());
 	}
 
 	@Override
@@ -56,7 +56,7 @@ public class NoticeCommentService implements CommentService<CreateNoticeCommentR
 	public List<GetCommentResponse> getCommentList(User user, Long noticeId) {
 		Notice notice = validateNotice(user, noticeId);
 		List<NoticeComment> notices = noticeCommentRepository.findAllByNotice(notice);
-		log.info("success to get notice comment list. noticeId: {}", noticeId);
+		log.info("success to get notice comment list. notice_id = {}", noticeId);
 		return notices.stream().map(GetCommentResponse::toDTO).sorted(Comparator.comparing(
 			GetCommentResponse::createdAt).reversed()).toList();
 	}
@@ -70,10 +70,10 @@ public class NoticeCommentService implements CommentService<CreateNoticeCommentR
 		if (!comment.getUser().getId().equals(user.getId()))
 			throw new UserValidationException("댓글 작성자만 수정할 수 있습니다.");
 
-		if(request.content()!=null){
+		if (request.content() != null) {
 			comment.updateComment(request.content());
 		}
-		log.info("success to update notice comment. commentId: {}", comment.getId());
+		log.info("success to update notice comment. comment_id = {}", comment.getId());
 
 	}
 
@@ -88,7 +88,7 @@ public class NoticeCommentService implements CommentService<CreateNoticeCommentR
 
 		validateNotice(user, comment.getNotice().getId());
 		noticeCommentRepository.delete(comment);
-		log.info("success to delete notice comment. commentId: {}", commentId);
+		log.info("success to delete notice comment. comment_id = {}", commentId);
 
 	}
 
