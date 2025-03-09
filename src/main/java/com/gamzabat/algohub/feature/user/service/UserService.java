@@ -192,9 +192,6 @@ public class UserService {
 	public void registerBjNickname(User user, RegisterBjNickNameRequest request) {
 		String bjUserUrl = BOJ_USER_PROFILE_URL + request.bjNickName();
 
-		User editUser = userRepository.findById(user.getId())
-			.orElseThrow(() -> new UserValidationException("존재하지 않는 유저입니다."));
-
 		HttpHeaders headers = new HttpHeaders();
 		headers.set("User-Agent",
 			"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36");
@@ -213,8 +210,8 @@ public class UserService {
 			throw new BOJServerErrorException("현재 백준 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
 		}
 
-		editUser.editBjNickname(request.bjNickName());
-
+		user.editBjNickname(request.bjNickName());
+		userRepository.save(user);
 		log.info("success to register baekjoon-nickname user_id = {}", user.getId());
 	}
 
