@@ -7,6 +7,7 @@ import org.hibernate.annotations.SQLDelete;
 
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -26,6 +27,7 @@ public class Problem {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
+	@Column(length = 512)
 	private String link;
 	private LocalDate startDate;
 	private LocalDate endDate;

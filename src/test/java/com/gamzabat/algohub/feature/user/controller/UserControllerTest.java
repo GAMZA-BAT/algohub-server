@@ -197,8 +197,8 @@ class UserControllerTest {
 
 	@ParameterizedTest
 	@CsvSource(value = {
-		"'',password, email : 이메일은 필수 입력 입니다.",
-		"email,'', password : 비밀번호는 필수 입력 입니다."
+		"'',password, identifier : 이메일(닉네임)은 필수 입력 입니다.",
+		"identifier,'', password : 비밀번호는 필수 입력 입니다."
 	}, nullValues = "null")
 	@DisplayName("로그인 실패 : 잘못된 요청")
 	void signInFailed_1(String email, String password, String exceptionMessage) throws Exception {

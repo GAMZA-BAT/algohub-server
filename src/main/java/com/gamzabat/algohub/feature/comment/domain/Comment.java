@@ -6,6 +6,7 @@ import org.hibernate.annotations.DynamicUpdate;
 
 import com.gamzabat.algohub.feature.user.domain.User;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -29,6 +30,7 @@ public abstract class Comment {
 	@JoinColumn(name = "user_id")
 	private User user;
 
+	@Column(columnDefinition = "TEXT")
 	private String content;
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
