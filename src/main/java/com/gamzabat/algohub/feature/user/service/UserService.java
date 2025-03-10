@@ -216,6 +216,30 @@ public class UserService {
 	}
 
 	@Transactional(readOnly = true)
+	public void checkBjNickname(String bjNickname) {
+		String bjUserUrl = BOJ_USER_PROFILE_URL + bjNickname;
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.set("User-Agent",
+			"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36");
+		HttpEntity<String> entity = new HttpEntity<>(headers);
+
+		try {
+			restTemplate.exchange(bjUserUrl, HttpMethod.GET, entity, String.class);
+			// TODO : 백준 본인 인증 관련 사항 확정 후 로직 수정
+			// if (userRepository.existsByBjNickname(bjNickname))
+			// 	throw new CheckBjNicknameValidationException(HttpStatus.CONFLICT.value(), "이미 가입된 백준 닉네임 입니다.");
+		} catch (HttpClientErrorException e) {
+			if (e.getStatusCode() == HttpStatus.NOT_FOUND)
+				throw new CheckBjNicknameValidationException(HttpStatus.NOT_FOUND.value(), "백준 닉네임이 유효하지 않습니다.");
+		} catch (HttpServerErrorException e) {
+			log.error("BOJ server error occurred : " + e.getMessage());
+			throw new BOJServerErrorException("현재 백준 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+		}
+		log.info("success to check baekjoon nickname validity nickname = {}", bjNickname);
+	}
+
+	@Transactional(readOnly = true)
 	public void checkEmailDuplication(String email) {
 		if (userRepository.existsByEmail(email))
 			throw new UserValidationException("이미 사용 중인 이메일 입니다.");

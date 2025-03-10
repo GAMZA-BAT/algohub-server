@@ -73,6 +73,13 @@ public class UserController {
 		return ResponseEntity.ok().body(response);
 	}
 
+	@GetMapping("/users/check-baekjoon-nickname")
+	@Operation(summary = "백준 닉네임 유효성 검증 API", description = "회원가입 진행 시, 백준 닉네임이 유효한지 검증하는 API")
+	public ResponseEntity<Void> checkBjNickname(@RequestParam String bjNickname) {
+		userService.checkBjNickname(bjNickname);
+		return ResponseEntity.ok().build();
+	}
+
 	@PostMapping(value = "/auth/reissue-token")
 	@Operation(summary = "토큰 재발급 API")
 	public ResponseEntity<TokenResponse> reissueToken(@Valid @RequestBody ReissueTokenRequest request,

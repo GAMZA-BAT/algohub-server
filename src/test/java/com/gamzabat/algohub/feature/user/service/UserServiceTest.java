@@ -298,7 +298,7 @@ class UserServiceTest {
 	}
 
 	@Test
-	@DisplayName("백준 닉네임 유효성 검증 : 유효하지 않은 백준 닉네임")
+	@DisplayName("백준 닉네임 등록 실패 : 유효하지 않은 백준 닉네임")
 	void registerBjNickname_2() {
 		// given
 		RegisterBjNickNameRequest request = new RegisterBjNickNameRequest("bjNickname");
@@ -313,7 +313,7 @@ class UserServiceTest {
 	}
 
 	@Test
-	@DisplayName("백준 닉네임 유효성 검증 실패 : 백준 서버 오류 발생")
+	@DisplayName("백준 닉네임 등록 실패 : 백준 서버 오류 발생")
 	void checkBjNickname_4() {
 		// given
 		RegisterBjNickNameRequest request = new RegisterBjNickNameRequest("bjNickname");
