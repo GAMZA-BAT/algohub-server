@@ -113,7 +113,7 @@ public class UserService {
 			throw new UncorrectedPasswordException("비밀번호가 틀렸습니다.");
 		}
 		JwtDTO result = tokenProvider.generateTokens(authenticate);
-		log.info("success to sign in email = {}", request.email());
+		log.info("success to sign in identifier = {}", request.identifier());
 		return new TokenResponse(result.getAccessToken(), result.getRefreshToken());
 	}
 
