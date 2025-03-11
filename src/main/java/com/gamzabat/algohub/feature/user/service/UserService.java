@@ -46,13 +46,11 @@ import com.gamzabat.algohub.feature.user.dto.TokenResponse;
 import com.gamzabat.algohub.feature.user.dto.UpdateUserRequest;
 import com.gamzabat.algohub.feature.user.dto.UserInfoResponse;
 import com.gamzabat.algohub.feature.user.exception.BOJServerErrorException;
-import com.gamzabat.algohub.feature.user.exception.CannotFoundVerificationCodeException;
 import com.gamzabat.algohub.feature.user.exception.CheckBjNicknameValidationException;
 import com.gamzabat.algohub.feature.user.exception.CheckEmailFormException;
 import com.gamzabat.algohub.feature.user.exception.CheckNicknameValidationException;
 import com.gamzabat.algohub.feature.user.exception.CheckPasswordFormException;
 import com.gamzabat.algohub.feature.user.exception.InvalidEmailException;
-import com.gamzabat.algohub.feature.user.exception.InvalidVerificationCodeException;
 import com.gamzabat.algohub.feature.user.exception.ResetPasswordValidationError;
 import com.gamzabat.algohub.feature.user.exception.UncorrectedPasswordException;
 import com.gamzabat.algohub.feature.user.repository.ResetPasswordRepository;
@@ -77,23 +75,19 @@ public class UserService {
 	private final EmailService emailService;
 
 	@Transactional
-	public void register(RegisterRequest request, MultipartFile profileImage) {
+	public void register(RegisterRequest request, MultipartFile profileImage, String token) {
 
-		boolean isVerified = redisService.checkExistsValue("VERIFIED:" + request.email());
-		if (!isVerified) {
-			throw new InvalidEmailException("이메일 인증을 먼저 완료해야 합니다.");
-		}
-
-		checkEmailDuplication(request.email());
+		String email = redisService.getValues(token);
+		checkEmailDuplication(email);
 		checkNickname(request.nickname());
-		checkEmailForm(request.email());
+		checkEmailForm(email);
 		checkBjNickname(request.bjNickname());
 		checkPasswordForm(request.password());
 
 		String encodedPassword = passwordEncoder.encode(request.password());
 
 		User user = userRepository.save(User.builder()
-			.email(request.email())
+			.email(email)
 			.password(encodedPassword)
 			.nickname(request.nickname())
 			.bjNickname(request.bjNickname())
@@ -101,7 +95,6 @@ public class UserService {
 			.build());
 
 		saveProfileImage(profileImage, user);
-		redisService.deleteValues("VERIFIED:" + request.email());
 		log.info("success to register");
 	}
 
@@ -327,23 +320,6 @@ public class UserService {
 			throw new CheckEmailFormException(HttpStatus.BAD_REQUEST.value(), "이메일 형식이 아닙니다");
 	}
 
-	public void checkEmailVerification(String email, String verificationCode) {
-
-		String redisAuthCode = redisService.getValues("AUTH_CODE:" + email);
-		if (redisAuthCode == null) {
-			throw new CannotFoundVerificationCodeException("인증번호가 없거나 만료되었습니다.");
-		}
-
-		boolean authResult = redisAuthCode.equals(verificationCode);
-
-		if (!authResult) {
-			throw new InvalidVerificationCodeException("인증버호가 틀렸습니다.");
-		}
-
-		redisService.deleteValues("AUTH_CODE:" + email);
-		redisService.setValues("VERIFIED:" + email, "true", Duration.ofMinutes(30));
-	}
-
 	private boolean isValidEmailForm(String email) {
 
 		String EMAIL_REGEX = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"; // 문자 사이에 @를 포함하고 최상위 도메인은 2글자 이상이어야 함
@@ -378,4 +354,16 @@ public class UserService {
 		return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
 	}
 
+	public void checkEmailVerification(String token) {
+		boolean isTokenExist = redisService.checkExistsValue(token);
+
+		if (!isTokenExist) {
+			throw new InvalidEmailException("토큰이 유효하지 않습니다.");
+		}
+
+		String email = redisService.getValues(token);
+
+		redisService.deleteValues(token);
+		redisService.setValues(token, email, Duration.ofMinutes(30));
+	}
 }

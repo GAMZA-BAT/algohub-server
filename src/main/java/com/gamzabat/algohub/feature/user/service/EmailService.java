@@ -25,7 +25,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class EmailService {
 	private static final String FROM_ADDRESS = "noreply@algohub.kr";
-	private static final String EMAIL_VERIFICATION_SUBJECT = "[AlgoHub] 이메일 유효성 검사";
+	private static final String EMAIL_VERIFICATION_SUBJECT = "[AlgoHub] 이메일 인증번호";
+	private static final String EMAIL_VERIFICATION_CLIENT_ENDPOINT = "https://algohub.kr/sign-up";
 	private static final String RESET_PASSWORD_SUBJECT = "[AlgoHub] 비밀번호 찾기";
 	private static final String RESET_PASSWORD_CLIENT_ENDPOINT = "https://algohub.kr/reset-password";
 	private final JavaMailSender mailSender;
@@ -67,13 +68,17 @@ public class EmailService {
 	}
 
 	@Async
-	public void sendVerificationCode(String email) {
-		String authCode = UserService.generateSecureToken();
+	@Retryable(
+		retryFor = {MessagingException.class},
+		backoff = @org.springframework.retry.annotation.Backoff(delay = 3000)
+	)
+	public CompletableFuture<Void> sendVerificationCode(String email) {
+		String token = UserService.generateSecureToken();
 
-		redisService.setValues("AUTH_CODE:" + email, authCode, Duration.ofMinutes(5));
-		log.info(redisService.getValues("AUTH_CODE:" + email));
+		redisService.setValues(token, email, Duration.ofMinutes(3));
+		log.info(redisService.getValues(token));
 		Context context = new Context();
-		context.setVariable("verificationCode", authCode);
+		context.setVariable("resetUrl", EMAIL_VERIFICATION_CLIENT_ENDPOINT + "?token=" + token);
 		String emailContent = templateEngine.process("verification-code", context);
 
 		MimeMessage message = mailSender.createMimeMessage();
@@ -81,13 +86,22 @@ public class EmailService {
 			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 			helper.setTo(email);
 			helper.setFrom(FROM_ADDRESS);
-			helper.setSubject("이메일 인증번호");
+			helper.setSubject(EMAIL_VERIFICATION_SUBJECT);
 			helper.setText(emailContent, true);
 			mailSender.send(message);
+			return CompletableFuture.completedFuture(null);
 		} catch (MessagingException e) {
 			log.warn("Failed to send verification email, retry. : {}", e.toString());
 			throw new MessagingRuntimeException(e);
 		}
+	}
+
+	@Recover
+	public CompletableFuture<Void> failedToSendVerificationEmail(MessagingRuntimeException e, String email) {
+		log.error("Failed to send verification email to {} after retries. Exception: {}", email, e.getMessage(), e);
+		CompletableFuture<Void> failedFuture = new CompletableFuture<>();
+		failedFuture.completeExceptionally(e);
+		return failedFuture;
 	}
 
 }

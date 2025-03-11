@@ -51,10 +51,10 @@ public class UserController {
 	@PostMapping(value = "/auth/sign-up", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(summary = "회원 가입 API")
 	public ResponseEntity<Void> register(@Valid @RequestPart RegisterRequest request, Errors errors,
-		@RequestPart(required = false) MultipartFile profileImage) {
+		@RequestPart(required = false) MultipartFile profileImage, @RequestParam String token) {
 		if (errors.hasErrors())
 			throw new RequestException("올바르지 않은 요청입니다.", errors);
-		userService.register(request, profileImage);
+		userService.register(request, profileImage, token);
 		return ResponseEntity.ok().build();
 	}
 
@@ -68,7 +68,7 @@ public class UserController {
 	}
 
 	@PostMapping("/auth/verify/send")
-	@Operation(summary = "이메일 인증 코드 전송")
+	@Operation(summary = "이메일 인증 토큰 전송")
 	public ResponseEntity<Void> sendVerificationCode(@Valid @RequestBody SendVerificationCodeRequest request,
 		Errors errors) {
 		if (errors.hasErrors())
@@ -79,9 +79,9 @@ public class UserController {
 	}
 
 	@GetMapping("/auth/verify")
-	@Operation(summary = "이메일 인증 코드 검증")
-	public ResponseEntity<Void> verifyEmail(@RequestParam String email, @RequestParam String verificationCode) {
-		userService.checkEmailVerification(email, verificationCode);
+	@Operation(summary = "이메일 인증 토큰 검증")
+	public ResponseEntity<Void> verifyEmail(@RequestParam String token) {
+		userService.checkEmailVerification(token);
 		return ResponseEntity.ok().build();
 	}
 
