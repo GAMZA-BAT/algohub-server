@@ -31,7 +31,6 @@ import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gamzabat.algohub.common.annotation.AuthedUserResolver;
 import com.gamzabat.algohub.common.jwt.TokenProvider;
-import com.gamzabat.algohub.common.redis.RedisService;
 import com.gamzabat.algohub.config.SpringSecurityConfig;
 import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.image.service.ImageService;
@@ -78,8 +77,6 @@ class UserControllerTest {
 
 	private User user;
 	private String token;
-	@Autowired
-	private RedisService redisService;
 
 	@BeforeEach
 	void setUp() {
@@ -499,5 +496,4 @@ class UserControllerTest {
 			.andExpect(jsonPath("$.error").value("이미 사용 중인 닉네임입니다."));
 		verify(userService, times(1)).checkNickname(nickname);
 	}
-
 }
