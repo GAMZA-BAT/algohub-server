@@ -587,13 +587,14 @@ class UserServiceTest {
 	void checkEmailVerification_success() {
 		//given
 		when(redisService.checkExistsValue(EMAIL_VERIFICATION_TOKEN)).thenReturn(true);
-
+		when(redisService.getValues(EMAIL_VERIFICATION_TOKEN)).thenReturn(email);
 		//when
 		userService.checkEmailVerification(EMAIL_VERIFICATION_TOKEN);
 
 		//then
-		verify(redisService).deleteValues(EMAIL_VERIFICATION_TOKEN);
+		verify(redisService).getValues(EMAIL_VERIFICATION_TOKEN);
 		verify(redisService).setValues(EMAIL_VERIFICATION_TOKEN, email, Duration.ofMinutes(30));
+		verify(redisService).deleteValues(EMAIL_VERIFICATION_TOKEN);
 		verify(redisService).checkExistsValue(EMAIL_VERIFICATION_TOKEN);
 	}
 
