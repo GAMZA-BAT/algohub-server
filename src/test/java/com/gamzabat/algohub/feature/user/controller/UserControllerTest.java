@@ -354,7 +354,7 @@ class UserControllerTest {
 
 	@Test
 	@DisplayName("백준 닉네임 연결 실패 : 유효하지 않은 백준 닉네임")
-	void checkBjNicknameFailed_1() throws Exception {
+	void registerBjNicknameFailed_1() throws Exception {
 		// given
 		RegisterBjNickNameRequest request = new RegisterBjNickNameRequest("bjNickName");
 		doThrow(new CheckBjNicknameValidationException(HttpStatus.NOT_FOUND.value(), "백준 닉네임이 유효하지 않습니다.")).when(
@@ -371,7 +371,7 @@ class UserControllerTest {
 
 	@Test
 	@DisplayName("백준 닉네임 연결 실패: 백준 서버 오류 발생")
-	void checkBjNicknameFailed_3() throws Exception {
+	void registerBjNicknameFailed_3() throws Exception {
 		// given
 		RegisterBjNickNameRequest request = new RegisterBjNickNameRequest("bjNickName");
 		doThrow(new BOJServerErrorException("현재 백준 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요."))
@@ -384,6 +384,54 @@ class UserControllerTest {
 			.andExpect(status().isServiceUnavailable())
 			.andExpect(jsonPath("$.error").value("현재 백준 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요."));
 		verify(userService, times(1)).registerBjNickname(user, request);
+	}
+
+	@Test
+	@DisplayName("백준 닉네임 검증 성공")
+	void checkBjNickname() throws Exception {
+		//given
+		String bjNickname = "string";
+		doNothing().when(userService).checkBjNickname(bjNickname);
+		//when,then
+		mockMvc.perform(get("/api/users/check-baekjoon-nickname")
+				.header("Authorization", token)
+				.param("bjNickname", bjNickname))
+			.andExpect(status().isOk());
+		verify(userService, times(1)).checkBjNickname(bjNickname);
+	}
+
+	@Test
+	@DisplayName("백준 닉네임 검증 실패 : 유효하지 않은 백준 닉네임")
+	void checkBjNicknameFailed_1() throws Exception {
+		String bjNickname = "bjNickName";
+		doThrow(new CheckBjNicknameValidationException(HttpStatus.NOT_FOUND.value(), "백준 닉네임이 유효하지 않습니다.")).when(
+				userService)
+			.checkBjNickname(bjNickname);
+		//when,then
+		mockMvc.perform(get("/api/users/check-baekjoon-nickname")
+				.header("Authorization", token)
+				.param("bjNickname", bjNickname))
+			.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.error").value("백준 닉네임이 유효하지 않습니다."));
+		verify(userService, times(1)).checkBjNickname(bjNickname);
+
+	}
+
+	@Test
+	@DisplayName("백준 닉네임 검증 실패 : 백준 서버 에러")
+	void checkBjNicknameFailed_2() throws Exception {
+		String bjNickname = "bjNickName";
+		doThrow(new BOJServerErrorException("현재 백준 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.")).when(
+				userService)
+			.checkBjNickname(bjNickname);
+		//when,then
+		mockMvc.perform(get("/api/users/check-baekjoon-nickname")
+				.header("Authorization", token)
+				.param("bjNickname", bjNickname))
+			.andExpect(status().isServiceUnavailable())
+			.andExpect(jsonPath("$.error").value("현재 백준 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요."));
+		verify(userService, times(1)).checkBjNickname(bjNickname);
+
 	}
 
 	@Test

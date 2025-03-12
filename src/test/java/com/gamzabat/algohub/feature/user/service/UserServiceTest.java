@@ -108,6 +108,7 @@ class UserServiceTest {
 			.email(email)
 			.password(encoded)
 			.nickname(nickname)
+			.bjNickname(bjNickname)
 			.profileImage(imageUrl)
 			.role(Role.USER)
 			.build();
@@ -285,8 +286,8 @@ class UserServiceTest {
 	@DisplayName("백준 닉네임 등록 성공 : 사용 가능한 백준 닉네임")
 	void registerBjNickname_1() {
 		// given
-		RegisterBjNickNameRequest request = new RegisterBjNickNameRequest("bjNickname");
-		String bjNickname = "bjNickname";
+		RegisterBjNickNameRequest request = new RegisterBjNickNameRequest("newBjNickname");
+		String bjNickname = "newBjNickname";
 		when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
 			.thenReturn(new ResponseEntity<>(HttpStatus.OK));
 		// when(userRepository.existsByBjNickname(bjNickname)).thenReturn(false);
@@ -322,6 +323,46 @@ class UserServiceTest {
 
 		// when, then
 		assertThatThrownBy(() -> userService.registerBjNickname(user, request))
+			.isInstanceOf(BOJServerErrorException.class)
+			.hasFieldOrPropertyWithValue("error", "현재 백준 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+	}
+
+	@Test
+	@DisplayName("백준 닉네임 유효성 검증 : 사용 가능한 백준 닉네임")
+	void checkBjNickname_1() {
+		// given
+		String bjNickname = "bjNickname";
+		when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
+			.thenReturn(new ResponseEntity<>(HttpStatus.OK));
+		// when
+		userService.checkBjNickname(bjNickname);
+		// then
+		assertThat(user.getBjNickname()).isEqualTo(bjNickname);
+	}
+
+	@Test
+	@DisplayName("백준 닉네임 유효성 검증 실패 : 사용 불가능한 백준 닉네임")
+	void checkBjNicknamefailed_1() {
+		//given
+		String bjNickName = "bjNickName";
+		when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
+			.thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
+		//when,then
+		assertThatThrownBy(() -> userService.checkBjNickname(bjNickName))
+			.isInstanceOf(CheckBjNicknameValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.NOT_FOUND.value())
+			.hasFieldOrPropertyWithValue("error", "백준 닉네임이 유효하지 않습니다.");
+	}
+
+	@Test
+	@DisplayName("백준 닉네임 유효성 검증 실패 : 백준 서버 에러")
+	void checkBjNicknamefailed_2() {
+		//given
+		String bjNickname = "bjNickname";
+		when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
+			.thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
+		//when,then
+		assertThatThrownBy(() -> userService.checkBjNickname(bjNickname))
 			.isInstanceOf(BOJServerErrorException.class)
 			.hasFieldOrPropertyWithValue("error", "현재 백준 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
 	}
