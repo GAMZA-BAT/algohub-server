@@ -2,7 +2,6 @@ spring:
   config:
     import:
       - "jwt.yml"
-      - "webhook.yml"
       - "github.yml"
       - "smtp.yml"
   profiles:
@@ -11,6 +10,9 @@ spring:
       dev:
         - common
       prod:
+        - common
+      rc:
+        - dev
         - common
 
 ---
@@ -65,8 +67,6 @@ cloud:
       secret-key: ${aws_secret_key}
 
 logging:
-  discord:
-    webhook-url: ${webhook_url}
   config: classpath:logback-spring.xml
 server:
   port: 8080
@@ -97,6 +97,7 @@ spring:
     import:
       - "mysql-prod.yml"
       - "aws-prod.yml"
+      - "webhook-prod.yml"
   datasource:
     url: jdbc:mysql://${mysql_endpoint}:3306/algohub?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
   jpa:
@@ -104,3 +105,22 @@ spring:
     properties:
       hibernate:
         format_sql: false
+logging:
+  discord:
+    webhook-url: ${webhook_url}
+---
+spring:
+  config:
+    activate:
+      on-profile: rc
+    import:
+      - "webhook-rc.yml"
+  datasource:
+    url: jdbc:mysql://${mysql_endpoint}:3306/algohub_rc?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
+  data:
+    redis:
+      host: redis
+      port: 6379
+logging:
+  discord:
+    webhook-url: ${webhook_url}

@@ -106,8 +106,9 @@ public class UserService {
 
 	@Transactional
 	public TokenResponse signIn(SignInRequest request) {
+
 		UsernamePasswordAuthenticationToken authenticationToken
-			= new UsernamePasswordAuthenticationToken(request.email(), request.password());
+			= new UsernamePasswordAuthenticationToken(request.identifier(), request.password());
 		Authentication authenticate;
 		try {
 			authenticate = authManager.getObject().authenticate(authenticationToken);

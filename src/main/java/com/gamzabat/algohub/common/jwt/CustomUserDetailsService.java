@@ -20,8 +20,10 @@ public class CustomUserDetailsService implements UserDetailsService {
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 		return userRepository.findByEmail(username)
+			.or(() -> userRepository.findByNickname(username))
 			.map(this::createUserDetails)
 			.orElseThrow(() -> new UserValidationException("존재하지 않는 회원입니다."));
+
 	}
 
 	private UserDetails createUserDetails(User user) {
