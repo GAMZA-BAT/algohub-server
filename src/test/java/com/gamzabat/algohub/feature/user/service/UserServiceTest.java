@@ -38,6 +38,7 @@ import org.springframework.web.client.RestTemplate;
 import com.gamzabat.algohub.common.jwt.TokenProvider;
 import com.gamzabat.algohub.common.jwt.dto.JwtDTO;
 import com.gamzabat.algohub.common.redis.RedisService;
+import com.gamzabat.algohub.enums.EmailType;
 import com.gamzabat.algohub.enums.ImageType;
 import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.exception.UserValidationException;
@@ -469,7 +470,7 @@ class UserServiceTest {
 	void resetPasswordEmail_suceess() {
 		//give
 		when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
-		when(emailService.sendResetPasswordMail(eq(email), anyString())).thenReturn(
+		when(emailService.sendVerificationMail(eq(email), anyString(), eq(EmailType.RESET_PASSWORD))).thenReturn(
 			CompletableFuture.completedFuture(null));
 
 		//when
@@ -480,7 +481,7 @@ class UserServiceTest {
 		ResetPassword resetPassword = passwordCaptor.getValue();
 		assertThat(resetPassword.getUser()).isEqualTo(user);
 
-		verify(emailService, times(1)).sendResetPasswordMail(anyString(), anyString());
+		verify(emailService, times(1)).sendVerificationMail(anyString(), anyString(), eq(EmailType.RESET_PASSWORD));
 
 	}
 

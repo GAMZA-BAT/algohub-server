@@ -72,7 +72,7 @@ public class UserController {
 		if (errors.hasErrors())
 			throw new RequestException("올바르지 않은 요청입니다.", errors);
 
-		emailService.sendVerificationCode(request.email());
+		userService.sendEmailVerificationMail(request.email());
 		return ResponseEntity.ok().build();
 	}
 

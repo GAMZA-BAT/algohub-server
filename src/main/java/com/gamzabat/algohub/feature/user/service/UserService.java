@@ -30,6 +30,7 @@ import com.gamzabat.algohub.common.jwt.TokenProvider;
 import com.gamzabat.algohub.common.jwt.dto.JwtDTO;
 import com.gamzabat.algohub.common.jwt.dto.ReissueTokenRequest;
 import com.gamzabat.algohub.common.redis.RedisService;
+import com.gamzabat.algohub.enums.EmailType;
 import com.gamzabat.algohub.enums.ImageType;
 import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.exception.UserValidationException;
@@ -285,9 +286,23 @@ public class UserService {
 		resetPasswordRepository.save(resetPassword);
 		log.info("success to create reset password token. Token: {}", resetPassword.getToken());
 
-		emailService.sendResetPasswordMail(user.getEmail(), token).thenAccept(unused ->
+		emailService.sendVerificationMail(user.getEmail(), token, EmailType.RESET_PASSWORD).thenAccept(unused ->
 			log.info("success to send reset password mail.")
 		);
+	}
+
+	@Transactional
+	public void sendEmailVerificationMail(String email) {
+		String token = UserService.generateSecureToken();
+		log.info("success to create email verification token. Token: {}", token);
+		redisService.setValues(token, email, Duration.ofMinutes(3));
+
+		emailService.sendVerificationMail(email, token, EmailType.EMAIL_VALIDATION).thenAccept(unused ->
+			log.info("success to send email validation mail.")
+		).exceptionally(e -> {
+			redisService.deleteValues(token);
+			return null;
+		});
 	}
 
 	@Transactional
@@ -347,7 +362,7 @@ public class UserService {
 
 	}
 
-	public static String generateSecureToken() {
+	private static String generateSecureToken() {
 		final int TOKEN_LENGTH = 32;
 		byte[] bytes = new byte[TOKEN_LENGTH];
 		new SecureRandom().nextBytes(bytes);
