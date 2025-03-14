@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.View;
 
 import com.gamzabat.algohub.common.annotation.AuthedUser;
 import com.gamzabat.algohub.common.jwt.dto.ReissueTokenRequest;
@@ -46,7 +45,6 @@ import lombok.RequiredArgsConstructor;
 public class UserController {
 	private final UserService userService;
 	private final EmailService emailService;
-	private final View error;
 
 	@PostMapping(value = "/auth/sign-up", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(summary = "회원 가입 API")

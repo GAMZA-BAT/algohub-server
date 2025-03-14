@@ -42,29 +42,14 @@ public class EmailService {
 		Context context = new Context();
 		context.setVariable("resetUrl", RESET_PASSWORD_CLIENT_ENDPOINT + "?token=" + token);
 		String emailContent = templateEngine.process("reset-password", context);
-		MimeMessage message = mailSender.createMimeMessage();
 
-		try {
-
-			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-			helper.setTo(to);
-			helper.setFrom(FROM_ADDRESS);
-			helper.setSubject(RESET_PASSWORD_SUBJECT);
-			helper.setText(emailContent, true);
-			mailSender.send(message);
-			return CompletableFuture.completedFuture(null);
-		} catch (MessagingException e) {
-			log.warn("Failed to send email, retry. : {}", e.toString());
-			throw new MessagingRuntimeException(e);
-		}
+		sendEmail(to, RESET_PASSWORD_SUBJECT, emailContent);
+		return CompletableFuture.completedFuture(null);
 	}
 
 	@Recover
 	public CompletableFuture<Void> failedToSendResetPasswordMail(MessagingRuntimeException e, String to, String token) {
-		log.error("Failed to send reset password email to {} after retries. Exception: {}", to, e.getMessage(), e);
-		CompletableFuture<Void> failedFuture = new CompletableFuture<>();
-		failedFuture.completeExceptionally(e);
-		return failedFuture;
+		return handleSendingEmailFailed(e, "reset password", to);
 	}
 
 	@Async
@@ -78,30 +63,41 @@ public class EmailService {
 		redisService.setValues(token, email, Duration.ofMinutes(3));
 		log.info(redisService.getValues(token));
 		Context context = new Context();
-		context.setVariable("resetUrl", EMAIL_VERIFICATION_CLIENT_ENDPOINT + "?token=" + token);
+		context.setVariable("verificationUrl", EMAIL_VERIFICATION_CLIENT_ENDPOINT + "?token=" + token);
 		String emailContent = templateEngine.process("verification-code", context);
 
-		MimeMessage message = mailSender.createMimeMessage();
-		try {
-			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-			helper.setTo(email);
-			helper.setFrom(FROM_ADDRESS);
-			helper.setSubject(EMAIL_VERIFICATION_SUBJECT);
-			helper.setText(emailContent, true);
-			mailSender.send(message);
-			return CompletableFuture.completedFuture(null);
-		} catch (MessagingException e) {
-			log.warn("Failed to send verification email, retry. : {}", e.toString());
-			throw new MessagingRuntimeException(e);
-		}
+		sendEmail(email, EMAIL_VERIFICATION_SUBJECT, emailContent);
+		return CompletableFuture.completedFuture(null);
+
 	}
 
 	@Recover
 	public CompletableFuture<Void> failedToSendVerificationEmail(MessagingRuntimeException e, String email) {
-		log.error("Failed to send verification email to {} after retries. Exception: {}", email, e.getMessage(), e);
+		return handleSendingEmailFailed(e, "verification", email);
+	}
+
+	private void sendEmail(String recipient, String subject, String content) {
+		try {
+			MimeMessage message = mailSender.createMimeMessage();
+			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+			helper.setTo(recipient);
+			helper.setFrom(FROM_ADDRESS);
+			helper.setSubject(subject);
+			helper.setText(content, true);
+
+			mailSender.send(message);
+		} catch (MessagingException e) {
+			log.warn("Failed to send email, retry. : {}", e.toString());
+			throw new MessagingRuntimeException(e);
+		}
+	}
+
+	private CompletableFuture<Void> handleSendingEmailFailed(MessagingRuntimeException e, String purpose,
+		String email) {
+		log.error("Failed to send {} email to {} after retries. Exception: {}", purpose, email, e.getMessage(), e);
 		CompletableFuture<Void> failedFuture = new CompletableFuture<>();
 		failedFuture.completeExceptionally(e);
 		return failedFuture;
 	}
-
 }
