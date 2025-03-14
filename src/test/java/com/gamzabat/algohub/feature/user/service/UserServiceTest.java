@@ -155,21 +155,6 @@ class UserServiceTest {
 	}
 
 	@Test
-	@DisplayName("회원가입 실패 : 이미 가입 된 이메일")
-	void registerFailed_1() {
-		// given
-		RegisterRequest request = new RegisterRequest(password, nickname, bjNickname);
-		MockMultipartFile profileImage = new MockMultipartFile("image", "image.jpg", "image/jpeg", "test".getBytes());
-		when(redisService.getValues(EMAIL_VERIFICATION_TOKEN)).thenReturn(email);
-		when(userRepository.existsByEmail(email)).thenReturn(true);
-
-		// when, then
-		assertThatThrownBy(() -> userService.register(request, profileImage, EMAIL_VERIFICATION_TOKEN))
-			.isInstanceOf(UserValidationException.class)
-			.hasFieldOrPropertyWithValue("errors", "이미 사용 중인 이메일 입니다.");
-	}
-
-	@Test
 	@DisplayName("로그인 성공")
 	void signIn() {
 		// given

@@ -79,7 +79,6 @@ public class UserService {
 	public void register(RegisterRequest request, MultipartFile profileImage, String token) {
 
 		String email = redisService.getValues(token);
-		checkEmailDuplication(email);
 		checkNickname(request.nickname());
 		checkEmailForm(email);
 		checkBjNickname(request.bjNickname());
@@ -291,8 +290,8 @@ public class UserService {
 		);
 	}
 
-	@Transactional
 	public void sendEmailVerificationMail(String email) {
+		checkEmailDuplication(email);
 		String token = UserService.generateSecureToken();
 		log.info("success to create email verification token. Token: {}", token);
 		redisService.setValues(token, email, Duration.ofMinutes(3));
