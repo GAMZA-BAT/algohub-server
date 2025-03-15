@@ -133,8 +133,8 @@ class UserControllerTest {
 
 	@ParameterizedTest
 	@CsvSource(value = {
-		" '', nickname, bjNickname, password : 비밀번호는 필수 입력입니다.",
-		"password, '', bjNickname, nickname : 닉네임은 필수 입력입니다."
+		" '', nickname, password : 비밀번호는 필수 입력입니다.",
+		"password, '', nickname : 닉네임은 필수 입력입니다."
 	}, nullValues = "null")
 	@DisplayName("회원 가입 실패 : 잘못된 요청")
 	void registerFailed_1(String password, String nickname, String exceptionMessage) throws Exception {
