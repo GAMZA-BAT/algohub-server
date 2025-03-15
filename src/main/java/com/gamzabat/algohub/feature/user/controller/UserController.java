@@ -22,6 +22,7 @@ import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.dto.CheckEmailRequest;
 import com.gamzabat.algohub.feature.user.dto.DeleteUserRequest;
 import com.gamzabat.algohub.feature.user.dto.EditUserPasswordRequest;
+import com.gamzabat.algohub.feature.user.dto.RegisterBjNickNameRequest;
 import com.gamzabat.algohub.feature.user.dto.RegisterRequest;
 import com.gamzabat.algohub.feature.user.dto.ResetPasswordRequest;
 import com.gamzabat.algohub.feature.user.dto.SendVerificationCodeRequest;
@@ -56,6 +57,16 @@ public class UserController {
 		return ResponseEntity.ok().build();
 	}
 
+	@PatchMapping(value = "/users/baekjoon-nickname")
+	@Operation(summary = "백준 아이디 입력 API")
+	public ResponseEntity<Void> registerBjNickname(@Valid @RequestBody RegisterBjNickNameRequest request, Errors errors,
+		@AuthedUser User user) {
+		if (errors.hasErrors())
+			throw new RequestException("올바르지 않은 요청입니다.", errors);
+		userService.registerBjNickname(user, request);
+		return ResponseEntity.ok().build();
+	}
+
 	@PostMapping(value = "/auth/sign-in")
 	@Operation(summary = "로그인 API")
 	public ResponseEntity<TokenResponse> signIn(@Valid @RequestBody SignInRequest request, Errors errors) {
@@ -64,6 +75,7 @@ public class UserController {
 		TokenResponse response = userService.signIn(request);
 		return ResponseEntity.ok().body(response);
 	}
+
 
 	@PostMapping("/auth/verify/send")
 	@Operation(summary = "이메일 인증 토큰 전송")
@@ -80,6 +92,14 @@ public class UserController {
 	@Operation(summary = "이메일 인증 토큰 검증")
 	public ResponseEntity<Void> verifyEmail(@RequestParam String token) {
 		userService.checkEmailVerification(token);
+    return ResponseEntity.ok().build();
+	}
+  
+	@GetMapping("/users/check-baekjoon-nickname")
+	@Operation(summary = "백준 닉네임 유효성 검증 API", description = "회원가입 진행 시, 백준 닉네임이 유효한지 검증하는 API")
+	public ResponseEntity<Void> checkBjNickname(@RequestParam String bjNickname) {
+		userService.checkBjNickname(bjNickname);
+
 		return ResponseEntity.ok().build();
 	}
 
@@ -128,13 +148,6 @@ public class UserController {
 	@Operation(summary = "로그아웃 API")
 	public ResponseEntity<Void> logout(HttpServletRequest request) {
 		userService.logout(request);
-		return ResponseEntity.ok().build();
-	}
-
-	@GetMapping("/users/check-baekjoon-nickname")
-	@Operation(summary = "백준 닉네임 유효성 검증 API", description = "회원가입 진행 시, 백준 닉네임이 유효한지 검증하는 API")
-	public ResponseEntity<Void> checkBjNickname(@RequestParam String bjNickname) {
-		userService.checkBjNickname(bjNickname);
 		return ResponseEntity.ok().build();
 	}
 
