@@ -227,7 +227,7 @@ public class TokenProvider {
 	}
 
 	private boolean logout(String token) {
-		return redisService.getValues(token).equals("logout");
+		return redisService.checkExistsValue(token) && redisService.getValues(token).equals("logout");
 	}
 
 	@Transactional
