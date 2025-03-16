@@ -27,7 +27,9 @@ download_yml "mysql-dev.yml"
 download_yml "mysql-prod.yml"
 download_yml "webhook-prod.yml"
 download_yml "webhook-rc.yml"
-download_yml "github.yml"
+download_yml "github-prod.yml"
+download_yml "github-rc.yml"
+download_yml "github-dev.yml"
 download_yml "smtp.yml"
 
 wait
