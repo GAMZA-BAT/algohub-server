@@ -648,4 +648,25 @@ class UserServiceTest {
 		verify(redisService).checkExistsValue(EMAIL_VERIFICATION_TOKEN);
 	}
 
+	@Test
+	@DisplayName("백준 닉네임 삭제 성공")
+	void deleteBjNickname_success() {
+		//when
+		userService.deleteBjNickname(user);
+
+		//then
+		assertThat(user.getBjNickname()).isEqualTo(null);
+	}
+
+	@Test
+	@DisplayName("백준 닉네임 삭제 실패 : 등록 되지 않은 백준 닉네임")
+	void deleteBjNickname_failed() {
+		//given
+		User user1 = User.builder().bjNickname(null).build();
+		//then
+		assertThatThrownBy(() -> userService.deleteBjNickname(user1))
+			.isInstanceOf(CheckBjNicknameValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
+			.hasFieldOrPropertyWithValue("error", "백준 아이디가 등록되어 있지 않습니다.");
+	}
 }

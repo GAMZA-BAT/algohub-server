@@ -206,6 +206,16 @@ public class UserService {
 		log.info("success to check baekjoon nickname validity nickname = {}", bjNickname);
 	}
 
+	@Transactional
+	public void deleteBjNickname(User user) {
+		if (user.getBjNickname() == null) {
+			throw new CheckBjNicknameValidationException(HttpStatus.BAD_REQUEST.value(), "백준 아이디가 등록되어 있지 않습니다.");
+		}
+		user.editBjNickname(null);
+		userRepository.save(user);
+		log.info("succes to delete user baekjoon nickname user_id = {}", user.getId());
+	}
+
 	@Transactional(readOnly = true)
 	public void checkEmailDuplication(String email) {
 		if (userRepository.existsByEmail(email))
@@ -359,7 +369,7 @@ public class UserService {
 		redisService.deleteValues(token);
 		redisService.setValues(token, email, Duration.ofMinutes(30));
 	}
-  
+
 	private void validateBjNickname(String bjNickname) {
 
 		String bjUserUrl = BOJ_USER_PROFILE_URL + bjNickname;

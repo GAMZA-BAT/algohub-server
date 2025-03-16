@@ -533,4 +533,30 @@ class UserControllerTest {
 			.andExpect(jsonPath("$.error").value("이미 사용 중인 닉네임입니다."));
 		verify(userService, times(1)).checkNickname(nickname);
 	}
+
+	@Test
+	@DisplayName("백준 닉네임 삭제 성공")
+	void deleteBjNickname() throws Exception {
+		//given
+		User user = User.builder().bjNickname("bjNickname").build();
+		doNothing().when(userService).deleteBjNickname(any(User.class));
+		//when, then
+		mockMvc.perform(delete("/api/users/baekjoon-nickname")
+				.header("Authorization", token))
+			.andExpect(status().isOk());
+		verify(userService, times(1)).deleteBjNickname(any(User.class));
+	}
+
+	@Test
+	@DisplayName("백준 닉네임 삭제 실패 : 백준 아이디 등록이 되어있지 않음")
+	void deleteBjNickname_2() throws Exception {
+		//given
+		doThrow(new CheckBjNicknameValidationException(HttpStatus.BAD_REQUEST.value(), "백준 아이디가 등록되어 있지 않습니다."))
+			.when(userService).deleteBjNickname(any(User.class));
+		//when,then
+		mockMvc.perform(delete("/api/users/baekjoon-nickname")
+				.header("Authorization", token))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.error").value("백준 아이디가 등록되어 있지 않습니다."));
+	}
 }

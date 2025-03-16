@@ -76,7 +76,6 @@ public class UserController {
 		return ResponseEntity.ok().body(response);
 	}
 
-
 	@PostMapping("/auth/verify/send")
 	@Operation(summary = "이메일 인증 토큰 전송")
 	public ResponseEntity<Void> sendVerificationCode(@Valid @RequestBody SendVerificationCodeRequest request,
@@ -92,13 +91,21 @@ public class UserController {
 	@Operation(summary = "이메일 인증 토큰 검증")
 	public ResponseEntity<Void> verifyEmail(@RequestParam String token) {
 		userService.checkEmailVerification(token);
-    return ResponseEntity.ok().build();
+		return ResponseEntity.ok().build();
 	}
-  
+
 	@GetMapping("/users/check-baekjoon-nickname")
 	@Operation(summary = "백준 닉네임 유효성 검증 API", description = "회원가입 진행 시, 백준 닉네임이 유효한지 검증하는 API")
 	public ResponseEntity<Void> checkBjNickname(@RequestParam String bjNickname) {
 		userService.checkBjNickname(bjNickname);
+
+		return ResponseEntity.ok().build();
+	}
+
+	@DeleteMapping("/users/baekjoon-nickname")
+	@Operation(summary = "백준 닉네임 삭제 API", description = "유저의 백준 id 를 null로 만드는 API")
+	public ResponseEntity<Void> deleteBjNickname(@AuthedUser User user) {
+		userService.deleteBjNickname(user);
 
 		return ResponseEntity.ok().build();
 	}
