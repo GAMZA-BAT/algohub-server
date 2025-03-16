@@ -2,7 +2,6 @@ spring:
   config:
     import:
       - "jwt.yml"
-      - "github.yml"
       - "smtp.yml"
   profiles:
     active: dev
@@ -77,6 +76,7 @@ spring:
       on-profile: dev
     import:
       - "mysql-dev.yml"
+      - "github-dev.yml"
       - "aws-dev.yml"
   datasource:
     url: jdbc:mysql://${mysql_endpoint}:3306/algohub_${DEV_NAME}?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
@@ -97,6 +97,7 @@ spring:
     import:
       - "mysql-prod.yml"
       - "aws-prod.yml"
+      - "github-prod.yml"
       - "webhook-prod.yml"
   datasource:
     url: jdbc:mysql://${mysql_endpoint}:3306/algohub?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
@@ -115,6 +116,7 @@ spring:
       on-profile: rc
     import:
       - "webhook-rc.yml"
+      - "github-rc.yml"
   datasource:
     url: jdbc:mysql://${mysql_endpoint}:3306/algohub_rc?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
   data:
