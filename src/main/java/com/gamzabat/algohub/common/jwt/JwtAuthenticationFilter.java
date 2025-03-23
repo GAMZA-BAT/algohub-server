@@ -34,7 +34,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		"/api/users/check-email",
 		"/api/users/check-nickname",
 		"/api/users/check-baekjoon-nickname",
-		"/api/oauth/github/sign-in");
+		"/api/oauth/github/sign-in",
+		"/api/auth/verify");
 
 	@Override
 	protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {

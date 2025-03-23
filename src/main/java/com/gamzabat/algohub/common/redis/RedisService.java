@@ -1,6 +1,7 @@
 package com.gamzabat.algohub.common.redis;
 
 import java.time.Duration;
+import java.util.Optional;
 
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -23,12 +24,16 @@ public class RedisService {
 
 	public String getValues(String key) {
 		ValueOperations<String, Object> values = redisTemplate.opsForValue();
-		if (values.get(key) == null)
-			return "";
-		return String.valueOf(values.get(key));
+		return Optional.ofNullable(values.get((key)))
+			.map(Object::toString)
+			.orElse(null);
 	}
 
 	public void deleteValues(String key) {
 		redisTemplate.delete(key);
+	}
+
+	public boolean checkExistsValue(String key) {
+		return redisTemplate.hasKey(key);
 	}
 }

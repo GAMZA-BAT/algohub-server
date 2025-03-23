@@ -2,8 +2,6 @@ package com.gamzabat.algohub.feature.user.service;
 
 import static com.gamzabat.algohub.constants.ApiConstants.*;
 
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -30,6 +28,7 @@ import com.gamzabat.algohub.common.jwt.TokenProvider;
 import com.gamzabat.algohub.common.jwt.dto.JwtDTO;
 import com.gamzabat.algohub.common.jwt.dto.ReissueTokenRequest;
 import com.gamzabat.algohub.common.redis.RedisService;
+import com.gamzabat.algohub.enums.EmailType;
 import com.gamzabat.algohub.enums.ImageType;
 import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.exception.UserValidationException;
@@ -39,6 +38,7 @@ import com.gamzabat.algohub.feature.user.domain.ResetPassword;
 import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.dto.DeleteUserRequest;
 import com.gamzabat.algohub.feature.user.dto.EditUserPasswordRequest;
+import com.gamzabat.algohub.feature.user.dto.RegisterBjNickNameRequest;
 import com.gamzabat.algohub.feature.user.dto.RegisterRequest;
 import com.gamzabat.algohub.feature.user.dto.ResetPasswordRequest;
 import com.gamzabat.algohub.feature.user.dto.SignInRequest;
@@ -50,6 +50,7 @@ import com.gamzabat.algohub.feature.user.exception.CheckBjNicknameValidationExce
 import com.gamzabat.algohub.feature.user.exception.CheckEmailFormException;
 import com.gamzabat.algohub.feature.user.exception.CheckNicknameValidationException;
 import com.gamzabat.algohub.feature.user.exception.CheckPasswordFormException;
+import com.gamzabat.algohub.feature.user.exception.InvalidEmailException;
 import com.gamzabat.algohub.feature.user.exception.ResetPasswordValidationError;
 import com.gamzabat.algohub.feature.user.exception.UncorrectedPasswordException;
 import com.gamzabat.algohub.feature.user.repository.ResetPasswordRepository;
@@ -74,20 +75,19 @@ public class UserService {
 	private final EmailService emailService;
 
 	@Transactional
-	public void register(RegisterRequest request, MultipartFile profileImage) {
-		checkEmailDuplication(request.email());
+	public void register(RegisterRequest request, MultipartFile profileImage, String token) {
+
+		String email = redisService.getValues(token);
 		checkNickname(request.nickname());
-		checkEmailForm(request.email());
-		checkBjNickname(request.bjNickname());
+		checkEmailForm(email);
 		checkPasswordForm(request.password());
 
 		String encodedPassword = passwordEncoder.encode(request.password());
 
 		User user = userRepository.save(User.builder()
-			.email(request.email())
+			.email(email)
 			.password(encodedPassword)
 			.nickname(request.nickname())
-			.bjNickname(request.bjNickname())
 			.role(Role.USER)
 			.build());
 
@@ -148,6 +148,7 @@ public class UserService {
 				imageService.deleteImage(user.getProfileImage());
 			}
 			saveProfileImage(inputImage, user);
+			log.info("success to update user profile image. profile image : {}", user.getProfileImage());
 			return;
 		}
 		if (isDefaultImage) {
@@ -161,15 +162,6 @@ public class UserService {
 			imageService.deleteImage(user.getProfileImage());
 			user.editProfileImage(null);
 		}
-	}
-
-	private boolean isEqualToProfileImage(User user, MultipartFile profileImage) {
-		String prefix = imageService.createImagePrefix(user.getId(), user.getEmail());
-		String inputImageUrl = imageService.getImageName(ImageType.USER, prefix,
-			profileImage);
-		String userProfileImageUrl = URLDecoder.decode(imageService.parseImageName(user.getProfileImage()),
-			StandardCharsets.UTF_8);
-		return inputImageUrl.equals(userProfileImageUrl);
 	}
 
 	@Transactional
@@ -202,28 +194,28 @@ public class UserService {
 		log.info("success to edit password user_id={}", user.getId());
 	}
 
+	@Transactional
+	public void registerBjNickname(User user, RegisterBjNickNameRequest request) {
+		validateBjNickname(request.bjNickName());
+		user.editBjNickname(request.bjNickName());
+		userRepository.save(user);
+		log.info("success to register baekjoon-nickname user_id = {}", user.getId());
+	}
+
 	@Transactional(readOnly = true)
 	public void checkBjNickname(String bjNickname) {
-		String bjUserUrl = BOJ_USER_PROFILE_URL + bjNickname;
+		validateBjNickname(bjNickname);
+		log.info("success to check baekjoon nickname validity nickname = {}", bjNickname);
+	}
 
-		HttpHeaders headers = new HttpHeaders();
-		headers.set("User-Agent",
-			"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36");
-		HttpEntity<String> entity = new HttpEntity<>(headers);
-
-		try {
-			restTemplate.exchange(bjUserUrl, HttpMethod.GET, entity, String.class);
-			// TODO : 백준 본인 인증 관련 사항 확정 후 로직 수정
-			// if (userRepository.existsByBjNickname(bjNickname))
-			// 	throw new CheckBjNicknameValidationException(HttpStatus.CONFLICT.value(), "이미 가입된 백준 닉네임 입니다.");
-		} catch (HttpClientErrorException e) {
-			if (e.getStatusCode() == HttpStatus.NOT_FOUND)
-				throw new CheckBjNicknameValidationException(HttpStatus.NOT_FOUND.value(), "백준 닉네임이 유효하지 않습니다.");
-		} catch (HttpServerErrorException e) {
-			log.error("BOJ server error occurred : " + e.getMessage());
-			throw new BOJServerErrorException("현재 백준 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+	@Transactional
+	public void deleteBjNickname(User user) {
+		if (user.getBjNickname() == null) {
+			throw new CheckBjNicknameValidationException(HttpStatus.BAD_REQUEST.value(), "백준 아이디가 등록되어 있지 않습니다.");
 		}
-		log.info("success to check baekjoon nickname validity nickname={}", bjNickname);
+		user.editBjNickname(null);
+		userRepository.save(user);
+		log.info("succes to delete user baekjoon nickname user_id = {}", user.getId());
 	}
 
 	@Transactional(readOnly = true)
@@ -285,9 +277,23 @@ public class UserService {
 		resetPasswordRepository.save(resetPassword);
 		log.info("success to create reset password token. Token: {}", resetPassword.getToken());
 
-		emailService.sendResetPasswordMail(user.getEmail(), token).thenAccept(unused ->
-			log.info("success to send reset password mail. mail = {}", email)
+		emailService.sendVerificationMail(user.getEmail(), token, EmailType.RESET_PASSWORD).thenAccept(unused ->
+			log.info("success to send reset password mail.")
 		);
+	}
+
+	public void sendEmailVerificationMail(String email) {
+		checkEmailDuplication(email);
+		String token = UserService.generateSecureToken();
+		log.info("success to create email verification token. Token: {}", token);
+		redisService.setValues(token, email, Duration.ofMinutes(3));
+
+		emailService.sendVerificationMail(email, token, EmailType.EMAIL_VALIDATION).thenAccept(unused ->
+			log.info("success to send email validation mail.")
+		).exceptionally(e -> {
+			redisService.deleteValues(token);
+			return null;
+		});
 	}
 
 	@Transactional
@@ -354,4 +360,40 @@ public class UserService {
 		return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
 	}
 
+	public void checkEmailVerification(String token) {
+		boolean isTokenExist = redisService.checkExistsValue(token);
+
+		if (!isTokenExist) {
+			throw new InvalidEmailException("토큰이 유효하지 않습니다.");
+		}
+
+		String email = redisService.getValues(token);
+
+		redisService.deleteValues(token);
+		redisService.setValues(token, email, Duration.ofMinutes(30));
+	}
+
+	private void validateBjNickname(String bjNickname) {
+
+		String bjUserUrl = BOJ_USER_PROFILE_URL + bjNickname;
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.set("User-Agent",
+			"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36");
+		HttpEntity<String> entity = new HttpEntity<>(headers);
+
+		try {
+			restTemplate.exchange(bjUserUrl, HttpMethod.GET, entity, String.class);
+			// TODO : 백준 본인 인증 관련 사항 확정 후 로직 수정
+			// if (userRepository.existsByBjNickname(bjNickname))
+			// 	throw new CheckBjNicknameValidationException(HttpStatus.CONFLICT.value(), "이미 가입된 백준 닉네임 입니다.");
+		} catch (HttpClientErrorException e) {
+			if (e.getStatusCode() == HttpStatus.NOT_FOUND)
+				throw new CheckBjNicknameValidationException(HttpStatus.NOT_FOUND.value(), "백준 닉네임이 유효하지 않습니다.");
+		} catch (HttpServerErrorException e) {
+			log.error("BOJ server error occurred : " + e.getMessage());
+			throw new BOJServerErrorException("현재 백준 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+		}
+
+	}
 }

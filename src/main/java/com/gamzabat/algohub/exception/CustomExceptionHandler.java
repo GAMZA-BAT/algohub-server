@@ -25,10 +25,13 @@ import com.gamzabat.algohub.feature.problem.exception.SolvedAcApiErrorException;
 import com.gamzabat.algohub.feature.solution.exception.CannotFoundSolutionException;
 import com.gamzabat.algohub.feature.solution.exception.SolutionValidationException;
 import com.gamzabat.algohub.feature.user.exception.BOJServerErrorException;
+import com.gamzabat.algohub.feature.user.exception.CannotFoundVerificationCodeException;
 import com.gamzabat.algohub.feature.user.exception.CheckBjNicknameValidationException;
 import com.gamzabat.algohub.feature.user.exception.CheckEmailFormException;
 import com.gamzabat.algohub.feature.user.exception.CheckNicknameValidationException;
 import com.gamzabat.algohub.feature.user.exception.CheckPasswordFormException;
+import com.gamzabat.algohub.feature.user.exception.InvalidEmailException;
+import com.gamzabat.algohub.feature.user.exception.InvalidVerificationCodeException;
 import com.gamzabat.algohub.feature.user.exception.ResetPasswordValidationError;
 import com.gamzabat.algohub.feature.user.exception.UncorrectedPasswordException;
 
@@ -196,5 +199,27 @@ public class CustomExceptionHandler {
 	protected ResponseEntity<ErrorResponse> handler(ResetPasswordValidationError e) {
 		return ResponseEntity.badRequest()
 			.body(new ErrorResponse(e.getCode(), e.getErrors(), null));
+	}
+
+	@ExceptionHandler(InvalidEmailException.class)
+	protected ResponseEntity<ErrorResponse> handleInvalidEmailException(InvalidEmailException e) {
+		return ResponseEntity
+			.status(HttpStatus.BAD_REQUEST)
+			.body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), e.getErrors(), null));
+	}
+
+	@ExceptionHandler(InvalidVerificationCodeException.class)
+	protected ResponseEntity<ErrorResponse> handleInvalidVerificationCodeException(InvalidVerificationCodeException e) {
+		return ResponseEntity
+			.status(HttpStatus.UNAUTHORIZED)
+			.body(new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), e.getErrors(), null));
+	}
+
+	@ExceptionHandler(CannotFoundVerificationCodeException.class)
+	protected ResponseEntity<ErrorResponse> handleCannotFoundVerificationCodeException(
+		CannotFoundVerificationCodeException e) {
+		return ResponseEntity
+			.status(HttpStatus.NOT_FOUND)
+			.body(new ErrorResponse(HttpStatus.NOT_FOUND.value(), e.getErrors(), null));
 	}
 }

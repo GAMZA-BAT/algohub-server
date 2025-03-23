@@ -22,6 +22,7 @@ public class MDCFilter extends OncePerRequestFilter {
 		MDCUtil.set(MDCUtil.MDC_HEADER, MDCUtil.getHeader(nativeRequest));
 		MDCUtil.set(MDCUtil.MDC_PARAMETER, MDCUtil.getParameter(nativeRequest));
 		MDCUtil.set(MDCUtil.MDC_REQUEST_BODY, MDCUtil.getBody(nativeRequest));
+		MDCUtil.set(MDCUtil.MDC_REQUEST_ID, MDCUtil.createRequestId());
 
 		filterChain.doFilter(request, response);
 

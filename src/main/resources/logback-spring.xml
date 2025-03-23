@@ -7,14 +7,19 @@
     <logger name="com.gamzabat.algohub" level="DEBUG"/>
 
     <springProfile name="prod">
-        <include resource="discord-appender.xml"/>
         <include resource="aws-appender.xml"/>
 
         <root level="INFO">
-            <appender-ref ref="CONSOLE"/>
-            <!-- prod에서만 DISCORD 전송 -->
-            <appender-ref ref="ASYNC_DISCORD"/>
             <appender-ref ref="ASYNC_AWS_LOGS"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="prod,rc">
+        <include resource="discord-appender.xml"/>
+
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_DISCORD"/>
         </root>
     </springProfile>
 

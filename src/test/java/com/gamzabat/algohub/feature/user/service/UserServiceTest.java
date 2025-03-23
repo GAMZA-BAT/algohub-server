@@ -38,6 +38,7 @@ import org.springframework.web.client.RestTemplate;
 import com.gamzabat.algohub.common.jwt.TokenProvider;
 import com.gamzabat.algohub.common.jwt.dto.JwtDTO;
 import com.gamzabat.algohub.common.redis.RedisService;
+import com.gamzabat.algohub.enums.EmailType;
 import com.gamzabat.algohub.enums.ImageType;
 import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.exception.UserValidationException;
@@ -47,6 +48,7 @@ import com.gamzabat.algohub.feature.user.domain.ResetPassword;
 import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.dto.DeleteUserRequest;
 import com.gamzabat.algohub.feature.user.dto.EditUserPasswordRequest;
+import com.gamzabat.algohub.feature.user.dto.RegisterBjNickNameRequest;
 import com.gamzabat.algohub.feature.user.dto.RegisterRequest;
 import com.gamzabat.algohub.feature.user.dto.ResetPasswordRequest;
 import com.gamzabat.algohub.feature.user.dto.SignInRequest;
@@ -57,6 +59,7 @@ import com.gamzabat.algohub.feature.user.exception.BOJServerErrorException;
 import com.gamzabat.algohub.feature.user.exception.CheckBjNicknameValidationException;
 import com.gamzabat.algohub.feature.user.exception.CheckNicknameValidationException;
 import com.gamzabat.algohub.feature.user.exception.CheckPasswordFormException;
+import com.gamzabat.algohub.feature.user.exception.InvalidEmailException;
 import com.gamzabat.algohub.feature.user.exception.ResetPasswordValidationError;
 import com.gamzabat.algohub.feature.user.exception.UncorrectedPasswordException;
 import com.gamzabat.algohub.feature.user.repository.ResetPasswordRepository;
@@ -98,6 +101,8 @@ class UserServiceTest {
 	private final String imageUrl = "1_test@email.com_image.jpg";
 	private final String bjNickname = "bjNickname";
 	private final String RESET_PASSWORD_TOKEN = "RESET_PASSWORD_TOKEN";
+	private final String EMAIL_VERIFICATION_TOKEN = "TOKEN123456";
+
 	private User user;
 	private ResetPassword resetPassword;
 
@@ -130,15 +135,16 @@ class UserServiceTest {
 	void register() {
 		// given
 		String prefix = "1_test@email.com";
-		RegisterRequest request = new RegisterRequest(email, password, nickname, bjNickname);
+		RegisterRequest request = new RegisterRequest(password, nickname);
 		MockMultipartFile profileImage = new MockMultipartFile("image", "image.jpg", "image/jpeg", "test".getBytes());
+		when(redisService.getValues(EMAIL_VERIFICATION_TOKEN)).thenReturn(email);
 		when(userRepository.save(any(User.class))).thenReturn(user);
 		when(imageService.createImagePrefix(user.getId(), user.getEmail())).thenReturn(prefix);
 		when(imageService.saveImage(ImageType.USER, prefix,
 			profileImage)).thenReturn(imageUrl);
 		when(passwordEncoder.encode(password)).thenReturn(encoded);
 		// when
-		userService.register(request, profileImage);
+		userService.register(request, profileImage, EMAIL_VERIFICATION_TOKEN);
 		// then
 		verify(userRepository, times(1)).save(userCaptor.capture());
 		User user = userCaptor.getValue();
@@ -147,19 +153,6 @@ class UserServiceTest {
 		assertThat(user.getDescription()).isEqualTo("");
 		verify(imageService, times(1)).createImagePrefix(anyLong(), anyString());
 		verify(imageService, times(1)).saveImage(ImageType.USER, prefix, profileImage);
-	}
-
-	@Test
-	@DisplayName("회원가입 실패 : 이미 가입 된 이메일")
-	void registerFailed_1() {
-		// given
-		RegisterRequest request = new RegisterRequest(email, password, nickname, bjNickname);
-		MockMultipartFile profileImage = new MockMultipartFile("image", "image.jpg", "image/jpeg", "test".getBytes());
-		when(userRepository.existsByEmail(email)).thenReturn(true);
-		// when, then
-		assertThatThrownBy(() -> userService.register(request, profileImage))
-			.isInstanceOf(UserValidationException.class)
-			.hasFieldOrPropertyWithValue("errors", "이미 사용 중인 이메일 입니다.");
 	}
 
 	@Test
@@ -244,7 +237,6 @@ class UserServiceTest {
 		assertThat(response.getEmail()).isEqualTo(email);
 		assertThat(response.getNickname()).isEqualTo(nickname);
 		assertThat(response.getProfileImage()).isEqualTo(imageUrl);
-		assertThat(response.getBjNickname()).isEqualTo(bjNickname);
 		assertThat(response.getDescription()).isEqualTo("");
 	}
 
@@ -303,41 +295,85 @@ class UserServiceTest {
 	}
 
 	@Test
-	@DisplayName("백준 닉네임 유효성 검증 : 사용 가능한 백준 닉네임")
-	void checkBjNickname_1() {
+	@DisplayName("백준 닉네임 등록 성공 : 사용 가능한 백준 닉네임")
+	void registerBjNickname_1() {
 		// given
-		String bjNickname = "bjNickname";
+		RegisterBjNickNameRequest request = new RegisterBjNickNameRequest("newBjNickname");
+		String bjNickname = "newBjNickname";
 		when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
 			.thenReturn(new ResponseEntity<>(HttpStatus.OK));
 		// when(userRepository.existsByBjNickname(bjNickname)).thenReturn(false);
 		// when
-		userService.checkBjNickname(bjNickname);
+		userService.registerBjNickname(user, request);
+		assertThat(user.getBjNickname()).isEqualTo(bjNickname);
 		// then
 		// verify(userRepository, times(1)).existsByBjNickname(bjNickname);
 	}
 
 	@Test
-	@DisplayName("백준 닉네임 유효성 검증 : 유효하지 않은 백준 닉네임")
-	void checkBjNickname_2() {
+	@DisplayName("백준 닉네임 등록 실패 : 유효하지 않은 백준 닉네임")
+	void registerBjNickname_2() {
 		// given
-		String bjNickname = "bjNickname";
+		RegisterBjNickNameRequest request = new RegisterBjNickNameRequest("bjNickname");
 		when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
 			.thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
+
 		// when, then
-		assertThatThrownBy(() -> userService.checkBjNickname(bjNickname))
+		assertThatThrownBy(() -> userService.registerBjNickname(user, request))
 			.isInstanceOf(CheckBjNicknameValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.NOT_FOUND.value())
 			.hasFieldOrPropertyWithValue("error", "백준 닉네임이 유효하지 않습니다.");
 	}
 
 	@Test
-	@DisplayName("백준 닉네임 유효성 검증 실패 : 백준 서버 오류 발생")
+	@DisplayName("백준 닉네임 등록 실패 : 백준 서버 오류 발생")
 	void checkBjNickname_4() {
+		// given
+		RegisterBjNickNameRequest request = new RegisterBjNickNameRequest("bjNickname");
+		when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
+			.thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
+
+		// when, then
+		assertThatThrownBy(() -> userService.registerBjNickname(user, request))
+			.isInstanceOf(BOJServerErrorException.class)
+			.hasFieldOrPropertyWithValue("error", "현재 백준 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+	}
+
+	@Test
+	@DisplayName("백준 닉네임 유효성 검증 : 사용 가능한 백준 닉네임")
+	void checkBjNickname_1() {
 		// given
 		String bjNickname = "bjNickname";
 		when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
+			.thenReturn(new ResponseEntity<>(HttpStatus.OK));
+		// when
+		userService.checkBjNickname(bjNickname);
+		// then
+		assertThat(user.getBjNickname()).isEqualTo(bjNickname);
+	}
+
+	@Test
+	@DisplayName("백준 닉네임 유효성 검증 실패 : 사용 불가능한 백준 닉네임")
+	void checkBjNicknamefailed_1() {
+		//given
+		String bjNickName = "bjNickName";
+		when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
+			.thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
+		//when,then
+		assertThatThrownBy(() -> userService.checkBjNickname(bjNickName))
+			.isInstanceOf(CheckBjNicknameValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.NOT_FOUND.value())
+			.hasFieldOrPropertyWithValue("error", "백준 닉네임이 유효하지 않습니다.");
+	}
+
+	@Test
+	@DisplayName("백준 닉네임 유효성 검증 실패 : 백준 서버 에러")
+	void checkBjNicknamefailed_2() {
+		//given
+		String bjNickname = "bjNickname";
+		when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
 			.thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
-		// when, then
+		//when,then
 		assertThatThrownBy(() -> userService.checkBjNickname(bjNickname))
 			.isInstanceOf(BOJServerErrorException.class)
 			.hasFieldOrPropertyWithValue("error", "현재 백준 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
@@ -483,7 +519,7 @@ class UserServiceTest {
 	void resetPasswordEmail_suceess() {
 		//give
 		when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
-		when(emailService.sendResetPasswordMail(eq(email), anyString())).thenReturn(
+		when(emailService.sendVerificationMail(eq(email), anyString(), eq(EmailType.RESET_PASSWORD))).thenReturn(
 			CompletableFuture.completedFuture(null));
 
 		//when
@@ -494,7 +530,7 @@ class UserServiceTest {
 		ResetPassword resetPassword = passwordCaptor.getValue();
 		assertThat(resetPassword.getUser()).isEqualTo(user);
 
-		verify(emailService, times(1)).sendResetPasswordMail(anyString(), anyString());
+		verify(emailService, times(1)).sendVerificationMail(anyString(), anyString(), eq(EmailType.RESET_PASSWORD));
 
 	}
 
@@ -584,4 +620,53 @@ class UserServiceTest {
 		assertThat(user.getPassword()).isEqualTo(passwordEncoder.encode(password));
 	}
 
+	@Test
+	@DisplayName("이메일 검증 실패 : 인증번호가 없거나 만료된 경우")
+	void checkEmailVerification_failed() {
+		//given
+		when(redisService.checkExistsValue(EMAIL_VERIFICATION_TOKEN)).thenReturn(false);
+
+		//when, then
+		assertThatThrownBy(() -> userService.checkEmailVerification(EMAIL_VERIFICATION_TOKEN))
+			.isInstanceOf(InvalidEmailException.class)
+			.hasFieldOrPropertyWithValue("errors", "토큰이 유효하지 않습니다.");
+	}
+
+	@Test
+	@DisplayName("이메일 검증 성공")
+	void checkEmailVerification_success() {
+		//given
+		when(redisService.checkExistsValue(EMAIL_VERIFICATION_TOKEN)).thenReturn(true);
+		when(redisService.getValues(EMAIL_VERIFICATION_TOKEN)).thenReturn(email);
+		//when
+		userService.checkEmailVerification(EMAIL_VERIFICATION_TOKEN);
+
+		//then
+		verify(redisService).getValues(EMAIL_VERIFICATION_TOKEN);
+		verify(redisService).setValues(EMAIL_VERIFICATION_TOKEN, email, Duration.ofMinutes(30));
+		verify(redisService).deleteValues(EMAIL_VERIFICATION_TOKEN);
+		verify(redisService).checkExistsValue(EMAIL_VERIFICATION_TOKEN);
+	}
+
+	@Test
+	@DisplayName("백준 닉네임 삭제 성공")
+	void deleteBjNickname_success() {
+		//when
+		userService.deleteBjNickname(user);
+
+		//then
+		assertThat(user.getBjNickname()).isEqualTo(null);
+	}
+
+	@Test
+	@DisplayName("백준 닉네임 삭제 실패 : 등록 되지 않은 백준 닉네임")
+	void deleteBjNickname_failed() {
+		//given
+		User user1 = User.builder().bjNickname(null).build();
+		//then
+		assertThatThrownBy(() -> userService.deleteBjNickname(user1))
+			.isInstanceOf(CheckBjNicknameValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
+			.hasFieldOrPropertyWithValue("error", "백준 아이디가 등록되어 있지 않습니다.");
+	}
 }
