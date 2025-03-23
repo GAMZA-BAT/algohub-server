@@ -1,0 +1,878 @@
+package com.gamzabat.algohub.service;
+
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import java.lang.reflect.Field;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
+
+import com.gamzabat.algohub.common.DateFormatUtil;
+import com.gamzabat.algohub.enums.Role;
+import com.gamzabat.algohub.exception.ProblemValidationException;
+import com.gamzabat.algohub.exception.StudyGroupValidationException;
+import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
+import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
+import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
+import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundProblemException;
+import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
+import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
+import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
+import com.gamzabat.algohub.feature.notification.repository.NotificationRepository;
+import com.gamzabat.algohub.feature.notification.repository.NotificationSettingRepository;
+import com.gamzabat.algohub.feature.notification.service.NotificationService;
+import com.gamzabat.algohub.feature.problem.domain.Problem;
+import com.gamzabat.algohub.feature.problem.dto.CreateProblemRequest;
+import com.gamzabat.algohub.feature.problem.dto.EditProblemRequest;
+import com.gamzabat.algohub.feature.problem.dto.GetProblemResponse;
+import com.gamzabat.algohub.feature.problem.exception.SolvedAcApiErrorException;
+import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
+import com.gamzabat.algohub.feature.problem.service.ProblemService;
+import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
+import com.gamzabat.algohub.feature.user.domain.User;
+
+@ExtendWith(MockitoExtension.class)
+class ProblemServiceTest {
+	@InjectMocks
+	private ProblemService problemService;
+	@Mock
+	private NotificationService notificationService;
+	@Mock
+	private ProblemRepository problemRepository;
+	@Mock
+	private StudyGroupRepository groupRepository;
+	@Mock
+	private GroupMemberRepository groupMemberRepository;
+	@Mock
+	private SolutionRepository solutionRepository;
+	@Mock
+	private NotificationRepository notificationRepository;
+	@Mock
+	private NotificationSettingRepository notificationSettingRepository;
+	@Mock
+	private RestTemplate restTemplate;
+
+	private User user;
+	private User user2;
+	private User user3;
+	private User user4;
+	private StudyGroup group;
+	private GroupMember groupMember1;
+	private GroupMember groupMember3;
+	private GroupMember groupMember4;
+
+	private Problem problem;
+
+	@Captor
+	private ArgumentCaptor<Problem> problemCaptor;
+
+	@BeforeEach
+	void setUp() throws NoSuchFieldException, IllegalAccessException {
+		user = User.builder().email("email1").password("password").nickname("nickname")
+			.role(Role.USER).profileImage("image").build();
+		user2 = User.builder().email("email2").password("password").nickname("nickname")
+			.role(Role.USER).profileImage("image").build();
+		user3 = User.builder().email("email3").password("password").nickname("nickname")
+			.role(Role.USER).profileImage("image").build();
+		user4 = User.builder().email("email4").password("password").nickname("nickname")
+			.role(Role.USER).profileImage("image").build();
+		group = StudyGroup.builder().name("name").groupImage("imageUrl").groupCode("code").build();
+		groupMember1 = GroupMember.builder().role(RoleOfGroupMember.OWNER).studyGroup(group).user(user).build();
+		groupMember3 = GroupMember.builder().role(RoleOfGroupMember.ADMIN).studyGroup(group).user(user3).build();
+		groupMember4 = GroupMember.builder().role(RoleOfGroupMember.PARTICIPANT).studyGroup(group).user(user4).build();
+
+		problem = Problem.builder()
+			.studyGroup(group)
+			.link("link")
+			.startDate(LocalDate.now().plusDays(3))
+			.endDate(LocalDate.now().plusDays(10))
+			.build();
+
+		Field userField = User.class.getDeclaredField("id");
+		userField.setAccessible(true);
+		userField.set(user, 1L);
+		userField.set(user2, 2L);
+
+		Field groupId = StudyGroup.class.getDeclaredField("id");
+		groupId.setAccessible(true);
+		groupId.set(group, 10L);
+
+		Field problemId = Problem.class.getDeclaredField("id");
+		problemId.setAccessible(true);
+		problemId.set(problem, 20L);
+	}
+
+	@Test
+	@DisplayName("문제 생성 성공")
+	void createProblem_Success() {
+		// given
+		CreateProblemRequest request = CreateProblemRequest.builder()
+			.link("https://www.acmicpc.net/problem/1000")
+			.startDate(LocalDate.now().plusDays(3))
+			.endDate(LocalDate.now().plusDays(10))
+			.build();
+		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		String apiResult = "[{\"titleKo\":\"A+B\",\"level\":1}]";
+		ResponseEntity<String> responseEntity = new ResponseEntity<>(apiResult, HttpStatus.OK);
+		when(restTemplate.getForEntity(anyString(), eq(String.class))).thenReturn(responseEntity);
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
+		// when
+		problemService.createProblem(user, 10L, request);
+		// then
+		verify(problemRepository, times(1)).save(problemCaptor.capture());
+		Problem result = problemCaptor.getValue();
+		assertThat(result.getStudyGroup()).isEqualTo(group);
+		assertThat(result.getLink()).isEqualTo("https://www.acmicpc.net/problem/1000");
+		assertThat(result.getNumber()).isEqualTo(1000);
+		assertThat(result.getTitle()).isEqualTo("A+B");
+		assertThat(result.getLevel()).isEqualTo(1);
+		assertThat(result.getStartDate()).isEqualTo(LocalDate.now().plusDays(3));
+		assertThat(result.getEndDate()).isEqualTo(LocalDate.now().plusDays(10));
+	}
+
+	@Test
+	@DisplayName("문제 생성 성공 : 부방장일 때")
+	void createProblem_SuccessByADMIN() {
+		// given
+		CreateProblemRequest request = CreateProblemRequest.builder()
+			.link("https://www.acmicpc.net/problem/1000")
+			.startDate(LocalDate.now())
+			.endDate(LocalDate.now().plusDays(10))
+			.build();
+		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user3, group)).thenReturn(Optional.of(groupMember3));
+		String apiResult = "[{\"titleKo\":\"A+B\",\"level\":1}]";
+		ResponseEntity<String> responseEntity = new ResponseEntity<>(apiResult, HttpStatus.OK);
+		when(restTemplate.getForEntity(anyString(), eq(String.class))).thenReturn(responseEntity);
+		// when
+		problemService.createProblem(user3, 10L, request);
+		// then
+		verify(problemRepository, times(1)).save(problemCaptor.capture());
+		Problem result = problemCaptor.getValue();
+		assertThat(result.getStudyGroup()).isEqualTo(group);
+		assertThat(result.getLink()).isEqualTo("https://www.acmicpc.net/problem/1000");
+		assertThat(result.getNumber()).isEqualTo(1000);
+		assertThat(result.getTitle()).isEqualTo("A+B");
+		assertThat(result.getLevel()).isEqualTo(1);
+		assertThat(result.getStartDate()).isEqualTo(LocalDate.now());
+		assertThat(result.getEndDate()).isEqualTo(LocalDate.now().plusDays(10));
+		verify(notificationService, times(1)).sendNotificationToMembers(any(), any(), any(), any(), any(), any());
+	}
+
+	@Test
+	@DisplayName("문제 생성 실패 : 존재하지 않는 그룹")
+	void createProblemFailed_1() {
+		// given
+		CreateProblemRequest request = CreateProblemRequest.builder()
+			.link("link")
+			.startDate(LocalDate.now().minusDays(7))
+			.endDate(LocalDate.now())
+			.build();
+		when(groupRepository.findById(10L)).thenReturn(Optional.empty());
+		// when, then
+		assertThatThrownBy(() -> problemService.createProblem(user, 10L, request))
+			.isInstanceOf(StudyGroupValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.NOT_FOUND.value())
+			.hasFieldOrPropertyWithValue("error", "존재하지 않는 그룹 입니다.");
+	}
+
+	@Test
+	@DisplayName("문제 생성 실패 : 권한 없음 // 그룹원이 아닌 경우")
+	void createProblemFailed_2() {
+		// given
+		CreateProblemRequest request = CreateProblemRequest.builder()
+			.link("link")
+			.startDate(LocalDate.now().minusDays(7))
+			.endDate(LocalDate.now())
+			.build();
+		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		// when, then
+		assertThatThrownBy(() -> problemService.createProblem(user2, 10L, request))
+			.isInstanceOf(StudyGroupValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
+			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹 입니다.");
+	}
+
+	@Test
+	@DisplayName("문제 생성 실패 : 권한 없음 // Role이 PARTICIPANT인 경우")
+	void createProblemFailed_4() {
+		// given
+		CreateProblemRequest request = CreateProblemRequest.builder()
+			.link("link")
+			.startDate(LocalDate.now().minusDays(7))
+			.endDate(LocalDate.now())
+			.build();
+		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user4, group)).thenReturn(Optional.of(groupMember4));
+		// when, then
+		assertThatThrownBy(() -> problemService.createProblem(user4, 10L, request))
+			.isInstanceOf(StudyGroupValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
+			.hasFieldOrPropertyWithValue("error", "문제 생성 권한이 없습니다. 방장, 부방장일 경우에만 생성이 가능합니다.");
+	}
+
+	@Test
+	@DisplayName("문제 생성 실패 : 백준에 유효하지 않은 문제")
+	void createProblemFailed_5() {
+		// given
+		CreateProblemRequest request = CreateProblemRequest.builder()
+			.link("https://www.acmicpc.net/problem/00")
+			.startDate(LocalDate.now().minusDays(7))
+			.endDate(LocalDate.now())
+			.build();
+		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		String apiResult = "[]";
+		ResponseEntity<String> responseEntity = new ResponseEntity<>(apiResult, HttpStatus.OK);
+		when(restTemplate.getForEntity(anyString(), eq(String.class))).thenReturn(responseEntity);
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
+		// when, then
+		assertThatThrownBy(() -> problemService.createProblem(user, 10L, request))
+			.isInstanceOf(SolvedAcApiErrorException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
+			.hasFieldOrPropertyWithValue("error", "백준에 유효하지 않은 문제입니다.");
+	}
+
+	@Test
+	@DisplayName("문제 생성 실패 : solved.ac API의 잘못된 response")
+	void createProblemFailed_6() {
+		// given
+		CreateProblemRequest request = CreateProblemRequest.builder()
+			.link("https://www.acmicpc.net/problem/00")
+			.startDate(LocalDate.now().minusDays(7))
+			.endDate(LocalDate.now())
+			.build();
+		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		String apiResult = "{\"titleKo\":\"A+B\",\"level\":1}";
+		ResponseEntity<String> responseEntity = new ResponseEntity<>(apiResult, HttpStatus.OK);
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
+		when(restTemplate.getForEntity(anyString(), eq(String.class))).thenReturn(responseEntity);
+		// when, then
+		assertThatThrownBy(() -> problemService.createProblem(user, 10L, request))
+			.isInstanceOf(SolvedAcApiErrorException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.SERVICE_UNAVAILABLE.value())
+			.hasFieldOrPropertyWithValue("error", "solved.ac API로부터 예상치 못한 응답을 받았습니다.");
+	}
+
+	@Test
+	@DisplayName("문제 정보 수정 성공")
+	void editProblem() {
+		// given
+		EditProblemRequest request = EditProblemRequest.builder()
+			.startDate(LocalDate.now())
+			.endDate(LocalDate.now().plusDays(7))
+			.build();
+		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
+		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
+		// when
+		problemService.editProblem(user, 20L, request);
+		// then
+		assertThat(problem.getStartDate()).isEqualTo(request.startDate());
+		assertThat(problem.getEndDate()).isEqualTo(request.endDate());
+	}
+
+	@Test
+	@DisplayName("문제 정보 수정 실패 : 존재하지 않는 그룹")
+	void editProblemFailed_1() {
+		// given
+		EditProblemRequest request = EditProblemRequest.builder()
+			.startDate(LocalDate.now())
+			.endDate(LocalDate.now().plusDays(7))
+			.build();
+		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
+		when(groupRepository.findById(10L)).thenReturn(Optional.empty());
+		// when, then
+		assertThatThrownBy(() -> problemService.editProblem(user, 20L, request))
+			.isInstanceOf(StudyGroupValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.NOT_FOUND.value())
+			.hasFieldOrPropertyWithValue("error", "존재하지 않는 그룹 입니다.");
+	}
+
+	@Test
+	@DisplayName("문제 마감 기한 수정 실패 : 존재하지 않는 문제")
+	void editProblemFailed_2() {
+		// given
+		EditProblemRequest request = EditProblemRequest.builder()
+			.startDate(LocalDate.now())
+			.endDate(LocalDate.now().plusDays(7))
+			.build();
+		when(problemRepository.findById(20L)).thenReturn(Optional.empty());
+		// when, then
+		assertThatThrownBy(() -> problemService.editProblem(user, 20L, request))
+			.isInstanceOf(ProblemValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.NOT_FOUND.value())
+			.hasFieldOrPropertyWithValue("error", "존재하지 않는 문제 입니다.");
+	}
+
+	@Test
+	@DisplayName("문제 정보 수정 실패 : 권한 없음 // 그룹원이 아닌경우")
+	void editProblemFailed_3() {
+		// given
+		EditProblemRequest request = EditProblemRequest.builder()
+			.startDate(LocalDate.now())
+			.endDate(LocalDate.now().plusDays(7))
+			.build();
+		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
+		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		// when, then
+		assertThatThrownBy(() -> problemService.editProblem(user2, 20L, request))
+			.isInstanceOf(StudyGroupValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
+			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹 입니다.");
+	}
+
+	@Test
+	@DisplayName("문제 정보 수정 실패 : 권한 없음 // Role이 PARTICIPAN인 경우")
+	void editProblemFailed_4() {
+		// given
+		EditProblemRequest request = EditProblemRequest.builder()
+			.startDate(LocalDate.now())
+			.endDate(LocalDate.now().plusDays(7))
+			.build();
+		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
+		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user4, group)).thenReturn(Optional.of(groupMember4));
+		// when, then
+		assertThatThrownBy(() -> problemService.editProblem(user4, 20L, request))
+			.isInstanceOf(StudyGroupValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
+			.hasFieldOrPropertyWithValue("error", "문제 수정 권한이 없습니다. 방장, 부방장일 경우에만 수정이 가능합니다.");
+	}
+
+	@Test
+	@DisplayName("문제 정보 수정 실패 : 이미 진행 중인 문제인데 시작날짜 수정을 요청하는 경우")
+	void editProblemFailed_5() {
+		// given
+		Problem problem = Problem.builder()
+			.studyGroup(group)
+			.link("link")
+			.startDate(LocalDate.now().minusDays(1))
+			.endDate(LocalDate.now().plusDays(10))
+			.build();
+		EditProblemRequest request = EditProblemRequest.builder()
+			.startDate(LocalDate.now().plusDays(1))
+			.endDate(LocalDate.now().plusDays(7))
+			.build();
+		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
+		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
+		// when, then
+		assertThatThrownBy(() -> problemService.editProblem(user, 20L, request))
+			.isInstanceOf(ProblemValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
+			.hasFieldOrPropertyWithValue("error", "문제 수정이 불가합니다. : 이미 진행 중인 문제입니다.");
+	}
+
+	@Test
+	@DisplayName("문제 정보 수정 실패 : 문제 시작 날짜를 오늘 이전의 날짜로 요청한 경우")
+	void editProblemFailed_6() {
+		// given
+		Problem problem = Problem.builder()
+			.studyGroup(group)
+			.link("link")
+			.startDate(LocalDate.now().plusDays(1))
+			.endDate(LocalDate.now().plusDays(10))
+			.build();
+		EditProblemRequest request = EditProblemRequest.builder()
+			.startDate(LocalDate.now().minusDays(3))
+			.endDate(LocalDate.now().plusDays(7))
+			.build();
+		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
+		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
+		// when, then
+		assertThatThrownBy(() -> problemService.editProblem(user, 20L, request))
+			.isInstanceOf(ProblemValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
+			.hasFieldOrPropertyWithValue("error", "문제 시작 날짜는 오늘 이전의 날짜로 수정할 수 없습니다.");
+	}
+
+	@Test
+	@DisplayName("문제 정보 수정 실패 : 문제 마감 날짜를 오늘 이전의 날짜로 요청한 경우")
+	void editProblemFailed_7() {
+		// given
+		Problem problem = Problem.builder()
+			.studyGroup(group)
+			.link("link")
+			.startDate(LocalDate.now().plusDays(10))
+			.endDate(LocalDate.now().plusDays(12))
+			.build();
+		EditProblemRequest request = EditProblemRequest.builder()
+			.endDate(LocalDate.now().minusDays(2))
+			.build();
+		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
+		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
+		// when, then
+		assertThatThrownBy(() -> problemService.editProblem(user, 20L, request))
+			.isInstanceOf(ProblemValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
+			.hasFieldOrPropertyWithValue("error", "문제 마감 날짜는 시작 날짜 이전으로 수정할 수 없습니다.");
+	}
+
+	@Test
+	@DisplayName("문제 정보 수정 실패 : 마감 날짜가 시작 날짜 보다 전인 경우")
+	void editProblemFailed_8() {
+		//given
+		Problem problem = Problem.builder()
+			.studyGroup(group)
+			.link("link")
+			.startDate(LocalDate.now().plusDays(10))
+			.endDate(LocalDate.now().plusDays(10))
+			.build();
+		EditProblemRequest request = EditProblemRequest.builder()
+			.endDate(problem.getEndDate().minusDays(2))
+			.build();
+		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
+		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
+		//when, then
+		assertThatThrownBy(() -> problemService.editProblem(user, 20L, request))
+			.isInstanceOf(ProblemValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
+			.hasFieldOrPropertyWithValue("error", "문제 마감 날짜는 시작 날짜 이전으로 수정할 수 없습니다.");
+
+	}
+
+	@Test
+	@DisplayName("문제 정보 수정 실패 : 마감 날짜가 지난 종료된 문제인 경우")
+	void editProblemFailed_9() {
+		//given
+		Problem problem = Problem.builder()
+			.studyGroup(group)
+			.link("link")
+			.startDate(LocalDate.now().minusDays(3))
+			.endDate(LocalDate.now().minusDays(2))
+			.build();
+		EditProblemRequest request = EditProblemRequest.builder()
+			.endDate(problem.getEndDate().minusDays(2))
+			.build();
+		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
+		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
+
+		assertThatThrownBy(() -> problemService.editProblem(user, 20L, request))
+			.isInstanceOf(ProblemValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
+			.hasFieldOrPropertyWithValue("error", "문제 수정이 불가합니다. : 이미 종료된 문제입니다.");
+
+	}
+
+	@Test
+	@DisplayName("진행 중인 문제 목록 조회 성공")
+	void getInProgressProblems() throws NoSuchFieldException, IllegalAccessException {
+		// given
+		Pageable pageable = PageRequest.of(0, 10);
+		Field problemField = Problem.class.getDeclaredField("id");
+		problemField.setAccessible(true);
+
+		List<Problem> list = new ArrayList<>();
+		for (int i = 0; i < 10; i++) {
+			Problem problem = Problem.builder()
+				.studyGroup(group)
+				.startDate(LocalDate.now())
+				.endDate(LocalDate.now().plusDays(i + 1))
+				.link("https://www.acmicpc.net/problem/" + i)
+				.title("title" + i)
+				.build();
+			list.add(problem);
+			problemField.set(problem, (long)i);
+		}
+
+		Page<Problem> problemPage = new PageImpl<>(list.subList(0, 10), pageable, list.size());
+		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		when(problemRepository.findAllInProgressProblem(any(User.class), any(StudyGroup.class), eq(false),
+			any(Pageable.class))).thenReturn(problemPage);
+		when(groupMemberRepository.existsByUserAndStudyGroup(user, group)).thenReturn(true);
+		when(solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(anyLong(),
+			anyString())).thenReturn(8);
+		when(solutionRepository.countDistinctUsersByProblem(any(Problem.class))).thenReturn(10);
+		// when
+		Page<GetProblemResponse> result = problemService.getInProgressProblems(user, 10L, false, pageable);
+		// then
+		for (int i = 0; i < 10; i++) {
+			assertThat(result.getContent().get(i).getProblemId()).isEqualTo(i);
+			assertThat(result.getContent().get(i).getLink()).isEqualTo("https://www.acmicpc.net/problem/" + i);
+			assertThat(result.getContent().get(i).getTitle()).isEqualTo("title" + i);
+			assertThat(result.getContent().get(i).getEndDate()).isEqualTo(
+				DateFormatUtil.formatDate(LocalDate.now().plusDays(i + 1)));
+		}
+	}
+
+	@Test
+	@DisplayName("마감된 문제 목록 조회 성공")
+	void getExpiredProblems() throws NoSuchFieldException, IllegalAccessException {
+		// given
+		Pageable pageable = PageRequest.of(0, 10);
+		Field problemField = Problem.class.getDeclaredField("id");
+		problemField.setAccessible(true);
+
+		List<Problem> list = new ArrayList<>();
+		for (int i = 0; i < 10; i++) {
+			Problem problem = Problem.builder()
+				.studyGroup(group)
+				.startDate(LocalDate.now().minusDays(30))
+				.endDate(LocalDate.now().minusDays(3))
+				.link("https://www.acmicpc.net/problem/" + i)
+				.title("title" + i)
+				.build();
+			list.add(problem);
+			problemField.set(problem, (long)i);
+		}
+
+		Page<Problem> problemPage = new PageImpl<>(list.subList(0, 10), pageable, list.size());
+		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		when(problemRepository.findAllExpiredProblem(eq(group),
+			any(Pageable.class))).thenReturn(problemPage);
+		when(groupMemberRepository.existsByUserAndStudyGroup(user, group)).thenReturn(true);
+		when(solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(anyLong(),
+			anyString())).thenReturn(8);
+		when(solutionRepository.countDistinctUsersByProblem(any(Problem.class))).thenReturn(10);
+		// when
+		Page<GetProblemResponse> result = problemService.getExpiredProblems(user, 10L, pageable);
+		// then
+		for (int i = 0; i < 10; i++) {
+			assertThat(result.getContent().get(i).getProblemId()).isEqualTo(i);
+			assertThat(result.getContent().get(i).getLink()).isEqualTo("https://www.acmicpc.net/problem/" + i);
+			assertThat(result.getContent().get(i).getTitle()).isEqualTo("title" + i);
+			assertThat(result.getContent().get(i).getEndDate()).isEqualTo(
+				DateFormatUtil.formatDate(LocalDate.now().minusDays(3)));
+		}
+	}
+
+	@Test
+	@DisplayName("문제 목록 조회 실패 : 존재하지 않는 그룹")
+	void getProblemListFailed_1() {
+		// given
+		when(groupRepository.findById(10L)).thenReturn(Optional.empty());
+		// when, then
+		assertThatThrownBy(() -> problemService.getInProgressProblems(user, 10L, false, any(Pageable.class)))
+			.isInstanceOf(StudyGroupValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.NOT_FOUND.value())
+			.hasFieldOrPropertyWithValue("error", "존재하지 않는 그룹 입니다.");
+	}
+
+	@Test
+	@DisplayName("문제 목록 조회 실패 : 문제 조회 권한 없음 // 아예 그룹원이 아닌 경우")
+	void getProblemListFailed_2() {
+		// given
+		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		when(groupMemberRepository.existsByUserAndStudyGroup(user2, group)).thenReturn(false);
+		// when, then
+		assertThatThrownBy(() -> problemService.getInProgressProblems(user2, 10L, false, any(Pageable.class)))
+			.isInstanceOf(ProblemValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
+			.hasFieldOrPropertyWithValue("error", "문제를 조회할 권한이 없습니다.");
+	}
+
+	@Test
+	@DisplayName("문제 삭제 성공")
+	void deleteProblem() {
+		// given
+		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
+		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
+		// when
+		problemService.deleteProblem(user, 20L);
+		// then
+		verify(problemRepository, times(1)).delete(problem);
+	}
+
+	@Test
+	@DisplayName("문제 삭제 실패 : 존재하지 않는 문제")
+	void deleteProblemFailed_1() {
+		// given
+		when(problemRepository.findById(20L)).thenReturn(Optional.empty());
+		// when, then
+		assertThatThrownBy(() -> problemService.deleteProblem(user, 20L))
+			.isInstanceOf(ProblemValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.NOT_FOUND.value())
+			.hasFieldOrPropertyWithValue("error", "존재하지 않는 문제 입니다.");
+	}
+
+	@Test
+	@DisplayName("문제 삭제 실패 : 존재하지 않는 그룹")
+	void deleteProblemFailed_2() {
+		// given
+		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
+		when(groupRepository.findById(10L)).thenReturn(Optional.empty());
+		// when, then
+		assertThatThrownBy(() -> problemService.deleteProblem(user, 20L))
+			.isInstanceOf(StudyGroupValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.NOT_FOUND.value())
+			.hasFieldOrPropertyWithValue("error", "존재하지 않는 그룹 입니다.");
+	}
+
+	@Test
+	@DisplayName("문제 삭제 실패 : 권한 없음")
+	void deleteProblemFailed_3() {
+		// given
+		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
+		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user4, group)).thenReturn(Optional.ofNullable(groupMember4));
+		// when, then
+		assertThatThrownBy(() -> problemService.deleteProblem(user4, 20L))
+			.isInstanceOf(StudyGroupValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
+			.hasFieldOrPropertyWithValue("error", "문제 삭제 권한이 없습니다. 방장, 부방장일 경우에만 삭제가 가능합니다.");
+	}
+
+	@Test
+	@DisplayName("예정 문제 조회 성공 : 방장")
+	void getQueuedProblemSuccess_1() throws NoSuchFieldException, IllegalAccessException {
+		// given
+		Pageable pageable = PageRequest.of(0, 10);
+		Field problemField = Problem.class.getDeclaredField("id");
+		problemField.setAccessible(true);
+
+		List<Problem> list = new ArrayList<>();
+		for (int i = 0; i < 10; i++) {
+			Problem problem = Problem.builder()
+				.studyGroup(group)
+				.startDate(LocalDate.now().plusDays(1))
+				.endDate(LocalDate.now().plusDays(i + 1))
+				.link("https://www.acmicpc.net/problem/" + i)
+				.title("title" + i)
+				.build();
+			list.add(problem);
+			problemField.set(problem, (long)i);
+		}
+		Page<Problem> problemPage = new PageImpl<>(list.subList(0, 10), pageable, list.size());
+
+		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		when(problemRepository.findAllQueuedProblem(group, pageable)).thenReturn(
+			problemPage);
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
+		//when
+		Page<GetProblemResponse> result = problemService.getQueuedProblems(user, group.getId(), pageable);
+
+		//then
+		assertThat(result.getSize()).isEqualTo(10);
+		for (int i = 0; i < 10; i++) {
+			assertThat(result.getContent().get(i).getProblemId()).isEqualTo(i);
+			assertThat(result.getContent().get(i).getLink()).isEqualTo("https://www.acmicpc.net/problem/" + i);
+			assertThat(result.getContent().get(i).getTitle()).isEqualTo("title" + i);
+			assertThat(result.getContent().get(i).getStartDate()).isEqualTo(
+				DateFormatUtil.formatDate(LocalDate.now().plusDays(1)));
+			assertThat(result.getContent().get(i).getEndDate()).isEqualTo(
+				DateFormatUtil.formatDate(LocalDate.now().plusDays(i + 1)));
+		}
+	}
+
+	@Test
+	@DisplayName("예정 문제 조회 성공 : 부방장")
+	void getQueuedProblemSuccess_2() throws NoSuchFieldException, IllegalAccessException {
+		//given
+		Pageable pageable = PageRequest.of(0, 10);
+		Field problemField = Problem.class.getDeclaredField("id");
+		problemField.setAccessible(true);
+
+		List<Problem> list = new ArrayList<>();
+		for (int i = 0; i < 10; i++) {
+			Problem problem = Problem.builder()
+				.studyGroup(group)
+				.startDate(LocalDate.now().plusDays(1))
+				.endDate(LocalDate.now().plusDays(i + 1))
+				.link("https://www.acmicpc.net/problem/" + i)
+				.title("title" + i)
+				.build();
+			list.add(problem);
+			problemField.set(problem, (long)i);
+		}
+		Page<Problem> problemPage = new PageImpl<>(list.subList(0, 10), pageable, list.size());
+		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user3, group)).thenReturn(Optional.of(groupMember3));
+		when(problemRepository.findAllQueuedProblem(group, pageable)).thenReturn(
+			problemPage);
+
+		// when
+		Page<GetProblemResponse> result = problemService.getQueuedProblems(user3, group.getId(), pageable);
+
+		//then
+		assertThat(result.getSize()).isEqualTo(10);
+		for (int i = 0; i < 10; i++) {
+			assertThat(result.getContent().get(i).getProblemId()).isEqualTo(i);
+			assertThat(result.getContent().get(i).getLink()).isEqualTo("https://www.acmicpc.net/problem/" + i);
+			assertThat(result.getContent().get(i).getTitle()).isEqualTo("title" + i);
+			assertThat(result.getContent().get(i).getStartDate()).isEqualTo(
+				DateFormatUtil.formatDate(LocalDate.now().plusDays(1)));
+			assertThat(result.getContent().get(i).getEndDate()).isEqualTo(
+				DateFormatUtil.formatDate(LocalDate.now().plusDays(i + 1)));
+		}
+	}
+
+	@Test
+	@DisplayName("예정 문제 조회 실패 : 그룹을 찾지 못함")
+	void getQueuedProblemsFailed_2() {
+		//given
+		Pageable pageable = PageRequest.of(0, 10);
+
+		when(groupRepository.findById(20L)).thenReturn(Optional.empty());
+
+		//whe
+		//then
+		assertThatThrownBy(() -> problemService.getQueuedProblems(user2, 20L, pageable))
+			.isInstanceOf(StudyGroupValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.NOT_FOUND.value())
+			.hasFieldOrPropertyWithValue("error", "존재하지 않는 그룹 입니다.");
+	}
+
+	@Test
+	@DisplayName("예정 문제 조회 실패 : 그룹원이 아님")
+	void getQueuedProblemsFailed_3() {
+		//given
+		Pageable pageable = PageRequest.of(0, 10);
+
+		when(groupRepository.findById(10L)).thenReturn(Optional.of(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user2, group)).thenReturn(Optional.empty());
+
+		//when
+		//then
+		assertThatThrownBy(() -> problemService.getQueuedProblems(user2, 10L, pageable))
+			.isInstanceOf(StudyGroupValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
+			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹 입니다.");
+	}
+
+	@Test
+	@DisplayName("예정 문제 조회 실패 : 권한 없음")
+	void getQueuedProblemsFailed_4() {
+		//given
+		Pageable pageable = PageRequest.of(0, 10);
+
+		when(groupRepository.findById(10L)).thenReturn(Optional.of(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user4, group)).thenReturn(Optional.of(groupMember4));
+
+		//when
+		//then
+		assertThatThrownBy(() -> problemService.getQueuedProblems(user4, 10L, pageable))
+			.isInstanceOf(ProblemValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
+			.hasFieldOrPropertyWithValue("error", "예정 문제를 조회할 권한이 없습니다. : 그룹의 방장과 부방장만 볼 수 있습니다.");
+	}
+
+	@Test
+	@DisplayName("문제 시작 날짜가 오늘일 시 그룹 멤버들에게 알림 전송")
+	void sendProblemNotification() {
+		// given
+		StudyGroup group2 = StudyGroup.builder().name("group2").build();
+		User user11 = User.builder().email("email1").build();
+		GroupMember groupMember11 = GroupMember.builder().user(user11).studyGroup(group2).build();
+
+		List<GroupMember> group1Members = List.of(groupMember1, groupMember3, groupMember4);
+		List<GroupMember> group2Members = List.of(groupMember11);
+
+		List<Problem> startProblems = new ArrayList<>();
+		for (int i = 0; i < 5; i++) {
+			startProblems.add(Problem.builder()
+				.studyGroup(group)
+				.startDate(LocalDate.now())
+				.endDate(LocalDate.now().plusDays(30))
+				.title("started problem")
+				.build());
+		}
+		for (int i = 5; i < 10; i++) {
+			startProblems.add(Problem.builder()
+				.studyGroup(group2)
+				.startDate(LocalDate.now())
+				.endDate(LocalDate.now().plusDays(30))
+				.title("started problem")
+				.build());
+		}
+
+		List<Problem> endProblems = new ArrayList<>();
+		for (int i = 0; i < 5; i++) {
+			endProblems.add(Problem.builder()
+				.studyGroup(group)
+				.startDate(LocalDate.now().minusDays(30))
+				.endDate(LocalDate.now())
+				.title("started problem")
+				.build());
+		}
+		for (int i = 5; i < 10; i++) {
+			endProblems.add(Problem.builder()
+				.studyGroup(group2)
+				.startDate(LocalDate.now().minusDays(30))
+				.endDate(LocalDate.now())
+				.title("started problem")
+				.build());
+		}
+
+		when(problemRepository.findAllByStartDate(LocalDate.now())).thenReturn(startProblems);
+		when(problemRepository.findAllByEndDate(LocalDate.now())).thenReturn(endProblems);
+		when(groupMemberRepository.findAllByStudyGroup(group)).thenReturn(group1Members);
+		when(groupMemberRepository.findAllByStudyGroup(group2)).thenReturn(group2Members);
+		// when
+		problemService.dailyProblemScheduler();
+		// then
+		verify(notificationService, times(20)).sendNotificationToMembers(any(), any(), any(), any(), any(), any());
+	}
+
+	@Test
+	@DisplayName("문제 단건 조회 성공")
+	void getProblem() throws NoSuchFieldException, IllegalAccessException {
+		// given
+		Long problemId = 10L;
+		Field problemField = Problem.class.getDeclaredField("id");
+		problemField.setAccessible(true);
+		problemField.set(problem, problemId);
+
+		when(problemRepository.findById(anyLong())).thenReturn(Optional.of(problem));
+		when(groupMemberRepository.existsByUserAndStudyGroup(user, group)).thenReturn(true);
+		when(solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(anyLong(),
+			anyString())).thenReturn(8);
+		when(groupMemberRepository.countMembersByStudyGroup(group)).thenReturn(3);
+		when(solutionRepository.countDistinctUsersByProblem(any(Problem.class))).thenReturn(10);
+		// when
+		GetProblemResponse response = problemService.getProblem(user, problemId);
+		// then
+		assertThat(response.getMemberCount()).isEqualTo(3);
+		assertThat(response.getAccuracy()).isEqualTo(80);
+	}
+
+	@Test
+	@DisplayName("문제 단건 조회 실패 : 존재하지 않는 문제")
+	void getProblemFailed_1() {
+		// given
+		Long problemId = 10L;
+		when(problemRepository.findById(anyLong())).thenReturn(Optional.empty());
+		// when, then
+		assertThatThrownBy(() -> problemService.getProblem(user, problemId))
+			.isInstanceOf(CannotFoundProblemException.class)
+			.hasFieldOrPropertyWithValue("errors", "존재하지 않는 문제입니다.");
+	}
+
+	@Test
+	@DisplayName("문제 단건 조회 실패 : 참여하지 않은 그룹")
+	void getProblemFailed_2() {
+		// given
+		Long problemId = 10L;
+		when(problemRepository.findById(anyLong())).thenReturn(Optional.ofNullable(problem));
+		when(groupMemberRepository.existsByUserAndStudyGroup(user, group)).thenReturn(false);
+		// when, then
+		assertThatThrownBy(() -> problemService.getProblem(user, problemId))
+			.isInstanceOf(GroupMemberValidationException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
+			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹입니다.");
+	}
+
+}

@@ -1,0 +1,135 @@
+package com.gamzabat.algohub.feature.solution.service;
+
+import java.util.List;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.gamzabat.algohub.exception.ProblemValidationException;
+import com.gamzabat.algohub.exception.StudyGroupValidationException;
+import com.gamzabat.algohub.exception.UserValidationException;
+import com.gamzabat.algohub.feature.comment.dto.GetCommentResponse;
+import com.gamzabat.algohub.feature.comment.dto.UpdateCommentRequest;
+import com.gamzabat.algohub.feature.comment.exception.CommentValidationException;
+import com.gamzabat.algohub.feature.comment.service.CommentService;
+import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
+import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
+import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
+import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
+import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
+import com.gamzabat.algohub.feature.notification.enums.NotificationCategory;
+import com.gamzabat.algohub.feature.notification.service.NotificationService;
+import com.gamzabat.algohub.feature.problem.domain.Problem;
+import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
+import com.gamzabat.algohub.feature.solution.domain.Solution;
+import com.gamzabat.algohub.feature.solution.domain.SolutionComment;
+import com.gamzabat.algohub.feature.solution.dto.CreateSolutionCommentRequest;
+import com.gamzabat.algohub.feature.solution.exception.SolutionValidationException;
+import com.gamzabat.algohub.feature.solution.repository.SolutionCommentRepository;
+import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
+import com.gamzabat.algohub.feature.user.domain.User;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class SolutionCommentService implements CommentService<CreateSolutionCommentRequest> {
+	private final SolutionCommentRepository commentRepository;
+	private final SolutionRepository solutionRepository;
+	private final ProblemRepository problemRepository;
+	private final StudyGroupRepository studyGroupRepository;
+	private final GroupMemberRepository groupMemberRepository;
+	private final NotificationService notificationService;
+
+	@Override
+	@Transactional
+	public void createComment(User user, Long solutionId, CreateSolutionCommentRequest request) {
+		Solution solution = checkSolutionValidation(user, solutionId);
+
+		SolutionComment comment = commentRepository.save(SolutionComment.builder()
+			.user(user)
+			.solution(solution)
+			.content(request.content())
+			.isRead(false)
+			.build());
+
+		sendCommentNotification(user, solution);
+		log.info("success to create solution comment. commentId: {}, solutionId: {}", comment.getId(),
+			solution.getId());
+	}
+
+	private void sendCommentNotification(User commenter, Solution solution) {
+		GroupMember member = groupMemberRepository.findByUserAndStudyGroup(solution.getUser(),
+				solution.getProblem().getStudyGroup())
+			.orElseThrow(() -> new GroupMemberValidationException(HttpStatus.NOT_FOUND.value(), "참여하지 않은 스터디 그룹입니다."));
+
+		notificationService.sendNotificationToMembers(
+			solution.getProblem().getStudyGroup(),
+			List.of(member),
+			null,
+			solution,
+			NotificationCategory.NEW_COMMENT_POSTED,
+			NotificationCategory.NEW_COMMENT_POSTED.getMessage(commenter.getNickname())
+		);
+	}
+
+	@Override
+	@Transactional
+	public List<GetCommentResponse> getCommentList(User user, Long solutionId) {
+		Solution solution = checkSolutionValidation(user, solutionId);
+		List<SolutionComment> list = commentRepository.findAllBySolution(solution);
+		for (SolutionComment comment : list) {
+			if (!comment.isRead()) {
+				comment.markAsRead();
+			}
+		}
+		List<GetCommentResponse> result = list.stream().map(GetCommentResponse::toDTO)
+			.sorted((s1, s2) -> s2.createdAt().compareTo(s1.createdAt())).toList();
+		log.info("success to get solution comment list. solutionId: {}", solutionId);
+		return result;
+	}
+
+	@Override
+	@Transactional
+	public void updateComment(User user, Long commentId, UpdateCommentRequest request) {
+		SolutionComment comment = commentRepository.findById(commentId)
+			.orElseThrow(() -> new CommentValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 댓글 입니다."));
+		if (!comment.getUser().getId().equals(user.getId()))
+			throw new UserValidationException("댓글 작성자가 아닙니다.");
+
+		comment.updateComment(request.content());
+		log.info("success to update solution comment. commentId: {}", commentId);
+	}
+
+	@Override
+	@Transactional
+	public void deleteComment(User user, Long commentId) {
+		SolutionComment comment = commentRepository.findById(commentId)
+			.orElseThrow(() -> new CommentValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 댓글 입니다."));
+		if (!comment.getUser().getId().equals(user.getId()))
+			throw new CommentValidationException(HttpStatus.FORBIDDEN.value(), "댓글 삭제에 대한 권한이 없습니다.");
+
+		checkSolutionValidation(user, comment.getSolution().getId());
+		commentRepository.delete(comment);
+		log.info("success to delete solution comment. commentId: {}", commentId);
+	}
+
+	private Solution checkSolutionValidation(User user, Long solutionId) {
+		Solution solution = solutionRepository.findById(solutionId)
+			.orElseThrow(() -> new SolutionValidationException("존재하지 않는 풀이 입니다."));
+
+		Problem problem = problemRepository.findById(solution.getProblem().getId())
+			.orElseThrow(() -> new ProblemValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 문제 입니다."));
+
+		StudyGroup group = studyGroupRepository.findById(problem.getStudyGroup().getId())
+			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다."));
+
+		if (!groupMemberRepository.existsByUserAndStudyGroup(user, group))
+			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹 입니다.");
+
+		return solution;
+	}
+}

@@ -1,0 +1,289 @@
+package com.gamzabat.algohub.feature.solution.service;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.gamzabat.algohub.constants.BOJResultConstants;
+import com.gamzabat.algohub.exception.ProblemValidationException;
+import com.gamzabat.algohub.exception.StudyGroupValidationException;
+import com.gamzabat.algohub.exception.UserValidationException;
+import com.gamzabat.algohub.feature.group.ranking.service.RankingService;
+import com.gamzabat.algohub.feature.group.ranking.service.RankingUpdateService;
+import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
+import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
+import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundGroupException;
+import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
+import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
+import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
+import com.gamzabat.algohub.feature.notification.enums.NotificationCategory;
+import com.gamzabat.algohub.feature.notification.service.NotificationService;
+import com.gamzabat.algohub.feature.problem.domain.Problem;
+import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
+import com.gamzabat.algohub.feature.solution.domain.Solution;
+import com.gamzabat.algohub.feature.solution.domain.SolutionComment;
+import com.gamzabat.algohub.feature.solution.dto.CreateSolutionRequest;
+import com.gamzabat.algohub.feature.solution.dto.GetSolutionResponse;
+import com.gamzabat.algohub.feature.solution.dto.GetSolutionWithGroupIdResponse;
+import com.gamzabat.algohub.feature.solution.enums.ProgressCategory;
+import com.gamzabat.algohub.feature.solution.exception.CannotFoundSolutionException;
+import com.gamzabat.algohub.feature.solution.repository.SolutionCommentRepository;
+import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
+import com.gamzabat.algohub.feature.user.domain.User;
+import com.gamzabat.algohub.feature.user.repository.UserRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class SolutionService {
+	private final SolutionRepository solutionRepository;
+	private final ProblemRepository problemRepository;
+	private final StudyGroupRepository studyGroupRepository;
+	private final GroupMemberRepository groupMemberRepository;
+	private final UserRepository userRepository;
+	private final NotificationService notificationService;
+	private final SolutionCommentRepository commentRepository;
+	private final RankingService rankingService;
+	private final RankingUpdateService rankingUpdateService;
+	private final SolutionCommentRepository solutionCommentRepository;
+
+	@Transactional(readOnly = true)
+	public Page<GetSolutionResponse> getSolutionList(User user, Long problemId, String nickname,
+		String language, String result, Pageable pageable) {
+		Problem problem = problemRepository.findById(problemId)
+			.orElseThrow(() -> new ProblemValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 문제 입니다."));
+
+		StudyGroup group = studyGroupRepository.findById(problem.getStudyGroup().getId())
+			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다."));
+
+		if (!groupMemberRepository.existsByUserAndStudyGroup(user, group)) {
+			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹 입니다.");
+		}
+
+		Page<Solution> solutions = solutionRepository.findAllFilteredSolutions(problem, nickname, language, result,
+			pageable);
+
+		return solutions.map(solution -> this.getGetSolutionResponse(user, solution));
+
+	}
+
+	@Transactional(readOnly = true)
+	public GetSolutionResponse getSolution(User user, Long solutionId) {
+		Solution solution = solutionRepository.findById(solutionId)
+			.orElseThrow(() -> new CannotFoundSolutionException("존재하지 않는 풀이 입니다."));
+
+		StudyGroup group = solution.getProblem().getStudyGroup();
+
+		if (groupMemberRepository.existsByUserAndStudyGroup(user, group)) {
+			return getGetSolutionResponse(user, solution);
+		} else {
+			throw new UserValidationException("해당 풀이를 확인 할 권한이 없습니다.");
+		}
+	}
+
+	@Transactional(readOnly = true)
+	public Page<GetSolutionResponse> getMySolutionsInGroupInProgress(User user, Long groupId, Integer problemNumber,
+		String language,
+		String result, Pageable pageable) {
+		StudyGroup group = studyGroupRepository.findById(groupId)
+			.orElseThrow(() -> new CannotFoundGroupException("존재하지 않는 그룹입니다."));
+		if (!groupMemberRepository.existsByUserAndStudyGroup(user, group)) {
+			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹입니다.");
+		}
+
+		Page<GetSolutionResponse> inProgressSolutions = solutionRepository.findAllFilteredMySolutionsInGroup(user,
+				group, problemNumber, language, result, ProgressCategory.IN_PROGRESS, pageable)
+			.map(solution -> this.getGetSolutionResponse(user, solution));
+
+		log.info("success to get my in-progress solutions in group {}", groupId);
+		return inProgressSolutions;
+	}
+
+	@Transactional(readOnly = true)
+	public Page<GetSolutionResponse> getMySolutionsInGroupExpired(User user, Long groupId, Integer problemNumber,
+		String language,
+		String result, Pageable pageable) {
+		StudyGroup group = studyGroupRepository.findById(groupId)
+			.orElseThrow(() -> new CannotFoundGroupException("존재하지 않는 그룹입니다."));
+		if (!groupMemberRepository.existsByUserAndStudyGroup(user, group)) {
+			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹입니다.");
+		}
+
+		Page<GetSolutionResponse> expiredSolutions = solutionRepository.findAllFilteredMySolutionsInGroup(user, group,
+				problemNumber, language, result, ProgressCategory.EXPIRED, pageable)
+			.map(solution -> this.getGetSolutionResponse(user, solution));
+
+		log.info("success to get my expired solutions in group {}", groupId);
+		return expiredSolutions;
+	}
+
+	@Transactional(readOnly = true)
+	public Page<GetSolutionWithGroupIdResponse> getMySolutionsInProgress(User user, Integer problemNumber,
+		String language,
+		String result,
+		Pageable pageable) {
+		Page<GetSolutionWithGroupIdResponse> inProgressSolutions = solutionRepository.findAllFilteredMySolutions(user,
+				problemNumber,
+				language,
+				result, ProgressCategory.IN_PROGRESS, pageable)
+			.map(solution -> this.getGetSolutionWithGroupIdResponse(user, solution));
+		log.info("success to get my in-progress solutions.");
+		return inProgressSolutions;
+	}
+
+	@Transactional(readOnly = true)
+	public Page<GetSolutionWithGroupIdResponse> getMySolutionsExpired(User user, Integer problemNumber, String language,
+		String result,
+		Pageable pageable) {
+		Page<GetSolutionWithGroupIdResponse> expiredSolutions = solutionRepository.findAllFilteredMySolutions(user,
+				problemNumber,
+				language,
+				result, ProgressCategory.EXPIRED, pageable)
+			.map(solution -> this.getGetSolutionWithGroupIdResponse(user, solution));
+		log.info("success to get my expired solutions.");
+		return expiredSolutions;
+	}
+
+	private GetSolutionWithGroupIdResponse getGetSolutionWithGroupIdResponse(User user, Solution solution) {
+		Integer correctCount = getCorrectCount(solution);
+		Integer submitMemberCount = solutionRepository.countDistinctUsersByProblem(solution.getProblem());
+		Integer totalMemberCount = groupMemberRepository.countMembersByStudyGroup(getGroup(solution)) + 1;
+		Integer accuracy = calculateAccuracy(submitMemberCount, correctCount);
+		long commentCount = commentRepository.countCommentsBySolutionId(solution.getId());
+		boolean isRead = true;
+
+		if (isMySolution(user, solution)) {
+			isRead = isAllCommentsRead(solution);
+		}
+		return GetSolutionWithGroupIdResponse.toDTO(solution, accuracy, submitMemberCount, totalMemberCount,
+			commentCount, isRead);
+	}
+
+	private GetSolutionResponse getGetSolutionResponse(User user, Solution solution) {
+		Integer correctCount = getCorrectCount(solution);
+		Integer submitMemberCount = solutionRepository.countDistinctUsersByProblem(solution.getProblem());
+		Integer totalMemberCount = groupMemberRepository.countMembersByStudyGroup(getGroup(solution)) + 1;
+		Integer accuracy = calculateAccuracy(submitMemberCount, correctCount);
+		long commentCount = commentRepository.countCommentsBySolutionId(solution.getId());
+		boolean isRead = true;
+
+		if (isMySolution(user, solution)) {
+			isRead = isAllCommentsRead(solution);
+		}
+
+		return GetSolutionResponse.toDTO(solution, accuracy, submitMemberCount, totalMemberCount, commentCount, isRead);
+	}
+
+	private Integer getCorrectCount(Solution solution) {
+		return solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(
+			solution.getProblem().getId(),
+			BOJResultConstants.CORRECT);
+	}
+
+	@Transactional
+	public void createSolution(CreateSolutionRequest request) {
+
+		List<Problem> problems = problemRepository.findAllByNumber(request.problemNumber());
+		if (problems.isEmpty()) {
+			throw new ProblemValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 문제 입니다.");
+		}
+
+		User user = userRepository.findByBjNickname(request.userName())
+			.orElseThrow(() -> new UserValidationException("존재하지 않는 유저 입니다."));
+
+		Iterator<Problem> iterator = problems.iterator();
+		while (iterator.hasNext()) {
+			Problem problem = iterator.next();
+			StudyGroup studyGroup = problem.getStudyGroup(); // problem에 딸린 그룹 고유id 로 studyGroup 가져오기
+			Optional<GroupMember> member = groupMemberRepository.findByUserAndStudyGroup(user, studyGroup);
+			LocalDate endDate = problem.getEndDate();
+			LocalDate now = LocalDate.now();
+			LocalDateTime solvedDateTime = LocalDateTime.now();
+			boolean isFirstCorrectSolution = true;
+
+			if (member.isEmpty() || endDate == null || now.isAfter(endDate)) {
+				iterator.remove();
+				continue;
+			}
+
+			if (!isCorrect(request.result()) || solutionRepository.existsByUserAndProblemAndResult(user, problem,
+				BOJResultConstants.CORRECT))
+				isFirstCorrectSolution = false;
+
+			solutionRepository.save(Solution.builder()
+				.problem(problem)
+				.user(user)
+				.content(request.code())
+				.memoryUsage(request.memoryUsage())
+				.executionTime(request.executionTime())
+				.language(request.codeType())
+				.codeLength(request.codeLength())
+				.result(request.result())
+				.solvedDateTime(solvedDateTime)
+				.build()
+			);
+
+			if (isFirstCorrectSolution) {
+				rankingService.updateScore(member.get(), problem.getEndDate(), solvedDateTime);
+				rankingUpdateService.updateRanking(studyGroup);
+			}
+
+			sendNewSolutionNotification(studyGroup, member.get(), problem);
+		}
+	}
+
+	private void sendNewSolutionNotification(StudyGroup group, GroupMember solver, Problem problem) {
+		notificationService.sendNotificationToMembers(
+			group,
+			groupMemberRepository.findAllByStudyGroup(group),
+			problem,
+			null,
+			NotificationCategory.NEW_SOLUTION_POSTED,
+			NotificationCategory.NEW_SOLUTION_POSTED.getMessage(solver.getUser().getNickname())
+		);
+	}
+
+	private boolean isCorrect(String result) {
+		return result.equals(BOJResultConstants.CORRECT) || result.endsWith("점");
+	}
+
+	private Integer calculateAccuracy(Integer submitMemberCount, Integer correctCount) {
+		if (submitMemberCount == 0)
+			return 0;
+
+		Double tempCorrectCount = correctCount.doubleValue();
+		Double tempSubmitMemberCount = submitMemberCount.doubleValue();
+		Double tempAccuracy = ((tempCorrectCount / tempSubmitMemberCount) * 100);
+		return tempAccuracy.intValue();
+	}
+
+	private StudyGroup getGroup(Solution solution) {
+		return solution.getProblem().getStudyGroup();
+	}
+
+	private boolean isMySolution(User user, Solution solution) {
+		return solution.getUser().getId().equals(user.getId());
+	}
+
+	private boolean isAllCommentsRead(Solution solution) {
+		List<SolutionComment> comments = solutionCommentRepository.findAllBySolution(solution);
+
+		for (SolutionComment solutionComment : comments) {
+			if (!solutionComment.isRead())
+				return false;
+		}
+
+		return true;
+	}
+}

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>비밀번호 재설정</title>
+    <style type="text/css">
+        @import url('//fonts.googleapis.com/earlyaccess/notosanskr.css');
+
+        @font-face {
+            font-family: 'Pretendard-Regular';
+            src: url('https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
+            font-weight: 400;
+            font-style: normal;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', 'Pretendard-Regular', sans-serif;
+
+        }
+    </style>
+</head>
+<body style="background-color: #161C24;">
+
+<div style="display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 40px; padding: 10px; background-color: #161C24; min-height: 768px;">
+    <a href="https://algohub.kr">
+        <img src="https://storage.hwangdo.kr/algohub-static-asset/logo.svg" alt="logo"
+             style="width: 161px; height: 41px;">
+
+    </a>
+
+    <div style="
+            display: flex;
+            width: 610px;
+            padding: 80px 60px;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 40px;
+            border-radius: 10px;
+            background: #222734;
+            box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.25);">
+
+        <div style="
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 20px;
+                align-self: stretch;">
+
+            <div th:utext="${title}" style="
+                    color: #FFF;
+                    font-size: 24px;
+                    font-style: normal;
+                    font-weight: 600;
+                    line-height: 140%;
+                    letter-spacing: -0.36px;">
+                비밀번호 재설정
+            </div>
+
+            <div th:utext="${content}" style="
+                    font-family: 'Pretendard-Regular',sans-serif;
+                    color: #BCC0CD;
+                    font-size: 16px;
+                    font-style: normal;
+                    font-weight: 500;
+                    line-height: 155%;
+                    letter-spacing: -0.4px;">
+                버튼을 누르면 새로운 비밀번호 설정을 위한 페이지로 이동합니다. <br/>
+                3시간내 비밀번호를 재설정하지 않으면, 링크는 만료됩니다.
+            </div>
+        </div>
+
+        <a th:href="@{${url}}" class="button">
+            <div th:utext="${button}"
+                 style="
+                display: flex;
+                padding: 10px 24px;
+                justify-content: center;
+                align-items: center;
+                gap: 10px;
+                border-radius: 6px;
+                color: #FFF;
+                background: #6659FF;
+                cursor: pointer;">
+                비밀번호 재설정
+            </div>
+        </a>
+    </div>
+</div>
+
+</body>
+</html>

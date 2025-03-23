@@ -1,0 +1,23 @@
+package com.gamzabat.algohub.common;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
+
+public final class DateFormatUtil {
+	public static String formatDate(LocalDate date) {
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+		return date.format(formatter);
+	}
+
+	public static String formatDateTime(LocalDateTime dateTime) {
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss");
+		return dateTime.format(formatter);
+	}
+
+	public static String formatDateTimeForNotice(LocalDateTime dateTime) {
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yy/MM/dd hh:mm a", Locale.ENGLISH);
+		return dateTime.format(formatter);
+	}
+}

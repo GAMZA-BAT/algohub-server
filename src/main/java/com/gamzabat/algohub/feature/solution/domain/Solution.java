@@ -1,0 +1,62 @@
+package com.gamzabat.algohub.feature.solution.domain;
+
+import java.time.LocalDateTime;
+
+import org.hibernate.annotations.SQLDelete;
+
+import com.gamzabat.algohub.feature.problem.domain.Problem;
+import com.gamzabat.algohub.feature.user.domain.User;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Entity
+@Getter
+@NoArgsConstructor
+@SQLDelete(sql = "UPDATE solution SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+public class Solution {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "problem_id")
+	private Problem problem;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "user_id")
+	private User user;
+
+	private LocalDateTime solvedDateTime;
+	@Column(columnDefinition = "TEXT")
+	private String content;
+	private String result;
+	private Integer memoryUsage;
+	private Integer executionTime;
+	private String language;
+	private Integer codeLength;
+	private LocalDateTime deletedAt;
+
+	@Builder
+	public Solution(Problem problem, User user, LocalDateTime solvedDateTime, String content, String result,
+		Integer memoryUsage, Integer executionTime, String language, Integer codeLength) {
+		this.problem = problem;
+		this.user = user;
+		this.solvedDateTime = solvedDateTime;
+		this.content = content;
+		this.result = result;
+		this.memoryUsage = memoryUsage;
+		this.executionTime = executionTime;
+		this.language = language;
+		this.codeLength = codeLength;
+	}
+}

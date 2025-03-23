@@ -1,0 +1,26 @@
+package com.gamzabat.algohub.feature.group.studygroup.repository;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+
+import com.gamzabat.algohub.feature.group.studygroup.domain.BookmarkedStudyGroup;
+import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
+import com.gamzabat.algohub.feature.user.domain.User;
+
+public interface BookmarkedStudyGroupRepository extends JpaRepository<BookmarkedStudyGroup, Long> {
+	Optional<BookmarkedStudyGroup> findByUserAndStudyGroup(User user, StudyGroup studyGroup);
+
+	List<BookmarkedStudyGroup> findAllByUser(User user);
+
+	List<BookmarkedStudyGroup> findAllByStudyGroup(StudyGroup studyGroup);
+
+	boolean existsByUserAndStudyGroup(User user, StudyGroup group);
+
+	@Modifying
+	@Query("delete from BookmarkedStudyGroup bms where bms.studyGroup = :studyGroup")
+	void deleteAllByStudyGroup(StudyGroup studyGroup);
+}

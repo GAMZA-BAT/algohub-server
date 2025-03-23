@@ -1,0 +1,50 @@
+package com.gamzabat.algohub.feature.notification.repository.querydsl;
+
+import static com.gamzabat.algohub.feature.group.studygroup.domain.QGroupMember.*;
+import static com.gamzabat.algohub.feature.group.studygroup.domain.QStudyGroup.*;
+import static com.gamzabat.algohub.feature.notification.domain.QNotificationSetting.*;
+
+import java.util.List;
+
+import org.springframework.stereotype.Repository;
+
+import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
+import com.gamzabat.algohub.feature.notification.domain.NotificationSetting;
+import com.gamzabat.algohub.feature.user.domain.User;
+import com.querydsl.jpa.JPAExpressions;
+import com.querydsl.jpa.impl.JPAQueryFactory;
+
+import lombok.AllArgsConstructor;
+
+@Repository
+@AllArgsConstructor
+public class CustomNotificationSettingRepositoryImpl implements CustomNotificationSettingRepository {
+	private final JPAQueryFactory query;
+
+	@Override
+	public List<NotificationSetting> findAllByUser(User user) {
+		return query.selectFrom(notificationSetting)
+			.join(notificationSetting.member, groupMember).fetchJoin()
+			.join(groupMember.studyGroup, studyGroup).fetchJoin()
+			.where(notificationSetting.member.user.eq(user)
+				.and(notificationSetting.member.studyGroup.deletedAt.isNull()))
+			.fetch();
+	}
+
+	@Override
+	public List<NotificationSetting> findAllByStudyGroup(StudyGroup studyGroup) {
+		return query.selectFrom(notificationSetting)
+			.where(notificationSetting.member.studyGroup.eq(studyGroup))
+			.fetch();
+	}
+
+	@Override
+	public void deleteAllByStudyGroup(StudyGroup studyGroup) {
+		query.delete(notificationSetting)
+			.where(notificationSetting.member.in(
+				JPAExpressions.selectFrom(groupMember)
+					.where(groupMember.studyGroup.eq(studyGroup))
+			))
+			.execute();
+	}
+}
