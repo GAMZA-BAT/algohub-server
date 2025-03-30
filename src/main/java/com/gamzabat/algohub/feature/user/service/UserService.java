@@ -166,6 +166,10 @@ public class UserService {
 
 	@Transactional
 	public void deleteUser(User user, DeleteUserRequest deleteUserRequest) {
+		if (deleteUserRequest.isOAuthAccount()) {
+			userRepository.delete(user);
+			return;
+		}
 		if (!passwordEncoder.matches(deleteUserRequest.password(), user.getPassword())) {
 			throw new UncorrectedPasswordException("비밀번호가 틀렸습니다.");
 		}
