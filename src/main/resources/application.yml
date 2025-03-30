@@ -13,7 +13,6 @@ spring:
       rc:
         - dev
         - common
-
 ---
 spring:
   config:
@@ -54,6 +53,10 @@ spring:
           auth: true
           starttls:
             enable: true
+  # 기본 도메인 값 (dev 환경 기본)
+  api:
+    domain: dev.algohub.kr
+
 cloud:
   aws:
     s3:
@@ -85,6 +88,32 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  # dev 환경 도메인 (공통과 동일하게 설정)
+  api:
+    domain: dev.algohub.kr
+cloud:
+  aws:
+    s3:
+      path-style-access: true
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+    import:
+      - "mysql-dev.yml"
+      - "github-dev.yml"
+      - "aws-dev.yml"
+  datasource:
+    url: jdbc:mysql://${mysql_endpoint}:3306/algohub_${DEV_NAME}?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  # dev 환경 도메인 (공통과 동일하게 설정)
+  api:
+    domain: dev.algohub.kr
 cloud:
   aws:
     s3:
@@ -106,6 +135,9 @@ spring:
     properties:
       hibernate:
         format_sql: false
+  # prod 환경 도메인
+  api:
+    domain: algohub.kr
 logging:
   discord:
     webhook-url: ${webhook_url}
@@ -123,6 +155,9 @@ spring:
     redis:
       host: redis
       port: 6379
+  # rc 환경 도메인
+  api:
+    domain: rc.algohub.kr
 logging:
   discord:
     webhook-url: ${webhook_url}

@@ -2,6 +2,7 @@ package com.gamzabat.algohub.feature.user.service;
 
 import java.util.concurrent.CompletableFuture;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.retry.annotation.Recover;
@@ -25,10 +26,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class EmailService {
 	private static final String FROM_ADDRESS = "noreply@algohub.kr";
-	private static final String EMAIL_VERIFICATION_CLIENT_ENDPOINT = "https://algohub.kr/signup";
-	private static final String RESET_PASSWORD_CLIENT_ENDPOINT = "https://algohub.kr/reset-password";
+	private static final String EMAIL_VERIFICATION_CLIENT_ENDPOINT = createClientEndpoint("signup");
+	private static final String RESET_PASSWORD_CLIENT_ENDPOINT = createClientEndpoint("reset-password");
 	private final JavaMailSender mailSender;
 	private final TemplateEngine templateEngine;
+
+	@Value("${app.type:dev}")
+	static private String appType;
 
 	@Async
 	@Retryable(
@@ -101,5 +105,13 @@ public class EmailService {
 			case EMAIL_VALIDATION -> EmailTemplateStrings.EMAIL_VALIDATION_SUBJECT;
 			default -> throw new IllegalArgumentException("LOGIC ERROR : Unreachable code block");
 		};
+	}
+
+	static private String createClientEndpoint(String apiType) {
+		if ("rc".equals(appType)) {
+			return ("https://rc.algohub.kr/" + apiType);
+		} else {
+			return ("https://algohub.kr/" + apiType);
+		}
 	}
 }
