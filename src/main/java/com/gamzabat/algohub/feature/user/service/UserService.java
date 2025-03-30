@@ -119,7 +119,12 @@ public class UserService {
 
 	@Transactional(readOnly = true)
 	public UserInfoResponse userInfo(User user) {
-		return new UserInfoResponse(user.getEmail(), user.getNickname(), user.getProfileImage(), user.getBjNickname(),
+		return new UserInfoResponse(
+			user.getEmail(),
+			user.getNickname(),
+			user.getProfileImage(),
+			user.getBjNickname(),
+			user.getGithubName(),
 			user.getDescription());
 	}
 
@@ -248,6 +253,7 @@ public class UserService {
 
 		return new UserInfoResponse(targetUser.getEmail(), targetUser.getNickname(), targetUser.getProfileImage(),
 			targetUser.getBjNickname(),
+			targetUser.getGithubName(),
 			targetUser.getDescription());
 	}
 

@@ -280,7 +280,7 @@ class UserControllerTest {
 	@DisplayName("회원 정보 조회 성공")
 	void getUserInfo() throws Exception {
 		// given
-		UserInfoResponse response = new UserInfoResponse("email", "nickname", "profileImage", "bjNickname", "");
+		UserInfoResponse response = new UserInfoResponse("email", "nickname", "profileImage", "bjNickname", "", "");
 		when(userService.userInfo(user)).thenReturn(response);
 		// when, then
 		mockMvc.perform(get("/api/users/me")
