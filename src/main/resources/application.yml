@@ -22,19 +22,16 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: ${mysql_username}
     password: ${mysql_password}
-
   jpa:
     database: mysql
     database-platform: org.hibernate.dialect.MySQLDialect
     open-in-view: false
     hibernate:
       ddl-auto: update
-
   servlet:
     multipart:
       max-file-size: 5MB
       max-request-size: 6MB
-
   data:
     redis:
       host: localhost
@@ -56,7 +53,6 @@ spring:
   # 기본 도메인 값 (dev 환경 기본)
   api:
     domain: dev.algohub.kr
-
 cloud:
   aws:
     s3:
@@ -67,7 +63,6 @@ cloud:
     credentials:
       access-key: ${aws_access_key}
       secret-key: ${aws_secret_key}
-
 logging:
   config: classpath:logback-spring.xml
 server:
@@ -88,32 +83,7 @@ spring:
     properties:
       hibernate:
         format_sql: true
-  # dev 환경 도메인 (공통과 동일하게 설정)
-  api:
-    domain: dev.algohub.kr
-cloud:
-  aws:
-    s3:
-      path-style-access: true
----
-spring:
-  config:
-    activate:
-      on-profile: dev
-    import:
-      - "mysql-dev.yml"
-      - "github-dev.yml"
-      - "aws-dev.yml"
-  datasource:
-    url: jdbc:mysql://${mysql_endpoint}:3306/algohub_${DEV_NAME}?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
-  jpa:
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-  # dev 환경 도메인 (공통과 동일하게 설정)
-  api:
-    domain: dev.algohub.kr
+  # dev 환경 도메인은 common에 정의되어 있으므로 중복 설정하지 않음
 cloud:
   aws:
     s3:
