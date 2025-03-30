@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class EmailService {
 	private static final String FROM_ADDRESS = "noreply@algohub.kr";
-	private static final String EMAIL_VERIFICATION_CLIENT_ENDPOINT = "https://algohub.kr/sign-up";
+	private static final String EMAIL_VERIFICATION_CLIENT_ENDPOINT = "https://algohub.kr/signup";
 	private static final String RESET_PASSWORD_CLIENT_ENDPOINT = "https://algohub.kr/reset-password";
 	private final JavaMailSender mailSender;
 	private final TemplateEngine templateEngine;
