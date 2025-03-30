@@ -50,9 +50,6 @@ spring:
           auth: true
           starttls:
             enable: true
-  # 기본 도메인 값 (dev 환경 기본)
-  api:
-    domain: dev.algohub.kr
 cloud:
   aws:
     s3:
