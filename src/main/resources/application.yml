@@ -80,7 +80,6 @@ spring:
     properties:
       hibernate:
         format_sql: true
-  # dev 환경 도메인은 common에 정의되어 있으므로 중복 설정하지 않음
 cloud:
   aws:
     s3:
@@ -102,9 +101,6 @@ spring:
     properties:
       hibernate:
         format_sql: false
-  # prod 환경 도메인
-  api:
-    domain: algohub.kr
 logging:
   discord:
     webhook-url: ${webhook_url}
@@ -122,9 +118,6 @@ spring:
     redis:
       host: redis
       port: 6379
-  # rc 환경 도메인
-  api:
-    domain: rc.algohub.kr
 logging:
   discord:
     webhook-url: ${webhook_url}

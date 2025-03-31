@@ -16,6 +16,7 @@ import com.gamzabat.algohub.constants.EmailTemplateStrings;
 import com.gamzabat.algohub.enums.EmailType;
 import com.gamzabat.algohub.exception.MessagingRuntimeException;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -25,14 +26,15 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class EmailService {
+
+	@Value("${spring.profiles.active:dev}")
+	private String activeProfile;
+
 	private static final String FROM_ADDRESS = "noreply@algohub.kr";
-	private static final String EMAIL_VERIFICATION_CLIENT_ENDPOINT = createClientEndpoint("signup");
-	private static final String RESET_PASSWORD_CLIENT_ENDPOINT = createClientEndpoint("reset-password");
+	private String EMAIL_VERIFICATION_CLIENT_ENDPOINT;
+	private String RESET_PASSWORD_CLIENT_ENDPOINT;
 	private final JavaMailSender mailSender;
 	private final TemplateEngine templateEngine;
-
-	@Value("${app.type:dev}")
-	static private String appType;
 
 	@Async
 	@Retryable(
@@ -55,7 +57,6 @@ public class EmailService {
 		try {
 			MimeMessage message = mailSender.createMimeMessage();
 			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
 			helper.setTo(recipient);
 			helper.setFrom(FROM_ADDRESS);
 			helper.setSubject(getEmailSubject(type));
@@ -107,11 +108,19 @@ public class EmailService {
 		};
 	}
 
-	static private String createClientEndpoint(String apiType) {
-		if ("rc".equals(appType)) {
-			return ("https://rc.algohub.kr/" + apiType);
-		} else {
+	@PostConstruct
+	private void init() {
+		this.EMAIL_VERIFICATION_CLIENT_ENDPOINT = createClientEndpoint("signup");
+		this.RESET_PASSWORD_CLIENT_ENDPOINT = createClientEndpoint("reset-password");
+	}
+
+	private String createClientEndpoint(String apiType) {
+		System.out.println(activeProfile);
+
+		if ("prod".equals(activeProfile)) {
 			return ("https://algohub.kr/" + apiType);
+		} else {
+			return ("https://rc.algohub.kr/" + apiType);
 		}
 	}
 }
