@@ -16,7 +16,6 @@ import com.gamzabat.algohub.constants.EmailTemplateStrings;
 import com.gamzabat.algohub.enums.EmailType;
 import com.gamzabat.algohub.exception.MessagingRuntimeException;
 
-import jakarta.annotation.PostConstruct;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -31,8 +30,6 @@ public class EmailService {
 	private String activeProfile;
 
 	private static final String FROM_ADDRESS = "noreply@algohub.kr";
-	private String EMAIL_VERIFICATION_CLIENT_ENDPOINT;
-	private String RESET_PASSWORD_CLIENT_ENDPOINT;
 	private final JavaMailSender mailSender;
 	private final TemplateEngine templateEngine;
 
@@ -81,19 +78,21 @@ public class EmailService {
 		switch (type) {
 			case RESET_PASSWORD: {
 				Context context = new Context();
+				String clientEndpoint = getClientEndpoint("reset-password");
 				context.setVariable("title", EmailTemplateStrings.RESET_PASSWORD_TITLE);
 				context.setVariable("content", EmailTemplateStrings.RESET_PASSWORD_CONTENT);
 				context.setVariable("button", EmailTemplateStrings.RESET_PASSWORD_BUTTON);
-				context.setVariable("url", RESET_PASSWORD_CLIENT_ENDPOINT + "?token=" + token);
+				context.setVariable("url", clientEndpoint + "?token=" + token);
 				return templateEngine.process("email-template", context);
 			}
 
 			case EMAIL_VALIDATION:
 				Context context = new Context();
+				String clientEndpoint = getClientEndpoint("signup");
 				context.setVariable("title", EmailTemplateStrings.EMAIL_VALIDATION_TITLE);
 				context.setVariable("content", EmailTemplateStrings.EMAIL_VALIDATION_CONTENT);
 				context.setVariable("button", EmailTemplateStrings.EMAIL_VALIDATION_BUTTON);
-				context.setVariable("url", EMAIL_VERIFICATION_CLIENT_ENDPOINT + "?token=" + token);
+				context.setVariable("url", clientEndpoint + "?token=" + token);
 				return templateEngine.process("email-template", context);
 			default:
 				throw new IllegalArgumentException("LOGIC ERROR : Unreachable code block");
@@ -108,19 +107,13 @@ public class EmailService {
 		};
 	}
 
-	@PostConstruct
-	private void init() {
-		this.EMAIL_VERIFICATION_CLIENT_ENDPOINT = createClientEndpoint("signup");
-		this.RESET_PASSWORD_CLIENT_ENDPOINT = createClientEndpoint("reset-password");
-	}
-
-	private String createClientEndpoint(String apiType) {
-		System.out.println(activeProfile);
+	private String getClientEndpoint(String apiType) {
 
 		if ("prod".equals(activeProfile)) {
 			return ("https://algohub.kr/" + apiType);
 		} else {
 			return ("https://rc.algohub.kr/" + apiType);
 		}
+
 	}
 }
