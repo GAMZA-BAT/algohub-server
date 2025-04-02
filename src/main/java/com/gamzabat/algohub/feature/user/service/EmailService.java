@@ -2,6 +2,7 @@ package com.gamzabat.algohub.feature.user.service;
 
 import java.util.concurrent.CompletableFuture;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.retry.annotation.Recover;
@@ -24,9 +25,11 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class EmailService {
+
+	@Value("${spring.profiles.active:dev}")
+	private String activeProfile;
+
 	private static final String FROM_ADDRESS = "noreply@algohub.kr";
-	private static final String EMAIL_VERIFICATION_CLIENT_ENDPOINT = "https://algohub.kr/signup";
-	private static final String RESET_PASSWORD_CLIENT_ENDPOINT = "https://algohub.kr/reset-password";
 	private final JavaMailSender mailSender;
 	private final TemplateEngine templateEngine;
 
@@ -51,7 +54,6 @@ public class EmailService {
 		try {
 			MimeMessage message = mailSender.createMimeMessage();
 			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
 			helper.setTo(recipient);
 			helper.setFrom(FROM_ADDRESS);
 			helper.setSubject(getEmailSubject(type));
@@ -76,19 +78,21 @@ public class EmailService {
 		switch (type) {
 			case RESET_PASSWORD: {
 				Context context = new Context();
+				String clientEndpoint = getClientEndpoint("reset-password");
 				context.setVariable("title", EmailTemplateStrings.RESET_PASSWORD_TITLE);
 				context.setVariable("content", EmailTemplateStrings.RESET_PASSWORD_CONTENT);
 				context.setVariable("button", EmailTemplateStrings.RESET_PASSWORD_BUTTON);
-				context.setVariable("url", RESET_PASSWORD_CLIENT_ENDPOINT + "?token=" + token);
+				context.setVariable("url", clientEndpoint + "?token=" + token);
 				return templateEngine.process("email-template", context);
 			}
 
 			case EMAIL_VALIDATION:
 				Context context = new Context();
+				String clientEndpoint = getClientEndpoint("signup");
 				context.setVariable("title", EmailTemplateStrings.EMAIL_VALIDATION_TITLE);
 				context.setVariable("content", EmailTemplateStrings.EMAIL_VALIDATION_CONTENT);
 				context.setVariable("button", EmailTemplateStrings.EMAIL_VALIDATION_BUTTON);
-				context.setVariable("url", EMAIL_VERIFICATION_CLIENT_ENDPOINT + "?token=" + token);
+				context.setVariable("url", clientEndpoint + "?token=" + token);
 				return templateEngine.process("email-template", context);
 			default:
 				throw new IllegalArgumentException("LOGIC ERROR : Unreachable code block");
@@ -101,5 +105,15 @@ public class EmailService {
 			case EMAIL_VALIDATION -> EmailTemplateStrings.EMAIL_VALIDATION_SUBJECT;
 			default -> throw new IllegalArgumentException("LOGIC ERROR : Unreachable code block");
 		};
+	}
+
+	private String getClientEndpoint(String apiType) {
+
+		if ("prod".equals(activeProfile)) {
+			return ("https://algohub.kr/" + apiType);
+		} else {
+			return ("https://rc.algohub.kr/" + apiType);
+		}
+
 	}
 }

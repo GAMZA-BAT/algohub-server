@@ -13,7 +13,6 @@ spring:
       rc:
         - dev
         - common
-
 ---
 spring:
   config:
@@ -23,19 +22,16 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: ${mysql_username}
     password: ${mysql_password}
-
   jpa:
     database: mysql
     database-platform: org.hibernate.dialect.MySQLDialect
     open-in-view: false
     hibernate:
       ddl-auto: update
-
   servlet:
     multipart:
       max-file-size: 5MB
       max-request-size: 6MB
-
   data:
     redis:
       host: localhost
@@ -64,7 +60,6 @@ cloud:
     credentials:
       access-key: ${aws_access_key}
       secret-key: ${aws_secret_key}
-
 logging:
   config: classpath:logback-spring.xml
 server:
