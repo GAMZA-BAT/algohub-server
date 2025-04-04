@@ -260,8 +260,19 @@ class UserServiceTest {
 	@DisplayName("회원 탈퇴 성공")
 	void deleteUser() {
 		// given
-		DeleteUserRequest request = new DeleteUserRequest(password);
+		DeleteUserRequest request = new DeleteUserRequest(false, password);
 		when(passwordEncoder.matches(password, user.getPassword())).thenReturn(true);
+		// when
+		userService.deleteUser(user, request);
+		// then
+		verify(userRepository, times(1)).delete(user);
+	}
+
+	@Test
+	@DisplayName("소셜 로그인 회원 탈퇴 성공")
+	void deleteOAuthUser() {
+		// given
+		DeleteUserRequest request = new DeleteUserRequest(true, null);
 		// when
 		userService.deleteUser(user, request);
 		// then
@@ -272,7 +283,7 @@ class UserServiceTest {
 	@DisplayName("회원 탈퇴 실패 : 틀린 비밀번호")
 	void deleteUserFailed() {
 		// given
-		DeleteUserRequest request = new DeleteUserRequest(password);
+		DeleteUserRequest request = new DeleteUserRequest(false, password);
 		when(passwordEncoder.matches(password, user.getPassword())).thenReturn(false);
 		// when, then
 		assertThatThrownBy(() -> userService.deleteUser(user, request))

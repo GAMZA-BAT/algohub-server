@@ -141,7 +141,7 @@ public class UserController {
 	}
 
 	@DeleteMapping(value = "/users/me")
-	@Operation(summary = "회원 정보 삭제 API")
+	@Operation(summary = "회원 탈퇴 API")
 	public ResponseEntity<Void> deleteUser(@AuthedUser User user, @Valid @RequestBody DeleteUserRequest request,
 		Errors errors) {
 		if (errors.hasErrors()) {
