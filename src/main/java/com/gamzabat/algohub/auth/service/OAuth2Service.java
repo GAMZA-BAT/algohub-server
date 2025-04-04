@@ -82,7 +82,7 @@ public class OAuth2Service {
 	}
 
 	private String createTemporaryNickname(String login, Long id) {
-		return login + "@" + id;
+		return login + id;
 	}
 
 	private String getGithubAccessToken(String code) {
