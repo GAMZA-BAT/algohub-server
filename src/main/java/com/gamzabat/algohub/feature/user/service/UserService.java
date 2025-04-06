@@ -50,6 +50,7 @@ import com.gamzabat.algohub.feature.user.exception.CheckBjNicknameValidationExce
 import com.gamzabat.algohub.feature.user.exception.CheckEmailFormException;
 import com.gamzabat.algohub.feature.user.exception.CheckNicknameValidationException;
 import com.gamzabat.algohub.feature.user.exception.CheckPasswordFormException;
+import com.gamzabat.algohub.feature.user.exception.InvalidDeleteUserRequestException;
 import com.gamzabat.algohub.feature.user.exception.InvalidEmailException;
 import com.gamzabat.algohub.feature.user.exception.ResetPasswordValidationError;
 import com.gamzabat.algohub.feature.user.exception.UncorrectedPasswordException;
@@ -171,15 +172,28 @@ public class UserService {
 
 	@Transactional
 	public void deleteUser(User user, DeleteUserRequest deleteUserRequest) {
-		if (deleteUserRequest.isOAuthAccount()) {
-			userRepository.delete(user);
-			return;
+		if (user.getGithubName() != null) {
+			validateOAuthUserRequest(deleteUserRequest);
+		} else {
+			validateNormalUserRequest(user, deleteUserRequest);
+		}
+		userRepository.delete(user);
+		log.info("success to delete user user_id={}", user.getId());
+	}
+
+	private void validateOAuthUserRequest(DeleteUserRequest deleteUserRequest) {
+		if (deleteUserRequest.password() != null) {
+			throw new InvalidDeleteUserRequestException("소셜 로그인 회원의 비밀번호는 존재하지 않습니다.");
+		}
+	}
+
+	private void validateNormalUserRequest(User user, DeleteUserRequest deleteUserRequest) {
+		if (deleteUserRequest.password() == null) {
+			throw new InvalidDeleteUserRequestException("일반 회원 탈퇴 시 비밀번호 입력이 필요합니다.");
 		}
 		if (!passwordEncoder.matches(deleteUserRequest.password(), user.getPassword())) {
 			throw new UncorrectedPasswordException("비밀번호가 틀렸습니다.");
 		}
-		userRepository.delete(user);
-		log.info("success to delete user user_id={}", user.getId());
 	}
 
 	@Transactional

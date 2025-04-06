@@ -59,6 +59,7 @@ import com.gamzabat.algohub.feature.user.exception.BOJServerErrorException;
 import com.gamzabat.algohub.feature.user.exception.CheckBjNicknameValidationException;
 import com.gamzabat.algohub.feature.user.exception.CheckNicknameValidationException;
 import com.gamzabat.algohub.feature.user.exception.CheckPasswordFormException;
+import com.gamzabat.algohub.feature.user.exception.InvalidDeleteUserRequestException;
 import com.gamzabat.algohub.feature.user.exception.InvalidEmailException;
 import com.gamzabat.algohub.feature.user.exception.ResetPasswordValidationError;
 import com.gamzabat.algohub.feature.user.exception.UncorrectedPasswordException;
@@ -260,7 +261,7 @@ class UserServiceTest {
 	@DisplayName("회원 탈퇴 성공")
 	void deleteUser() {
 		// given
-		DeleteUserRequest request = new DeleteUserRequest(false, password);
+		DeleteUserRequest request = new DeleteUserRequest(password);
 		when(passwordEncoder.matches(password, user.getPassword())).thenReturn(true);
 		// when
 		userService.deleteUser(user, request);
@@ -272,7 +273,9 @@ class UserServiceTest {
 	@DisplayName("소셜 로그인 회원 탈퇴 성공")
 	void deleteOAuthUser() {
 		// given
-		DeleteUserRequest request = new DeleteUserRequest(true, null);
+		User user = User.builder().email("githubEmail").role(Role.USER).bjNickname("bjNickname").build();
+		user.editGithubName("githubName");
+		DeleteUserRequest request = new DeleteUserRequest(null);
 		// when
 		userService.deleteUser(user, request);
 		// then
@@ -281,14 +284,38 @@ class UserServiceTest {
 
 	@Test
 	@DisplayName("회원 탈퇴 실패 : 틀린 비밀번호")
-	void deleteUserFailed() {
+	void deleteUserFailed_1() {
 		// given
-		DeleteUserRequest request = new DeleteUserRequest(false, password);
+		DeleteUserRequest request = new DeleteUserRequest(password);
 		when(passwordEncoder.matches(password, user.getPassword())).thenReturn(false);
 		// when, then
 		assertThatThrownBy(() -> userService.deleteUser(user, request))
 			.isInstanceOf(UncorrectedPasswordException.class)
 			.hasFieldOrPropertyWithValue("errors", "비밀번호가 틀렸습니다.");
+	}
+
+	@Test
+	@DisplayName("회원 탈퇴 실패 : 소셜 로그인 회원의 잘못된 요청")
+	void deleteUserFailed_2() {
+		// given
+		User user = User.builder().email("githubEmail").role(Role.USER).bjNickname("bjNickname").build();
+		user.editGithubName("githubName");
+		DeleteUserRequest request = new DeleteUserRequest(password);
+		// when, then
+		assertThatThrownBy(() -> userService.deleteUser(user, request))
+			.isInstanceOf(InvalidDeleteUserRequestException.class)
+			.hasFieldOrPropertyWithValue("message", "소셜 로그인 회원의 비밀번호는 존재하지 않습니다.");
+	}
+
+	@Test
+	@DisplayName("회원 탈퇴 실패 : 일반 회원의 잘못된 요청")
+	void deleteUserFailed_3() {
+		// given
+		DeleteUserRequest request = new DeleteUserRequest(null);
+		// when, then
+		assertThatThrownBy(() -> userService.deleteUser(user, request))
+			.isInstanceOf(InvalidDeleteUserRequestException.class)
+			.hasFieldOrPropertyWithValue("message", "일반 회원 탈퇴 시 비밀번호 입력이 필요합니다.");
 	}
 
 	@Test
