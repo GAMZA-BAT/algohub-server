@@ -181,7 +181,7 @@ public class UserService {
 		log.info("success to delete user user_id={}", user.getId());
 	}
 
-	private static void validateOAuthUserRequest(DeleteUserRequest deleteUserRequest) {
+	private void validateOAuthUserRequest(DeleteUserRequest deleteUserRequest) {
 		if (deleteUserRequest.password() != null) {
 			throw new InvalidDeleteUserRequestException("소셜 로그인 회원의 비밀번호는 존재하지 않습니다.");
 		}
