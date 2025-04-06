@@ -178,6 +178,7 @@ public class UserService {
 			validateNormalUserRequest(user, deleteUserRequest);
 		}
 		userRepository.delete(user);
+		log.info("success to delete user user_id={}", user.getId());
 	}
 
 	private static void validateOAuthUserRequest(DeleteUserRequest deleteUserRequest) {
@@ -193,8 +194,6 @@ public class UserService {
 		if (!passwordEncoder.matches(deleteUserRequest.password(), user.getPassword())) {
 			throw new UncorrectedPasswordException("비밀번호가 틀렸습니다.");
 		}
-		userRepository.delete(user);
-		log.info("success to delete user user_id={}", user.getId());
 	}
 
 	@Transactional
