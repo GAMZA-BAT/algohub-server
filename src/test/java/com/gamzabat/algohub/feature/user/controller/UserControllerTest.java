@@ -280,7 +280,7 @@ class UserControllerTest {
 	@DisplayName("회원 정보 조회 성공")
 	void getUserInfo() throws Exception {
 		// given
-		UserInfoResponse response = new UserInfoResponse("email", "nickname", "profileImage", "bjNickname", "");
+		UserInfoResponse response = new UserInfoResponse("email", "nickname", "profileImage", "bjNickname", "", "");
 		when(userService.userInfo(user)).thenReturn(response);
 		// when, then
 		mockMvc.perform(get("/api/users/me")
@@ -299,7 +299,7 @@ class UserControllerTest {
 	@DisplayName("회원 탈퇴 성공")
 	void deleteUser() throws Exception {
 		// given
-		DeleteUserRequest request = new DeleteUserRequest("password");
+		DeleteUserRequest request = new DeleteUserRequest(false, "password");
 		// when, then
 		mockMvc.perform(delete("/api/users/me")
 				.header("Authorization", token)
@@ -314,7 +314,7 @@ class UserControllerTest {
 	@DisplayName("회원 탈퇴 실패 : 잘못된 요청")
 	void deleteUserFailed_1() throws Exception {
 		// given
-		DeleteUserRequest request = new DeleteUserRequest("");
+		DeleteUserRequest request = new DeleteUserRequest(null, "");
 		// when, then
 		mockMvc.perform(delete("/api/users/me")
 				.header("Authorization", token)
@@ -322,14 +322,14 @@ class UserControllerTest {
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.error").value("올바르지 않은 요청입니다."))
-			.andExpect(jsonPath("$.messages", hasItem("password : 비밀번호는 필수 입력입니다.")));
+			.andExpect(jsonPath("$.messages", hasItem("isOAuthAccount : 소셜 로그인 여부는 필수 입력입니다.")));
 	}
 
 	@Test
 	@DisplayName("회원 탈퇴 실패 : 틀린 비밀번호")
 	void deleteUserFailed_2() throws Exception {
 		// given
-		DeleteUserRequest request = new DeleteUserRequest("invalidPassword");
+		DeleteUserRequest request = new DeleteUserRequest(false, "invalidPassword");
 		doThrow(new UncorrectedPasswordException("비밀번호가 틀렸습니다.")).when(userService).deleteUser(user, request);
 		// when, then
 		mockMvc.perform(delete("/api/users/me")
