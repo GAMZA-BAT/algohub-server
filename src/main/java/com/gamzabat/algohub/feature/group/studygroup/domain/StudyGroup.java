@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.SQLDelete;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -27,6 +28,7 @@ public class StudyGroup {
 	private LocalDate startDate;
 	private LocalDate endDate;
 	private String introduction;
+	@Column(length = 512)
 	private String groupImage;
 	private String groupCode;
 
