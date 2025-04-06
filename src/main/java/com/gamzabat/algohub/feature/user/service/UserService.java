@@ -173,19 +173,26 @@ public class UserService {
 	@Transactional
 	public void deleteUser(User user, DeleteUserRequest deleteUserRequest) {
 		if (user.getGithubName() != null) {
-			if (deleteUserRequest.password() != null) {
-				throw new InvalidDeleteUserRequestException("소셜 로그인 회원의 비밀번호는 존재하지 않습니다.");
-			}
-			userRepository.delete(user);
-			return;
+			validateOAuthUserRequest(deleteUserRequest);
+		} else {
+			validateNormalUserRequest(user, deleteUserRequest);
 		}
+		userRepository.delete(user);
+	}
+
+	private static void validateOAuthUserRequest(DeleteUserRequest deleteUserRequest) {
+		if (deleteUserRequest.password() != null) {
+			throw new InvalidDeleteUserRequestException("소셜 로그인 회원의 비밀번호는 존재하지 않습니다.");
+		}
+	}
+
+	private void validateNormalUserRequest(User user, DeleteUserRequest deleteUserRequest) {
 		if (deleteUserRequest.password() == null) {
 			throw new InvalidDeleteUserRequestException("일반 회원 탈퇴 시 비밀번호 입력이 필요합니다.");
 		}
 		if (!passwordEncoder.matches(deleteUserRequest.password(), user.getPassword())) {
 			throw new UncorrectedPasswordException("비밀번호가 틀렸습니다.");
 		}
-		userRepository.delete(user);
 	}
 
 	@Transactional
