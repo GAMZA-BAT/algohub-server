@@ -349,7 +349,7 @@ class UserControllerTest {
 		RegisterBjNickNameRequest request = new RegisterBjNickNameRequest("bjNickName");
 		doNothing().when(userService).registerBjNickname(user, request);
 		// when, then
-		mockMvc.perform(patch("/api/users/baekjoon-nickname")
+		mockMvc.perform(post("/api/users/baekjoon-nickname")
 				.header("Authorization", token)
 				.content(objectMapper.writeValueAsString(request))
 				.contentType(MediaType.APPLICATION_JSON))
@@ -365,7 +365,7 @@ class UserControllerTest {
 		doThrow(new CheckBjNicknameValidationException(HttpStatus.NOT_FOUND.value(), "백준 닉네임이 유효하지 않습니다.")).when(
 			userService).registerBjNickname(user, request);
 		// when, then
-		mockMvc.perform(patch("/api/users/baekjoon-nickname")
+		mockMvc.perform(post("/api/users/baekjoon-nickname")
 				.header("Authorization", token)
 				.content(objectMapper.writeValueAsString(request))
 				.contentType(MediaType.APPLICATION_JSON))
@@ -382,7 +382,7 @@ class UserControllerTest {
 		doThrow(new BOJServerErrorException("현재 백준 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요."))
 			.when(userService).registerBjNickname(user, request);
 		// when, then
-		mockMvc.perform(patch("/api/users/baekjoon-nickname")
+		mockMvc.perform(post("/api/users/baekjoon-nickname")
 				.header("Authorization", token)
 				.content(objectMapper.writeValueAsString(request))
 				.contentType(MediaType.APPLICATION_JSON))
