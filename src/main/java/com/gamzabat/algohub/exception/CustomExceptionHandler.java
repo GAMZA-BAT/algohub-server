@@ -30,6 +30,7 @@ import com.gamzabat.algohub.feature.user.exception.CheckBjNicknameValidationExce
 import com.gamzabat.algohub.feature.user.exception.CheckEmailFormException;
 import com.gamzabat.algohub.feature.user.exception.CheckNicknameValidationException;
 import com.gamzabat.algohub.feature.user.exception.CheckPasswordFormException;
+import com.gamzabat.algohub.feature.user.exception.InvalidDeleteUserRequestException;
 import com.gamzabat.algohub.feature.user.exception.InvalidEmailException;
 import com.gamzabat.algohub.feature.user.exception.InvalidVerificationCodeException;
 import com.gamzabat.algohub.feature.user.exception.ResetPasswordValidationError;
@@ -221,5 +222,13 @@ public class CustomExceptionHandler {
 		return ResponseEntity
 			.status(HttpStatus.NOT_FOUND)
 			.body(new ErrorResponse(HttpStatus.NOT_FOUND.value(), e.getErrors(), null));
+	}
+
+	@ExceptionHandler(InvalidDeleteUserRequestException.class)
+	protected ResponseEntity<ErrorResponse> handleCannotFoundVerificationCodeException(
+		InvalidDeleteUserRequestException e) {
+		return ResponseEntity
+			.status(HttpStatus.BAD_REQUEST)
+			.body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null));
 	}
 }
