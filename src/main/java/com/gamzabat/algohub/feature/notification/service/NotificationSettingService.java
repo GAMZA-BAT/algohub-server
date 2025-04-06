@@ -53,6 +53,6 @@ public class NotificationSettingService {
 			request.deadlineReached()
 		);
 
-		log.info("success to edit notification settings");
+		log.info("success to edit notification settings user_id = {}", user.getId());
 	}
 }

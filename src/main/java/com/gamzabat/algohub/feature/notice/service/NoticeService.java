@@ -63,7 +63,7 @@ public class NoticeService {
 			.category(request.category())
 			.createdAt(LocalDateTime.now())
 			.build());
-		log.info("success to create notice");
+		log.info("success to create notice user_id={} , group_id = {}", user.getId(), groupId);
 		return new CreateNoticeResponse(notice.getId());
 	}
 
@@ -77,6 +77,7 @@ public class NoticeService {
 		log.info("success to get notice");
 		return GetNoticeResponse.builder()
 			.author(notice.getAuthor().getNickname())
+			.authorImage(notice.getAuthor().getProfileImage())
 			.noticeId(notice.getId())
 			.title(notice.getTitle())
 			.content(notice.getContent())
@@ -98,7 +99,7 @@ public class NoticeService {
 				NoticeRead.builder().notice(notice).user(user).build()
 			);
 		}
-		log.info("success to read notice. userId: {}, noticeId: {}", user.getId(), notice.getId());
+		log.info("success to read notice. user_id = {}, notice_id = {}", user.getId(), notice.getId());
 	}
 
 	@Transactional(readOnly = true)
@@ -131,7 +132,7 @@ public class NoticeService {
 		if (request.category() != null) {
 			notice.updateCategory(request.category());
 		}
-		log.info("success to update notice");
+		log.info("success to update notice user_id={} , notice_id = {}", user.getId(), noticeId);
 	}
 
 	@Transactional
@@ -147,7 +148,7 @@ public class NoticeService {
 		noticeReadRepository.deleteAllByNotice(notice);
 		noticeRepository.delete(notice);
 
-		log.info("success to delete notice. userId: {}, noticeId: {}", user.getId(), noticeId);
+		log.info("success to delete notice. user_id = {}, notice_id = {}", user.getId(), noticeId);
 	}
 
 	private void validateStudyGroupExists(Notice notice) {
