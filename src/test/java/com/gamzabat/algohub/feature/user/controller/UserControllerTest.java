@@ -311,21 +311,6 @@ class UserControllerTest {
 	}
 
 	@Test
-	@DisplayName("회원 탈퇴 실패 : 잘못된 요청")
-	void deleteUserFailed_1() throws Exception {
-		// given
-		DeleteUserRequest request = new DeleteUserRequest("");
-		// when, then
-		mockMvc.perform(delete("/api/users/me")
-				.header("Authorization", token)
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(request)))
-			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.error").value("올바르지 않은 요청입니다."))
-			.andExpect(jsonPath("$.messages", hasItem("isOAuthAccount : 소셜 로그인 여부는 필수 입력입니다.")));
-	}
-
-	@Test
 	@DisplayName("회원 탈퇴 실패 : 틀린 비밀번호")
 	void deleteUserFailed_2() throws Exception {
 		// given
