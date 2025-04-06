@@ -77,6 +77,7 @@ public class NoticeService {
 		log.info("success to get notice");
 		return GetNoticeResponse.builder()
 			.author(notice.getAuthor().getNickname())
+			.authorImage(notice.getAuthor().getProfileImage())
 			.noticeId(notice.getId())
 			.title(notice.getTitle())
 			.content(notice.getContent())
