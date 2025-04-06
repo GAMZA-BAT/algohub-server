@@ -241,6 +241,7 @@ public class SolutionService {
 
 			sendNewSolutionNotification(studyGroup, member.get(), problem);
 		}
+		log.info("success to create solution user_id={}.", user.getId());
 	}
 
 	private void sendNewSolutionNotification(StudyGroup group, GroupMember solver, Problem problem) {

@@ -182,7 +182,7 @@ public class NotificationService {
 		if (!notification.getUser().getId().equals(user.getId()))
 			throw new NotificationValidationException(HttpStatus.FORBIDDEN.value(), "알림의 주인이 일치하지 않습니다.");
 		notification.updateIsRead();
-		log.info("success to read notification. notificationId : {}", notificationId);
+		log.info("success to read notification. notification_id = {}", notificationId);
 	}
 
 	@Transactional
@@ -193,7 +193,7 @@ public class NotificationService {
 		for (GroupMember member : receiver) {
 			NotificationSetting setting = notificationSettingRepository.findByMember(member)
 				.orElseThrow(() -> {
-					log.error("cannot find notification setting for member. userId : {}, groupId : {}",
+					log.error("cannot find notification setting for member. user_id = {}, group_id =g {}",
 						member.getUser().getId(), group.getId());
 					return new CannotFoundNotificationSettingException("해당 그룹에 가입 되지 않은 유저입니다.");
 				});

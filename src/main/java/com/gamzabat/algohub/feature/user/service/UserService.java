@@ -92,7 +92,7 @@ public class UserService {
 			.build());
 
 		saveProfileImage(profileImage, user);
-		log.info("success to register");
+		log.info("success to register user_id={}", user.getId());
 	}
 
 	private void saveProfileImage(MultipartFile profileImage, User user) {
@@ -113,7 +113,7 @@ public class UserService {
 			throw new UncorrectedPasswordException("비밀번호가 틀렸습니다.");
 		}
 		JwtDTO result = tokenProvider.generateTokens(authenticate);
-		log.info("success to sign in");
+		log.info("success to sign in identifier = {}", request.identifier());
 		return new TokenResponse(result.getAccessToken(), result.getRefreshToken());
 	}
 
@@ -144,7 +144,7 @@ public class UserService {
 		}
 
 		userRepository.save(user);
-		log.info("success to update user");
+		log.info("success to update user user_id={}", user.getId());
 	}
 
 	private void editUserProfileImage(User user, MultipartFile inputImage, Boolean isDefaultImage) {
@@ -179,6 +179,7 @@ public class UserService {
 			throw new UncorrectedPasswordException("비밀번호가 틀렸습니다.");
 		}
 		userRepository.delete(user);
+		log.info("success to delete user user_id={}", user.getId());
 	}
 
 	@Transactional
@@ -199,6 +200,7 @@ public class UserService {
 		user.editPassword(encodedPassword);
 
 		userRepository.save(user);
+		log.info("success to edit password user_id={}", user.getId());
 	}
 
 	@Transactional
@@ -229,6 +231,7 @@ public class UserService {
 	public void checkEmailDuplication(String email) {
 		if (userRepository.existsByEmail(email))
 			throw new UserValidationException("이미 사용 중인 이메일 입니다.");
+		log.info("success to validity email = {}", email);
 	}
 
 	@Transactional(readOnly = true)
@@ -243,7 +246,7 @@ public class UserService {
 		if (userRepository.existsByNickname(nickname))
 			throw new CheckNicknameValidationException(HttpStatus.CONFLICT.value(), "이미 사용 중인 닉네임입니다.");
 
-		log.info("success to check nickname validity");
+		log.info("success to check nickname validity nickname={}", nickname);
 	}
 
 	@Transactional(readOnly = true)
