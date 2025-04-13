@@ -193,7 +193,7 @@ public class NotificationService {
 		for (GroupMember member : receiver) {
 			NotificationSetting setting = notificationSettingRepository.findByMember(member)
 				.orElseThrow(() -> {
-					log.error("cannot find notification setting for member. user_id = {}, group_id =g {}",
+					log.error("cannot find notification setting for member. user_id = {}, group_id = {}",
 						member.getUser().getId(), group.getId());
 					return new CannotFoundNotificationSettingException("해당 그룹에 가입 되지 않은 유저입니다.");
 				});
