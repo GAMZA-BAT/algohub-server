@@ -2,90 +2,73 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>비밀번호 재설정</title>
-    <style type="text/css">
-        @import url('//fonts.googleapis.com/earlyaccess/notosanskr.css');
-
-        @font-face {
-            font-family: 'Pretendard-Regular';
-            src: url('https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
-            font-weight: 400;
-            font-style: normal;
-        }
-
-        body {
-            font-family: 'Noto Sans KR', 'Pretendard-Regular', sans-serif;
-
-        }
-    </style>
+    <title>Algohub</title>
 </head>
-<body style="background-color: #161C24;">
-
-<div style="display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 40px; padding: 10px; background-color: #161C24; min-height: 768px;">
-    <a href="https://algohub.kr">
-        <img src="https://storage.hwangdo.kr/algohub-static-asset/logo.svg" alt="logo"
-             style="width: 161px; height: 41px;">
-
-    </a>
-
-    <div style="
-            display: flex;
-            width: 610px;
-            padding: 80px 60px;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 40px;
-            border-radius: 10px;
-            background: #222734;
-            box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.25);">
-
-        <div style="
-                display: flex;
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 20px;
-                align-self: stretch;">
-
-            <div th:utext="${title}" style="
-                    color: #FFF;
-                    font-size: 24px;
-                    font-style: normal;
-                    font-weight: 600;
-                    line-height: 140%;
-                    letter-spacing: -0.36px;">
-                비밀번호 재설정
-            </div>
-
-            <div th:utext="${content}" style="
-                    font-family: 'Pretendard-Regular',sans-serif;
-                    color: #BCC0CD;
-                    font-size: 16px;
-                    font-style: normal;
-                    font-weight: 500;
-                    line-height: 155%;
-                    letter-spacing: -0.4px;">
-                버튼을 누르면 새로운 비밀번호 설정을 위한 페이지로 이동합니다. <br/>
-                3시간내 비밀번호를 재설정하지 않으면, 링크는 만료됩니다.
-            </div>
-        </div>
-
-        <a th:href="@{${url}}" class="button">
-            <div th:utext="${button}"
-                 style="
-                display: flex;
-                padding: 10px 24px;
-                justify-content: center;
-                align-items: center;
-                gap: 10px;
-                border-radius: 6px;
-                color: #FFF;
-                background: #6659FF;
-                cursor: pointer;">
-                비밀번호 재설정
-            </div>
-        </a>
-    </div>
-</div>
-
+<body style="margin:0; padding:0; background-color:#161C24;">
+<!-- 전체 배경 테이블 -->
+<table width="100%" border="0" cellspacing="0" cellpadding="0" bgcolor="#161C24"
+       style="font-family: 'Noto Sans KR', 'Pretendard-Regular', sans-serif;">
+    <tr>
+        <!-- min-height와 수직 중앙 정렬을 흉내내기 위해 높이와 패딩을 조정 -->
+        <td align="center" valign="top" style="padding:10px; min-height:768px;">
+            <!-- 로고 영역 -->
+            <table border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                    <td align="center">
+                        <a href="https://algohub.kr" style="display:block;">
+                            <img src="https://storage.hwangdo.kr/algohub-static-asset/logo.png" alt="logo" width="161"
+                                 height="41" style="display:block; border:0;">
+                        </a>
+                    </td>
+                </tr>
+                <!-- 로고와 컨텐츠 사이의 40px 간격 -->
+                <tr>
+                    <td style="height:40px; line-height:40px; font-size:0;">&nbsp;</td>
+                </tr>
+            </table>
+            <!-- 메인 컨텐츠 영역 -->
+            <table width="610" border="0" cellspacing="0" cellpadding="0"
+                   style="background:#222734; border-radius:10px; box-shadow:0 4px 4px 0 rgba(0,0,0,0.25);">
+                <tr>
+                    <td align="left" style="padding:80px 60px;">
+                        <!-- 제목과 내용 영역 -->
+                        <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                            <tr>
+                                <td style="padding-bottom:20px;">
+                                    <div th:utext="${title}"
+                                         style="color:#FFF; font-size:24px; font-weight:600; line-height:140%; letter-spacing:-0.36px;">
+                                        비밀번호 재설정
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding-bottom:40px;">
+                                    <div th:utext="${content}"
+                                         style="font-family:'Pretendard-Regular', sans-serif; color:#BCC0CD; font-size:16px; font-weight:500; line-height:155%; letter-spacing:-0.4px;">
+                                        버튼을 누르면 새로운 비밀번호 설정을 위한 페이지로 이동합니다. <br/>
+                                        3시간내 비밀번호를 재설정하지 않으면, 링크는 만료됩니다.
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                        <!-- 버튼 영역 -->
+                        <table border="0" cellspacing="0" cellpadding="0">
+                            <tr>
+                                <td align="center" bgcolor="#6659FF" style="border-radius:6px;">
+                                    <a th:href="@{${url}}"
+                                       style="display:inline-block; padding:10px 24px; text-decoration:none; font-size:16px; font-weight:600; color:#FFF;">
+                                        <span th:utext="${button}">비밀번호 재설정</span>
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+                        <!-- // 버튼 영역 끝 -->
+                    </td>
+                </tr>
+            </table>
+            <!-- // 메인 컨텐츠 영역 끝 -->
+        </td>
+    </tr>
+</table>
 </body>
 </html>
