@@ -26,7 +26,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 
-import com.gamzabat.algohub.common.DateFormatUtil;
 import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.exception.UserValidationException;
@@ -193,7 +192,7 @@ public class NoticeServiceTest {
 		assertThat(response.content()).isEqualTo("content");
 		assertThat(response.title()).isEqualTo("title");
 		assertThat(response.category()).isEqualTo("category");
-		assertThat(response.createdAt()).isEqualTo(DateFormatUtil.formatDateTimeForNotice(notice.getCreatedAt()));
+		assertThat(response.createdAt()).isEqualTo(notice.getCreatedAt());
 		assertThat(response.noticeId()).isEqualTo(1000L);
 	}
 
