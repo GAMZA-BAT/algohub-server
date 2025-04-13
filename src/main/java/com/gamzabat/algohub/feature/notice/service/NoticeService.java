@@ -8,7 +8,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.gamzabat.algohub.common.DateFormatUtil;
 import com.gamzabat.algohub.common.annotation.AuthedUser;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.exception.UserValidationException;
@@ -75,16 +74,7 @@ public class NoticeService {
 			throw new StudyGroupValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 스터디 그룹 입니다.");
 
 		log.info("success to get notice");
-		return GetNoticeResponse.builder()
-			.author(notice.getAuthor().getNickname())
-			.authorImage(notice.getAuthor().getProfileImage())
-			.noticeId(notice.getId())
-			.title(notice.getTitle())
-			.content(notice.getContent())
-			.category(notice.getCategory())
-			.createdAt(DateFormatUtil.formatDateTimeForNotice(notice.getCreatedAt()))
-			.isRead(true)
-			.build();
+		return GetNoticeResponse.toDTO(notice, true);
 	}
 
 	@Transactional
