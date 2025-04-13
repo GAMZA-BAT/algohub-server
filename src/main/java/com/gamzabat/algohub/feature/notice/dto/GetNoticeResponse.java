@@ -1,6 +1,7 @@
 package com.gamzabat.algohub.feature.notice.dto;
 
-import com.gamzabat.algohub.common.DateFormatUtil;
+import java.time.LocalDateTime;
+
 import com.gamzabat.algohub.feature.notice.domain.Notice;
 
 import lombok.Builder;
@@ -12,7 +13,7 @@ public record GetNoticeResponse(String author,
 								String content,
 								String title,
 								String category,
-								String createdAt,
+								LocalDateTime createdAt,
 								boolean isRead) {
 
 	public static GetNoticeResponse toDTO(Notice notice, boolean isRead) {
@@ -23,7 +24,7 @@ public record GetNoticeResponse(String author,
 			.title(notice.getTitle())
 			.content(notice.getContent())
 			.category(notice.getCategory())
-			.createdAt(DateFormatUtil.formatDateTimeForNotice(notice.getCreatedAt()))
+			.createdAt(notice.getCreatedAt())
 			.isRead(isRead)
 			.build();
 	}
