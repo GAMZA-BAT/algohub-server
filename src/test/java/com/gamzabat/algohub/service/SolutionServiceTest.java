@@ -487,7 +487,7 @@ class SolutionServiceTest {
 
 	@Test
 	@DisplayName("풀이 추가 성공")
-	void createSolution() {
+	void createSolution() throws NoSuchFieldException, IllegalAccessException {
 		// given
 		CreateSolutionRequest request = new CreateSolutionRequest(
 			"bjNickname",
@@ -508,6 +508,11 @@ class SolutionServiceTest {
 			.studyGroup(group)
 			.user(user2)
 			.build();
+
+		Field memberField = GroupMember.class.getDeclaredField("id");
+		memberField.setAccessible(true);
+		memberField.set(member1, 10L);
+		memberField.set(member2, 20L);
 
 		Problem problem = Problem.builder()
 			.number(300)
