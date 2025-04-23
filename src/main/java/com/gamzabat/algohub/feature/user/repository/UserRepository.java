@@ -1,5 +1,6 @@
 package com.gamzabat.algohub.feature.user.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,7 +21,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 		+ "AND u.deletedAt IS NULL")
 	Optional<User> findByEmail(String email);
 
-	Optional<User> findByBjNickname(String bjNickname);
+	List<User> findAllByBjNickname(String bjNickname);
 
 	boolean existsByNickname(String nickname);
 

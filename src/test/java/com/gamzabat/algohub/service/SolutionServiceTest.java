@@ -68,7 +68,7 @@ class SolutionServiceTest {
 	private SolutionCommentRepository solutionCommentRepository;
 	@Mock
 	private UserRepository userRepository;
-	private User user, user2;
+	private User user, user2, user3;
 	private Problem problem, problem1, problem2;
 	private StudyGroup group, group1;
 	private Long groupId = 30L;
@@ -82,6 +82,8 @@ class SolutionServiceTest {
 		user = User.builder().email("email1").password("password").nickname("nickname1").bjNickname("bjNickname1")
 			.role(Role.USER).profileImage("profileImage").build();
 		user2 = User.builder().email("email2").password("password").nickname("nickname2").bjNickname("bjNickname2")
+			.role(Role.USER).profileImage("profileImage").build();
+		user3 = User.builder().email("email3").password("password").nickname("nickname3").bjNickname("bjNickname2")
 			.role(Role.USER).profileImage("profileImage").build();
 		group = StudyGroup.builder().name("name").groupImage("imageUrl").groupCode("code").build();
 		group1 = StudyGroup.builder().name("name1").groupImage("imageUrl1").groupCode("code1").build();
@@ -114,6 +116,7 @@ class SolutionServiceTest {
 		userField.setAccessible(true);
 		userField.set(user, 1L);
 		userField.set(user2, 2L);
+		userField.set(user3, 3L);
 
 		Field problemField = Problem.class.getDeclaredField("id");
 		problemField.setAccessible(true);
@@ -490,7 +493,7 @@ class SolutionServiceTest {
 	void createSolution() {
 		// given
 		CreateSolutionRequest request = new CreateSolutionRequest(
-			"bjNickname",
+			"bjNickname2",
 			"code",
 			"Java",
 			"result",
@@ -508,6 +511,10 @@ class SolutionServiceTest {
 			.studyGroup(group)
 			.user(user2)
 			.build();
+		GroupMember member3 = GroupMember.builder()
+			.studyGroup(group)
+			.user(user3)
+			.build();
 
 		Problem problem = Problem.builder()
 			.number(300)
@@ -515,18 +522,27 @@ class SolutionServiceTest {
 			.endDate(LocalDate.now().plusDays(30))
 			.build();
 
-		List<GroupMember> members = List.of(member1, member2);
-		when(problemRepository.findAllByNumber(300)).thenReturn(List.of(problem));
-		when(userRepository.findByBjNickname("bjNickname")).thenReturn(Optional.of(user));
-		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.of(member1));
+		Solution solutionStub = mock(Solution.class);
+
+		List<GroupMember> members = List.of(member1, member2, member3);
+
+		List<User> sameBojNicknameUsers = List.of(user2, user3);
+		when(problemRepository.findValidProblemsByNumberAndUser(any(), any(LocalDate.class),
+			any(User.class))).thenReturn(List.of(problem));
+		when(userRepository.findAllByBjNickname("bjNickname2")).thenReturn(sameBojNicknameUsers);
+		when(solutionRepository.save(any())).thenReturn(solutionStub);
+		when(solutionStub.getId()).thenReturn(123L);
+		when(groupMemberRepository.findByUserAndStudyGroup(user2, group)).thenReturn(Optional.of(member2));
+		when(groupMemberRepository.findByUserAndStudyGroup(user3, group)).thenReturn(Optional.of(member3));
+
 		when(groupMemberRepository.findAllByStudyGroup(group)).thenReturn(members);
 
 		// when
 		solutionService.createSolution(request);
 
 		// then
-		verify(solutionRepository, times(1)).save(any(Solution.class));
-		verify(notificationService, times(1)).sendNotificationToMembers(any(), any(), any(), any(), any(), any());
+		verify(solutionRepository, times(2)).save(any(Solution.class));
+		verify(notificationService, times(2)).sendNotificationToMembers(any(), any(), any(), any(), any(), any());
 	}
 
 	@Test
