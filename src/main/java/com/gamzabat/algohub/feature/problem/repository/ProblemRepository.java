@@ -25,7 +25,9 @@ public interface ProblemRepository extends JpaRepository<Problem, Long>, CustomP
 		    SELECT p FROM Problem p
 			JOIN FETCH p.studyGroup
 		    WHERE p.number = :number
-		      AND p.endDate > :today
+		  	AND p.endDate > :today
+			AND p.deletedAt is null
+		  	AND p.studyGroup.deletedAt is null
 		      AND EXISTS (
 		        SELECT gm FROM GroupMember gm
 		        WHERE gm.user = :user
