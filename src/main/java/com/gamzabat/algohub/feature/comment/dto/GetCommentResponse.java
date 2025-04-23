@@ -1,6 +1,7 @@
 package com.gamzabat.algohub.feature.comment.dto;
 
-import com.gamzabat.algohub.common.DateFormatUtil;
+import java.time.LocalDateTime;
+
 import com.gamzabat.algohub.feature.comment.domain.Comment;
 
 import lombok.Builder;
@@ -10,7 +11,7 @@ public record GetCommentResponse(Long commentId,
 								 String writerNickname,
 								 String writerProfileImage,
 								 String content,
-								 String createdAt) {
+								 LocalDateTime createdAt) {
 
 	public static GetCommentResponse toDTO(Comment comment) {
 		return GetCommentResponse.builder()
@@ -18,7 +19,7 @@ public record GetCommentResponse(Long commentId,
 			.writerNickname(comment.getUser().getNickname())
 			.writerProfileImage(comment.getUser().getProfileImage())
 			.content(comment.getContent())
-			.createdAt(DateFormatUtil.formatDateTime(comment.getCreatedAt()))
+			.createdAt(comment.getCreatedAt())
 			.build();
 	}
 }
