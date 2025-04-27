@@ -520,6 +520,7 @@ class SolutionServiceTest {
 		memberField.setAccessible(true);
 		memberField.set(member1, 10L);
 		memberField.set(member2, 20L);
+		memberField.set(member3, 30L);
 
 		Problem problem = Problem.builder()
 			.number(300)
