@@ -5,10 +5,8 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Field;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -208,9 +206,7 @@ class RankingServiceTest {
 		LocalDate problemEndDate = LocalDate.now().plusDays(10);
 		LocalDateTime solvedDateTime = LocalDateTime.now();
 
-		LocalDateTime endDateTime = problemEndDate.atTime(LocalTime.MAX);
-		Duration duration = Duration.between(solvedDateTime, endDateTime);
-		double score = duration.getSeconds() * SCORE_SCALING_FACTOR;
+		double score = solvedDateTime.atZone(java.time.ZoneId.of("Asia/Seoul")).toEpochSecond() * SCORE_SCALING_FACTOR;
 
 		when(rankingRepository.findByMember(groupMember2)).thenReturn(Optional.ofNullable(ranking2));
 

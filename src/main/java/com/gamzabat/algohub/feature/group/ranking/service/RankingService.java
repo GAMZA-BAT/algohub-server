@@ -2,7 +2,6 @@ package com.gamzabat.algohub.feature.group.ranking.service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -61,6 +60,6 @@ public class RankingService {
 	}
 
 	private double calculateNewScore(LocalDateTime solvedDateTime) {
-		return solvedDateTime.toEpochSecond(ZoneOffset.of("Asia/Seoul")) * SCORE_SCALING_FACTOR;
+		return solvedDateTime.atZone(java.time.ZoneId.of("Asia/Seoul")).toEpochSecond() * SCORE_SCALING_FACTOR;
 	}
 }
