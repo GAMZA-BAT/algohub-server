@@ -2,9 +2,7 @@ package com.gamzabat.algohub.feature.solution.service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -194,54 +192,56 @@ public class SolutionService {
 	@Transactional
 	public void createSolution(CreateSolutionRequest request) {
 
-		List<Problem> problems = problemRepository.findAllByNumber(request.problemNumber());
-		if (problems.isEmpty()) {
-			throw new ProblemValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 문제 입니다.");
+		List<User> users = userRepository.findAllByBjNickname(request.userName());
+		if (users.isEmpty()) {
+			log.warn("user {} not found for create solution", request.userName());
+			throw new UserValidationException("해당 아이디로 등록된 백준 유저는 없습니다.");
 		}
 
-		User user = userRepository.findByBjNickname(request.userName())
-			.orElseThrow(() -> new UserValidationException("존재하지 않는 유저 입니다."));
+		final LocalDateTime now = LocalDateTime.now();
 
-		Iterator<Problem> iterator = problems.iterator();
-		while (iterator.hasNext()) {
-			Problem problem = iterator.next();
-			StudyGroup studyGroup = problem.getStudyGroup(); // problem에 딸린 그룹 고유id 로 studyGroup 가져오기
-			Optional<GroupMember> member = groupMemberRepository.findByUserAndStudyGroup(user, studyGroup);
-			LocalDate endDate = problem.getEndDate();
-			LocalDate now = LocalDate.now();
-			LocalDateTime solvedDateTime = LocalDateTime.now();
-			boolean isFirstCorrectSolution = true;
+		for (User user : users) {
+			List<Problem> problems = problemRepository.findValidProblemsByNumberAndUser(
+				request.problemNumber(), LocalDate.from(now), user);
 
-			if (member.isEmpty() || endDate == null || now.isAfter(endDate)) {
-				iterator.remove();
-				continue;
+			if (problems.isEmpty()) {
+				log.warn("problem {} not found for create solution, user : {}", request.problemNumber(), user.getId());
 			}
 
-			if (!isCorrect(request.result()) || solutionRepository.existsByUserAndProblemAndResult(user, problem,
-				BOJResultConstants.CORRECT))
-				isFirstCorrectSolution = false;
+			for (Problem problem : problems) {
+				final boolean isFirstCorrect =
+					isCorrect(request.result()) && !solutionRepository.existsByUserAndProblemAndResult(user, problem,
+						BOJResultConstants.CORRECT);
 
-			solutionRepository.save(Solution.builder()
-				.problem(problem)
-				.user(user)
-				.content(request.code())
-				.memoryUsage(request.memoryUsage())
-				.executionTime(request.executionTime())
-				.language(request.codeType())
-				.codeLength(request.codeLength())
-				.result(request.result())
-				.solvedDateTime(solvedDateTime)
-				.build()
-			);
+				Long solutionId = solutionRepository.save(Solution.builder()
+					.problem(problem)
+					.user(user)
+					.content(request.code())
+					.memoryUsage(request.memoryUsage())
+					.executionTime(request.executionTime())
+					.language(request.codeType())
+					.codeLength(request.codeLength())
+					.result(request.result())
+					.solvedDateTime(now)
+					.build()
+				).getId();
 
-			if (isFirstCorrectSolution) {
-				rankingService.updateScore(member.get(), problem.getEndDate(), solvedDateTime);
-				rankingUpdateService.updateRanking(studyGroup);
+				GroupMember groupMember = groupMemberRepository.findByUserAndStudyGroup(user, problem.getStudyGroup())
+					.orElseThrow(() -> new IllegalStateException("Logic Error"));
+
+				if (isFirstCorrect) {
+					rankingService.updateScore(groupMember, problem.getEndDate(), now);
+					rankingUpdateService.updateRanking(problem.getStudyGroup());
+				}
+
+				sendNewSolutionNotification(problem.getStudyGroup(), groupMember, problem);
+
+				log.info("success to create solution for user: {}, solutionId: {}", user.getId(), solutionId);
+
 			}
 
-			sendNewSolutionNotification(studyGroup, member.get(), problem);
 		}
-		log.info("success to create solution user_id={}.", user.getId());
+
 	}
 
 	private void sendNewSolutionNotification(StudyGroup group, GroupMember solver, Problem problem) {
