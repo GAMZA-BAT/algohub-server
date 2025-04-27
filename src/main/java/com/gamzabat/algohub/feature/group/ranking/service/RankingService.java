@@ -32,7 +32,7 @@ public class RankingService {
 	private final StudyGroupRepository groupRepository;
 	private final GroupMemberRepository groupMemberRepository;
 
-	public static final double SCORE_SCALING_FACTOR = 1e-4;
+	public static final double SCORE_SCALING_FACTOR = 1e-6;
 
 	@Transactional(readOnly = true)
 	public Page<GetRankingResponse> getAllRank(User user, Long groupId, Pageable pageable) {
