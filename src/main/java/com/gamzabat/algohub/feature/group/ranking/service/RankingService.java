@@ -1,9 +1,8 @@
 package com.gamzabat.algohub.feature.group.ranking.service;
 
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.ZoneOffset;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -57,13 +56,11 @@ public class RankingService {
 			.orElseThrow(() -> new CannotFoundRankingException("유저의 랭킹 정보를 조회할 수 없습니다."));
 
 		ranking.increaseSolvedCount();
-		ranking.increaseScore(calculateNewScore(problemEndDate, solvedDateTime));
+		ranking.increaseScore(calculateNewScore(solvedDateTime));
 		log.info("success to update ranking score");
 	}
 
-	private double calculateNewScore(LocalDate problemEndDate, LocalDateTime solvedDateTime) {
-		LocalDateTime endDateTime = problemEndDate.atTime(LocalTime.MAX);
-		Duration duration = Duration.between(solvedDateTime, endDateTime);
-		return duration.getSeconds() * SCORE_SCALING_FACTOR;
+	private double calculateNewScore(LocalDateTime solvedDateTime) {
+		return solvedDateTime.toEpochSecond(ZoneOffset.of("Asia/Seoul")) * SCORE_SCALING_FACTOR;
 	}
 }

@@ -189,7 +189,7 @@ class NoticeCommentServiceTest {
 		// then
 		assertThat(result.size()).isEqualTo(30);
 		for (int i = 0; i < 30; i++)
-			assertThat(result.get(i).content()).isEqualTo("content" + i);
+			assertThat(result.get(i).content()).isEqualTo("content" + (30 - i - 1));
 	}
 
 	@Test
