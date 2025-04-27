@@ -245,9 +245,13 @@ public class SolutionService {
 	}
 
 	private void sendNewSolutionNotification(StudyGroup group, GroupMember solver, Problem problem) {
+		List<GroupMember> groupMembers = groupMemberRepository.findAllByStudyGroup(group).stream()
+			.filter(member -> !member.getId().equals(solver.getId()))
+			.toList();
+
 		notificationService.sendNotificationToMembers(
 			group,
-			groupMemberRepository.findAllByStudyGroup(group),
+			groupMembers,
 			problem,
 			null,
 			NotificationCategory.NEW_SOLUTION_POSTED,

@@ -56,7 +56,9 @@ public class SolutionCommentService implements CommentService<CreateSolutionComm
 			.isRead(false)
 			.build());
 
-		sendCommentNotification(user, solution);
+		if (!solution.getUser().getId().equals(user.getId())) {
+			sendCommentNotification(user, solution);
+		}
 		log.info("success to create solution comment. comment_id = {}, solution_id = {}", comment.getId(),
 			solution.getId());
 	}

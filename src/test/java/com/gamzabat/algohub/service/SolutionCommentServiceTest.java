@@ -114,7 +114,7 @@ class SolutionCommentServiceTest {
 	}
 
 	@Test
-	@DisplayName("댓글 작성 성공")
+	@DisplayName("타 유저 풀이에 댓글 작성 성공")
 	void createComment_1() {
 		// given
 		CreateSolutionCommentRequest request = CreateSolutionCommentRequest.builder()
@@ -141,6 +141,30 @@ class SolutionCommentServiceTest {
 		assertThat(result.getUser()).isEqualTo(user2);
 		assertThat(result.getSolution()).isEqualTo(solution);
 		verify(notificationService, times(1)).sendNotificationToMembers(any(), any(), any(), any(), any(), any());
+	}
+
+	@Test
+	@DisplayName("내 풀이에 댓글 작성 성공")
+	void createComment_2() {
+		// given
+		CreateSolutionCommentRequest request = CreateSolutionCommentRequest.builder()
+			.content("content")
+			.build();
+
+		when(solutionRepository.findById(10L)).thenReturn(Optional.ofNullable(solution));
+		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
+		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(studyGroup));
+		when(groupMemberRepository.existsByUserAndStudyGroup(user, studyGroup)).thenReturn(true);
+		when(commentRepository.save(any(SolutionComment.class))).thenReturn(comment);
+		// when
+		commentService.createComment(user, 10L, request);
+		// then
+		verify(commentRepository, times(1)).save(commentCaptor.capture());
+		SolutionComment result = commentCaptor.getValue();
+		assertThat(result.getContent()).isEqualTo("content");
+		assertThat(result.getUser()).isEqualTo(user);
+		assertThat(result.getSolution()).isEqualTo(solution);
+		verify(notificationService, times(0)).sendNotificationToMembers(any(), any(), any(), any(), any(), any());
 	}
 
 	@Test
