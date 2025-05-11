@@ -1,11 +1,13 @@
 package com.gamzabat.algohub.service;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +42,7 @@ import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.solution.domain.Solution;
 import com.gamzabat.algohub.feature.solution.domain.SolutionComment;
 import com.gamzabat.algohub.feature.solution.dto.CreateSolutionRequest;
+import com.gamzabat.algohub.feature.solution.dto.GetCurrentSolvingStatusResponse;
 import com.gamzabat.algohub.feature.solution.dto.GetSolutionResponse;
 import com.gamzabat.algohub.feature.solution.dto.GetSolutionWithGroupIdResponse;
 import com.gamzabat.algohub.feature.solution.enums.ProgressCategory;
@@ -765,5 +768,60 @@ class SolutionServiceTest {
 			assertThat(responses.getContent().get(i).getGroupId()).isEqualTo(
 				problem2.getStudyGroup().getId());
 		}
+	}
+
+	@Test
+	@DisplayName("풀이 현황 테이블 조회 테스트")
+	void getCurrentSolvingStatusesTest() {
+		// given
+		GroupMember member1 = GroupMember.builder().user(user).studyGroup(group).build();
+		GroupMember member2 = GroupMember.builder().user(user2).studyGroup(group).build();
+		List<GroupMember> members = List.of(member1, member2);
+
+		List<Problem> problems = new ArrayList<>();
+		for (int i = 0; i < 5; i++) {
+			Problem problem = Problem.builder()
+				.title("title" + i)
+				.studyGroup(group)
+				.startDate(LocalDate.now())
+				.build();
+			problems.add(problem);
+
+			Solution solution = Solution.builder()
+				.problem(problem)
+				.user(user)
+				.codeLength(i)
+				.result("맞았습니다!!")
+				.language("Java 11")
+				.solvedDateTime(LocalDateTime.of(
+					LocalDate.now(),
+					LocalTime.of(10, 10)
+				))
+				.build();
+			when(solutionRepository.findAllByUserAndProblem(user, problem)).thenReturn(List.of(solution));
+		}
+
+		when(studyGroupRepository.findById(group.getId())).thenReturn(Optional.of(group));
+		when(groupMemberRepository.existsByUserAndStudyGroup(user, group)).thenReturn(true);
+		when(problemRepository.findAllInProgressProblem(group)).thenReturn(problems);
+		when(groupMemberRepository.findAllByStudyGroup(group)).thenReturn(members);
+		// when(solutionRepository.findAllByUserAndProblem(user, problem1)).thenReturn(solutions);
+		// when(solutionRepository.findAllByUserAndProblem(user, problem2)).thenReturn(Collections.emptyList());
+
+		// when
+		List<GetCurrentSolvingStatusResponse> responses = solutionService.getCurrentSolvingStatuses(user,
+			group.getId());
+
+		// then
+		assertAll(() -> {
+			assertThat(responses).hasSize(2);
+			GetCurrentSolvingStatusResponse response = responses.getFirst();
+			assertThat(response.rank()).isEqualTo(1);
+			assertThat(response.nickname()).isEqualTo("nickname1");
+			assertThat(response.totalSubmissionCount()).isEqualTo(5);
+			assertThat(response.totalPassedTime()).isEqualTo("50:50"); // 문제 시작일 ~ 맞은 시간 차이
+			assertThat(response.problems()).hasSize(5);
+			assertThat(response.problems().getFirst().solved()).isTrue();
+		});
 	}
 }

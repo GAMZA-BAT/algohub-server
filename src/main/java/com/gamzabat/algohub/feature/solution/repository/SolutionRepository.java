@@ -1,5 +1,6 @@
 package com.gamzabat.algohub.feature.solution.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -59,4 +60,11 @@ public interface SolutionRepository extends JpaRepository<Solution, Long>, Custo
 		+ "FROM Problem p "
 		+ "WHERE p.studyGroup = :studyGroup)")
 	void deleteAllByStudyGroupAndUser(StudyGroup studyGroup, User user);
+
+	@Query("SELECT s "
+		+ "FROM Solution s "
+		+ "WHERE s.deletedAt IS NULL "
+		+ "AND s.user = :user "
+		+ "AND s.problem = :problem")
+	List<Solution> findAllByUserAndProblem(User user, Problem problem);
 }

@@ -1,8 +1,14 @@
 package com.gamzabat.algohub.feature.solution.service;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -29,8 +35,10 @@ import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.solution.domain.Solution;
 import com.gamzabat.algohub.feature.solution.domain.SolutionComment;
 import com.gamzabat.algohub.feature.solution.dto.CreateSolutionRequest;
+import com.gamzabat.algohub.feature.solution.dto.GetCurrentSolvingStatusResponse;
 import com.gamzabat.algohub.feature.solution.dto.GetSolutionResponse;
 import com.gamzabat.algohub.feature.solution.dto.GetSolutionWithGroupIdResponse;
+import com.gamzabat.algohub.feature.solution.dto.GetSolvingStatusPerProblemResponse;
 import com.gamzabat.algohub.feature.solution.enums.ProgressCategory;
 import com.gamzabat.algohub.feature.solution.exception.CannotFoundSolutionException;
 import com.gamzabat.algohub.feature.solution.repository.SolutionCommentRepository;
@@ -94,11 +102,7 @@ public class SolutionService {
 	public Page<GetSolutionResponse> getMySolutionsInGroupInProgress(User user, Long groupId, Integer problemNumber,
 		String language,
 		String result, Pageable pageable) {
-		StudyGroup group = studyGroupRepository.findById(groupId)
-			.orElseThrow(() -> new CannotFoundGroupException("존재하지 않는 그룹입니다."));
-		if (!groupMemberRepository.existsByUserAndStudyGroup(user, group)) {
-			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹입니다.");
-		}
+		StudyGroup group = validateGroupAndMember(user, groupId);
 
 		Page<GetSolutionResponse> inProgressSolutions = solutionRepository.findAllFilteredMySolutionsInGroup(user,
 				group, problemNumber, language, result, ProgressCategory.IN_PROGRESS, pageable)
@@ -112,11 +116,7 @@ public class SolutionService {
 	public Page<GetSolutionResponse> getMySolutionsInGroupExpired(User user, Long groupId, Integer problemNumber,
 		String language,
 		String result, Pageable pageable) {
-		StudyGroup group = studyGroupRepository.findById(groupId)
-			.orElseThrow(() -> new CannotFoundGroupException("존재하지 않는 그룹입니다."));
-		if (!groupMemberRepository.existsByUserAndStudyGroup(user, group)) {
-			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹입니다.");
-		}
+		StudyGroup group = validateGroupAndMember(user, groupId);
 
 		Page<GetSolutionResponse> expiredSolutions = solutionRepository.findAllFilteredMySolutionsInGroup(user, group,
 				problemNumber, language, result, ProgressCategory.EXPIRED, pageable)
@@ -151,6 +151,120 @@ public class SolutionService {
 			.map(solution -> this.getGetSolutionWithGroupIdResponse(user, solution));
 		log.info("success to get my expired solutions.");
 		return expiredSolutions;
+	}
+
+	@Transactional(readOnly = true)
+	public List<GetCurrentSolvingStatusResponse> getCurrentSolvingStatuses(User user, Long groupId) {
+		StudyGroup group = validateGroupAndMember(user, groupId);
+
+		List<Problem> inProgressProblems = problemRepository.findAllInProgressProblem(group);
+		List<GroupMember> members = groupMemberRepository.findAllByStudyGroup(group);
+
+		Map<GroupMember, SolvedStatusResult> solvedStatuses = calculateMemberStatusRanks(members, inProgressProblems);
+
+		return createSolvingStatusResponses(solvedStatuses);
+	}
+
+	private Map<GroupMember, SolvedStatusResult> calculateMemberStatusRanks(List<GroupMember> members,
+		List<Problem> inProgressProblems) {
+		Map<GroupMember, SolvedStatusResult> ranks = new LinkedHashMap<>();
+
+		for (GroupMember member : members) {
+			int totalSubmissionCount = 0;
+			Duration totalPassedTime = Duration.ZERO;
+			List<GetSolvingStatusPerProblemResponse> statusResponses = new ArrayList<>();
+
+			for (Problem problem : inProgressProblems) {
+				List<Solution> solutions = solutionRepository.findAllByUserAndProblem(member.getUser(), problem);
+				int submissionCount = solutions.size();
+				Long firstCorrectSolutionId = null;
+				String firstCorrectDuration = "--";
+				boolean solved = false;
+
+				Optional<Solution> firstCorrectSolution = solutions.stream()
+					.filter(solution -> isCorrect(solution.getResult()))
+					.min(Comparator.comparing(Solution::getSolvedDateTime));
+
+				if (firstCorrectSolution.isPresent()) {
+					Solution solution = firstCorrectSolution.get();
+
+					firstCorrectSolutionId = solution.getId();
+
+					Duration duration = calculateGap(problem, solution);
+					totalPassedTime = totalPassedTime.plus(duration);
+					firstCorrectDuration = convertToSolvedTimeFormat(duration);
+					solved = true;
+				}
+				totalSubmissionCount += submissionCount;
+
+				statusResponses.add(new GetSolvingStatusPerProblemResponse(
+					problem.getId(), firstCorrectSolutionId,
+					submissionCount, firstCorrectDuration, solved
+				));
+			}
+
+			float totalScore = calculateTotalScore(totalSubmissionCount, totalPassedTime);
+			String formattedPassedTime = convertToSolvedTimeFormat(totalPassedTime);
+			ranks.put(member,
+				new SolvedStatusResult(totalScore, totalSubmissionCount, formattedPassedTime, statusResponses));
+		}
+		return ranks;
+	}
+
+	private Duration calculateGap(Problem problem, Solution solution) {
+		LocalDateTime startDate = problem.getStartDate().atStartOfDay();
+		LocalDateTime solvedDateTime = solution.getSolvedDateTime();
+		return Duration.between(startDate, solvedDateTime);
+	}
+
+	private float calculateTotalScore(int totalSubmissionCount, Duration totalPassedTime) {
+		float totalScore = 0;
+		if (!(totalSubmissionCount == 0 || totalPassedTime.isZero())) {
+			long minutes = totalPassedTime.toMinutes();
+			totalScore = (float)1 / (totalSubmissionCount * minutes);
+		}
+		return totalScore;
+	}
+
+	private List<GetCurrentSolvingStatusResponse> createSolvingStatusResponses(
+		Map<GroupMember, SolvedStatusResult> ranks) {
+		List<GroupMember> memberOrders = ranks.keySet().stream()
+			.sorted((m1, m2) -> Float.compare(ranks.get(m2).totalScore, ranks.get(m1).totalScore))
+			.toList();
+
+		List<GetCurrentSolvingStatusResponse> responses = new ArrayList<>();
+		for (int i = 0; i < memberOrders.size(); i++) {
+			GroupMember member = memberOrders.get(i);
+			responses.add(new GetCurrentSolvingStatusResponse(
+				i + 1, member.getUser().getNickname(),
+				ranks.get(member).totalSubmissionCount,
+				ranks.get(member).totalPassedTime,
+				ranks.get(member).problems
+			));
+		}
+		return responses;
+	}
+
+	private void sendNewSolutionNotification(StudyGroup group, GroupMember solver, Problem problem) {
+		List<GroupMember> groupMembers = groupMemberRepository.findAllByStudyGroup(group).stream()
+			.filter(member -> !member.getId().equals(solver.getId()))
+			.toList();
+
+		notificationService.sendNotificationToMembers(
+			group,
+			groupMembers,
+			problem,
+			null,
+			NotificationCategory.NEW_SOLUTION_POSTED,
+			NotificationCategory.NEW_SOLUTION_POSTED.getMessage(solver.getUser().getNickname())
+		);
+	}
+
+	private String convertToSolvedTimeFormat(Duration duration) {
+		long totalMinutes = duration.toMinutes();
+		long hours = totalMinutes / 60;
+		long minutes = totalMinutes % 60;
+		return String.format("%d:%02d", hours, minutes);
 	}
 
 	private GetSolutionWithGroupIdResponse getGetSolutionWithGroupIdResponse(User user, Solution solution) {
@@ -244,19 +358,13 @@ public class SolutionService {
 
 	}
 
-	private void sendNewSolutionNotification(StudyGroup group, GroupMember solver, Problem problem) {
-		List<GroupMember> groupMembers = groupMemberRepository.findAllByStudyGroup(group).stream()
-			.filter(member -> !member.getId().equals(solver.getId()))
-			.toList();
-
-		notificationService.sendNotificationToMembers(
-			group,
-			groupMembers,
-			problem,
-			null,
-			NotificationCategory.NEW_SOLUTION_POSTED,
-			NotificationCategory.NEW_SOLUTION_POSTED.getMessage(solver.getUser().getNickname())
-		);
+	private StudyGroup validateGroupAndMember(User user, Long groupId) {
+		StudyGroup group = studyGroupRepository.findById(groupId)
+			.orElseThrow(() -> new CannotFoundGroupException("존재하지 않는 그룹입니다."));
+		if (!groupMemberRepository.existsByUserAndStudyGroup(user, group)) {
+			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹입니다.");
+		}
+		return group;
 	}
 
 	private boolean isCorrect(String result) {
@@ -290,5 +398,11 @@ public class SolutionService {
 		}
 
 		return true;
+	}
+
+	private record SolvedStatusResult(float totalScore,
+									  int totalSubmissionCount,
+									  String totalPassedTime,
+									  List<GetSolvingStatusPerProblemResponse> problems) {
 	}
 }

@@ -4,6 +4,7 @@ import static com.gamzabat.algohub.feature.problem.domain.QProblem.*;
 import static com.gamzabat.algohub.feature.solution.domain.QSolution.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -39,6 +40,16 @@ public class CustomProblemRepositoryImpl implements CustomProblemRepository {
 		}
 
 		return findAllProblemByCondition(condition, pageable);
+	}
+
+	@Override
+	public List<Problem> findAllInProgressProblem(StudyGroup group) {
+		JPAQuery<Problem> query = queryFactory.selectFrom(problem)
+			.where(problem.studyGroup.eq(group)
+				.and(problem.deletedAt.isNull())
+				.and(problem.startDate.loe(LocalDate.now()))
+				.and(problem.endDate.goe(LocalDate.now())));
+		return query.fetch();
 	}
 
 	@Override

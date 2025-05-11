@@ -1,5 +1,7 @@
 package com.gamzabat.algohub.feature.problem.repository.querydsl;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -9,6 +11,8 @@ import com.gamzabat.algohub.feature.user.domain.User;
 
 public interface CustomProblemRepository {
 	Page<Problem> findAllInProgressProblem(User user, StudyGroup group, Boolean unsolvedOnly, Pageable pageable);
+
+	List<Problem> findAllInProgressProblem(StudyGroup group);
 
 	Page<Problem> findAllExpiredProblem(StudyGroup group, Pageable pageable);
 

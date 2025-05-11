@@ -1,5 +1,7 @@
 package com.gamzabat.algohub.feature.solution.controller;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.gamzabat.algohub.common.annotation.AuthedUser;
 import com.gamzabat.algohub.exception.RequestException;
 import com.gamzabat.algohub.feature.solution.dto.CreateSolutionRequest;
+import com.gamzabat.algohub.feature.solution.dto.GetCurrentSolvingStatusResponse;
 import com.gamzabat.algohub.feature.solution.dto.GetSolutionResponse;
 import com.gamzabat.algohub.feature.solution.dto.GetSolutionWithGroupIdResponse;
 import com.gamzabat.algohub.feature.solution.service.SolutionService;
@@ -121,6 +124,14 @@ public class SolutionController {
 		Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 		Page<GetSolutionWithGroupIdResponse> response = solutionService.getMySolutionsExpired(user,
 			problemNumber, language, result, pageable);
+		return ResponseEntity.ok().body(response);
+	}
+
+	@GetMapping("/groups/{groupId}/solutions/current-status")
+	@Operation(summary = "풀이 현황 테이블 조회 API", description = "진행 중인 문제들에 대해 풀이 현황 테이블을 조회하는 API")
+	public ResponseEntity<List<GetCurrentSolvingStatusResponse>> getCurrentSolvingStatus(@AuthedUser User user,
+		@PathVariable Long groupId) {
+		List<GetCurrentSolvingStatusResponse> response = solutionService.getCurrentSolvingStatuses(user, groupId);
 		return ResponseEntity.ok().body(response);
 	}
 }
