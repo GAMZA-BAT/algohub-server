@@ -53,7 +53,8 @@ public class CustomRankingRepositoryImpl implements CustomRankingRepository {
 			.from(ranking)
 			.join(ranking.member, groupMember)
 			.join(groupMember.user, user)
-			.where(ranking.member.studyGroup.eq(studyGroup));
+			.where(ranking.member.studyGroup.eq(studyGroup)
+				.and(ranking.solvedCount.gt(0)));
 	}
 
 	@Override
