@@ -29,6 +29,7 @@ import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValida
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.notification.enums.NotificationCategory;
+import com.gamzabat.algohub.feature.notification.repository.NotificationRepository;
 import com.gamzabat.algohub.feature.notification.service.NotificationService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.dto.CreateProblemRequest;
@@ -53,6 +54,7 @@ public class ProblemService {
 	private final GroupMemberRepository groupMemberRepository;
 	private final NotificationService notificationService;
 	private final RestTemplate restTemplate;
+	private final NotificationRepository notificationRepository;
 
 	@Transactional
 	public void createProblem(User user, Long groupId, CreateProblemRequest request) {
@@ -212,6 +214,7 @@ public class ProblemService {
 
 		solutionRepository.deleteAllByProblem(problem);
 		problemRepository.delete(problem);
+		notificationRepository.deleteAllByProblem(problem);
 		log.info("success to delete problem user_id={} , problem_id = {}", user.getId(), problemId);
 	}
 
