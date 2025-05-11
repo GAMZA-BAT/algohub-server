@@ -126,11 +126,6 @@ public class ProblemService {
 			throw new ProblemValidationException(HttpStatus.FORBIDDEN.value(),
 				"문제 수정이 불가합니다. : 이미 종료된 문제입니다.");
 		}
-		if (problem.getStartDate().isBefore(LocalDate.now()) || problem.getStartDate().equals(LocalDate.now())) {
-			throw new ProblemValidationException(HttpStatus.FORBIDDEN.value(),
-				"문제 수정이 불가합니다. : 이미 진행 중인 문제입니다.");
-		}
-
 	}
 
 	private void checkProblemEndDate(EditProblemRequest request, Problem problem) {

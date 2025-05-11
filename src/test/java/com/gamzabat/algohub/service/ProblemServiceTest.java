@@ -359,30 +359,6 @@ class ProblemServiceTest {
 	}
 
 	@Test
-	@DisplayName("문제 정보 수정 실패 : 이미 진행 중인 문제인데 시작날짜 수정을 요청하는 경우")
-	void editProblemFailed_5() {
-		// given
-		Problem problem = Problem.builder()
-			.studyGroup(group)
-			.link("link")
-			.startDate(LocalDate.now().minusDays(1))
-			.endDate(LocalDate.now().plusDays(10))
-			.build();
-		EditProblemRequest request = EditProblemRequest.builder()
-			.startDate(LocalDate.now().plusDays(1))
-			.endDate(LocalDate.now().plusDays(7))
-			.build();
-		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
-		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
-		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
-		// when, then
-		assertThatThrownBy(() -> problemService.editProblem(user, 20L, request))
-			.isInstanceOf(ProblemValidationException.class)
-			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
-			.hasFieldOrPropertyWithValue("error", "문제 수정이 불가합니다. : 이미 진행 중인 문제입니다.");
-	}
-
-	@Test
 	@DisplayName("문제 정보 수정 실패 : 문제 시작 날짜를 오늘 이전의 날짜로 요청한 경우")
 	void editProblemFailed_6() {
 		// given
