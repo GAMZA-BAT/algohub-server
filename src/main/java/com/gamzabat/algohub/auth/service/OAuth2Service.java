@@ -28,6 +28,7 @@ import com.gamzabat.algohub.auth.dto.OAuthAccessTokenDto;
 import com.gamzabat.algohub.auth.exception.GithubApiException;
 import com.gamzabat.algohub.common.jwt.TokenProvider;
 import com.gamzabat.algohub.common.jwt.dto.JwtDTO;
+import com.gamzabat.algohub.common.logging.DiscordWebhookService;
 import com.gamzabat.algohub.constants.ApiConstants;
 import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.feature.user.domain.User;
@@ -48,6 +49,7 @@ public class OAuth2Service {
 	private String secretKey;
 	private final RestTemplate restTemplate;
 	private final UserRepository userRepository;
+	private final DiscordWebhookService webhookService;
 
 	@Transactional
 	public TokenResponse githubSignIn(String code) {
@@ -79,6 +81,8 @@ public class OAuth2Service {
 			.build());
 		newUser.editNickname(createTemporaryNickname(githubUser.getLogin(), newUser.getId()));
 		newUser.editGithubName(githubUser.getLogin());
+
+		webhookService.sendRegisterMessage(newUser.getNickname(), "Github", newUser.getId());
 	}
 
 	private String createTemporaryNickname(String login, Long id) {

@@ -27,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.gamzabat.algohub.common.jwt.TokenProvider;
 import com.gamzabat.algohub.common.jwt.dto.JwtDTO;
 import com.gamzabat.algohub.common.jwt.dto.ReissueTokenRequest;
+import com.gamzabat.algohub.common.logging.DiscordWebhookService;
 import com.gamzabat.algohub.common.redis.RedisService;
 import com.gamzabat.algohub.enums.EmailType;
 import com.gamzabat.algohub.enums.ImageType;
@@ -74,6 +75,7 @@ public class UserService {
 	private final RestTemplate restTemplate;
 	private final ResetPasswordRepository resetPasswordRepository;
 	private final EmailService emailService;
+	private final DiscordWebhookService webhookService;
 
 	@Transactional
 	public void register(RegisterRequest request, MultipartFile profileImage, String token) {
@@ -94,6 +96,8 @@ public class UserService {
 
 		saveProfileImage(profileImage, user);
 		log.info("success to register user_id={}", user.getId());
+
+		webhookService.sendRegisterMessage(user.getNickname(), "SignUp", user.getId());
 	}
 
 	private void saveProfileImage(MultipartFile profileImage, User user) {

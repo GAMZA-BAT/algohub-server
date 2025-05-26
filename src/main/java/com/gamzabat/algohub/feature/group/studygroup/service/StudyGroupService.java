@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
+import com.gamzabat.algohub.common.logging.DiscordWebhookService;
 import com.gamzabat.algohub.constants.BOJResultConstants;
 import com.gamzabat.algohub.enums.ImageType;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
@@ -88,6 +89,7 @@ public class StudyGroupService {
 	private final ObjectProvider<StudyGroupService> studyGroupServiceProvider;
 	private final NotificationSettingRepository notificationSettingRepository;
 	private final NotificationService notificationService;
+	private final DiscordWebhookService webhookService;
 
 	@Transactional
 	public GroupCodeResponse createGroup(User user, CreateGroupRequest request, MultipartFile profileImage) {
@@ -122,6 +124,8 @@ public class StudyGroupService {
 
 		saveGroupImage(profileImage, group);
 		log.info("success to save study group user_id={}", user.getId());
+
+		webhookService.sendCreateGroupMessage(user.getNickname(), group.getName());
 		return new GroupCodeResponse(inviteCode);
 	}
 
