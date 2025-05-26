@@ -37,6 +37,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.gamzabat.algohub.common.jwt.TokenProvider;
 import com.gamzabat.algohub.common.jwt.dto.JwtDTO;
+import com.gamzabat.algohub.common.logging.DiscordWebhookService;
 import com.gamzabat.algohub.common.redis.RedisService;
 import com.gamzabat.algohub.enums.EmailType;
 import com.gamzabat.algohub.enums.ImageType;
@@ -90,6 +91,8 @@ class UserServiceTest {
 	private ResetPasswordRepository resetPasswordRepository;
 	@Mock
 	private EmailService emailService;
+	@Mock
+	private DiscordWebhookService webhookService;
 	@Captor
 	private ArgumentCaptor<User> userCaptor;
 	@Captor

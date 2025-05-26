@@ -24,6 +24,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockMultipartFile;
 
 import com.gamzabat.algohub.common.DateFormatUtil;
+import com.gamzabat.algohub.common.logging.DiscordWebhookService;
 import com.gamzabat.algohub.enums.ImageType;
 import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
@@ -96,6 +97,8 @@ class StudyGroupServiceTest {
 	private NoticeCommentRepository noticeCommentRepository;
 	@Mock
 	private SolutionCommentRepository solutionCommentRepository;
+	@Mock
+	private DiscordWebhookService webhookService;
 	@Mock
 	private RankingRepository rankingRepository;
 	@Mock
