@@ -1,14 +1,17 @@
 package com.gamzabat.algohub.feature.edgecase.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.gamzabat.algohub.common.annotation.AuthedUser;
 import com.gamzabat.algohub.exception.RequestException;
 import com.gamzabat.algohub.feature.edgecase.dto.CreateEdgeCaseRequest;
+import com.gamzabat.algohub.feature.edgecase.dto.GetEdgeCaseListResponse;
 import com.gamzabat.algohub.feature.edgecase.service.EdgeCaseService;
 import com.gamzabat.algohub.feature.user.domain.User;
 
@@ -26,7 +29,7 @@ public class EdgeCaseController {
 	private final EdgeCaseService edgeCaseService;
 
 	@PostMapping("/edgecase")
-	@Operation(summary = "반례게시판 반례 등록")
+	@Operation(summary = "반례 등록")
 	public ResponseEntity<Void> createEdgeCase(@AuthedUser User user, @RequestBody @Valid CreateEdgeCaseRequest creatEdgeCaseRequest,
 		Errors errors) {
 		if (errors.hasErrors())
@@ -35,5 +38,13 @@ public class EdgeCaseController {
 		edgeCaseService.createEdgeCase(user, creatEdgeCaseRequest);
 
 		return ResponseEntity.ok().build();
+	}
+
+	@GetMapping("/edgecase/{problemId}")
+	@Operation(summary = "반례리스트 조회")
+	public ResponseEntity<GetEdgeCaseListResponse> getEdgeCaseList(@AuthedUser User user, @RequestParam Integer problemId) {
+		GetEdgeCaseListResponse response = edgeCaseService.getEdgeCaseList(problemId);
+
+		return ResponseEntity.ok().body(response);
 	}
 }

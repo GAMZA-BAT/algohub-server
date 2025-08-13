@@ -2,6 +2,10 @@ package com.gamzabat.algohub.feature.edgecase.service;
 
 import static com.gamzabat.algohub.constants.ApiConstants.*;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -9,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.gamzabat.algohub.feature.edgecase.domain.EdgeCase;
 import com.gamzabat.algohub.feature.edgecase.dto.CreateEdgeCaseRequest;
+import com.gamzabat.algohub.feature.edgecase.dto.GetEdgeCaseListResponse;
+import com.gamzabat.algohub.feature.edgecase.dto.GetEdgeCaseResponse;
 import com.gamzabat.algohub.feature.edgecase.repository.EdgeCaseRepository;
 import com.gamzabat.algohub.feature.problem.exception.NotBojLinkException;
 import com.gamzabat.algohub.feature.problem.service.ProblemService;
@@ -38,6 +44,24 @@ public class EdgeCaseService {
 			link).output(request.output()).number(Integer.parseInt(number)).author(author).like(0).build();
 
 		edgeCaseRepository.save(edgeCase);
+	}
+
+	public GetEdgeCaseListResponse getEdgeCaseList(Integer problemNumber) {
+		List<EdgeCase> edgeCaseList = edgeCaseRepository.findAllByNumber(problemNumber);
+
+		List<GetEdgeCaseResponse> responseList = edgeCaseList.stream()
+			.map(edgeCase -> new GetEdgeCaseResponse(
+				edgeCase.getId().intValue(),
+				edgeCase.getLevel(),
+				edgeCase.getNumber(),
+				edgeCase.getTitle(),
+				edgeCase.getInput(),
+				edgeCase.getOutput(),
+				edgeCase.getLike()
+			))
+			.collect(Collectors.toList());
+
+		return new GetEdgeCaseListResponse(responseList);
 	}
 
 	private String getProblemId(String url) {
