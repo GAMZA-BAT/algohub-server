@@ -4,7 +4,7 @@ import lombok.Getter;
 
 @Getter
 public class GetEdgeCaseResponse {
-	private final Integer id;
+	private final Integer edgeCaseId;
 	private final Integer level;
 	private final Integer problemNumber;
 	private final String title;
@@ -12,8 +12,8 @@ public class GetEdgeCaseResponse {
 	private final String output;
 	private final Integer like;
 
-	public GetEdgeCaseResponse(Integer id, Integer level, Integer problemNumber, String title, String input, String output, Integer like) {
-		this.id = id;
+	public GetEdgeCaseResponse(Integer edgeCaseId, Integer level, Integer problemNumber, String title, String input, String output, Integer like) {
+		this.edgeCaseId = edgeCaseId;
 		this.level = level;
 		this.problemNumber = problemNumber;
 		this.title = title;

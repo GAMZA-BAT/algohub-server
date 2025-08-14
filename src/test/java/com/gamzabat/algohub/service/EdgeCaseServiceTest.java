@@ -1,12 +1,13 @@
 package com.gamzabat.algohub.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,14 +18,18 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gamzabat.algohub.enums.Role;
+import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.feature.edgecase.domain.EdgeCase;
 import com.gamzabat.algohub.feature.edgecase.dto.CreateEdgeCaseRequest;
 import com.gamzabat.algohub.feature.edgecase.dto.GetEdgeCaseListResponse;
 import com.gamzabat.algohub.feature.edgecase.dto.GetEdgeCaseResponse;
+import com.gamzabat.algohub.feature.edgecase.exception.CannotFoundEdgeCaseException;
+import com.gamzabat.algohub.feature.edgecase.exception.NotAuthorizedUserException;
 import com.gamzabat.algohub.feature.edgecase.repository.EdgeCaseRepository;
 import com.gamzabat.algohub.feature.edgecase.service.EdgeCaseService;
 import com.gamzabat.algohub.feature.problem.service.ProblemService;
@@ -44,12 +49,14 @@ class EdgeCaseServiceTest {
 	@Mock
 	private ProblemService problemService;
 
-	private User user;
+	private User user, user2;
 	private EdgeCase edgeCase1, edgeCase2, edgeCase3;
 
 	@BeforeEach
 	void setUp() throws NoSuchFieldException, IllegalAccessException {
 		user = User.builder().email("email1").password("password").nickname("nickname1")
+			.role(Role.USER).profileImage("image").build();
+		user2 = User.builder().email("email2").password("password").nickname("nickname2")
 			.role(Role.USER).profileImage("image").build();
 
 
@@ -83,12 +90,13 @@ class EdgeCaseServiceTest {
 			.input("0 0 13 40 0 37")
 			.output("2")
 			.like(21)
-			.author(user)
+			.author(user2)
 			.build();
 
 		Field userId = User.class.getDeclaredField("id");
 		userId.setAccessible(true);
 		userId.set(user, 1L);
+		userId.set(user2, 2L);
 
 		Field edgeCaseId = EdgeCase.class.getDeclaredField("id");
 		edgeCaseId.setAccessible(true);
@@ -201,6 +209,46 @@ class EdgeCaseServiceTest {
 		assertEquals("0 0 13 40 0 37", thirdResponse.getInput());
 		assertEquals("2", thirdResponse.getOutput());
 		assertEquals(21, thirdResponse.getLike());
+	}
+
+	@Test
+	@DisplayName("반례 삭제 성공")
+	void deleteEdgeCase_success() {
+		//given
+		when(edgeCaseRepository.findById(1L)).thenReturn(Optional.of(edgeCase1));
+
+		//when
+		edgeCaseService.deleteEdgeCase(user, 1L);
+
+		//then
+		verify(edgeCaseRepository, times(1)).delete(edgeCase1);
+		verify(edgeCaseRepository, times(1)).findById(1L);
+	}
+
+	@Test
+	@DisplayName("반례 삭제 실패 // 존재하지 않는 반례")
+	void deleteEdgeCase_failed_1() {
+		//given
+		when(edgeCaseRepository.findById(100L)).thenReturn(Optional.empty());
+
+		//when, then
+		assertThatThrownBy(() -> edgeCaseService.deleteEdgeCase(user, 100L))
+			.isInstanceOf(CannotFoundEdgeCaseException.class)
+			.hasFieldOrPropertyWithValue("httpStatus", HttpStatus.NOT_FOUND)
+			.hasFieldOrPropertyWithValue("errors", "존재하지 않는 반례입니다.");
+	}
+
+	@Test
+	@DisplayName("반례 삭제 실패 // 권한 없음")
+	void deleteEdgeCase_failed_2() {
+		//given
+		when(edgeCaseRepository.findById(3L)).thenReturn(Optional.of(edgeCase3));
+
+		//when, then
+		assertThatThrownBy(() -> edgeCaseService.deleteEdgeCase(user, 3L))
+			.isInstanceOf(NotAuthorizedUserException.class)
+			.hasFieldOrPropertyWithValue("httpStatus", HttpStatus.FORBIDDEN)
+			.hasFieldOrPropertyWithValue("error", "반례를 삭제할 권한이 없습니다.");
 	}
 }
 

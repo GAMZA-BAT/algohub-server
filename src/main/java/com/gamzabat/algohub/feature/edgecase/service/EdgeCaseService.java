@@ -11,10 +11,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.edgecase.domain.EdgeCase;
 import com.gamzabat.algohub.feature.edgecase.dto.CreateEdgeCaseRequest;
 import com.gamzabat.algohub.feature.edgecase.dto.GetEdgeCaseListResponse;
 import com.gamzabat.algohub.feature.edgecase.dto.GetEdgeCaseResponse;
+import com.gamzabat.algohub.feature.edgecase.exception.CannotFoundEdgeCaseException;
+import com.gamzabat.algohub.feature.edgecase.exception.NotAuthorizedUserException;
 import com.gamzabat.algohub.feature.edgecase.repository.EdgeCaseRepository;
 import com.gamzabat.algohub.feature.problem.exception.NotBojLinkException;
 import com.gamzabat.algohub.feature.problem.service.ProblemService;
@@ -66,6 +69,19 @@ public class EdgeCaseService {
 			.collect(Collectors.toList());
 
 		return new GetEdgeCaseListResponse(responseList);
+	}
+
+	@Transactional
+	public void deleteEdgeCase(User user, Long edgeCaseId) {
+		EdgeCase edgeCase = edgeCaseRepository.findById(edgeCaseId)
+			.orElseThrow(() -> new CannotFoundEdgeCaseException("존재하지 않는 반례입니다.", HttpStatus.NOT_FOUND));
+
+		User author = edgeCase.getAuthor();
+
+		if (!user.getId().equals(author.getId()))
+			throw new NotAuthorizedUserException("반례를 삭제할 권한이 없습니다.", HttpStatus.FORBIDDEN);
+
+		edgeCaseRepository.delete(edgeCase);
 	}
 
 	private String getProblemId(String url) {
