@@ -40,9 +40,9 @@ public class EdgeCaseController {
 		return ResponseEntity.ok().build();
 	}
 
-	@GetMapping("/edgecase/{problemId}")
+	@GetMapping("/edgecase/list")
 	@Operation(summary = "반례리스트 조회")
-	public ResponseEntity<GetEdgeCaseListResponse> getEdgeCaseList(@AuthedUser User user, @RequestParam Integer problemId) {
+	public ResponseEntity<GetEdgeCaseListResponse> getEdgeCaseList(@AuthedUser User user, @RequestParam(required = false) Integer problemId) {
 		GetEdgeCaseListResponse response = edgeCaseService.getEdgeCaseList(problemId);
 
 		return ResponseEntity.ok().body(response);

@@ -29,7 +29,7 @@ public class EdgeCase {
 	private Long id;
 	private Integer level;
 	private String link;
-	private Integer number;
+	private Integer problemNumber;
 	private String title;
 	private String input;
 	private String output;
@@ -40,10 +40,10 @@ public class EdgeCase {
 	private LocalDateTime deletedAt;
 
 	@Builder
-	public EdgeCase(Integer level, String link, Integer number, String title, String input, String output, Integer like, User author) {
+	public EdgeCase(Integer level, String link, Integer problemNumber, String title, String input, String output, Integer like, User author) {
 		this.level = level;
 		this.link = link;
-		this.number = number;
+		this.problemNumber = problemNumber;
 		this.title = title;
 		this.input = input;
 		this.output = output;

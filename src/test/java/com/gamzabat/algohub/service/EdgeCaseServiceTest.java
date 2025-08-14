@@ -56,7 +56,7 @@ class EdgeCaseServiceTest {
 		edgeCase1 = EdgeCase.builder()
 			.level(3)
 			.link("https://www.acmicpc.net/problem/1001")
-			.number(1001)
+			.problemNumber(1001)
 			.title("A-B")
 			.input("0 0")
 			.output("0")
@@ -67,7 +67,7 @@ class EdgeCaseServiceTest {
 		edgeCase2 = EdgeCase.builder()
 			.level(3)
 			.link("https://www.acmicpc.net/problem/1001")
-			.number(1001)
+			.problemNumber(1001)
 			.title("A-B")
 			.input("5 5")
 			.output("0")
@@ -77,9 +77,9 @@ class EdgeCaseServiceTest {
 
 		edgeCase3 = EdgeCase.builder()
 			.level(3)
-			.link("https://www.acmicpc.net/problem/1001")
-			.number(1001)
-			.title("A-B")
+			.link("https://www.acmicpc.net/problem/1002")
+			.problemNumber(1002)
+			.title("Turret")
 			.input("0 0 13 40 0 37")
 			.output("2")
 			.like(21)
@@ -122,7 +122,7 @@ class EdgeCaseServiceTest {
 
 		EdgeCase result = edgeCaseCaptor.getValue();
 		assertThat(result.getLink()).isEqualTo("https://www.acmicpc.net/problem/1000");
-		assertThat(result.getNumber()).isEqualTo(1000);
+		assertThat(result.getProblemNumber()).isEqualTo(1000);
 		assertThat(result.getTitle()).isEqualTo("A+B");
 		assertThat(result.getLevel()).isEqualTo(1);
 		assertThat(result.getInput()).isEqualTo("1 2");
@@ -137,19 +137,19 @@ class EdgeCaseServiceTest {
 	void getEdgeCaseListSuccess_1() {
 		//given
 		Integer problemNumber = 1001;
-		List<EdgeCase> edgeCaseList = Arrays.asList(edgeCase1, edgeCase2, edgeCase3);
-		when(edgeCaseRepository.findAllByNumber(problemNumber))
+		List<EdgeCase> edgeCaseList = Arrays.asList(edgeCase1, edgeCase2);
+		when(edgeCaseRepository.findAllByProblemNumber(problemNumber))
 			.thenReturn(edgeCaseList);
 
 		//when
 		GetEdgeCaseListResponse response = edgeCaseService.getEdgeCaseList(problemNumber);
 
 		//then
-		assertEquals(3, response.getEdgeCaseList().size());
+		assertEquals(2, response.getEdgeCaseList().size());
 
 		GetEdgeCaseResponse firstResponse = response.getEdgeCaseList().get(0);
 		assertEquals(3, firstResponse.getLevel());
-		assertEquals(1001, firstResponse.getNumber());
+		assertEquals(1001, firstResponse.getProblemNumber());
 		assertEquals("A-B", firstResponse.getTitle());
 		assertEquals("0 0", firstResponse.getInput());
 		assertEquals("0", firstResponse.getOutput());
@@ -157,7 +157,38 @@ class EdgeCaseServiceTest {
 
 		GetEdgeCaseResponse secondResponse = response.getEdgeCaseList().get(1);
 		assertEquals(3, secondResponse.getLevel());
-		assertEquals(1001, secondResponse.getNumber());
+		assertEquals(1001, secondResponse.getProblemNumber());
+		assertEquals("A-B", secondResponse.getTitle());
+		assertEquals("5 5", secondResponse.getInput());
+		assertEquals("0", secondResponse.getOutput());
+		assertEquals(12, secondResponse.getLike());
+	}
+
+	@Test
+	@DisplayName("반례 리스트 조회 성공 // 모든 리스트 반환")
+	void getEdgeCaseListSuccess_2() {
+		// given
+		Integer problemNumber = null;
+		List<EdgeCase> edgeCaseList = Arrays.asList(edgeCase1, edgeCase2, edgeCase3);
+		when(edgeCaseRepository.findAll())
+			.thenReturn(edgeCaseList);
+		// when
+		GetEdgeCaseListResponse response = edgeCaseService.getEdgeCaseList(problemNumber);
+
+		// then
+		assertEquals(3, response.getEdgeCaseList().size());
+
+		GetEdgeCaseResponse firstResponse = response.getEdgeCaseList().get(0);
+		assertEquals(3, firstResponse.getLevel());
+		assertEquals(1001, firstResponse.getProblemNumber());
+		assertEquals("A-B", firstResponse.getTitle());
+		assertEquals("0 0", firstResponse.getInput());
+		assertEquals("0", firstResponse.getOutput());
+		assertEquals(5, firstResponse.getLike());
+
+		GetEdgeCaseResponse secondResponse = response.getEdgeCaseList().get(1);
+		assertEquals(3, secondResponse.getLevel());
+		assertEquals(1001, secondResponse.getProblemNumber());
 		assertEquals("A-B", secondResponse.getTitle());
 		assertEquals("5 5", secondResponse.getInput());
 		assertEquals("0", secondResponse.getOutput());
@@ -165,25 +196,11 @@ class EdgeCaseServiceTest {
 
 		GetEdgeCaseResponse thirdResponse = response.getEdgeCaseList().get(2);
 		assertEquals(3, thirdResponse.getLevel());
-		assertEquals(1001, thirdResponse.getNumber());
-		assertEquals("A-B", thirdResponse.getTitle());
+		assertEquals(1002, thirdResponse.getProblemNumber());
+		assertEquals("Turret", thirdResponse.getTitle());
 		assertEquals("0 0 13 40 0 37", thirdResponse.getInput());
 		assertEquals("2", thirdResponse.getOutput());
 		assertEquals(21, thirdResponse.getLike());
-	}
-
-	@Test
-	@DisplayName("반례 리스트 조회 성공 // 0개 반환")
-	void getEdgeCaseListSuccess_2() {
-		// given
-		Integer problemNumber = 9999;
-		when(edgeCaseRepository.findAllByNumber(problemNumber))
-			.thenReturn(List.of());
-		// when
-		GetEdgeCaseListResponse response = edgeCaseService.getEdgeCaseList(problemNumber);
-
-		// then
-		assertEquals(0, response.getEdgeCaseList().size());
 	}
 }
 

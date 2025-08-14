@@ -41,19 +41,23 @@ public class EdgeCaseService {
 		String title = problemService.getProblemTitle(apiResult);
 
 		EdgeCase edgeCase = EdgeCase.builder().input(request.input()).level(level).title(title).link(
-			link).output(request.output()).number(Integer.parseInt(number)).author(author).like(0).build();
+			link).output(request.output()).problemNumber(Integer.parseInt(number)).author(author).like(0).build();
 
 		edgeCaseRepository.save(edgeCase);
 	}
 
 	public GetEdgeCaseListResponse getEdgeCaseList(Integer problemNumber) {
-		List<EdgeCase> edgeCaseList = edgeCaseRepository.findAllByNumber(problemNumber);
+		List<EdgeCase> edgeCaseList = new ArrayList<>();
+		if (problemNumber == null)
+			edgeCaseList = edgeCaseRepository.findAll();
+		else
+			edgeCaseList = edgeCaseRepository.findAllByProblemNumber(problemNumber);
 
 		List<GetEdgeCaseResponse> responseList = edgeCaseList.stream()
 			.map(edgeCase -> new GetEdgeCaseResponse(
 				edgeCase.getId().intValue(),
 				edgeCase.getLevel(),
-				edgeCase.getNumber(),
+				edgeCase.getProblemNumber(),
 				edgeCase.getTitle(),
 				edgeCase.getInput(),
 				edgeCase.getOutput(),
