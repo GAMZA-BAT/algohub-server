@@ -13,11 +13,14 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.edgecase.domain.EdgeCase;
+import com.gamzabat.algohub.feature.edgecase.domain.EdgeCaseLike;
 import com.gamzabat.algohub.feature.edgecase.dto.CreateEdgeCaseRequest;
 import com.gamzabat.algohub.feature.edgecase.dto.GetEdgeCaseListResponse;
 import com.gamzabat.algohub.feature.edgecase.dto.GetEdgeCaseResponse;
+import com.gamzabat.algohub.feature.edgecase.exception.AlreadyLikedException;
 import com.gamzabat.algohub.feature.edgecase.exception.CannotFoundEdgeCaseException;
 import com.gamzabat.algohub.feature.edgecase.exception.NotAuthorizedUserException;
+import com.gamzabat.algohub.feature.edgecase.repository.EdgeCaseLikeRepository;
 import com.gamzabat.algohub.feature.edgecase.repository.EdgeCaseRepository;
 import com.gamzabat.algohub.feature.problem.exception.NotBojLinkException;
 import com.gamzabat.algohub.feature.problem.service.ProblemService;
@@ -32,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 public class EdgeCaseService {
 	private final EdgeCaseRepository edgeCaseRepository;
 	private final ProblemService problemService;
+	private final EdgeCaseLikeRepository edgeCaseLikeRepository;
 
 	@Transactional
 	public void createEdgeCase(User user, CreateEdgeCaseRequest request) {
@@ -44,7 +48,7 @@ public class EdgeCaseService {
 		String title = problemService.getProblemTitle(apiResult);
 
 		EdgeCase edgeCase = EdgeCase.builder().input(request.input()).level(level).title(title).link(
-			link).output(request.output()).problemNumber(Integer.parseInt(number)).author(author).like(0).build();
+			link).output(request.output()).problemNumber(Integer.parseInt(number)).author(author).build();
 
 		edgeCaseRepository.save(edgeCase);
 	}
@@ -64,7 +68,7 @@ public class EdgeCaseService {
 				edgeCase.getTitle(),
 				edgeCase.getInput(),
 				edgeCase.getOutput(),
-				edgeCase.getLike()
+				edgeCase.getLikeCount()
 			))
 			.collect(Collectors.toList());
 
@@ -83,6 +87,21 @@ public class EdgeCaseService {
 
 		edgeCaseRepository.delete(edgeCase);
 	}
+
+	@Transactional
+	public void addEdgeCaseLike(User user, Long edgeCaseId) {
+		EdgeCase edgeCase = edgeCaseRepository.findById(edgeCaseId)
+			.orElseThrow(() -> new CannotFoundEdgeCaseException("존재하지 않는 반례입니다.", HttpStatus.NOT_FOUND));
+
+		if (edgeCaseLikeRepository.existsByEdgeCaseAndUser(edgeCase, user))
+			throw new AlreadyLikedException("이미 좋아요가 눌러져있습니다.", HttpStatus.CONFLICT);
+
+		EdgeCaseLike edgeCaseLike = EdgeCaseLike.builder().user(user).edgeCase(edgeCase).build();
+		edgeCase.addLike(edgeCaseLike);
+		edgeCaseRepository.save(edgeCase);
+		edgeCaseLikeRepository.save(edgeCaseLike);
+	}
+
 
 	private String getProblemId(String url) {
 		String[] parts = url.split("/");

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.gamzabat.algohub.common.annotation.AuthedUser;
 import com.gamzabat.algohub.exception.RequestException;
+import com.gamzabat.algohub.feature.edgecase.domain.EdgeCaseLike;
 import com.gamzabat.algohub.feature.edgecase.dto.CreateEdgeCaseRequest;
 import com.gamzabat.algohub.feature.edgecase.dto.GetEdgeCaseListResponse;
 import com.gamzabat.algohub.feature.edgecase.service.EdgeCaseService;
@@ -55,6 +56,13 @@ public class EdgeCaseController {
 	public ResponseEntity<Void> deleteEdgeCase(@AuthedUser User user, @PathVariable Long edgeCaseId) {
 		edgeCaseService.deleteEdgeCase(user, edgeCaseId);
 
+		return ResponseEntity.ok().build();
+	}
+
+	@PostMapping("/edge-case/like/{edgeCaseId}")
+	@Operation(summary = "반례 좋아요 추가")
+	public ResponseEntity<Void> addEdgeCaseLike(@AuthedUser User user, @PathVariable Long edgeCaseId) {
+		edgeCaseService.addEdgeCaseLike(user, edgeCaseId);
 		return ResponseEntity.ok().build();
 	}
 }
