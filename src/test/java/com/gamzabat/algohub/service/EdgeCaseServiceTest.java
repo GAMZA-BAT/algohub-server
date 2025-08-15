@@ -69,6 +69,8 @@ class EdgeCaseServiceTest {
 		user2 = User.builder().email("email2").password("password").nickname("nickname2")
 			.role(Role.USER).profileImage("image").build();
 		edgeCaseLike1 = EdgeCaseLike.builder().user(user).edgeCase(edgeCase1).build();
+		edgeCaseLike2 = EdgeCaseLike.builder().user(user2).edgeCase(edgeCase2).build();
+		edgeCaseLike3 = EdgeCaseLike.builder().user(user2).edgeCase(edgeCase1).build();
 
 		edgeCase1 = EdgeCase.builder()
 			.level(3)
@@ -105,11 +107,17 @@ class EdgeCaseServiceTest {
 		userId.set(user, 1L);
 		userId.set(user2, 2L);
 
+		edgeCase1.addLike(edgeCaseLike1);
+		edgeCase1.addLike(edgeCaseLike2);
+		edgeCase2.addLike(edgeCaseLike3);
+
 		Field edgeCaseId = EdgeCase.class.getDeclaredField("id");
+		Field edgeCaseLikeCount = EdgeCase.class.getDeclaredField("likeCount");
 		edgeCaseId.setAccessible(true);
 		edgeCaseId.set(edgeCase1, 1L);
 		edgeCaseId.set(edgeCase2, 2L);
 		edgeCaseId.set(edgeCase3, 3L);
+
 	}
 
 	@Test
@@ -168,7 +176,6 @@ class EdgeCaseServiceTest {
 		assertEquals("A-B", firstResponse.getTitle());
 		assertEquals("0 0", firstResponse.getInput());
 		assertEquals("0", firstResponse.getOutput());
-		assertEquals(0, firstResponse.getLike());
 
 		GetEdgeCaseResponse secondResponse = response.getEdgeCaseList().get(1);
 		assertEquals(3, secondResponse.getLevel());
@@ -176,7 +183,6 @@ class EdgeCaseServiceTest {
 		assertEquals("A-B", secondResponse.getTitle());
 		assertEquals("5 5", secondResponse.getInput());
 		assertEquals("0", secondResponse.getOutput());
-		assertEquals(0, secondResponse.getLike());
 	}
 
 	@Test
@@ -199,7 +205,6 @@ class EdgeCaseServiceTest {
 		assertEquals("A-B", firstResponse.getTitle());
 		assertEquals("0 0", firstResponse.getInput());
 		assertEquals("0", firstResponse.getOutput());
-		assertEquals(0, firstResponse.getLike());
 
 		GetEdgeCaseResponse secondResponse = response.getEdgeCaseList().get(1);
 		assertEquals(3, secondResponse.getLevel());
@@ -207,7 +212,6 @@ class EdgeCaseServiceTest {
 		assertEquals("A-B", secondResponse.getTitle());
 		assertEquals("5 5", secondResponse.getInput());
 		assertEquals("0", secondResponse.getOutput());
-		assertEquals(0, secondResponse.getLike());
 
 		GetEdgeCaseResponse thirdResponse = response.getEdgeCaseList().get(2);
 		assertEquals(3, thirdResponse.getLevel());
@@ -215,7 +219,6 @@ class EdgeCaseServiceTest {
 		assertEquals("Turret", thirdResponse.getTitle());
 		assertEquals("0 0 13 40 0 37", thirdResponse.getInput());
 		assertEquals("2", thirdResponse.getOutput());
-		assertEquals(0, thirdResponse.getLike());
 	}
 
 	@Test
@@ -259,17 +262,31 @@ class EdgeCaseServiceTest {
 	}
 
 	@Test
-	@DisplayName("반례 좋아요 추가 성공")
-	void addEdgeCase_success() {
+	@DisplayName("반례 좋아요 토글 성공 (기본상태 true)")
+	void addEdgeCase_success_1() {
 		//given
-		when(edgeCaseRepository.findById(1L)).thenReturn(Optional.of(edgeCase1));
-		when(edgeCaseLikeRepository.existsByEdgeCaseAndUser(edgeCase1, user)).thenReturn(false);
+		when(edgeCaseRepository.findById(2L)).thenReturn(Optional.of(edgeCase2));
+		when(edgeCaseLikeRepository.findByEdgeCaseAndUser(edgeCase2,user2)).thenReturn(Optional.of(edgeCaseLike2));
 
 		//when
-		edgeCaseService.addEdgeCaseLike(user, 1L);
+		edgeCaseService.togleEdgeCaseLike(user2, 2L);
 
 		//then
-		assertThat(edgeCase1.getLikeCount()).isEqualTo(1);
+		verify(edgeCaseRepository, times(1)).save(any(EdgeCase.class));
+		verify(edgeCaseLikeRepository, times(1)).delete(any(EdgeCaseLike.class));
+	}
+
+	@Test
+	@DisplayName("반례 좋아요 토글 성공 (기본상태 false)")
+	void addEdgeCase_success_2() {
+		//given
+		when(edgeCaseRepository.findById(2L)).thenReturn(Optional.of(edgeCase2));
+		when(edgeCaseLikeRepository.findByEdgeCaseAndUser(edgeCase2,user2)).thenReturn(Optional.empty());
+
+		//when
+		edgeCaseService.togleEdgeCaseLike(user2, 2L);
+
+		//then
 		verify(edgeCaseRepository, times(1)).save(any(EdgeCase.class));
 		verify(edgeCaseLikeRepository, times(1)).save(any(EdgeCaseLike.class));
 	}
@@ -281,23 +298,10 @@ class EdgeCaseServiceTest {
 		when(edgeCaseRepository.findById(100L)).thenReturn(Optional.empty());
 
 		//when, then
-		assertThatThrownBy(() -> edgeCaseService.addEdgeCaseLike(user, 100L))
+		assertThatThrownBy(() -> edgeCaseService.togleEdgeCaseLike(user, 100L))
 			.isInstanceOf(CannotFoundEdgeCaseException.class)
 			.hasFieldOrPropertyWithValue("httpStatus", HttpStatus.NOT_FOUND)
 			.hasFieldOrPropertyWithValue("errors", "존재하지 않는 반례입니다.");
-	}
-
-	@Test
-	@DisplayName("반례 좋아요 추가 실패 // 좋아요가 이미 추가된 상태")
-	void addEdgeCase_failed_2() {
-		//given
-		when(edgeCaseRepository.findById(1L)).thenReturn(Optional.of(edgeCase1));
-		when(edgeCaseLikeRepository.existsByEdgeCaseAndUser(edgeCase1, user)).thenReturn(true);
-		//when, then
-		assertThatThrownBy(() -> edgeCaseService.addEdgeCaseLike(user, 1L))
-			.isInstanceOf(AlreadyLikedException.class)
-			.hasFieldOrPropertyWithValue("httpStatus", HttpStatus.CONFLICT)
-			.hasFieldOrPropertyWithValue("errors", "이미 좋아요가 눌러져있습니다.");
 	}
 }
 

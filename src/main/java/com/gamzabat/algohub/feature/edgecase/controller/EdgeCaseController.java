@@ -1,5 +1,6 @@
 package com.gamzabat.algohub.feature.edgecase.controller;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,6 +16,7 @@ import com.gamzabat.algohub.exception.RequestException;
 import com.gamzabat.algohub.feature.edgecase.domain.EdgeCaseLike;
 import com.gamzabat.algohub.feature.edgecase.dto.CreateEdgeCaseRequest;
 import com.gamzabat.algohub.feature.edgecase.dto.GetEdgeCaseListResponse;
+import com.gamzabat.algohub.feature.edgecase.dto.TogleEdgeCaseResponse;
 import com.gamzabat.algohub.feature.edgecase.service.EdgeCaseService;
 import com.gamzabat.algohub.feature.user.domain.User;
 
@@ -59,10 +61,11 @@ public class EdgeCaseController {
 		return ResponseEntity.ok().build();
 	}
 
-	@PostMapping("/edge-case/like/{edgeCaseId}")
-	@Operation(summary = "반례 좋아요 추가")
-	public ResponseEntity<Void> addEdgeCaseLike(@AuthedUser User user, @PathVariable Long edgeCaseId) {
-		edgeCaseService.addEdgeCaseLike(user, edgeCaseId);
-		return ResponseEntity.ok().build();
+	@PostMapping(value = "/edge-case/like/{edgeCaseId}")
+	@Operation(summary = "반례 좋아요 토글")
+	public ResponseEntity<TogleEdgeCaseResponse> addEdgeCaseLike(@AuthedUser User user, @PathVariable Long edgeCaseId) {
+		TogleEdgeCaseResponse result = edgeCaseService.togleEdgeCaseLike(user, edgeCaseId);
+
+		return ResponseEntity.ok().body(result);
 	}
 }

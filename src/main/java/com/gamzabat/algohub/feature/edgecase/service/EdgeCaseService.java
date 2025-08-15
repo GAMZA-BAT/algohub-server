@@ -17,6 +17,7 @@ import com.gamzabat.algohub.feature.edgecase.domain.EdgeCaseLike;
 import com.gamzabat.algohub.feature.edgecase.dto.CreateEdgeCaseRequest;
 import com.gamzabat.algohub.feature.edgecase.dto.GetEdgeCaseListResponse;
 import com.gamzabat.algohub.feature.edgecase.dto.GetEdgeCaseResponse;
+import com.gamzabat.algohub.feature.edgecase.dto.TogleEdgeCaseResponse;
 import com.gamzabat.algohub.feature.edgecase.exception.AlreadyLikedException;
 import com.gamzabat.algohub.feature.edgecase.exception.CannotFoundEdgeCaseException;
 import com.gamzabat.algohub.feature.edgecase.exception.NotAuthorizedUserException;
@@ -54,7 +55,7 @@ public class EdgeCaseService {
 	}
 
 	public GetEdgeCaseListResponse getEdgeCaseList(Integer problemNumber) {
-		List<EdgeCase> edgeCaseList = new ArrayList<>();
+		List<EdgeCase> edgeCaseList;
 		if (problemNumber == null)
 			edgeCaseList = edgeCaseRepository.findAll();
 		else
@@ -89,17 +90,26 @@ public class EdgeCaseService {
 	}
 
 	@Transactional
-	public void addEdgeCaseLike(User user, Long edgeCaseId) {
+	public TogleEdgeCaseResponse togleEdgeCaseLike(User user, Long edgeCaseId) {
 		EdgeCase edgeCase = edgeCaseRepository.findById(edgeCaseId)
 			.orElseThrow(() -> new CannotFoundEdgeCaseException("존재하지 않는 반례입니다.", HttpStatus.NOT_FOUND));
 
-		if (edgeCaseLikeRepository.existsByEdgeCaseAndUser(edgeCase, user))
-			throw new AlreadyLikedException("이미 좋아요가 눌러져있습니다.", HttpStatus.CONFLICT);
+		EdgeCaseLike edgeCaseLike = edgeCaseLikeRepository.findByEdgeCaseAndUser(edgeCase,user).orElse(null);
+		Boolean isLike = false;
+		if (edgeCaseLike == null) {
+			edgeCaseLike = EdgeCaseLike.builder().user(user).edgeCase(edgeCase).build();
+			edgeCase.addLike(edgeCaseLike);
+			edgeCaseLikeRepository.save(edgeCaseLike);
 
-		EdgeCaseLike edgeCaseLike = EdgeCaseLike.builder().user(user).edgeCase(edgeCase).build();
-		edgeCase.addLike(edgeCaseLike);
+			isLike = true;
+		} else {
+			edgeCase.removeLike(edgeCaseLike);
+			edgeCaseLikeRepository.delete(edgeCaseLike);
+		}
+
 		edgeCaseRepository.save(edgeCase);
-		edgeCaseLikeRepository.save(edgeCaseLike);
+
+		return new TogleEdgeCaseResponse(isLike);
 	}
 
 

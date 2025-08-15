@@ -20,7 +20,6 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor
-@SQLDelete(sql = "UPDATE edge_case_like SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
 public class EdgeCaseLike {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
