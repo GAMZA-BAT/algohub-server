@@ -389,7 +389,7 @@ public class ProblemService {
 		return problemDetails.get("titleKo").asText();
 	}
 
-	public String getProblemId(CreateProblemRequest request) {
+	private String getProblemId(CreateProblemRequest request) {
 		String url = request.link();
 		String[] parts = url.split("/");
 		if (parts.length < 3 || !parts[2].equals(BOJ_PROBLEM_URL))
