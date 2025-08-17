@@ -4,6 +4,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -61,7 +62,7 @@ public class EdgeCaseController {
 		return ResponseEntity.ok().build();
 	}
 
-	@PostMapping(value = "/edge-case/like/{edgeCaseId}")
+	@PatchMapping(value = "/edge-case/{edgeCaseId}/like")
 	@Operation(summary = "반례 좋아요 토글")
 	public ResponseEntity<TogleEdgeCaseResponse> addEdgeCaseLike(@AuthedUser User user, @PathVariable Long edgeCaseId) {
 		TogleEdgeCaseResponse result = edgeCaseService.togleEdgeCaseLike(user, edgeCaseId);
