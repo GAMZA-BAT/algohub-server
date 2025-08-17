@@ -35,7 +35,9 @@ public class EdgeCase {
 	private String link;
 	private Integer problemNumber;
 	private String title;
+	@Column(columnDefinition = "TEXT")
 	private String input;
+	@Column(columnDefinition = "TEXT")
 	private String output;
 
 	@OneToMany(mappedBy = "edgeCase", fetch = FetchType.LAZY)

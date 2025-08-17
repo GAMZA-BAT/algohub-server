@@ -168,21 +168,21 @@ class EdgeCaseServiceTest {
 		GetEdgeCaseListResponse response = edgeCaseService.getEdgeCaseList(problemNumber);
 
 		//then
-		assertEquals(2, response.getEdgeCaseList().size());
+		assertEquals(2, response.edgeCaseList().size());
 
-		GetEdgeCaseResponse firstResponse = response.getEdgeCaseList().get(0);
-		assertEquals(3, firstResponse.getLevel());
-		assertEquals(1001, firstResponse.getProblemNumber());
-		assertEquals("A-B", firstResponse.getTitle());
-		assertEquals("0 0", firstResponse.getInput());
-		assertEquals("0", firstResponse.getOutput());
+		GetEdgeCaseResponse firstResponse = response.edgeCaseList().get(0);
+		assertEquals(3, firstResponse.level());
+		assertEquals(1001, firstResponse.problemNumber());
+		assertEquals("A-B", firstResponse.title());
+		assertEquals("0 0", firstResponse.input());
+		assertEquals("0", firstResponse.output());
 
-		GetEdgeCaseResponse secondResponse = response.getEdgeCaseList().get(1);
-		assertEquals(3, secondResponse.getLevel());
-		assertEquals(1001, secondResponse.getProblemNumber());
-		assertEquals("A-B", secondResponse.getTitle());
-		assertEquals("5 5", secondResponse.getInput());
-		assertEquals("0", secondResponse.getOutput());
+		GetEdgeCaseResponse secondResponse = response.edgeCaseList().get(1);
+		assertEquals(3, secondResponse.level());
+		assertEquals(1001, secondResponse.problemNumber());
+		assertEquals("A-B", secondResponse.title());
+		assertEquals("5 5", secondResponse.input());
+		assertEquals("0", secondResponse.output());
 	}
 
 	@Test
@@ -197,28 +197,28 @@ class EdgeCaseServiceTest {
 		GetEdgeCaseListResponse response = edgeCaseService.getEdgeCaseList(problemNumber);
 
 		// then
-		assertEquals(3, response.getEdgeCaseList().size());
+		assertEquals(3, response.edgeCaseList().size());
 
-		GetEdgeCaseResponse firstResponse = response.getEdgeCaseList().get(0);
-		assertEquals(3, firstResponse.getLevel());
-		assertEquals(1001, firstResponse.getProblemNumber());
-		assertEquals("A-B", firstResponse.getTitle());
-		assertEquals("0 0", firstResponse.getInput());
-		assertEquals("0", firstResponse.getOutput());
+		GetEdgeCaseResponse firstResponse = response.edgeCaseList().get(0);
+		assertEquals(3, firstResponse.level());
+		assertEquals(1001, firstResponse.problemNumber());
+		assertEquals("A-B", firstResponse.title());
+		assertEquals("0 0", firstResponse.input());
+		assertEquals("0", firstResponse.output());
 
-		GetEdgeCaseResponse secondResponse = response.getEdgeCaseList().get(1);
-		assertEquals(3, secondResponse.getLevel());
-		assertEquals(1001, secondResponse.getProblemNumber());
-		assertEquals("A-B", secondResponse.getTitle());
-		assertEquals("5 5", secondResponse.getInput());
-		assertEquals("0", secondResponse.getOutput());
+		GetEdgeCaseResponse secondResponse = response.edgeCaseList().get(1);
+		assertEquals(3, secondResponse.level());
+		assertEquals(1001, secondResponse.problemNumber());
+		assertEquals("A-B", secondResponse.title());
+		assertEquals("5 5", secondResponse.input());
+		assertEquals("0", secondResponse.output());
 
-		GetEdgeCaseResponse thirdResponse = response.getEdgeCaseList().get(2);
-		assertEquals(3, thirdResponse.getLevel());
-		assertEquals(1002, thirdResponse.getProblemNumber());
-		assertEquals("Turret", thirdResponse.getTitle());
-		assertEquals("0 0 13 40 0 37", thirdResponse.getInput());
-		assertEquals("2", thirdResponse.getOutput());
+		GetEdgeCaseResponse thirdResponse = response.edgeCaseList().get(2);
+		assertEquals(3, thirdResponse.level());
+		assertEquals(1002, thirdResponse.problemNumber());
+		assertEquals("Turret", thirdResponse.title());
+		assertEquals("0 0 13 40 0 37", thirdResponse.input());
+		assertEquals("2", thirdResponse.output());
 	}
 
 	@Test
