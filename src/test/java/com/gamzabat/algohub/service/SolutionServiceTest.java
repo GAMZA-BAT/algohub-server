@@ -664,6 +664,7 @@ class SolutionServiceTest {
 			assertThat(responses.getContent().get(i).getNickname()).isEqualTo("nickname1");
 			assertThat(responses.getContent().get(i).getIsRead()).isEqualTo(false);
 			assertThat(responses.getContent().get(i).getProblemLevel()).isEqualTo(problem1.getLevel());
+			assertThat(responses.getContent().getFirst().getProblemId()).isEqualTo(problem1.getId());
 		}
 	}
 
@@ -712,6 +713,7 @@ class SolutionServiceTest {
 			assertThat(responses.getContent().get(i).getIsRead()).isEqualTo(true);
 			assertThat(responses.getContent().get(i).getGroupId()).isEqualTo(
 				problem.getStudyGroup().getId());
+			assertThat(responses.getContent().getFirst().getProblemId()).isEqualTo(problem1.getId());
 		}
 	}
 
@@ -767,6 +769,7 @@ class SolutionServiceTest {
 			assertThat(responses.getContent().get(i).getIsRead()).isEqualTo(false);
 			assertThat(responses.getContent().get(i).getGroupId()).isEqualTo(
 				problem2.getStudyGroup().getId());
+			assertThat(responses.getContent().getFirst().getProblemId()).isEqualTo(problem1.getId());
 		}
 	}
 
