@@ -44,7 +44,6 @@ import com.gamzabat.algohub.feature.solution.domain.SolutionComment;
 import com.gamzabat.algohub.feature.solution.dto.CreateSolutionRequest;
 import com.gamzabat.algohub.feature.solution.dto.GetCurrentSolvingStatusResponse;
 import com.gamzabat.algohub.feature.solution.dto.GetSolutionResponse;
-import com.gamzabat.algohub.feature.solution.dto.GetSolutionWithGroupIdResponse;
 import com.gamzabat.algohub.feature.solution.enums.ProgressCategory;
 import com.gamzabat.algohub.feature.solution.exception.CannotFoundSolutionException;
 import com.gamzabat.algohub.feature.solution.repository.SolutionCommentRepository;

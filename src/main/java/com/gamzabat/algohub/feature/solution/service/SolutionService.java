@@ -37,7 +37,6 @@ import com.gamzabat.algohub.feature.solution.domain.SolutionComment;
 import com.gamzabat.algohub.feature.solution.dto.CreateSolutionRequest;
 import com.gamzabat.algohub.feature.solution.dto.GetCurrentSolvingStatusResponse;
 import com.gamzabat.algohub.feature.solution.dto.GetSolutionResponse;
-import com.gamzabat.algohub.feature.solution.dto.GetSolutionWithGroupIdResponse;
 import com.gamzabat.algohub.feature.solution.dto.GetSolvingStatusPerProblemResponse;
 import com.gamzabat.algohub.feature.solution.enums.ProgressCategory;
 import com.gamzabat.algohub.feature.solution.exception.CannotFoundSolutionException;
@@ -99,58 +98,20 @@ public class SolutionService {
 	}
 
 	@Transactional(readOnly = true)
-	public Page<GetSolutionResponse> getMySolutionsInGroupInProgress(User user, Long groupId, Integer problemNumber,
-		String language,
-		String result, Pageable pageable) {
-		StudyGroup group = validateGroupAndMember(user, groupId);
+	public Page<GetSolutionResponse> getMySolutionList(User user, Long problemId, Integer problemNumber, String language,
+		String result, ProgressCategory status, Pageable pageable) {
+		Page<GetSolutionResponse> solutionList;
+		if (problemId != null) {
+			StudyGroup group = validateGroupAndMember(user, problemId);
+			solutionList = solutionRepository.findAllFilteredMySolutionsInGroup(user,group,problemNumber,language,result,status,pageable)
+				.map(solution -> this.getGetSolutionResponse(user, solution));
+		} else {
+			solutionList = solutionRepository.findAllFilteredMySolutions(user,problemNumber,language,result,status,pageable)
+				.map(solution -> this.getGetSolutionResponse(user, solution));
+		}
 
-		Page<GetSolutionResponse> inProgressSolutions = solutionRepository.findAllFilteredMySolutionsInGroup(user,
-				group, problemNumber, language, result, ProgressCategory.IN_PROGRESS, pageable)
-			.map(solution -> this.getGetSolutionResponse(user, solution));
-
-		log.info("success to get my in-progress solutions in group {}", groupId);
-		return inProgressSolutions;
-	}
-
-	@Transactional(readOnly = true)
-	public Page<GetSolutionResponse> getMySolutionsInGroupExpired(User user, Long groupId, Integer problemNumber,
-		String language,
-		String result, Pageable pageable) {
-		StudyGroup group = validateGroupAndMember(user, groupId);
-
-		Page<GetSolutionResponse> expiredSolutions = solutionRepository.findAllFilteredMySolutionsInGroup(user, group,
-				problemNumber, language, result, ProgressCategory.EXPIRED, pageable)
-			.map(solution -> this.getGetSolutionResponse(user, solution));
-
-		log.info("success to get my expired solutions in group {}", groupId);
-		return expiredSolutions;
-	}
-
-	@Transactional(readOnly = true)
-	public Page<GetSolutionWithGroupIdResponse> getMySolutionsInProgress(User user, Integer problemNumber,
-		String language,
-		String result,
-		Pageable pageable) {
-		Page<GetSolutionWithGroupIdResponse> inProgressSolutions = solutionRepository.findAllFilteredMySolutions(user,
-				problemNumber,
-				language,
-				result, ProgressCategory.IN_PROGRESS, pageable)
-			.map(solution -> this.getGetSolutionWithGroupIdResponse(user, solution));
-		log.info("success to get my in-progress solutions.");
-		return inProgressSolutions;
-	}
-
-	@Transactional(readOnly = true)
-	public Page<GetSolutionWithGroupIdResponse> getMySolutionsExpired(User user, Integer problemNumber, String language,
-		String result,
-		Pageable pageable) {
-		Page<GetSolutionWithGroupIdResponse> expiredSolutions = solutionRepository.findAllFilteredMySolutions(user,
-				problemNumber,
-				language,
-				result, ProgressCategory.EXPIRED, pageable)
-			.map(solution -> this.getGetSolutionWithGroupIdResponse(user, solution));
-		log.info("success to get my expired solutions.");
-		return expiredSolutions;
+		log.info("success to get my solutions.");
+		return solutionList;
 	}
 
 	@Transactional(readOnly = true)
@@ -265,21 +226,6 @@ public class SolutionService {
 		long hours = totalMinutes / 60;
 		long minutes = totalMinutes % 60;
 		return String.format("%d:%02d", hours, minutes);
-	}
-
-	private GetSolutionWithGroupIdResponse getGetSolutionWithGroupIdResponse(User user, Solution solution) {
-		Integer correctCount = getCorrectCount(solution);
-		Integer submitMemberCount = solutionRepository.countDistinctUsersByProblem(solution.getProblem());
-		Integer totalMemberCount = groupMemberRepository.countMembersByStudyGroup(getGroup(solution)) + 1;
-		Integer accuracy = calculateAccuracy(submitMemberCount, correctCount);
-		long commentCount = commentRepository.countCommentsBySolutionId(solution.getId());
-		boolean isRead = true;
-
-		if (isMySolution(user, solution)) {
-			isRead = isAllCommentsRead(solution);
-		}
-		return GetSolutionWithGroupIdResponse.toDTO(solution, accuracy, submitMemberCount, totalMemberCount,
-			commentCount, isRead);
 	}
 
 	private GetSolutionResponse getGetSolutionResponse(User user, Solution solution) {

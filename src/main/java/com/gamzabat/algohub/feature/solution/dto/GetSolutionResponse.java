@@ -27,6 +27,7 @@ public class GetSolutionResponse {
 	private final Integer codeLength;
 	private final Long commentCount;
 	private final Boolean isRead;
+	private final Long groupId;
 
 	public static GetSolutionResponse toDTO(Solution solution, Integer accuracy, Integer submitMemberCount,
 		Integer totalMemberCount, Long commentCount, Boolean isRead) {
@@ -48,6 +49,7 @@ public class GetSolutionResponse {
 			.codeLength(solution.getCodeLength())
 			.commentCount(commentCount)
 			.isRead(isRead)
+			.groupId(solution.getProblem().getStudyGroup().getId())
 			.build();
 	}
 
