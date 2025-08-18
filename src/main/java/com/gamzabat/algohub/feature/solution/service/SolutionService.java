@@ -98,11 +98,25 @@ public class SolutionService {
 	}
 
 	@Transactional(readOnly = true)
-	public Page<GetSolutionResponse> getMySolutionList(User user, Long problemId, Integer problemNumber, String language,
+	public Page<GetSolutionResponse> getMySolutionsInGroupExpired(User user, Long groupId, Integer problemNumber,
+		String language,
+		String result, Pageable pageable) {
+		StudyGroup group = validateGroupAndMember(user, groupId);
+
+		Page<GetSolutionResponse> expiredSolutions = solutionRepository.findAllFilteredMySolutionsInGroup(user, group,
+				problemNumber, language, result, ProgressCategory.EXPIRED, pageable)
+			.map(solution -> this.getGetSolutionResponse(user, solution));
+
+		log.info("success to get my expired solutions in group {}", groupId);
+		return expiredSolutions;
+	}
+
+	@Transactional(readOnly = true)
+	public Page<GetSolutionResponse> getMySolutionList(User user, Long groupId, Integer problemNumber, String language,
 		String result, ProgressCategory status, Pageable pageable) {
 		Page<GetSolutionResponse> solutionList;
-		if (problemId != null) {
-			StudyGroup group = validateGroupAndMember(user, problemId);
+		if (groupId != null) {
+			StudyGroup group = validateGroupAndMember(user, groupId);
 			solutionList = solutionRepository.findAllFilteredMySolutionsInGroup(user,group,problemNumber,language,result,status,pageable)
 				.map(solution -> this.getGetSolutionResponse(user, solution));
 		} else {

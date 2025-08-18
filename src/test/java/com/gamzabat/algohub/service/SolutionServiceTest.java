@@ -554,7 +554,7 @@ class SolutionServiceTest {
 	}
 
 	@Test
-	@DisplayName("그룹 내 진행 중인 나의 풀이 전체 조회 성공 : 문제 필터링")
+	@DisplayName("나의 풀이 전체 조회 성공 : 문제 필터링 // 그룹 내 진행 중인 ")
 	void getMySolutionsInGroupInProgress() {
 		// given
 		Pageable pageable = PageRequest.of(0, 10);
@@ -599,9 +599,9 @@ class SolutionServiceTest {
 				comments.subList(i * 10, i * 10 + 10));
 		}
 		// when
-		Page<GetSolutionResponse> responses = solutionService.getMySolutionsInGroupInProgress(user, groupId,
+		Page<GetSolutionResponse> responses = solutionService.getMySolutionList(user, groupId,
 			problemNumber, null,
-			null, pageable);
+			null, ProgressCategory.IN_PROGRESS, pageable);
 		// then
 		for (int i = 0; i < 5; i++) {
 			assertThat(responses.getContent().get(i).getNickname()).isEqualTo("nickname1");
@@ -611,7 +611,7 @@ class SolutionServiceTest {
 	}
 
 	@Test
-	@DisplayName("그룹 내 마감된 나의 풀이 전체 조회 성공 : 문제 필터링")
+	@DisplayName("나의 풀이 전체 조회 성공 : 문제 필터링 // 그룹 내 마감된 ")
 	void getMySolutionsInGroupExpired() {
 		// given
 		Pageable pageable = PageRequest.of(0, 10);
@@ -667,7 +667,7 @@ class SolutionServiceTest {
 	}
 
 	@Test
-	@DisplayName("진행 중인 나의 풀이 전체 조회 성공")
+	@DisplayName("나의 풀이 전체 조회 성공 // 진행 중인 ")
 	void getMySolutionsInProgress() {
 		// given
 		Pageable pageable = PageRequest.of(0, 10);
@@ -703,8 +703,8 @@ class SolutionServiceTest {
 				comments.subList(i * 10, i * 10 + 10));
 		}
 		// when
-		Page<GetSolutionWithGroupIdResponse> responses = solutionService.getMySolutionsInProgress(user, null, null,
-			null, pageable);
+		Page<GetSolutionResponse> responses = solutionService.getMySolutionList(user, null, null,
+			null,null,ProgressCategory.IN_PROGRESS, pageable);
 		// then
 		for (int i = 0; i < 5; i++) {
 			assertThat(responses.getContent().get(i).getNickname()).isEqualTo("nickname1");
@@ -715,7 +715,7 @@ class SolutionServiceTest {
 	}
 
 	@Test
-	@DisplayName("마감 된 나의 풀이 전체 조회 성공")
+	@DisplayName("나의 풀이 전체 조회 성공// 마감 된")
 	void getMySolutionsExpired() {
 		// given
 		Pageable pageable = PageRequest.of(0, 10);
@@ -758,8 +758,8 @@ class SolutionServiceTest {
 				comments.subList(i * 10, i * 10 + 10));
 		}
 		// when
-		Page<GetSolutionWithGroupIdResponse> responses = solutionService.getMySolutionsExpired(user, null, null,
-			null, pageable);
+		Page<GetSolutionResponse> responses = solutionService.getMySolutionList(user, null, null,
+			null, null, ProgressCategory.EXPIRED, pageable);
 		// then
 		for (int i = 0; i < 5; i++) {
 			assertThat(responses.getContent().get(i).getNickname()).isEqualTo("nickname1");
