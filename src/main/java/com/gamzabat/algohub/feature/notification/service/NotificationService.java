@@ -102,8 +102,8 @@ public class NotificationService {
 
 	@Transactional
 	public void send(String receiver, String message, StudyGroup studyGroup, Problem problem, Solution solution,
-		String subContent) {
-		Notification notification = createNotification(receiver, message, studyGroup, subContent, problem, solution);
+		String subContent, NotificationCategory category) {
+		Notification notification = createNotification(receiver, message, studyGroup, subContent, problem, solution, category);
 		notificationRepository.save(notification);
 		Map<String, SseEmitter> sseEmitter = emitterRepository.findAllEmitterStartWithByEmail(receiver);
 		sseEmitter.forEach(
@@ -115,14 +115,14 @@ public class NotificationService {
 	}
 
 	private void sendList(List receiverList, String message, StudyGroup studyGroup, String subContent, Problem problem,
-		Solution solution) {
+		Solution solution, NotificationCategory category) {
 		List<Notification> notifications = new ArrayList<>();
 		Map<String, SseEmitter> sseEmitters;
 		for (int i = 0; i < receiverList.size(); i++) {
 			int finalI = i;
 			sseEmitters = new HashMap<>();
 			Notification notification = createNotification(receiverList.get(i).toString(), message, studyGroup,
-				subContent, problem, solution);
+				subContent, problem, solution, category);
 			notifications.add(notification);
 			notificationRepository.save(notification);
 			sseEmitters.putAll(emitterRepository.findAllEmitterStartWithByEmail(receiverList.get(i).toString()));
@@ -136,7 +136,7 @@ public class NotificationService {
 	}
 
 	private Notification createNotification(String receiver, String message, StudyGroup studyGroup, String subContent,
-		Problem problem, Solution solution) {
+		Problem problem, Solution solution, NotificationCategory category) {
 		return Notification.builder()
 			.user(
 				userRepository.findByEmail(receiver).orElseThrow(() -> new UserValidationException("존재 하지 않는 회원 입니다.")))
@@ -146,6 +146,7 @@ public class NotificationService {
 			.solution(solution)
 			.subContent(subContent)
 			.isRead(false)
+			.category(category)
 			.build();
 	}
 
@@ -203,7 +204,7 @@ public class NotificationService {
 		}
 
 		try {
-			sendList(users, message, group, null, problem, solution);
+			sendList(users, message, group, null, problem, solution, category);
 		} catch (Exception e) {
 			log.warn("failed to send notification", e);
 		}

@@ -179,7 +179,7 @@ class SolutionCommentServiceTest {
 		assertThatThrownBy(() -> commentService.createComment(user, 10L, request))
 			.isInstanceOf(SolutionValidationException.class)
 			.hasFieldOrPropertyWithValue("error", "존재하지 않는 풀이 입니다.");
-		verify(notificationService, never()).send(any(), any(), any(), any(), any(), any());
+		verify(notificationService, never()).send(any(), any(), any(), any(), any(), any(), any());
 	}
 
 	@Test
@@ -196,7 +196,7 @@ class SolutionCommentServiceTest {
 			.isInstanceOf(ProblemValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.NOT_FOUND.value())
 			.hasFieldOrPropertyWithValue("error", "존재하지 않는 문제 입니다.");
-		verify(notificationService, never()).send(any(), any(), any(), any(), any(), any());
+		verify(notificationService, never()).send(any(), any(), any(), any(), any(), any(), any());
 	}
 
 	@Test
@@ -214,7 +214,7 @@ class SolutionCommentServiceTest {
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.NOT_FOUND.value())
 			.hasFieldOrPropertyWithValue("error", "존재하지 않는 그룹 입니다.");
-		verify(notificationService, never()).send(any(), any(), any(), any(), any(), any());
+		verify(notificationService, never()).send(any(), any(), any(), any(), any(), any(), any());
 	}
 
 	@Test
@@ -233,7 +233,7 @@ class SolutionCommentServiceTest {
 			.isInstanceOf(GroupMemberValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹 입니다.");
-		verify(notificationService, never()).send(any(), any(), any(), any(), any(), any());
+		verify(notificationService, never()).send(any(), any(), any(), any(), any(), any(), any());
 	}
 
 	@Test
