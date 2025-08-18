@@ -85,11 +85,12 @@ public class SolutionController {
 		@RequestParam(required = false) String language,
 		@RequestParam(required = false) String result,
 		@RequestParam(required = false)ProgressCategory status,
+		@RequestParam(required = false) Boolean isIncorrect,
 		@RequestParam(defaultValue = "0") int page,
 		@RequestParam(defaultValue = "20") int size) {
 		Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 		Page<GetSolutionResponse> response = solutionService.getMySolutionList(user, groupId, problemNumber, language,
-			result, status, pageable);
+			result, status, isIncorrect, pageable);
 		return ResponseEntity.ok().body(response);
 	}
 }

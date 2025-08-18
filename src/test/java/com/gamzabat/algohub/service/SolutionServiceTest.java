@@ -601,7 +601,7 @@ class SolutionServiceTest {
 		// when
 		Page<GetSolutionResponse> responses = solutionService.getMySolutionList(user, groupId,
 			problemNumber, null,
-			null, ProgressCategory.IN_PROGRESS, pageable);
+			null, ProgressCategory.IN_PROGRESS, false, pageable);
 		// then
 		for (int i = 0; i < 5; i++) {
 			assertThat(responses.getContent().get(i).getNickname()).isEqualTo("nickname1");
@@ -655,9 +655,9 @@ class SolutionServiceTest {
 				comments.subList(i * 10, i * 10 + 10));
 		}
 		// when
-		Page<GetSolutionResponse> responses = solutionService.getMySolutionsInGroupExpired(user, groupId,
+		Page<GetSolutionResponse> responses = solutionService.getMySolutionList(user, groupId,
 			problemNumber, null,
-			null, pageable);
+			null,ProgressCategory.EXPIRED,false, pageable);
 		// then
 		for (int i = 0; i < 5; i++) {
 			assertThat(responses.getContent().get(i).getNickname()).isEqualTo("nickname1");
@@ -704,7 +704,7 @@ class SolutionServiceTest {
 		}
 		// when
 		Page<GetSolutionResponse> responses = solutionService.getMySolutionList(user, null, null,
-			null,null,ProgressCategory.IN_PROGRESS, pageable);
+			null,null,ProgressCategory.IN_PROGRESS, false, pageable);
 		// then
 		for (int i = 0; i < 5; i++) {
 			assertThat(responses.getContent().get(i).getNickname()).isEqualTo("nickname1");
@@ -759,7 +759,7 @@ class SolutionServiceTest {
 		}
 		// when
 		Page<GetSolutionResponse> responses = solutionService.getMySolutionList(user, null, null,
-			null, null, ProgressCategory.EXPIRED, pageable);
+			null, null, ProgressCategory.EXPIRED, false, pageable);
 		// then
 		for (int i = 0; i < 5; i++) {
 			assertThat(responses.getContent().get(i).getNickname()).isEqualTo("nickname1");

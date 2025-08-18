@@ -18,6 +18,7 @@ import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.solution.domain.Solution;
 import com.gamzabat.algohub.feature.solution.enums.ProgressCategory;
 import com.gamzabat.algohub.feature.user.domain.User;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
@@ -71,7 +72,8 @@ public class CustomSolutionRepositoryImpl implements CustomSolutionRepository {
 				.and(solution.user.eq(user)))
 			.orderBy(solution.solvedDateTime.desc());
 
-		addMySolutionFilters(problemNumber, language, result, category, query);
+		addMySolutionFiltersExceptResult(problemNumber, language, category, query);
+		addResultFilter(result, query);
 		query.offset(pageable.getOffset())
 			.limit(pageable.getPageSize());
 
@@ -88,7 +90,8 @@ public class CustomSolutionRepositoryImpl implements CustomSolutionRepository {
 				.and(solution.deletedAt.isNull()))
 			.orderBy(solution.solvedDateTime.desc());
 
-		addMySolutionFilters(problemNumber, language, result, category, query);
+		addMySolutionFiltersExceptResult(problemNumber, language, category, query);
+		addResultFilter(result, query);
 		query.offset(pageable.getOffset())
 			.limit(pageable.getPageSize());
 
@@ -96,21 +99,47 @@ public class CustomSolutionRepositoryImpl implements CustomSolutionRepository {
 		return PageableExecutionUtils.getPage(query.fetch(), pageable, countQuery::fetchOne);
 	}
 
-	private void addMySolutionFilters(Integer problemNumber, String language, String result, ProgressCategory category,
+	@Override
+	public Page<Solution> findAllFilteredMySolutionsIsIncorrect(User user,
+		Integer problemNumber,
+		String language,
+		String result,
+		ProgressCategory category,
+		Pageable pageable) {
+		JPAQuery<Solution> query = queryFactory.selectFrom(solution)
+			.where(solution.user.eq(user)
+				.and(solution.deletedAt.isNull()))
+			.orderBy(solution.solvedDateTime.desc());
+		addMySolutionFiltersExceptResult(problemNumber, language, category, query);
+		addResultIncorrectFilter(result, query);
+		query.offset(pageable.getOffset())
+			.limit(pageable.getPageSize());
+		JPAQuery<Long> countQuery = solutionCountQuery(query);
+		return PageableExecutionUtils.getPage(query.fetch(), pageable, countQuery::fetchOne);
+	}
+
+	private void addMySolutionFiltersExceptResult(Integer problemNumber, String language, ProgressCategory category,
 		JPAQuery<Solution> query) {
 		addEndDateFilter(category, query);
 		addProblemFilter(problemNumber, query);
 		addLanguageFilter(language, query);
-		addResultFilter(result, query);
 	}
 
 	private void addEndDateFilter(ProgressCategory category, JPAQuery<Solution> query) {
+		if (category == null) return;
 		if (category.equals(ProgressCategory.IN_PROGRESS))
 			query.where(problem.endDate.goe(LocalDate.now()));
 		else if (category.equals(ProgressCategory.EXPIRED))
 			query.where(problem.endDate.before(LocalDate.now()));
 	}
 
+	private void addResultIncorrectFilter(String result, JPAQuery<Solution> query) {
+		BooleanExpression incorrectBase =
+			solution.result.isNotNull()
+				.and(solution.result.ne(CORRECT))
+				.and(solution.result.endsWith("점").not());
+		query.where(incorrectBase);
+	}
 	private void addResultFilter(String result, JPAQuery<Solution> query) {
 		if (result != null && !result.isBlank()) {
 			if (result.equals(CORRECT))

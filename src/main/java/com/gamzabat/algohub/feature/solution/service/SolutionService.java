@@ -97,27 +97,17 @@ public class SolutionService {
 		}
 	}
 
-	@Transactional(readOnly = true)
-	public Page<GetSolutionResponse> getMySolutionsInGroupExpired(User user, Long groupId, Integer problemNumber,
-		String language,
-		String result, Pageable pageable) {
-		StudyGroup group = validateGroupAndMember(user, groupId);
-
-		Page<GetSolutionResponse> expiredSolutions = solutionRepository.findAllFilteredMySolutionsInGroup(user, group,
-				problemNumber, language, result, ProgressCategory.EXPIRED, pageable)
-			.map(solution -> this.getGetSolutionResponse(user, solution));
-
-		log.info("success to get my expired solutions in group {}", groupId);
-		return expiredSolutions;
-	}
 
 	@Transactional(readOnly = true)
 	public Page<GetSolutionResponse> getMySolutionList(User user, Long groupId, Integer problemNumber, String language,
-		String result, ProgressCategory status, Pageable pageable) {
+		String result, ProgressCategory status, Boolean isIncorrect, Pageable pageable) {
 		Page<GetSolutionResponse> solutionList;
 		if (groupId != null) {
 			StudyGroup group = validateGroupAndMember(user, groupId);
 			solutionList = solutionRepository.findAllFilteredMySolutionsInGroup(user,group,problemNumber,language,result,status,pageable)
+				.map(solution -> this.getGetSolutionResponse(user, solution));
+		} else if (isIncorrect) {
+			solutionList = solutionRepository.findAllFilteredMySolutionsIsIncorrect(user, problemNumber, language, result, status, pageable)
 				.map(solution -> this.getGetSolutionResponse(user, solution));
 		} else {
 			solutionList = solutionRepository.findAllFilteredMySolutions(user,problemNumber,language,result,status,pageable)
