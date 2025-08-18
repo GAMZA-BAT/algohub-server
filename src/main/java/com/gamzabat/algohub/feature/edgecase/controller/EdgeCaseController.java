@@ -29,12 +29,12 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api")
+@RequestMapping("/api/edge-case")
 @Tag(name = "반례 게시판 API", description = "반례 게시판 관련 API")
 public class EdgeCaseController {
 	private final EdgeCaseService edgeCaseService;
 
-	@PostMapping("/edge-case")
+	@PostMapping()
 	@Operation(summary = "반례 등록")
 	public ResponseEntity<Void> createEdgeCase(@AuthedUser User user, @RequestBody @Valid CreateEdgeCaseRequest creatEdgeCaseRequest,
 		Errors errors) {
@@ -46,7 +46,7 @@ public class EdgeCaseController {
 		return ResponseEntity.ok().build();
 	}
 
-	@GetMapping("/edge-case/list")
+	@GetMapping("/list")
 	@Operation(summary = "반례리스트 조회")
 	public ResponseEntity<GetEdgeCaseListResponse> getEdgeCaseList(@AuthedUser User user, @RequestParam(required = false) Integer problemId) {
 		GetEdgeCaseListResponse response = edgeCaseService.getEdgeCaseList(problemId);
@@ -54,7 +54,7 @@ public class EdgeCaseController {
 		return ResponseEntity.ok().body(response);
 	}
 
-	@DeleteMapping("/edge-case/{edgeCaseId}")
+	@DeleteMapping("/{edgeCaseId}")
 	@Operation(summary = "반례 삭제")
 	public ResponseEntity<Void> deleteEdgeCase(@AuthedUser User user, @PathVariable Long edgeCaseId) {
 		edgeCaseService.deleteEdgeCase(user, edgeCaseId);
@@ -62,7 +62,7 @@ public class EdgeCaseController {
 		return ResponseEntity.ok().build();
 	}
 
-	@PatchMapping(value = "/edge-case/{edgeCaseId}/like")
+	@PatchMapping(value = "/{edgeCaseId}/like")
 	@Operation(summary = "반례 좋아요 토글")
 	public ResponseEntity<TogleEdgeCaseResponse> addEdgeCaseLike(@AuthedUser User user, @PathVariable Long edgeCaseId) {
 		TogleEdgeCaseResponse result = edgeCaseService.togleEdgeCaseLike(user, edgeCaseId);
