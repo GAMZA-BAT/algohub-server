@@ -19,6 +19,7 @@ import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValida
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.notification.enums.NotificationCategory;
+import com.gamzabat.algohub.feature.notification.enums.NotificationType;
 import com.gamzabat.algohub.feature.notification.service.NotificationService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
@@ -74,7 +75,8 @@ public class SolutionCommentService implements CommentService<CreateSolutionComm
 			null,
 			solution,
 			NotificationCategory.NEW_COMMENT_POSTED,
-			NotificationCategory.NEW_COMMENT_POSTED.getMessage(commenter.getNickname())
+			NotificationCategory.NEW_COMMENT_POSTED.getMessage(commenter.getNickname()),
+			NotificationType.COMMENT
 		);
 	}
 

@@ -140,7 +140,7 @@ class SolutionCommentServiceTest {
 		assertThat(result.getContent()).isEqualTo("content");
 		assertThat(result.getUser()).isEqualTo(user2);
 		assertThat(result.getSolution()).isEqualTo(solution);
-		verify(notificationService, times(1)).sendNotificationToMembers(any(), any(), any(), any(), any(), any());
+		verify(notificationService, times(1)).sendNotificationToMembers(any(), any(), any(), any(), any(), any(),any());
 	}
 
 	@Test
@@ -164,7 +164,7 @@ class SolutionCommentServiceTest {
 		assertThat(result.getContent()).isEqualTo("content");
 		assertThat(result.getUser()).isEqualTo(user);
 		assertThat(result.getSolution()).isEqualTo(solution);
-		verify(notificationService, times(0)).sendNotificationToMembers(any(), any(), any(), any(), any(), any());
+		verify(notificationService, times(0)).sendNotificationToMembers(any(), any(), any(), any(), any(), any(),any());
 	}
 
 	@Test

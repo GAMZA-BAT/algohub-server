@@ -8,11 +8,15 @@ import org.springframework.data.jpa.repository.Query;
 
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.notification.domain.Notification;
+import com.gamzabat.algohub.feature.notification.enums.NotificationCategory;
+import com.gamzabat.algohub.feature.notification.enums.NotificationType;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.user.domain.User;
 
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 	List<Notification> findAllByUser(User user);
+
+	List<Notification> findAllByUserAndType(User user, NotificationType type);
 
 	List<Notification> findAllByUserAndIsRead(User user, boolean isRead);
 

@@ -551,7 +551,7 @@ class SolutionServiceTest {
 
 		// then
 		verify(solutionRepository, times(2)).save(any(Solution.class));
-		verify(notificationService, times(2)).sendNotificationToMembers(any(), any(), any(), any(), any(), any());
+		verify(notificationService, times(2)).sendNotificationToMembers(any(), any(), any(), any(), any(), any(),any());
 	}
 
 	@Test

@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.notification.enums.NotificationCategory;
+import com.gamzabat.algohub.feature.notification.enums.NotificationType;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.solution.domain.Solution;
 import com.gamzabat.algohub.feature.user.domain.User;
@@ -45,14 +46,14 @@ public class Notification {
 	private String message;
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
-	private NotificationCategory category;
+	private NotificationType type;
 	private boolean isRead;
 	private String subContent;
 	private LocalDateTime createdAt;
 
 	@Builder
 	public Notification(User user, StudyGroup studyGroup, Problem problem, Solution solution, String message,
-		boolean isRead, String subContent, NotificationCategory category) {
+		boolean isRead, String subContent, NotificationType type) {
 		this.user = user;
 		this.studyGroup = studyGroup;
 		this.problem = problem;
@@ -61,7 +62,7 @@ public class Notification {
 		this.isRead = isRead;
 		this.subContent = subContent;
 		this.createdAt = LocalDateTime.now();
-		this.category = category;
+		this.type = type;
 	}
 
 	public void updateIsRead() {

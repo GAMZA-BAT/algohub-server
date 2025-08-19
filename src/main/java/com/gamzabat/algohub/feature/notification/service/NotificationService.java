@@ -22,6 +22,7 @@ import com.gamzabat.algohub.feature.notification.domain.Notification;
 import com.gamzabat.algohub.feature.notification.domain.NotificationSetting;
 import com.gamzabat.algohub.feature.notification.dto.GetNotificationResponse;
 import com.gamzabat.algohub.feature.notification.enums.NotificationCategory;
+import com.gamzabat.algohub.feature.notification.enums.NotificationType;
 import com.gamzabat.algohub.feature.notification.exception.CannotFoundNotificationException;
 import com.gamzabat.algohub.feature.notification.exception.CannotFoundNotificationSettingException;
 import com.gamzabat.algohub.feature.notification.exception.NotificationValidationException;
@@ -102,8 +103,8 @@ public class NotificationService {
 
 	@Transactional
 	public void send(String receiver, String message, StudyGroup studyGroup, Problem problem, Solution solution,
-		String subContent, NotificationCategory category) {
-		Notification notification = createNotification(receiver, message, studyGroup, subContent, problem, solution, category);
+		String subContent, NotificationType type) {
+		Notification notification = createNotification(receiver, message, studyGroup, subContent, problem, solution, type);
 		notificationRepository.save(notification);
 		Map<String, SseEmitter> sseEmitter = emitterRepository.findAllEmitterStartWithByEmail(receiver);
 		sseEmitter.forEach(
@@ -115,14 +116,14 @@ public class NotificationService {
 	}
 
 	private void sendList(List receiverList, String message, StudyGroup studyGroup, String subContent, Problem problem,
-		Solution solution, NotificationCategory category) {
+		Solution solution, NotificationType type) {
 		List<Notification> notifications = new ArrayList<>();
 		Map<String, SseEmitter> sseEmitters;
 		for (int i = 0; i < receiverList.size(); i++) {
 			int finalI = i;
 			sseEmitters = new HashMap<>();
 			Notification notification = createNotification(receiverList.get(i).toString(), message, studyGroup,
-				subContent, problem, solution, category);
+				subContent, problem, solution, type);
 			notifications.add(notification);
 			notificationRepository.save(notification);
 			sseEmitters.putAll(emitterRepository.findAllEmitterStartWithByEmail(receiverList.get(i).toString()));
@@ -136,7 +137,7 @@ public class NotificationService {
 	}
 
 	private Notification createNotification(String receiver, String message, StudyGroup studyGroup, String subContent,
-		Problem problem, Solution solution, NotificationCategory category) {
+		Problem problem, Solution solution, NotificationType type) {
 		return Notification.builder()
 			.user(
 				userRepository.findByEmail(receiver).orElseThrow(() -> new UserValidationException("존재 하지 않는 회원 입니다.")))
@@ -146,7 +147,7 @@ public class NotificationService {
 			.solution(solution)
 			.subContent(subContent)
 			.isRead(false)
-			.category(category)
+			.type(type)
 			.build();
 	}
 
@@ -163,8 +164,14 @@ public class NotificationService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<GetNotificationResponse> getNotifications(User user) {
-		List<Notification> notifications = notificationRepository.findAllByUser(user);
+	public List<GetNotificationResponse> getNotifications(User user, NotificationType type) {
+		List<Notification> notifications;
+		if (type == null) {
+			notifications = notificationRepository.findAllByUser(user);
+		} else {
+			notifications = notificationRepository.findAllByUserAndType(user, type);
+
+		}
 		notifications.sort(Comparator.comparingLong(Notification::getId).reversed());
 		return notifications.stream().map(GetNotificationResponse::toDTO).toList();
 	}
@@ -189,7 +196,7 @@ public class NotificationService {
 	@Transactional
 	public void sendNotificationToMembers(StudyGroup group, List<GroupMember> receiver, Problem problem,
 		Solution solution,
-		NotificationCategory category, String message) {
+		NotificationCategory category, String message, NotificationType type) {
 		List<String> users = new ArrayList<>();
 		for (GroupMember member : receiver) {
 			NotificationSetting setting = notificationSettingRepository.findByMember(member)
@@ -204,7 +211,7 @@ public class NotificationService {
 		}
 
 		try {
-			sendList(users, message, group, null, problem, solution, category);
+			sendList(users, message, group, null, problem, solution, type);
 		} catch (Exception e) {
 			log.warn("failed to send notification", e);
 		}
@@ -217,6 +224,8 @@ public class NotificationService {
 			case NotificationCategory.NEW_COMMENT_POSTED -> setting.isNewComment();
 			case NotificationCategory.NEW_MEMBER_JOINED -> setting.isNewMember();
 			case NotificationCategory.NEW_SOLUTION_POSTED -> setting.isNewSolution();
+			case NotificationCategory.NEW_MEMBER_REQUESTED -> setting.isNewMember();
+			case NotificationCategory.NEW_GROUP_JOINED -> setting.isNewMember();
 		};
 	}
 

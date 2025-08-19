@@ -29,6 +29,7 @@ import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValida
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.notification.enums.NotificationCategory;
+import com.gamzabat.algohub.feature.notification.enums.NotificationType;
 import com.gamzabat.algohub.feature.notification.service.NotificationService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
@@ -256,7 +257,8 @@ public class SolutionService {
 			problem,
 			null,
 			NotificationCategory.NEW_SOLUTION_POSTED,
-			NotificationCategory.NEW_SOLUTION_POSTED.getMessage(solver.getUser().getNickname())
+			NotificationCategory.NEW_SOLUTION_POSTED.getMessage(solver.getUser().getNickname()),
+			NotificationType.STUDY_GROUP
 		);
 	}
 
