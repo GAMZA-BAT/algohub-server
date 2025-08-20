@@ -2,7 +2,6 @@ package com.gamzabat.algohub.feature.edgecase.service;
 
 import static com.gamzabat.algohub.constants.ApiConstants.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -11,14 +10,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.edgecase.domain.EdgeCase;
 import com.gamzabat.algohub.feature.edgecase.domain.EdgeCaseLike;
 import com.gamzabat.algohub.feature.edgecase.dto.CreateEdgeCaseRequest;
 import com.gamzabat.algohub.feature.edgecase.dto.GetEdgeCaseListResponse;
 import com.gamzabat.algohub.feature.edgecase.dto.GetEdgeCaseResponse;
 import com.gamzabat.algohub.feature.edgecase.dto.TogleEdgeCaseResponse;
-import com.gamzabat.algohub.feature.edgecase.exception.AlreadyLikedException;
 import com.gamzabat.algohub.feature.edgecase.exception.CannotFoundEdgeCaseException;
 import com.gamzabat.algohub.feature.edgecase.exception.NotAuthorizedUserException;
 import com.gamzabat.algohub.feature.edgecase.repository.EdgeCaseLikeRepository;
