@@ -20,6 +20,7 @@ import com.gamzabat.algohub.feature.notice.exception.NoticeValidationException;
 import com.gamzabat.algohub.feature.notification.exception.CannotFoundNotificationException;
 import com.gamzabat.algohub.feature.notification.exception.CannotFoundNotificationSettingException;
 import com.gamzabat.algohub.feature.notification.exception.NotificationValidationException;
+import com.gamzabat.algohub.feature.problem.exception.InvalidRequestException;
 import com.gamzabat.algohub.feature.problem.exception.NotBojLinkException;
 import com.gamzabat.algohub.feature.problem.exception.SolvedAcApiErrorException;
 import com.gamzabat.algohub.feature.solution.exception.CannotFoundSolutionException;
@@ -230,5 +231,13 @@ public class CustomExceptionHandler {
 		return ResponseEntity
 			.status(HttpStatus.BAD_REQUEST)
 			.body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null));
+	}
+
+	@ExceptionHandler(InvalidRequestException.class)
+	protected ResponseEntity<ErrorResponse> handleInvalidRequestException(
+		InvalidRequestException e) {
+		return ResponseEntity
+			.status(e.getStatus())
+			.body(new ErrorResponse(e.getStatus().value(), e.getError(), null));
 	}
 }
