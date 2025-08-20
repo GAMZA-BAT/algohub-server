@@ -35,6 +35,7 @@ import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.dto.CreateProblemRequest;
 import com.gamzabat.algohub.feature.problem.dto.EditProblemRequest;
 import com.gamzabat.algohub.feature.problem.dto.GetProblemResponse;
+import com.gamzabat.algohub.feature.problem.enums.ProblemListStatus;
 import com.gamzabat.algohub.feature.problem.exception.NotBojLinkException;
 import com.gamzabat.algohub.feature.problem.exception.SolvedAcApiErrorException;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
@@ -146,6 +147,24 @@ public class ProblemService {
 		if (request.startDate().isAfter(problem.getEndDate()))
 			throw new ProblemValidationException(HttpStatus.BAD_REQUEST.value(),
 				"문제 시작 날짜는 마감 날짜 이후로 수정할 수 없습니다.");
+	}
+
+	@Transactional(readOnly = true)
+	public Page<GetProblemResponse> getProblems(User user, Long groupId, Boolean unsolvedOnly, ProblemListStatus status, Pageable pageable) {
+		Page<GetProblemResponse> response;
+		if (status == ProblemListStatus.IN_PROGRESS) {
+			response = getInProgressProblems(user, groupId, unsolvedOnly, pageable);
+		} else if (status == ProblemListStatus.EXPIRED) {
+			response = getExpiredProblems(user, groupId, pageable);
+		} else {
+			response = getQueuedProblems(user, groupId, pageable);
+		}
+		/*
+		else if (status == ProblemListStatus.DEADLINE_REACHED) {
+			response = getDeadlineReachedProblemList(user,groupId);
+		}
+		*/
+		return response;
 	}
 
 	@Transactional(readOnly = true)
