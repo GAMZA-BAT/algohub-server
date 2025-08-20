@@ -150,7 +150,7 @@ public class ProblemService {
 	}
 
 	@Transactional(readOnly = true)
-	public Page<GetProblemResponse> getProblems(User user, Long groupId, Boolean unsolvedOnly, ProblemListStatus status, Pageable pageable) {
+	public Page<GetProblemResponse> getProblems(User user, Long groupId, ProblemListStatus status, Boolean unsolvedOnly, Pageable pageable) {
 		Page<GetProblemResponse> response;
 		if (status == ProblemListStatus.IN_PROGRESS) {
 			response = getInProgressProblems(user, groupId, unsolvedOnly, pageable);
