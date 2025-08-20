@@ -72,12 +72,14 @@ public class ProblemController {
 		@RequestParam(defaultValue = "0") int page,
 		@RequestParam(defaultValue = "20") int size) {
 		Pageable pageable = PageRequest.of(page, size, Sort.by(PROBLEM_SORT_BY).descending());
-		Page<GetProblemResponse> response = problemService.getProblems(user, groupId, status, unsolvedOnly, pageable);
 		if (status == ProblemListStatus.IN_PROGRESS) {
 			if (unsolvedOnly == null) {
 				throw new InvalidRequestException(HttpStatus.BAD_REQUEST, "IN_PROGRESS 상태에서는 unsolvedOnly 는 필수입니다.");
 			}
 		}
+
+		Page<GetProblemResponse> response = problemService.getProblems(user, groupId, status, unsolvedOnly, pageable);
+
 		return ResponseEntity.ok().body(response);
 	}
 

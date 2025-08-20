@@ -17,6 +17,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.mockito.internal.matchers.Null;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -41,6 +42,8 @@ import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupReposi
 import com.gamzabat.algohub.feature.problem.dto.CreateProblemRequest;
 import com.gamzabat.algohub.feature.problem.dto.EditProblemRequest;
 import com.gamzabat.algohub.feature.problem.dto.GetProblemResponse;
+import com.gamzabat.algohub.feature.problem.enums.ProblemListStatus;
+import com.gamzabat.algohub.feature.problem.exception.InvalidRequestException;
 import com.gamzabat.algohub.feature.problem.exception.SolvedAcApiErrorException;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
 import com.gamzabat.algohub.feature.problem.service.ProblemService;
@@ -300,38 +303,37 @@ class ProblemControllerTest {
 	}
 
 	@Test
-	@DisplayName("진행 중인 문제 목록 조회 성공")
+	@DisplayName("문제 목록 조회 성공")
 	void getProblemList() throws Exception {
 		// given
 		Pageable pageable = PageRequest.of(0, 20, Sort.by("endDate").descending());
 		Page<GetProblemResponse> response = new PageImpl<>(new ArrayList<>());
-		when(problemService.getInProgressProblems(any(User.class), anyLong(), eq(false),
+		when(problemService.getProblems(any(User.class), anyLong(), eq(ProblemListStatus.IN_PROGRESS) ,eq(false),
 			any(Pageable.class))).thenReturn(
 			response);
 		// when, then
-		mockMvc.perform(get("/api/groups/{groupId}/problems/in-progress", groupId)
+		mockMvc.perform(get("/api/groups/{groupId}/problems", groupId)
 				.header("Authorization", token)
-				.param("unsolved-only", String.valueOf(false)))
+				.param("unsolved-only", String.valueOf(false))
+				.param("status", String.valueOf(ProblemListStatus.IN_PROGRESS)))
 			.andExpect(status().isOk())
 			.andExpect(content().string(objectMapper.writeValueAsString(response)));
-		verify(problemService, times(1)).getInProgressProblems(user, groupId, false, pageable);
+		verify(problemService, times(1)).getProblems(user, groupId,ProblemListStatus.IN_PROGRESS,false, pageable);
 	}
 
 	@Test
-	@DisplayName("문제 목록 조회 실패 : 권한 없음")
+	@DisplayName("문제 목록 조회 실패 : 올바르지 않은 요청")
 	void getProblemListFailed_1() throws Exception {
 		// given
 		Pageable pageable = PageRequest.of(0, 20, Sort.by("endDate").descending());
-		when(
-			problemService.getInProgressProblems(any(User.class), anyLong(), eq(false), any(Pageable.class))).thenThrow(
-			new ProblemValidationException(HttpStatus.FORBIDDEN.value(), "문제를 조회할 권한이 없습니다."));
+
 		// when, then
-		mockMvc.perform(get("/api/groups/{groupId}/problems/in-progress", groupId)
+		mockMvc.perform(get("/api/groups/{groupId}/problems", groupId)
 				.header("Authorization", token)
-				.param("unsolved-only", String.valueOf(false)))
-			.andExpect(status().isForbidden())
-			.andExpect(jsonPath("$.error").value("문제를 조회할 권한이 없습니다."));
-		verify(problemService, times(1)).getInProgressProblems(user, groupId, false, pageable);
+				.param("status", String.valueOf(ProblemListStatus.IN_PROGRESS)))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.error").value("IN_PROGRESS 상태에서는 unsolvedOnly 는 필수입니다."));
+		verifyNoInteractions(problemService);
 	}
 
 	@Test
@@ -343,6 +345,7 @@ class ProblemControllerTest {
 		mockMvc.perform(delete("/api/problems/{problemId}", problemId)
 				.header("Authorization", token)
 				.param("problemId", String.valueOf(problemId)))
+
 			.andExpect(status().isOk());
 		verify(problemService, times(1)).deleteProblem(user, problemId);
 	}
