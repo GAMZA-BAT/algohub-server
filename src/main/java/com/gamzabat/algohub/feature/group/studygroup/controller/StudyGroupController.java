@@ -3,8 +3,8 @@ package com.gamzabat.algohub.feature.group.studygroup.controller;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
@@ -202,8 +202,7 @@ public class StudyGroupController {
 	@GetMapping(value = "/groups/search")
 	@Operation(summary = "그룹 검색 API", description = "홈 화면에서 그룹을 검색하는 API")
 	public ResponseEntity<Page<GetGroupResponse>> getSearchedGroupList(@RequestParam String searchPattern,
-		@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
-		Pageable pageable = PageRequest.of(page, size);
+		@PageableDefault(size = 20, page = 0) Pageable pageable) {
 		Page<GetGroupResponse> responses = studyGroupService.getSearchedStudyGroupList(searchPattern, pageable);
 		return ResponseEntity.ok().body(responses);
 	}
