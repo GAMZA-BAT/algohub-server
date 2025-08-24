@@ -637,7 +637,6 @@ public class StudyGroupService {
 		return response;
 	}
 
-	@Transactional(readOnly = true)
 	public Page<GetGroupResponse> getSearchedStudyGroupList(String searchPattern, Pageable pageable) {
 		Page<StudyGroup> groups = groupRepository.findBySearchPattern(searchPattern, pageable);
 		return groups.map(group -> new GetGroupResponse(group.getId(), group.getName(), group.getStartDate(),
