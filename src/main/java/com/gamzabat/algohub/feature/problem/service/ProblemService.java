@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -374,6 +375,10 @@ public class ProblemService {
 				throw new SolvedAcApiErrorException(HttpStatus.BAD_REQUEST.value(), "백준에 유효하지 않은 문제입니다.");
 
 			return root.get(0);
+		} catch (ResourceAccessException e) {
+			log.error("Timeout or connection failed solved.ac API error : " + e.getMessage());
+			throw new SolvedAcApiErrorException(HttpStatus.GATEWAY_TIMEOUT.value(),
+				"solved.ac API 응답이 지연되거나 연결에 실패했습니다. 잠시 후 다시 시도해주세요.");
 		} catch (JsonProcessingException e) {
 			log.error("Json processing error : " + e.getMessage());
 			throw new SolvedAcApiErrorException(HttpStatus.INTERNAL_SERVER_ERROR.value(),
