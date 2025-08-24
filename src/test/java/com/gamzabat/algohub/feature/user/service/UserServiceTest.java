@@ -139,7 +139,7 @@ class UserServiceTest {
 	void register() {
 		// given
 		String prefix = "1_test@email.com";
-		RegisterRequest request = new RegisterRequest(password, nickname);
+		RegisterRequest request = new RegisterRequest(password, nickname, bjNickname);
 		MockMultipartFile profileImage = new MockMultipartFile("image", "image.jpg", "image/jpeg", "test".getBytes());
 		when(redisService.getValues(EMAIL_VERIFICATION_TOKEN)).thenReturn(email);
 		when(userRepository.save(any(User.class))).thenReturn(user);
