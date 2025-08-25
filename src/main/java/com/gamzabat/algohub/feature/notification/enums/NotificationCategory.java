@@ -25,4 +25,5 @@ public enum NotificationCategory {
 	public String getMessage(Object... args) {
 		return String.format(message, args);
 	}
+
 }
