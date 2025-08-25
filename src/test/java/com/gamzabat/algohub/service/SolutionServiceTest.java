@@ -723,6 +723,7 @@ class SolutionServiceTest {
 	@Test
 	@DisplayName("나의 풀이 전체 조회 성공// 마감 된")
 	void getMySolutionsExpired() {
+
 		// given
 		Pageable pageable = PageRequest.of(0, 10);
 		List<Solution> expired = new ArrayList<>();
