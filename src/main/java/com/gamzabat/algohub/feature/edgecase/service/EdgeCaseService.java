@@ -95,16 +95,12 @@ public class EdgeCaseService {
 		Boolean isLike = false;
 		if (edgeCaseLike == null) {
 			edgeCaseLike = EdgeCaseLike.builder().user(user).edgeCase(edgeCase).build();
-			edgeCase.addLike(edgeCaseLike);
 			edgeCaseLikeRepository.save(edgeCaseLike);
 
 			isLike = true;
 		} else {
-			edgeCase.removeLike(edgeCaseLike);
 			edgeCaseLikeRepository.delete(edgeCaseLike);
 		}
-
-		edgeCaseRepository.save(edgeCase);
 
 		return new TogleEdgeCaseResponse(isLike);
 	}

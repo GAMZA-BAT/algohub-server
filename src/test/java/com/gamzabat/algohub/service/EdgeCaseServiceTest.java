@@ -105,9 +105,6 @@ class EdgeCaseServiceTest {
 		userId.set(user, 1L);
 		userId.set(user2, 2L);
 
-		edgeCase1.addLike(edgeCaseLike1);
-		edgeCase1.addLike(edgeCaseLike2);
-		edgeCase2.addLike(edgeCaseLike3);
 
 		Field edgeCaseId = EdgeCase.class.getDeclaredField("id");
 		Field edgeCaseLikeCount = EdgeCase.class.getDeclaredField("likeCount");
@@ -270,7 +267,6 @@ class EdgeCaseServiceTest {
 		edgeCaseService.togleEdgeCaseLike(user2, 2L);
 
 		//then
-		verify(edgeCaseRepository, times(1)).save(any(EdgeCase.class));
 		verify(edgeCaseLikeRepository, times(1)).delete(any(EdgeCaseLike.class));
 	}
 
@@ -285,7 +281,6 @@ class EdgeCaseServiceTest {
 		edgeCaseService.togleEdgeCaseLike(user2, 2L);
 
 		//then
-		verify(edgeCaseRepository, times(1)).save(any(EdgeCase.class));
 		verify(edgeCaseLikeRepository, times(1)).save(any(EdgeCaseLike.class));
 	}
 

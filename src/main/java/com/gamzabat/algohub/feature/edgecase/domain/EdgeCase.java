@@ -40,8 +40,6 @@ public class EdgeCase {
 	@Column(columnDefinition = "TEXT")
 	private String output;
 
-	@OneToMany(mappedBy = "edgeCase", fetch = FetchType.LAZY)
-	private List<EdgeCaseLike> likes = new ArrayList<>();
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id")
@@ -63,19 +61,6 @@ public class EdgeCase {
 		this.author = author;
 	}
 
-	public void addLike(EdgeCaseLike like) {
-		likes.add(like);
-		like.setEdgeCase(this);
-		likeCount++;
-	}
-	public void removeLike(EdgeCaseLike like) {
-		if (likes.remove(like)) {
-
-			like.setEdgeCase(null);
-			if (likeCount > 0)
-				likeCount--;
-		}
-	}
 
 
 
