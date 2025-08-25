@@ -34,6 +34,7 @@ import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValida
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
+import com.gamzabat.algohub.feature.solution.dto.GetSolutionListRequest;
 import com.gamzabat.algohub.feature.solution.dto.GetSolutionResponse;
 import com.gamzabat.algohub.feature.solution.exception.CannotFoundSolutionException;
 import com.gamzabat.algohub.feature.solution.repository.SolutionCommentRepository;
@@ -87,46 +88,63 @@ class SolutionControllerTest {
 		Pageable pageable = PageRequest.of(0, 20);
 		GetSolutionResponse response = GetSolutionResponse.builder().build();
 		Page<GetSolutionResponse> pagedResponse = new PageImpl<>(Collections.singletonList(response), pageable, 1);
-		when(solutionService.getSolutionList(any(User.class), anyLong(), isNull(), isNull(), isNull(),
+		when(solutionService.getSolutionList(any(User.class), anyLong(),any(GetSolutionListRequest.class),
 			any(Pageable.class))).thenReturn(pagedResponse);
 		// when, then
 		mockMvc.perform(get("/api/problems/{problemId}/solutions", problemId)
 				.header("Authorization", token))
 			.andExpect(status().isOk())
 			.andExpect(content().string(objectMapper.writeValueAsString(pagedResponse)));
-		verify(solutionService, times(1)).getSolutionList(user, problemId, null, null, null, pageable);
+		verify(solutionService, times(1)).getSolutionList(
+			any(User.class),
+			eq(problemId),
+			any(GetSolutionListRequest.class),
+			argThat(p -> p.getPageNumber()==0 && p.getPageSize()==20)
+		);
 	}
 
 	@Test
 	@DisplayName("풀이 목록 조회 실패 : 존재하지 않는 문제")
 	void getSolutionListFailed_1() throws Exception {
 		// given
-		Pageable pageable = PageRequest.of(0, 20);
-		when(solutionService.getSolutionList(any(User.class), anyLong(), isNull(), isNull(), isNull(),
+		when(solutionService.getSolutionList(any(User.class), anyLong(), any(GetSolutionListRequest.class),
 			any(Pageable.class)))
 			.thenThrow(new ProblemValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 문제 입니다."));
 		// when, then
 		mockMvc.perform(get("/api/problems/{problemId}/solutions", problemId)
-				.header("Authorization", token))
+				.header("Authorization", token)
+				.param("page", "0")
+				.param("size", "20"))
 			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.error").value("존재하지 않는 문제 입니다."));
-		verify(solutionService, times(1)).getSolutionList(user, problemId, null, null, null, pageable);
+		verify(solutionService, times(1)).getSolutionList(
+			any(User.class),
+			eq(problemId),
+			any(GetSolutionListRequest.class),
+			any(Pageable.class)
+		);
 	}
 
 	@Test
 	@DisplayName("풀이 목록 조회 실패 : 존재하지 않는 그룹")
 	void getSolutionListFailed_2() throws Exception {
 		// given
-		Pageable pageable = PageRequest.of(0, 20);
-		when(solutionService.getSolutionList(any(User.class), anyLong(), isNull(), isNull(), isNull(),
+		when(solutionService.getSolutionList(any(User.class), anyLong(), any(GetSolutionListRequest.class),
 			any(Pageable.class)))
 			.thenThrow(new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다."));
 		// when, then
 		mockMvc.perform(get("/api/problems/{problemId}/solutions", problemId)
-				.header("Authorization", token))
+				.header("Authorization", token)
+				.param("page", "0")
+				.param("size", "20"))
 			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.error").value("존재하지 않는 그룹 입니다."));
-		verify(solutionService, times(1)).getSolutionList(user, problemId, null, null, null, pageable);
+		verify(solutionService, times(1)).getSolutionList(
+			any(User.class),
+			eq(problemId),
+			any(GetSolutionListRequest.class),
+			any(Pageable.class)
+		);
 	}
 
 	@Test
@@ -134,15 +152,23 @@ class SolutionControllerTest {
 	void getSolutionListFailed_3() throws Exception {
 		// given
 		Pageable pageable = PageRequest.of(0, 20);
-		when(solutionService.getSolutionList(any(User.class), anyLong(), isNull(), isNull(), isNull(),
+		GetSolutionListRequest request = GetSolutionListRequest.builder().language(null).language(null).nickname(null).build();
+		when(solutionService.getSolutionList(any(User.class), anyLong(),any(GetSolutionListRequest.class),
 			any(Pageable.class)))
 			.thenThrow(new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹 입니다."));
 		// when, then
 		mockMvc.perform(get("/api/problems/{problemId}/solutions", problemId)
-				.header("Authorization", token))
+				.header("Authorization", token)
+				.param("page", "0")
+				.param("size", "20"))
 			.andExpect(status().isForbidden())
 			.andExpect(jsonPath("$.error").value("참여하지 않은 그룹 입니다."));
-		verify(solutionService, times(1)).getSolutionList(user, problemId, null, null, null, pageable);
+		verify(solutionService, times(1)).getSolutionList(
+			any(User.class),
+			eq(problemId),
+			any(GetSolutionListRequest.class),
+			any(Pageable.class)
+		);
 	}
 
 	@Test

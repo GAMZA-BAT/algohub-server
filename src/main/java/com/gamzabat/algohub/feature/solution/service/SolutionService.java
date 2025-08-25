@@ -36,6 +36,7 @@ import com.gamzabat.algohub.feature.solution.domain.Solution;
 import com.gamzabat.algohub.feature.solution.domain.SolutionComment;
 import com.gamzabat.algohub.feature.solution.dto.CreateSolutionRequest;
 import com.gamzabat.algohub.feature.solution.dto.GetCurrentSolvingStatusResponse;
+import com.gamzabat.algohub.feature.solution.dto.GetSolutionListRequest;
 import com.gamzabat.algohub.feature.solution.dto.GetSolutionResponse;
 import com.gamzabat.algohub.feature.solution.dto.GetSolvingStatusPerProblemResponse;
 import com.gamzabat.algohub.feature.solution.enums.ProgressCategory;
@@ -64,8 +65,7 @@ public class SolutionService {
 	private final SolutionCommentRepository solutionCommentRepository;
 
 	@Transactional(readOnly = true)
-	public Page<GetSolutionResponse> getSolutionList(User user, Long problemId, String nickname,
-		String language, String result, Pageable pageable) {
+	public Page<GetSolutionResponse> getSolutionList(User user, Long problemId, GetSolutionListRequest request, Pageable pageable) {
 		Problem problem = problemRepository.findById(problemId)
 			.orElseThrow(() -> new ProblemValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 문제 입니다."));
 
@@ -76,7 +76,7 @@ public class SolutionService {
 			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹 입니다.");
 		}
 
-		Page<Solution> solutions = solutionRepository.findAllFilteredSolutions(problem, nickname, language, result,
+		Page<Solution> solutions = solutionRepository.findAllFilteredSolutions(problem, request.nickname(), request.language(), request.result(),
 			pageable);
 
 		return solutions.map(solution -> this.getGetSolutionResponse(user, solution));

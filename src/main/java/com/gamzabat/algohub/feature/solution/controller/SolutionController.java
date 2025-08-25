@@ -6,9 +6,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,6 +22,7 @@ import com.gamzabat.algohub.common.annotation.AuthedUser;
 import com.gamzabat.algohub.exception.RequestException;
 import com.gamzabat.algohub.feature.solution.dto.CreateSolutionRequest;
 import com.gamzabat.algohub.feature.solution.dto.GetCurrentSolvingStatusResponse;
+import com.gamzabat.algohub.feature.solution.dto.GetSolutionListRequest;
 import com.gamzabat.algohub.feature.solution.dto.GetSolutionResponse;
 import com.gamzabat.algohub.feature.solution.enums.ProgressCategory;
 import com.gamzabat.algohub.feature.solution.service.SolutionService;
@@ -41,14 +44,9 @@ public class SolutionController {
 	@Operation(summary = "풀이 목록 조회 API", description = "특정 문제에 대한 풀이를 모두 조회하는 API")
 	public ResponseEntity<Page<GetSolutionResponse>> getSolutionList(@AuthedUser User user,
 		@PathVariable Long problemId,
-		@RequestParam(required = false) String language,
-		@RequestParam(required = false) String result,
-		@RequestParam(required = false) String nickname,
-		@RequestParam(defaultValue = "0") int page,
-		@RequestParam(defaultValue = "20") int size) {
-		Pageable pageable = PageRequest.of(page, size);
-		Page<GetSolutionResponse> response = solutionService.getSolutionList(user, problemId, nickname, language,
-			result, pageable);
+		@ModelAttribute GetSolutionListRequest request,
+		@PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+		Page<GetSolutionResponse> response = solutionService.getSolutionList(user, problemId,request,pageable);
 		return ResponseEntity.ok().body(response);
 	}
 

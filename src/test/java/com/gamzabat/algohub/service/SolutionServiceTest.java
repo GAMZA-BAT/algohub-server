@@ -43,6 +43,7 @@ import com.gamzabat.algohub.feature.solution.domain.Solution;
 import com.gamzabat.algohub.feature.solution.domain.SolutionComment;
 import com.gamzabat.algohub.feature.solution.dto.CreateSolutionRequest;
 import com.gamzabat.algohub.feature.solution.dto.GetCurrentSolvingStatusResponse;
+import com.gamzabat.algohub.feature.solution.dto.GetSolutionListRequest;
 import com.gamzabat.algohub.feature.solution.dto.GetSolutionResponse;
 import com.gamzabat.algohub.feature.solution.enums.ProgressCategory;
 import com.gamzabat.algohub.feature.solution.exception.CannotFoundSolutionException;
@@ -144,7 +145,8 @@ class SolutionServiceTest {
 		Page<Solution> correctPage = new PageImpl<>(list.subList(10, 20), pageable, 10);
 		List<SolutionComment> readComments = new ArrayList<>(commentList.subList(0, 25));
 		List<SolutionComment> unReadComments = new ArrayList<>(commentList.subList(25, 50));
-
+		GetSolutionListRequest requestCompileError = GetSolutionListRequest.builder().result("컴파일 에러").language(null).nickname(null).build();
+		GetSolutionListRequest requestCorrect = GetSolutionListRequest.builder().result("맞았습니다!!").language(null).nickname(null).build();
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(group));
 		when(problemRepository.findById(10L)).thenReturn(Optional.ofNullable(problem));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user, group)).thenReturn(true);
@@ -161,9 +163,9 @@ class SolutionServiceTest {
 				unReadComments.subList(i * 5, i * 5 + 5));
 		}
 		// when
-		Page<GetSolutionResponse> compileErrorResult = solutionService.getSolutionList(user, 10L, null, null, "컴파일 에러",
+		Page<GetSolutionResponse> compileErrorResult = solutionService.getSolutionList(user, 10L, requestCompileError,
 			pageable);
-		Page<GetSolutionResponse> correctResult = solutionService.getSolutionList(user, 10L, null, null, "맞았습니다!!",
+		Page<GetSolutionResponse> correctResult = solutionService.getSolutionList(user, 10L, requestCorrect,
 			pageable);
 		// then
 		// 1) 컴파일 에러 풀이 목록 조회
@@ -226,7 +228,7 @@ class SolutionServiceTest {
 		List<Solution> list = new ArrayList<>();
 		List<SolutionComment> commentList = new ArrayList<>();
 		LocalDateTime fixedDateTime = LocalDateTime.now();
-
+		GetSolutionListRequest request = GetSolutionListRequest.builder().result(null).language("Java").nickname("nickname1").build();
 		setTestSolutionAndCommentList(list, commentList, fixedDateTime);
 
 		Page<Solution> solutionPage = new PageImpl<>(list.subList(10, 15), pageable, 5);
@@ -238,8 +240,7 @@ class SolutionServiceTest {
 			solutionPage);
 
 		// when
-		Page<GetSolutionResponse> result = solutionService.getSolutionList(user2, 10L, "nickname1", "Java", null,
-			pageable);
+		Page<GetSolutionResponse> result = solutionService.getSolutionList(user2, 10L, request, pageable);
 		// then
 		assertThat(result.getContent().size()).isEqualTo(5);
 		assertThat(result.getTotalElements()).isEqualTo(5);
@@ -263,8 +264,9 @@ class SolutionServiceTest {
 		Pageable pageable = PageRequest.of(0, 20);
 		when(problemRepository.findById(10L)).thenReturn(Optional.ofNullable(problem));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.empty());
+		GetSolutionListRequest request = GetSolutionListRequest.builder().result(null).language(null).nickname(null).build();
 		// when, then
-		assertThatThrownBy(() -> solutionService.getSolutionList(user, 10L, null, null, null, pageable))
+		assertThatThrownBy(() -> solutionService.getSolutionList(user, 10L, request, pageable))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.NOT_FOUND.value())
 			.hasFieldOrPropertyWithValue("error", "존재하지 않는 그룹 입니다.");
@@ -276,8 +278,10 @@ class SolutionServiceTest {
 		// given
 		Pageable pageable = PageRequest.of(0, 20);
 		when(problemRepository.findById(10L)).thenReturn(Optional.empty());
+		GetSolutionListRequest request = GetSolutionListRequest.builder().result(null).language(null).nickname(null).build();
+
 		// when, then
-		assertThatThrownBy(() -> solutionService.getSolutionList(user, 10L, null, null, null, pageable))
+		assertThatThrownBy(() -> solutionService.getSolutionList(user, 10L,request, pageable))
 			.isInstanceOf(ProblemValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.NOT_FOUND.value())
 			.hasFieldOrPropertyWithValue("error", "존재하지 않는 문제 입니다.");
@@ -291,8 +295,10 @@ class SolutionServiceTest {
 		when(problemRepository.findById(10L)).thenReturn(Optional.ofNullable(problem));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(group));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user2, group)).thenReturn(false);
+		GetSolutionListRequest request = GetSolutionListRequest.builder().result(null).language(null).nickname(null).build();
+
 		// when, then
-		assertThatThrownBy(() -> solutionService.getSolutionList(user2, 10L, null, null, null, pageable))
+		assertThatThrownBy(() -> solutionService.getSolutionList(user2, 10L, request, pageable))
 			.isInstanceOf(GroupMemberValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹 입니다.");
