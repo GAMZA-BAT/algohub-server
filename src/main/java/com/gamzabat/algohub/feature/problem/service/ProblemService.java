@@ -159,11 +159,6 @@ public class ProblemService {
 		} else {
 			response = getQueuedProblems(user, groupId, pageable);
 		}
-		/*
-		else if (status == ProblemListStatus.DEADLINE_REACHED) {
-			response = getDeadlineReachedProblemList(user,groupId);
-		}
-		*/
 		return response;
 	}
 
@@ -230,37 +225,6 @@ public class ProblemService {
 		problemRepository.delete(problem);
 		notificationRepository.deleteAllByProblem(problem);
 		log.info("success to delete problem user_id={} , problem_id = {}", user.getId(), problemId);
-	}
-
-	@Transactional(readOnly = true)
-	public List<GetProblemResponse> getDeadlineReachedProblemList(User user, Long groupId) {
-		StudyGroup group = getGroup(groupId);
-		if (!groupMemberRepository.existsByUserAndStudyGroup(user, group))
-			throw new ProblemValidationException(HttpStatus.FORBIDDEN.value(), "문제를 조회할 권한이 없습니다.");
-
-		List<Problem> problems = problemRepository.findAllByStudyGroupAndEndDateBetween(group, LocalDate.now(),
-			LocalDate.now().plusDays(1));
-		problems.sort(Comparator.comparing(Problem::getEndDate));
-
-		return problems.stream().map(problem -> {
-			Integer correctCount = solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(problem.getId(),
-				BOJResultConstants.CORRECT);
-			Integer submitMemberCount = solutionRepository.countDistinctUsersByProblem(problem);
-			Integer groupMemberCount = groupMemberRepository.countMembersByStudyGroup(group);
-			Integer accuracy = calculateAccuracy(submitMemberCount, correctCount);
-
-			return new GetProblemResponse(
-				problem.getTitle(),
-				problem.getId(),
-				problem.getLink(),
-				problem.getStartDate(),
-				problem.getEndDate(),
-				problem.getLevel(),
-				solutionRepository.existsByUserAndProblemAndResult(user, problem, BOJResultConstants.CORRECT),
-				submitMemberCount,
-				groupMemberCount,
-				accuracy);
-		}).toList();
 	}
 
 	@Transactional(readOnly = true)

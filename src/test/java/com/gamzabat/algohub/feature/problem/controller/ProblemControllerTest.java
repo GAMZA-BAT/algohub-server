@@ -314,6 +314,8 @@ class ProblemControllerTest {
 		// when, then
 		mockMvc.perform(get("/api/groups/{groupId}/problems", groupId)
 				.header("Authorization", token)
+				.param("page", "0")
+				.param("size", "20")
 				.param("unsolved-only", String.valueOf(false))
 				.param("status", String.valueOf(ProblemListStatus.IN_PROGRESS)))
 			.andExpect(status().isOk())

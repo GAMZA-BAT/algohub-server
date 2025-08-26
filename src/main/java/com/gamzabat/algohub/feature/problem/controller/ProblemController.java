@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.parameters.P;
@@ -69,9 +70,8 @@ public class ProblemController {
 		@PathVariable Long groupId,
 		@RequestParam ProblemListStatus status,
 		@RequestParam(name = "unsolved-only", required = false) Boolean unsolvedOnly,
-		@RequestParam(defaultValue = "0") int page,
-		@RequestParam(defaultValue = "20") int size) {
-		Pageable pageable = PageRequest.of(page, size, Sort.by(PROBLEM_SORT_BY).descending());
+		@PageableDefault(page = 0, size = 20, sort = "endDate", direction = Sort.Direction.DESC)
+		Pageable pageable) {
 		if (status == ProblemListStatus.IN_PROGRESS) {
 			if (unsolvedOnly == null) {
 				throw new InvalidRequestException(HttpStatus.BAD_REQUEST, "IN_PROGRESS 상태에서는 unsolvedOnly 는 필수입니다.");
@@ -88,13 +88,6 @@ public class ProblemController {
 	public ResponseEntity<GetProblemResponse> getProblem(@AuthedUser User user, @PathVariable Long problemId) {
 		GetProblemResponse response = problemService.getProblem(user, problemId);
 		return ResponseEntity.ok().body(response);
-	}
-
-	@GetMapping("/groups/{groupId}/problems/deadline-reached")
-	@Operation(summary = "마감 기한이 내일까지인 문제들 조회 API")
-	public ResponseEntity<List<GetProblemResponse>> getDeadlineReachedProblemList(@AuthedUser User user,
-		@PathVariable Long groupId) {
-		return ResponseEntity.ok().body(problemService.getDeadlineReachedProblemList(user, groupId));
 	}
 
 	@DeleteMapping(value = "/problems/{problemId}")
