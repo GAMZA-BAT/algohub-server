@@ -26,6 +26,7 @@ import com.gamzabat.algohub.feature.group.ranking.domain.Ranking;
 import com.gamzabat.algohub.feature.group.ranking.repository.RankingRepository;
 import com.gamzabat.algohub.feature.group.studygroup.domain.BookmarkedStudyGroup;
 import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
+import com.gamzabat.algohub.feature.group.studygroup.domain.JoinRequest;
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.group.studygroup.dto.BookmarkStatus;
 import com.gamzabat.algohub.feature.group.studygroup.dto.CheckSolvedProblemResponse;
@@ -50,6 +51,7 @@ import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundUserEx
 import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.repository.BookmarkedStudyGroupRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
+import com.gamzabat.algohub.feature.group.studygroup.repository.JoinRequestRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.image.service.ImageService;
 import com.gamzabat.algohub.feature.notice.repository.NoticeCommentRepository;
@@ -90,6 +92,20 @@ public class StudyGroupService {
 	private final NotificationSettingRepository notificationSettingRepository;
 	private final NotificationService notificationService;
 	private final DiscordWebhookService webhookService;
+	private final JoinRequestRepository joinRequestRepository;
+
+	private static boolean isDone(LocalDate today, StudyGroup group) {
+		return group.getEndDate() != null && group.getEndDate().isBefore(today);
+	}
+
+	private static boolean isInProgress(LocalDate today, StudyGroup group) {
+		return !(group.getStartDate() == null || group.getStartDate().isAfter(today))
+			&& !(group.getEndDate() == null || group.getEndDate().isBefore(today));
+	}
+
+	private static boolean isQueued(LocalDate today, StudyGroup group) {
+		return group.getStartDate() != null && group.getStartDate().isAfter(today);
+	}
 
 	@Transactional
 	public GroupCodeResponse createGroup(User user, CreateGroupRequest request, MultipartFile profileImage) {
@@ -291,19 +307,6 @@ public class StudyGroupService {
 
 		log.info("success to get my study group list");
 		return response;
-	}
-
-	private static boolean isDone(LocalDate today, StudyGroup group) {
-		return group.getEndDate() != null && group.getEndDate().isBefore(today);
-	}
-
-	private static boolean isInProgress(LocalDate today, StudyGroup group) {
-		return !(group.getStartDate() == null || group.getStartDate().isAfter(today))
-			&& !(group.getEndDate() == null || group.getEndDate().isBefore(today));
-	}
-
-	private static boolean isQueued(LocalDate today, StudyGroup group) {
-		return group.getStartDate() != null && group.getStartDate().isAfter(today);
 	}
 
 	private GetStudyGroupResponse getStudyGroupResponseDTO(User user, StudyGroup group) {
@@ -633,5 +636,18 @@ public class StudyGroupService {
 		}).toList();
 		log.info("success to get my study groups settings");
 		return response;
+	}
+
+	@Transactional
+	public void joinRequest(User user, Long groupId) {
+		StudyGroup studyGroup = groupRepository.findById(groupId)
+			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다."));
+
+		JoinRequest request = new JoinRequest();
+		request.setRequester(user);
+		request.setGroup(studyGroup);
+		request = joinRequestRepository.save(request);
+
+		log.info("success to join request group = {}", groupId);
 	}
 }

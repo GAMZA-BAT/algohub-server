@@ -195,4 +195,12 @@ public class StudyGroupController {
 		List<GetGroupSettingResponse> responses = studyGroupService.getStudyGroupSettings(user);
 		return ResponseEntity.ok().body(responses);
 	}
+
+	@PostMapping(value = "/{groupdId}/request-join")
+	@Operation(summary = "그룹 가입 요청 API", description = "스터디 그룹에 가입 요청을 보내는 API")
+	public ResponseEntity<Void> requestGroupJoin(@AuthedUser User user, @PathVariable Long groupdId) {
+		studyGroupService.joinRequest(user, groupdId);
+		return ResponseEntity.ok().build();
+	}
+
 }
