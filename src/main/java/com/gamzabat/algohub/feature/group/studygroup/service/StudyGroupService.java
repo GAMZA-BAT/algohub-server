@@ -638,9 +638,21 @@ public class StudyGroupService {
 	}
 
 	public Page<GetGroupResponse> getSearchedStudyGroupList(String searchPattern, Pageable pageable) {
-		Page<StudyGroup> groups = groupRepository.findBySearchPattern(searchPattern, pageable);
-		return groups.map(group -> new GetGroupResponse(group.getId(), group.getName(), group.getStartDate(),
-			group.getEndDate(), group.getIntroduction(), group.getGroupImage(), null, null));
+		String p = searchPattern == null ? null : searchPattern.trim();
+		if (p == null || p.isEmpty()) {
+			return Page.empty(pageable);
+		}
+		Page<StudyGroup> groups = groupRepository.findBySearchPattern(p, pageable);
+		return groups.map(group -> new GetGroupResponse(
+			group.getId(),
+			group.getName(),
+			group.getStartDate(),
+			group.getEndDate(),
+			group.getIntroduction(),
+			group.getGroupImage(),
+			null,
+			null
+		));
 	}
 
 }
