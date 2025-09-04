@@ -642,12 +642,14 @@ public class StudyGroupService {
 	public void joinRequest(User user, Long groupId) {
 		StudyGroup studyGroup = groupRepository.findById(groupId)
 			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다."));
+		Optional<GroupMember> groupMember = groupMemberRepository.findByUserAndStudyGroup(user, studyGroup);
+		if (groupMember.isPresent())
+			throw new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(), "이미 가입한 그룹입니다");
 
 		JoinRequest request = new JoinRequest();
 		request.setRequester(user);
 		request.setGroup(studyGroup);
-		request = joinRequestRepository.save(request);
-
+		joinRequestRepository.save(request);
 		log.info("success to join request group = {}", groupId);
 	}
 }

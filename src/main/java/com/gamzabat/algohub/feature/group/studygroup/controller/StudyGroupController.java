@@ -196,11 +196,15 @@ public class StudyGroupController {
 		return ResponseEntity.ok().body(responses);
 	}
 
-	@PostMapping(value = "/{groupdId}/request-join")
+	@PostMapping(value = "/{groupdId}/join-request")
 	@Operation(summary = "그룹 가입 요청 API", description = "스터디 그룹에 가입 요청을 보내는 API")
-	public ResponseEntity<Void> requestGroupJoin(@AuthedUser User user, @PathVariable Long groupdId) {
-		studyGroupService.joinRequest(user, groupdId);
+	public ResponseEntity<Void> joinRequest(@AuthedUser User user, @PathVariable Long groupId) {
+		studyGroupService.joinRequest(user, groupId);
 		return ResponseEntity.ok().build();
 	}
+
+	@GetMapping(value="/{groupId}/join-request")
+	@Operation(summary = "그룹 가입 요청 목록 조회 API",description = "스터디 그룹 가입 요청 목록을 조회하는 API")
+	public ResponseEntity
 
 }
