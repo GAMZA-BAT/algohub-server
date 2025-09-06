@@ -34,7 +34,7 @@ import lombok.RequiredArgsConstructor;
 public class EdgeCaseController {
 	private final EdgeCaseService edgeCaseService;
 
-	@PostMapping()
+	@PostMapping
 	@Operation(summary = "반례 등록")
 	public ResponseEntity<Void> createEdgeCase(@AuthedUser User user, @RequestBody @Valid CreateEdgeCaseRequest creatEdgeCaseRequest,
 		Errors errors) {
@@ -48,8 +48,8 @@ public class EdgeCaseController {
 
 	@GetMapping("/list")
 	@Operation(summary = "반례리스트 조회")
-	public ResponseEntity<GetEdgeCaseListResponse> getEdgeCaseList(@AuthedUser User user, @RequestParam(required = false) Integer problemId) {
-		GetEdgeCaseListResponse response = edgeCaseService.getEdgeCaseList(problemId);
+	public ResponseEntity<GetEdgeCaseListResponse> getEdgeCaseList(@AuthedUser User user, @RequestParam(required = false) Integer problemNumber) {
+		GetEdgeCaseListResponse response = edgeCaseService.getEdgeCaseList(problemNumber);
 
 		return ResponseEntity.ok().body(response);
 	}

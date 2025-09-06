@@ -61,7 +61,4 @@ public class EdgeCase {
 		this.author = author;
 	}
 
-
-
-
 }

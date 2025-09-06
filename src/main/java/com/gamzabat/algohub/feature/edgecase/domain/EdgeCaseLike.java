@@ -39,7 +39,4 @@ public class EdgeCaseLike {
 		this.user = user;
 	}
 
-	void setEdgeCase(EdgeCase edgeCase) {
-		this.edgeCase = edgeCase;
-	}
 }

@@ -35,7 +35,6 @@ public class EdgeCaseService {
 	private final ProblemService problemService;
 	private final EdgeCaseLikeRepository edgeCaseLikeRepository;
 
-
 	public void createEdgeCase(User user, CreateEdgeCaseRequest request) {
 		User author = user;
 		String link = request.link();
@@ -48,8 +47,7 @@ public class EdgeCaseService {
 		saveEdgeCase(author,request,level,title,Integer.parseInt(number));
 	}
 
-	@Transactional
-	public void saveEdgeCase(User author, CreateEdgeCaseRequest request, int level, String title, int number) {
+	private void saveEdgeCase(User author, CreateEdgeCaseRequest request, int level, String title, int number) {
 		EdgeCase edgeCase = EdgeCase.builder().input(request.input()).level(level).title(title).link(
 			request.link()).output(request.output()).problemNumber(number).author(author).build();
 
