@@ -718,7 +718,7 @@ class SolutionServiceTest {
 			assertThat(responses.getContent().get(i).getIsRead()).isEqualTo(true);
 			assertThat(responses.getContent().get(i).getGroupId()).isEqualTo(
 				problem.getStudyGroup().getId());
-			assertThat(responses.getContent().getFirst().getProblemId()).isEqualTo(problem1.getId());
+			assertThat(responses.getContent().getFirst().getProblemId()).isEqualTo(problem.getId());
 		}
 	}
 
