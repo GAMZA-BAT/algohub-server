@@ -45,6 +45,7 @@ import com.gamzabat.algohub.feature.group.studygroup.dto.GroupRoleResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.UpdateBookmarkResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.UpdateGroupMemberRoleRequest;
 import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
+import com.gamzabat.algohub.feature.group.studygroup.exception.AlreadyExistsException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundGroupException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundProblemException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundUserException;
@@ -645,6 +646,8 @@ public class StudyGroupService {
 		Optional<GroupMember> groupMember = groupMemberRepository.findByUserAndStudyGroup(user, studyGroup);
 		if (groupMember.isPresent())
 			throw new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(), "이미 가입한 그룹입니다");
+		if (joinRequestRepository.findByGroupIdAndUserId(groupId, user.getId()) != null)
+			throw new AlreadyExistsException("이미 요청한 그룹입니다.");
 
 		JoinRequest request = new JoinRequest();
 		request.setRequester(user);
@@ -652,4 +655,5 @@ public class StudyGroupService {
 		joinRequestRepository.save(request);
 		log.info("success to join request group = {}", groupId);
 	}
+
 }

@@ -10,6 +10,7 @@ import com.gamzabat.algohub.common.jwt.exception.ExpiredTokenException;
 import com.gamzabat.algohub.common.jwt.exception.TokenException;
 import com.gamzabat.algohub.feature.comment.exception.CommentValidationException;
 import com.gamzabat.algohub.feature.group.ranking.exception.CannotFoundRankingException;
+import com.gamzabat.algohub.feature.group.studygroup.exception.AlreadyExistsException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundGroupException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundProblemException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundUserException;
@@ -227,6 +228,14 @@ public class CustomExceptionHandler {
 	@ExceptionHandler(InvalidDeleteUserRequestException.class)
 	protected ResponseEntity<ErrorResponse> handleCannotFoundVerificationCodeException(
 		InvalidDeleteUserRequestException e) {
+		return ResponseEntity
+			.status(HttpStatus.BAD_REQUEST)
+			.body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null));
+	}
+
+	@ExceptionHandler(AlreadyExistsException.class)
+	protected ResponseEntity<ErrorResponse> handleCannotFoundVerificationCodeException(
+		AlreadyExistsException e) {
 		return ResponseEntity
 			.status(HttpStatus.BAD_REQUEST)
 			.body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null));

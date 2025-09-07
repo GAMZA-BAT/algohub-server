@@ -5,5 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.gamzabat.algohub.feature.group.studygroup.domain.JoinRequest;
 
 public interface JoinRequestRepository extends JpaRepository<JoinRequest, Long> {
-
+	JoinRequest findByGroupIdAndUserId(Long groupId, Long userId);
 }
