@@ -18,7 +18,10 @@ public interface StudyGroupRepository extends JpaRepository<StudyGroup, Long>, C
 	@Query("select sg from StudyGroup sg where sg.id = :id and sg.deletedAt is null")
 	Optional<StudyGroup> findById(Long id);
 
-	@Query("select sg from StudyGroup sg where lower(sg.name) like(concat('%', lower(:searchPattern),'%'))"
-		+ "or lower(sg.introduction) like(concat('%',lower(:searchPattern),'%'))")
+	@Query(value = """
+		select sg from StudyGroup sg
+		where match (sg.name,sg.introduction)
+		against(:searchPattern in natural language mode) 
+		""", nativeQuery = true)
 	Page<StudyGroup> findBySearchPattern(@Param("searchPattern") String searchPattern, Pageable pageable);
 }
