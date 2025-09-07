@@ -84,6 +84,7 @@ public class UserService {
 		checkNickname(request.nickname());
 		checkEmailForm(email);
 		checkPasswordForm(request.password());
+		validateBjNickname(request.bjNickname());
 
 		String encodedPassword = passwordEncoder.encode(request.password());
 
@@ -91,6 +92,7 @@ public class UserService {
 			.email(email)
 			.password(encodedPassword)
 			.nickname(request.nickname())
+			.bjNickname(request.bjNickname())
 			.role(Role.USER)
 			.build());
 
