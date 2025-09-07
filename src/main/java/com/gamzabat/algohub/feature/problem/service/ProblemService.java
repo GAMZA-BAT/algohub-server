@@ -351,7 +351,7 @@ public class ProblemService {
 			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다."));
 	}
 
-	private JsonNode fetchProblemDetails(String problemId) {
+	public JsonNode fetchProblemDetails(String problemId) {
 		String url = SOLVED_AC_PROBLEM_API_URL + problemId;
 
 		try {
@@ -386,11 +386,11 @@ public class ProblemService {
 		}
 	}
 
-	private int getProblemLevel(JsonNode problemDetails) {
+	public int getProblemLevel(JsonNode problemDetails) {
 		return problemDetails.get("level").asInt();
 	}
 
-	private String getProblemTitle(JsonNode problemDetails) {
+	public String getProblemTitle(JsonNode problemDetails) {
 		return problemDetails.get("titleKo").asText();
 	}
 
