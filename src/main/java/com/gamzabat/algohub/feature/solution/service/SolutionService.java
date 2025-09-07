@@ -69,7 +69,7 @@ public class SolutionService {
 		String language, String result, Pageable pageable) {
 		Problem problem = problemRepository.findById(problemId)
 			.orElseThrow(() -> new ProblemValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 문제 입니다."));
-
+		// Gorup Id를 받고 그거로 group에 대한 확인을 해야할듯
 		StudyGroup group = studyGroupRepository.findById(problem.getStudyGroup().getId())
 			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다."));
 
