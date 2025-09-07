@@ -22,6 +22,7 @@ import com.gamzabat.algohub.common.annotation.AuthedUser;
 import com.gamzabat.algohub.exception.RequestException;
 import com.gamzabat.algohub.feature.solution.dto.CreateSolutionRequest;
 import com.gamzabat.algohub.feature.solution.dto.GetCurrentSolvingStatusResponse;
+import com.gamzabat.algohub.feature.solution.dto.GetMySolutionListRequest;
 import com.gamzabat.algohub.feature.solution.dto.GetSolutionListRequest;
 import com.gamzabat.algohub.feature.solution.dto.GetSolutionResponse;
 import com.gamzabat.algohub.feature.solution.enums.ProgressCategory;
@@ -78,17 +79,10 @@ public class SolutionController {
 	@GetMapping("/solutions/me")
 	@Operation(summary = "내 풀이 전체 조회", description = "나의 풀이를 그룹, 문제 번호, 언어, 결과, 상태 등으로 필터링하여 조회하는 API")
 	public ResponseEntity<Page<GetSolutionResponse>> getMySolutionList(@AuthedUser User user,
-		@RequestParam(required = false) Long groupId,
-		@RequestParam(required = false) Integer problemNumber,
-		@RequestParam(required = false) String language,
-		@RequestParam(required = false) String result,
-		@RequestParam(required = false)ProgressCategory status,
-		@RequestParam(required = false) Boolean isIncorrect,
-		@RequestParam(defaultValue = "0") int page,
-		@RequestParam(defaultValue = "20") int size) {
-		Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-		Page<GetSolutionResponse> response = solutionService.getMySolutionList(user, groupId, problemNumber, language,
-			result, status, isIncorrect, pageable);
+		@ModelAttribute GetMySolutionListRequest request,
+		@PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+		Page<GetSolutionResponse> response = solutionService.getMySolutionList(user, request.groupId(),
+			request.problemNumber(), request.language(), request.result(), request.status(), request.isIncorrect(), pageable);
 		return ResponseEntity.ok().body(response);
 	}
 }
