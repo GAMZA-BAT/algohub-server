@@ -3,7 +3,6 @@ package com.gamzabat.algohub.feature.problem.service;
 import static com.gamzabat.algohub.constants.ApiConstants.*;
 
 import java.time.LocalDate;
-import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -153,6 +152,9 @@ public class ProblemService {
 	public Page<GetProblemResponse> getProblems(User user, Long groupId, ProblemListStatus status, Boolean unsolvedOnly, Pageable pageable) {
 		Page<GetProblemResponse> response;
 		if (status == ProblemListStatus.IN_PROGRESS) {
+				if (unsolvedOnly == null) {
+					unsolvedOnly = false;
+				}
 			response = getInProgressProblems(user, groupId, unsolvedOnly, pageable);
 		} else if (status == ProblemListStatus.EXPIRED) {
 			response = getExpiredProblems(user, groupId, pageable);

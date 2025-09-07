@@ -27,7 +27,6 @@ import com.gamzabat.algohub.feature.problem.dto.CreateProblemRequest;
 import com.gamzabat.algohub.feature.problem.dto.EditProblemRequest;
 import com.gamzabat.algohub.feature.problem.dto.GetProblemResponse;
 import com.gamzabat.algohub.feature.problem.enums.ProblemListStatus;
-import com.gamzabat.algohub.feature.problem.exception.InvalidRequestException;
 import com.gamzabat.algohub.feature.problem.service.ProblemService;
 import com.gamzabat.algohub.feature.user.domain.User;
 
@@ -72,11 +71,6 @@ public class ProblemController {
 		@RequestParam(name = "unsolved-only", required = false) Boolean unsolvedOnly,
 		@PageableDefault(page = 0, size = 20, sort = "endDate", direction = Sort.Direction.DESC)
 		Pageable pageable) {
-		if (status == ProblemListStatus.IN_PROGRESS) {
-			if (unsolvedOnly == null) {
-				throw new InvalidRequestException(HttpStatus.BAD_REQUEST, "IN_PROGRESS 상태에서는 unsolvedOnly 는 필수입니다.");
-			}
-		}
 
 		Page<GetProblemResponse> response = problemService.getProblems(user, groupId, status, unsolvedOnly, pageable);
 
