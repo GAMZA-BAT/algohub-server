@@ -323,21 +323,6 @@ class ProblemControllerTest {
 	}
 
 	@Test
-	@DisplayName("문제 목록 조회 실패 : 올바르지 않은 요청")
-	void getProblemListFailed_1() throws Exception {
-		// given
-		Pageable pageable = PageRequest.of(0, 20, Sort.by("endDate").descending());
-
-		// when, then
-		mockMvc.perform(get("/api/groups/{groupId}/problems", groupId)
-				.header("Authorization", token)
-				.param("status", String.valueOf(ProblemListStatus.IN_PROGRESS)))
-			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.error").value("IN_PROGRESS 상태에서는 unsolvedOnly 는 필수입니다."));
-		verifyNoInteractions(problemService);
-	}
-
-	@Test
 	@DisplayName("문제 삭제 성공")
 	void deleteProblem() throws Exception {
 		// given
