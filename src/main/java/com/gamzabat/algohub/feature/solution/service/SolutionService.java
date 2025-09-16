@@ -289,7 +289,6 @@ public class SolutionService {
 		Integer accuracy = calculateAccuracy(submitMemberCount, correctCount);
 		long commentCount = commentRepository.countCommentsBySolutionId(solution.getId());
 		boolean isRead = true;
-
 		if (isMySolution(user, solution)) {
 			isRead = isAllCommentsRead(solution);
 		}

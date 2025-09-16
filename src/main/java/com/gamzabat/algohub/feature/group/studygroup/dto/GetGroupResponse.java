@@ -28,4 +28,5 @@ public class GetGroupResponse {
 		this.role = role;
 		this.ownerNickname = ownerNickname;
 	}
+	
 }

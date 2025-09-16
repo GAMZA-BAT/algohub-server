@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -90,6 +92,19 @@ public class StudyGroupService {
 	private final NotificationSettingRepository notificationSettingRepository;
 	private final NotificationService notificationService;
 	private final DiscordWebhookService webhookService;
+
+	private static boolean isDone(LocalDate today, StudyGroup group) {
+		return group.getEndDate() != null && group.getEndDate().isBefore(today);
+	}
+
+	private static boolean isInProgress(LocalDate today, StudyGroup group) {
+		return !(group.getStartDate() == null || group.getStartDate().isAfter(today))
+			&& !(group.getEndDate() == null || group.getEndDate().isBefore(today));
+	}
+
+	private static boolean isQueued(LocalDate today, StudyGroup group) {
+		return group.getStartDate() != null && group.getStartDate().isAfter(today);
+	}
 
 	@Transactional
 	public GroupCodeResponse createGroup(User user, CreateGroupRequest request, MultipartFile profileImage) {
@@ -291,19 +306,6 @@ public class StudyGroupService {
 
 		log.info("success to get my study group list");
 		return response;
-	}
-
-	private static boolean isDone(LocalDate today, StudyGroup group) {
-		return group.getEndDate() != null && group.getEndDate().isBefore(today);
-	}
-
-	private static boolean isInProgress(LocalDate today, StudyGroup group) {
-		return !(group.getStartDate() == null || group.getStartDate().isAfter(today))
-			&& !(group.getEndDate() == null || group.getEndDate().isBefore(today));
-	}
-
-	private static boolean isQueued(LocalDate today, StudyGroup group) {
-		return group.getStartDate() != null && group.getStartDate().isAfter(today);
 	}
 
 	private GetStudyGroupResponse getStudyGroupResponseDTO(User user, StudyGroup group) {
@@ -634,4 +636,23 @@ public class StudyGroupService {
 		log.info("success to get my study groups settings");
 		return response;
 	}
+
+	public Page<GetGroupResponse> getSearchedStudyGroupList(String searchPattern, Pageable pageable) {
+		String p = searchPattern == null ? null : searchPattern.trim();
+		if (p == null || p.isEmpty()) {
+			return Page.empty(pageable);
+		}
+		Page<StudyGroup> groups = groupRepository.findBySearchPattern(p, pageable);
+		return groups.map(group -> new GetGroupResponse(
+			group.getId(),
+			group.getName(),
+			group.getStartDate(),
+			group.getEndDate(),
+			group.getIntroduction(),
+			group.getGroupImage(),
+			null,
+			null
+		));
+	}
+
 }
