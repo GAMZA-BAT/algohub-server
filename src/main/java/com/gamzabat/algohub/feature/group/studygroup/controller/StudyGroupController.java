@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.gamzabat.algohub.common.annotation.AuthedUser;
 import com.gamzabat.algohub.exception.RequestException;
+import com.gamzabat.algohub.feature.group.studygroup.domain.JoinRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.CheckSolvedProblemResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.CreateGroupRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupRequest;
@@ -196,15 +197,35 @@ public class StudyGroupController {
 		return ResponseEntity.ok().body(responses);
 	}
 
-	@PostMapping(value = "/{groupdId}/join-request")
+	@PostMapping(value = "/{groupId}/join-request")
 	@Operation(summary = "그룹 가입 요청 API", description = "스터디 그룹에 가입 요청을 보내는 API")
 	public ResponseEntity<Void> joinRequest(@AuthedUser User user, @PathVariable Long groupId) {
 		studyGroupService.joinRequest(user, groupId);
 		return ResponseEntity.ok().build();
 	}
 
-	@GetMapping(value="/{groupId}/join-request")
-	@Operation(summary = "그룹 가입 요청 목록 조회 API",description = "스터디 그룹 가입 요청 목록을 조회하는 API")
-	public ResponseEntity
+	@GetMapping(value = "/{groupId}/join-request")
+	@Operation(summary = "그룹 가입 요청 목록 조회 API", description = "스터디 그룹 가입 요청 목록을 조회하는 API")
+	public ResponseEntity<List<JoinRequest>> getAllJoinRequests(@AuthedUser User user, @PathVariable Long groupId) {
+		List<JoinRequest> response = studyGroupService.getAllJoinRequests(user, groupId);
+
+		return ResponseEntity.ok().body(response);
+	}
+
+	@PostMapping(value = "/{requestId}/approve")
+	@Operation(summary = "그룹 가입 요청 승인 API", description = "스터디 그룹 가입 요청을 승인하는 API")
+	public ResponseEntity<Void> approveRequest(@AuthedUser User user, @PathVariable Long requestId,
+		@PathVariable Long groupId) {
+		studyGroupService.approveJoinRequest(user, requestId, groupId);
+		return ResponseEntity.ok().build();
+	}
+
+	@PostMapping(value = "/{requestId}/reject")
+	@Operation(summary = "그룹 가입 요청 거절 API", description = "스터디 그룹 가입 요청을 거절하는 API")
+	public ResponseEntity<Void> rejectRequest(@AuthedUser User user, @PathVariable Long requestId,
+		@PathVariable Long groupId) {
+		studyGroupService.rejectJoinRequest(user, requestId, groupId);
+		return ResponseEntity.ok().build();
+	}
 
 }

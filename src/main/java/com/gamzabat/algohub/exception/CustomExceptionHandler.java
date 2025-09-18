@@ -10,12 +10,12 @@ import com.gamzabat.algohub.common.jwt.exception.ExpiredTokenException;
 import com.gamzabat.algohub.common.jwt.exception.TokenException;
 import com.gamzabat.algohub.feature.comment.exception.CommentValidationException;
 import com.gamzabat.algohub.feature.group.ranking.exception.CannotFoundRankingException;
-import com.gamzabat.algohub.feature.group.studygroup.exception.AlreadyExistsException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundGroupException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundProblemException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundUserException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.InvalidRoleException;
+import com.gamzabat.algohub.feature.group.studygroup.exception.JoinRequestException;
 import com.gamzabat.algohub.feature.image.exception.AwsS3Exception;
 import com.gamzabat.algohub.feature.notice.exception.NoticeValidationException;
 import com.gamzabat.algohub.feature.notification.exception.CannotFoundNotificationException;
@@ -233,9 +233,9 @@ public class CustomExceptionHandler {
 			.body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null));
 	}
 
-	@ExceptionHandler(AlreadyExistsException.class)
+	@ExceptionHandler(JoinRequestException.class)
 	protected ResponseEntity<ErrorResponse> handleCannotFoundVerificationCodeException(
-		AlreadyExistsException e) {
+		JoinRequestException e) {
 		return ResponseEntity
 			.status(HttpStatus.BAD_REQUEST)
 			.body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null));

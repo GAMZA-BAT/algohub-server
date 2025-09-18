@@ -45,11 +45,11 @@ import com.gamzabat.algohub.feature.group.studygroup.dto.GroupRoleResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.UpdateBookmarkResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.UpdateGroupMemberRoleRequest;
 import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
-import com.gamzabat.algohub.feature.group.studygroup.exception.AlreadyExistsException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundGroupException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundProblemException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundUserException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
+import com.gamzabat.algohub.feature.group.studygroup.exception.JoinRequestException;
 import com.gamzabat.algohub.feature.group.studygroup.repository.BookmarkedStudyGroupRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.JoinRequestRepository;
@@ -643,11 +643,12 @@ public class StudyGroupService {
 	public void joinRequest(User user, Long groupId) {
 		StudyGroup studyGroup = groupRepository.findById(groupId)
 			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다."));
-		Optional<GroupMember> groupMember = groupMemberRepository.findByUserAndStudyGroup(user, studyGroup);
-		if (groupMember.isPresent())
+		if (groupMemberRepository.existsByUserAndStudyGroup(user, studyGroup)) {
 			throw new GroupMemberValidationException(HttpStatus.BAD_REQUEST.value(), "이미 가입한 그룹입니다");
-		if (joinRequestRepository.findByGroupIdAndUserId(groupId, user.getId()) != null)
-			throw new AlreadyExistsException("이미 요청한 그룹입니다.");
+		}
+		if (joinRequestRepository.existsByGroup_IdAndRequester_Id(groupId, user.getId())) {
+			throw new JoinRequestException("이미 요청한 그룹입니다.");
+		}
 
 		JoinRequest request = new JoinRequest();
 		request.setRequester(user);
@@ -656,4 +657,52 @@ public class StudyGroupService {
 		log.info("success to join request group = {}", groupId);
 	}
 
+	@Transactional(readOnly = true)
+	public List<JoinRequest> getAllJoinRequests(User user, Long groupId) {
+		StudyGroup studyGroup = groupRepository.findById(groupId)
+			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다."));
+		Optional<GroupMember> groupMember = groupMemberRepository.findByUserAndStudyGroup(user, studyGroup);
+		if (groupMember.isPresent() && RoleOfGroupMember.isParticipant(groupMember.get()) || groupMember.isEmpty()) {
+			throw new JoinRequestException("요청 목록을 조회할 권한이 없습니다.");
+		}
+		return joinRequestRepository.findAllByGroup_Id(groupId);
+	}
+
+	@Transactional
+	public void approveJoinRequest(User user, Long requestId, Long groupId) {
+		JoinRequest joinRequest = joinRequestRepository.findById(requestId)
+			.orElseThrow(() -> new JoinRequestException("해당 요청이 존재하지 않습니다"));
+		StudyGroup studyGroup = studyGroupRepository.findById(groupId)
+			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹입니다."));
+		GroupMember groupMember = groupMemberRepository.findByUserAndStudyGroup(user, studyGroup)
+			.orElseThrow(() -> new GroupMemberValidationException(HttpStatus.NOT_FOUND.value(), "해당 그룹의 멤버가 아닙니다."));
+		if (RoleOfGroupMember.isParticipant(groupMember)) {
+			throw new JoinRequestException("승인 권한이 없습니다.");
+		}
+		joinRequest.approve();
+		GroupMember newGroupMember = GroupMember.builder()
+			.user(joinRequest.getRequester())
+			.studyGroup(studyGroup)
+			.joinDate(LocalDate.now())
+			.role(RoleOfGroupMember.PARTICIPANT)
+			.build();
+		groupMemberRepository.save(newGroupMember);
+		log.info("success to approve join request group = {}", groupId);
+	}
+
+	@Transactional
+	public void rejectJoinRequest(User user, Long requestId, Long groupId) {
+		JoinRequest joinRequest = joinRequestRepository.findById(requestId)
+			.orElseThrow(() -> new JoinRequestException("해당 요청이 존재하지 않습니다"));
+		StudyGroup studyGroup = studyGroupRepository.findById(groupId)
+			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹입니다."));
+		GroupMember groupMember = groupMemberRepository.findByUserAndStudyGroup(user, studyGroup)
+			.orElseThrow(() -> new GroupMemberValidationException(HttpStatus.NOT_FOUND.value(), "해당 그룹의 멤버가 아닙니다."));
+		if (RoleOfGroupMember.isParticipant(groupMember)) {
+			throw new JoinRequestException("승인 권한이 없습니다.");
+		}
+		joinRequest.reject();
+		log.info("success to reject join request group = {} and delete request = {} ", groupId, requestId);
+
+	}
 }
