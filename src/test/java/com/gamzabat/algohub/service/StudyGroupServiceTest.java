@@ -993,6 +993,7 @@ class StudyGroupServiceTest {
 
 		assertThat(newMember.getUser()).isEqualTo(requester);
 		assertThat(newMember.getRole()).isEqualTo(RoleOfGroupMember.PARTICIPANT);
+		verify(joinRequestRepository, times(1)).delete(joinRequest);
 
 	}
 
@@ -1020,6 +1021,6 @@ class StudyGroupServiceTest {
 		studyGroupService.rejectJoinRequest(owner, 1000L, group.getId());
 
 		// then
-		assertThat(joinRequest.getStatus()).isEqualTo(JoinRequestStatus.REJECT);
+		verify(joinRequestRepository, times(1)).delete(joinRequest);
 	}
 }

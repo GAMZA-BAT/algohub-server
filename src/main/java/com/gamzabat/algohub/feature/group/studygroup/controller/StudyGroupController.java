@@ -212,7 +212,7 @@ public class StudyGroupController {
 		return ResponseEntity.ok().body(response);
 	}
 
-	@PostMapping(value = "/{requestId}/approve")
+	@PostMapping(value = "/{groupId}/{requestId}/approve")
 	@Operation(summary = "그룹 가입 요청 승인 API", description = "스터디 그룹 가입 요청을 승인하는 API")
 	public ResponseEntity<Void> approveRequest(@AuthedUser User user, @PathVariable Long requestId,
 		@PathVariable Long groupId) {
@@ -220,7 +220,7 @@ public class StudyGroupController {
 		return ResponseEntity.ok().build();
 	}
 
-	@PostMapping(value = "/{requestId}/reject")
+	@PostMapping(value = "/{groupId}/{requestId}/reject")
 	@Operation(summary = "그룹 가입 요청 거절 API", description = "스터디 그룹 가입 요청을 거절하는 API")
 	public ResponseEntity<Void> rejectRequest(@AuthedUser User user, @PathVariable Long requestId,
 		@PathVariable Long groupId) {

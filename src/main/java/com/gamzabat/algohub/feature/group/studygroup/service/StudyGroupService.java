@@ -687,6 +687,7 @@ public class StudyGroupService {
 			.role(RoleOfGroupMember.PARTICIPANT)
 			.build();
 		groupMemberRepository.save(newGroupMember);
+		joinRequestRepository.delete(joinRequest);
 		log.info("success to approve join request group = {}", groupId);
 	}
 
@@ -701,7 +702,7 @@ public class StudyGroupService {
 		if (RoleOfGroupMember.isParticipant(groupMember)) {
 			throw new JoinRequestException("승인 권한이 없습니다.");
 		}
-		joinRequest.reject();
+		joinRequestRepository.delete(joinRequest);
 		log.info("success to reject join request group = {} and delete request = {} ", groupId, requestId);
 
 	}

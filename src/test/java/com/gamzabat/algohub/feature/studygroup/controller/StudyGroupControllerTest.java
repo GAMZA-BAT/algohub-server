@@ -2,9 +2,15 @@ package com.gamzabat.algohub.feature.studygroup.controller;
 
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.doNothing;
+import static org.mockito.BDDMockito.doThrow;
+import static org.mockito.BDDMockito.eq;
+import static org.mockito.BDDMockito.times;
+import static org.mockito.BDDMockito.verify;
+import static org.mockito.BDDMockito.when;
+import static org.mockito.BDDMockito.*;
 import static org.mockito.Mockito.anyLong;
 import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -37,6 +43,7 @@ import com.gamzabat.algohub.enums.GroupStatus;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.controller.StudyGroupController;
+import com.gamzabat.algohub.feature.group.studygroup.domain.JoinRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.BookmarkStatus;
 import com.gamzabat.algohub.feature.group.studygroup.dto.CheckSolvedProblemResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.CreateGroupRequest;
@@ -53,6 +60,7 @@ import com.gamzabat.algohub.feature.group.studygroup.dto.UpdateGroupMemberRoleRe
 import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
 import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundGroupException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
+import com.gamzabat.algohub.feature.group.studygroup.exception.JoinRequestException;
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.group.studygroup.service.StudyGroupService;
@@ -865,4 +873,108 @@ class StudyGroupControllerTest {
 			.andExpect(jsonPath("$.error").value("참여하지 않은 그룹입니다."));
 		verify(studyGroupService, times(1)).editStudyGroupVisibility(user, groupId, request);
 	}
+
+	@Test
+	@DisplayName("가입 요청 성공")
+	void joinRequestSuccess() throws Exception {
+		//given
+		Long groupId = 10L;
+		willDoNothing().given(studyGroupService).joinRequest(any(User.class), eq(groupId));
+
+		mockMvc.perform(post("/api/{groupId}/join-request", groupId)
+				.header("Authorization", token))
+			.andExpect(status().isOk());
+	}
+
+	@Test
+	@DisplayName("가입 요청 실패 : 이미 요청한 그룹")
+	void joinRequest_fail_alreadyRequested() throws Exception {
+		Long groupId = 10L;
+		willThrow(new JoinRequestException("이미 요청한 그룹입니다."))
+			.given(studyGroupService).joinRequest(any(User.class), eq(groupId));
+
+		mockMvc.perform(post("/api/{groupId}/join-request", groupId)
+				.header("Authorization", token))
+			.andExpect(status().isBadRequest());
+	}
+
+	@Test
+	@DisplayName("가입 요청 목록 조회")
+	void getAllJoinRequests_success() throws Exception {
+		Long groupId = 10L;
+		// 직렬화가 비어도 배열 길이만 확인할 수 있게 더미 객체 2개
+		given(studyGroupService.getAllJoinRequests(any(User.class), eq(groupId)))
+			.willReturn(List.of(new JoinRequest(), new JoinRequest()));
+
+		mockMvc.perform(get("/api/{groupId}/join-request", groupId)
+				.header("Authorization", token))
+			.andExpect(status().isOk())
+			.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+			.andExpect(jsonPath("$", hasSize(2)));
+	}
+
+	@Test
+	@DisplayName("요청 목록 조회 실패 : 권한 없음")
+	void getAllJoinRequests_fail_alreadyRequested() throws Exception {
+		Long groupId = 10L;
+		given(studyGroupService.getAllJoinRequests(any(User.class), eq(groupId)))
+			.willThrow(new JoinRequestException("요청 목록을 조회할 권한이 없습니다."));
+
+		mockMvc.perform(get("/api/{groupId}/join-request", groupId)
+				.header("Authorization", token))
+			.andExpect(status().isBadRequest());
+	}
+
+	@Test
+	@DisplayName("승인 성공")
+	void approve_success() throws Exception {
+		Long groupId = 10L;
+		Long requestId = 77L;
+		willDoNothing().given(studyGroupService)
+			.approveJoinRequest(any(User.class), eq(requestId), eq(groupId));
+
+		mockMvc.perform(post("/api/{groupId}/{requestId}/approve", groupId, requestId)
+				.header("Authorization", token))
+			.andExpect(status().isOk());
+	}
+
+	@Test
+	@DisplayName("승인 실패 해당 요청 없음")
+	void approve_fail_requestNotFound() throws Exception {
+		Long groupId = 10L;
+		Long requestId = 999L;
+		willThrow(new JoinRequestException("해당 요청이 존재하지 않습니다"))
+			.given(studyGroupService).approveJoinRequest(any(User.class), eq(requestId), eq(groupId));
+
+		mockMvc.perform(post("/api/{groupId}/{requestId}/approve", groupId, requestId)
+				.header("Authorization", token))
+			.andExpect(status().isBadRequest());
+	}
+
+	@Test
+	@DisplayName("가입 요청 거절 성공")
+	void reject_success() throws Exception {
+		Long groupId = 10L;
+		Long requestId = 77L;
+		willDoNothing().given(studyGroupService)
+			.rejectJoinRequest(any(User.class), eq(requestId), eq(groupId));
+
+		mockMvc.perform(post("/api/{groupId}/{requestId}/reject", groupId, requestId)
+				.header("Authorization", token))
+			.andExpect(status().isOk());
+	}
+
+	@Test
+	@DisplayName("가입 요청 거절 실패 권한 없음")
+	void reject_fail_noPermission() throws Exception {
+		Long groupId = 10L;
+		Long requestId = 77L;
+		willThrow(new JoinRequestException("승인 권한이 없습니다."))
+			.given(studyGroupService).rejectJoinRequest(any(User.class), eq(requestId), eq(groupId));
+
+		mockMvc.perform(post("/api/{groupId}/{requestId}/reject", groupId, requestId)
+				.header("Authorization", token))
+			.andExpect(status().isBadRequest());
+	}
+
 }
