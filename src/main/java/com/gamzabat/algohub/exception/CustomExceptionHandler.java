@@ -9,6 +9,8 @@ import com.gamzabat.algohub.auth.exception.GithubApiException;
 import com.gamzabat.algohub.common.jwt.exception.ExpiredTokenException;
 import com.gamzabat.algohub.common.jwt.exception.TokenException;
 import com.gamzabat.algohub.feature.comment.exception.CommentValidationException;
+import com.gamzabat.algohub.feature.edgecase.exception.CannotFoundEdgeCaseException;
+import com.gamzabat.algohub.feature.edgecase.exception.NotAuthorizedUserException;
 import com.gamzabat.algohub.feature.group.ranking.exception.CannotFoundRankingException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundGroupException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundProblemException;
@@ -231,6 +233,22 @@ public class CustomExceptionHandler {
 		return ResponseEntity
 			.status(HttpStatus.BAD_REQUEST)
 			.body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null));
+	}
+
+	@ExceptionHandler(CannotFoundEdgeCaseException.class)
+	protected ResponseEntity<ErrorResponse> handleCannotFoundEdgeCaseException(
+		CannotFoundEdgeCaseException e) {
+		return ResponseEntity
+			.status(e.getHttpStatus())
+			.body(new ErrorResponse(e.getHttpStatus().value(), e.getErrors(), null));
+	}
+
+	@ExceptionHandler(NotAuthorizedUserException.class)
+	protected ResponseEntity<ErrorResponse> handleNotAuthorizedUserException(
+		NotAuthorizedUserException e) {
+		return ResponseEntity
+			.status(e.getHttpStatus())
+			.body(new ErrorResponse(e.getHttpStatus().value(), e.getError(), null));
 	}
 
 	@ExceptionHandler(JoinRequestException.class)

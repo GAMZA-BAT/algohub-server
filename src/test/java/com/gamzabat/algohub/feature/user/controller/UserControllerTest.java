@@ -92,7 +92,7 @@ class UserControllerTest {
 	@DisplayName("회원 가입 성공")
 	void register() throws Exception {
 		// given
-		RegisterRequest request = new RegisterRequest("password", "nickname");
+		RegisterRequest request = new RegisterRequest("password", "nickname", "bjNickname");
 		String requestJson = objectMapper.writeValueAsString(request);
 		MockMultipartFile requestPart = new MockMultipartFile("request", "", "application/json",
 			requestJson.getBytes());
@@ -115,7 +115,7 @@ class UserControllerTest {
 	@DisplayName("회원 가입 성공 : 프로필 사진 X")
 	void register_2() throws Exception {
 		// given
-		RegisterRequest request = new RegisterRequest("password", "nickname");
+		RegisterRequest request = new RegisterRequest("password", "nickname", "bjNickname");
 		String requestJson = objectMapper.writeValueAsString(request);
 		MockMultipartFile requestPart = new MockMultipartFile("request", "", "application/json",
 			requestJson.getBytes());
@@ -133,13 +133,15 @@ class UserControllerTest {
 
 	@ParameterizedTest
 	@CsvSource(value = {
-		" '', nickname, password : 비밀번호는 필수 입력입니다.",
-		"password, '', nickname : 닉네임은 필수 입력입니다."
+		" '', nickname, bjNickname, password : 비밀번호는 필수 입력입니다.",
+		"password, '', bjNickname, nickname : 닉네임은 필수 입력입니다.",
+		"password, nickname, '', bjNickname : 백준 아이디는 필수 입력입니다.",
 	}, nullValues = "null")
 	@DisplayName("회원 가입 실패 : 잘못된 요청")
-	void registerFailed_1(String password, String nickname, String exceptionMessage) throws Exception {
+	void registerFailed_1(String password, String nickname, String bjNickname, String exceptionMessage) throws
+		Exception {
 		// given
-		RegisterRequest request = new RegisterRequest(password, nickname);
+		RegisterRequest request = new RegisterRequest(password, nickname, bjNickname);
 		String requestJson = objectMapper.writeValueAsString(request);
 		MockMultipartFile requestPart = new MockMultipartFile("request", "", "application/json",
 			requestJson.getBytes());
@@ -161,7 +163,7 @@ class UserControllerTest {
 	@DisplayName("회원가입 실패 : 이미 가입 된 이메일")
 	void registerFailed_2() throws Exception {
 		// given
-		RegisterRequest request = new RegisterRequest("password", "nickname");
+		RegisterRequest request = new RegisterRequest("password", "nickname", "bjNickname");
 		String requestJson = objectMapper.writeValueAsString(request);
 		MockMultipartFile requestPart = new MockMultipartFile("request", "", "application/json",
 			requestJson.getBytes());

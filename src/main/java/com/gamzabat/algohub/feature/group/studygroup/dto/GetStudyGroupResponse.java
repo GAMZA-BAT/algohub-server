@@ -34,4 +34,5 @@ public record GetStudyGroupResponse(Long id,
 			isVisible
 		);
 	}
+
 }
