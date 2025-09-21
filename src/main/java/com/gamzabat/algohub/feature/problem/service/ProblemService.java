@@ -3,7 +3,6 @@ package com.gamzabat.algohub.feature.problem.service;
 import static com.gamzabat.algohub.constants.ApiConstants.*;
 
 import java.time.LocalDate;
-import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -37,6 +36,7 @@ import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.dto.CreateProblemRequest;
 import com.gamzabat.algohub.feature.problem.dto.EditProblemRequest;
 import com.gamzabat.algohub.feature.problem.dto.GetProblemResponse;
+import com.gamzabat.algohub.feature.problem.enums.ProblemListStatus;
 import com.gamzabat.algohub.feature.problem.exception.NotBojLinkException;
 import com.gamzabat.algohub.feature.problem.exception.SolvedAcApiErrorException;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
@@ -152,6 +152,22 @@ public class ProblemService {
 	}
 
 	@Transactional(readOnly = true)
+	public Page<GetProblemResponse> getProblems(User user, Long groupId, ProblemListStatus status, Boolean unsolvedOnly, Pageable pageable) {
+		Page<GetProblemResponse> response;
+		if (status == ProblemListStatus.IN_PROGRESS) {
+				if (unsolvedOnly == null) {
+					unsolvedOnly = false;
+				}
+			response = getInProgressProblems(user, groupId, unsolvedOnly, pageable);
+		} else if (status == ProblemListStatus.EXPIRED) {
+			response = getExpiredProblems(user, groupId, pageable);
+		} else {
+			response = getQueuedProblems(user, groupId, pageable);
+		}
+		return response;
+	}
+
+	@Transactional(readOnly = true)
 	public Page<GetProblemResponse> getInProgressProblems(User user, Long groupId, Boolean unsolvedOnly,
 		Pageable pageable) {
 		StudyGroup group = getGroup(groupId);
@@ -214,37 +230,6 @@ public class ProblemService {
 		problemRepository.delete(problem);
 		notificationRepository.deleteAllByProblem(problem);
 		log.info("success to delete problem user_id={} , problem_id = {}", user.getId(), problemId);
-	}
-
-	@Transactional(readOnly = true)
-	public List<GetProblemResponse> getDeadlineReachedProblemList(User user, Long groupId) {
-		StudyGroup group = getGroup(groupId);
-		if (!groupMemberRepository.existsByUserAndStudyGroup(user, group))
-			throw new ProblemValidationException(HttpStatus.FORBIDDEN.value(), "문제를 조회할 권한이 없습니다.");
-
-		List<Problem> problems = problemRepository.findAllByStudyGroupAndEndDateBetween(group, LocalDate.now(),
-			LocalDate.now().plusDays(1));
-		problems.sort(Comparator.comparing(Problem::getEndDate));
-
-		return problems.stream().map(problem -> {
-			Integer correctCount = solutionRepository.countDistinctUsersWithCorrectSolutionsByProblemId(problem.getId(),
-				BOJResultConstants.CORRECT);
-			Integer submitMemberCount = solutionRepository.countDistinctUsersByProblem(problem);
-			Integer groupMemberCount = groupMemberRepository.countMembersByStudyGroup(group);
-			Integer accuracy = calculateAccuracy(submitMemberCount, correctCount);
-
-			return new GetProblemResponse(
-				problem.getTitle(),
-				problem.getId(),
-				problem.getLink(),
-				problem.getStartDate(),
-				problem.getEndDate(),
-				problem.getLevel(),
-				solutionRepository.existsByUserAndProblemAndResult(user, problem, BOJResultConstants.CORRECT),
-				submitMemberCount,
-				groupMemberCount,
-				accuracy);
-		}).toList();
 	}
 
 	@Transactional(readOnly = true)
