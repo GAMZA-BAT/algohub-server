@@ -19,9 +19,9 @@ public interface StudyGroupRepository extends JpaRepository<StudyGroup, Long>, C
 	Optional<StudyGroup> findById(Long id);
 
 	@Query(value = """
-		select sg from StudyGroup sg
+		select * from study_group sg
 		where match (sg.name,sg.introduction)
-		against(:searchPattern in natural language mode) 
+		against(:searchPattern in boolean mode) 
 		""", nativeQuery = true)
 	Page<StudyGroup> findBySearchPattern(@Param("searchPattern") String searchPattern, Pageable pageable);
 }
