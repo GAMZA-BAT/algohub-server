@@ -34,5 +34,13 @@ public interface CustomSolutionRepository {
 		ProgressCategory category,
 		Pageable pageable);
 
+	Page<Solution> findAllFilteredMySolutionsIsIncorrect(
+		User user,
+		Integer problemNumber,
+		String language,
+		String result,
+		ProgressCategory category,
+		Pageable pageable);
+
 	boolean existsByUserAndProblemAndResult(User user, Problem problem, String result);
 }
