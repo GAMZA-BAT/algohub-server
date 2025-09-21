@@ -10,6 +10,7 @@ public class BOJResultConstants {
 	public static final String OVER_OUTPUT_LIMIT = "출력 초과";
 	public static final String WRONG_OUTPUT_FORMAT = "출력 형식이 잘못되었습니다";
 	public static final String WRONG_OUTPUT_FORMAT_CUSTOM = "출력 에러";
+	public static final String SCORE_UNIT = "점";
 
 	private BOJResultConstants() {
 		throw new RuntimeException("Can not instantiate : BOJResultConstants");

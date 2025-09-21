@@ -102,6 +102,8 @@ public class SolutionService {
 	public Page<GetSolutionResponse> getMySolutionList(User user, Long groupId, Integer problemNumber, String language,
 		String result, ProgressCategory status, Boolean isIncorrect, Pageable pageable) {
 		Page<GetSolutionResponse> solutionList;
+		if (isIncorrect == null)
+			isIncorrect = false;
 		if (groupId != null) {
 			StudyGroup group = validateGroupAndMember(user, groupId);
 			solutionList = solutionRepository.findAllFilteredMySolutionsInGroup(user,group,problemNumber,language,result,status,pageable)

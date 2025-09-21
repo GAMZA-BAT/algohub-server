@@ -137,7 +137,7 @@ public class CustomSolutionRepositoryImpl implements CustomSolutionRepository {
 		BooleanExpression incorrectBase =
 			solution.result.isNotNull()
 				.and(solution.result.ne(CORRECT))
-				.and(solution.result.endsWith("점").not());
+				.and(solution.result.endsWith(SCORE_UNIT).not());
 		query.where(incorrectBase);
 	}
 	private void addResultFilter(String result, JPAQuery<Solution> query) {
