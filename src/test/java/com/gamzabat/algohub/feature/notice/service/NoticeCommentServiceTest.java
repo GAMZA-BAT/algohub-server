@@ -132,7 +132,7 @@ class NoticeCommentServiceTest {
 		assertThatThrownBy(() -> commentService.createComment(user, 10L, request))
 			.isInstanceOf(NoticeValidationException.class)
 			.hasFieldOrPropertyWithValue("error", "공지사항이 존재하지 않습니다.");
-		verify(notificationService, never()).send(any(), any(), any(), any(), any(), any());
+		verify(notificationService, never()).send(any(), any(), any(), any(), any(), any(), any());
 	}
 
 	@Test
@@ -148,7 +148,7 @@ class NoticeCommentServiceTest {
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.NOT_FOUND.value())
 			.hasFieldOrPropertyWithValue("error", "스터디 그룹이 존재하지 않습니다.");
-		verify(notificationService, never()).send(any(), any(), any(), any(), any(), any());
+		verify(notificationService, never()).send(any(), any(), any(), any(), any(), any(), any());
 	}
 
 	@Test
@@ -166,7 +166,7 @@ class NoticeCommentServiceTest {
 			.isInstanceOf(GroupMemberValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹 입니다.");
-		verify(notificationService, never()).send(any(), any(), any(), any(), any(), any());
+		verify(notificationService, never()).send(any(), any(), any(), any(), any(), any(), any());
 	}
 
 	@Test
