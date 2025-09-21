@@ -24,6 +24,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import com.gamzabat.algohub.common.DateFormatUtil;
@@ -175,7 +176,7 @@ class ProblemServiceTest {
 		assertThat(result.getLevel()).isEqualTo(1);
 		assertThat(result.getStartDate()).isEqualTo(LocalDate.now());
 		assertThat(result.getEndDate()).isEqualTo(LocalDate.now().plusDays(10));
-		verify(notificationService, times(1)).sendNotificationToMembers(any(), any(), any(), any(), any(), any());
+		verify(notificationService, times(1)).sendNotificationToMembers(any(), any(), any(), any(), any(), any(), any());
 	}
 
 	@Test
@@ -270,6 +271,29 @@ class ProblemServiceTest {
 			.isInstanceOf(SolvedAcApiErrorException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.SERVICE_UNAVAILABLE.value())
 			.hasFieldOrPropertyWithValue("error", "solved.ac API로부터 예상치 못한 응답을 받았습니다.");
+	}
+
+	@Test
+	@DisplayName("문제 생성 실패 : solved.ac API 타임아웃 발생")
+	void createProblemFailed_solvedAcApiTimeout() {
+		// given
+		CreateProblemRequest request = CreateProblemRequest.builder()
+			.link("https://www.acmicpc.net/problem/00")
+			.startDate(LocalDate.now().minusDays(7))
+			.endDate(LocalDate.now())
+			.build();
+
+		when(groupRepository.findById(10L)).thenReturn(Optional.of(group));
+		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.of(groupMember1));
+
+		when(restTemplate.getForEntity(anyString(), eq(String.class)))
+			.thenThrow(new ResourceAccessException("I/O error: Read timed out"));
+
+		// when, then
+		assertThatThrownBy(() -> problemService.createProblem(user, 10L, request))
+			.isInstanceOf(SolvedAcApiErrorException.class)
+			.hasFieldOrPropertyWithValue("code", HttpStatus.GATEWAY_TIMEOUT.value())
+			.hasFieldOrPropertyWithValue("error", "solved.ac API 응답이 지연되거나 연결에 실패했습니다. 잠시 후 다시 시도해주세요.");
 	}
 
 	@Test
@@ -800,7 +824,7 @@ class ProblemServiceTest {
 		// when
 		problemService.dailyProblemScheduler();
 		// then
-		verify(notificationService, times(20)).sendNotificationToMembers(any(), any(), any(), any(), any(), any());
+		verify(notificationService, times(20)).sendNotificationToMembers(any(), any(), any(), any(), any(), any(), any());
 	}
 
 	@Test

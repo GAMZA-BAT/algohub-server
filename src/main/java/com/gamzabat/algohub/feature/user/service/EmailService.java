@@ -26,12 +26,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class EmailService {
 
-	@Value("${spring.profiles.active:dev}")
-	private String activeProfile;
-
 	private static final String FROM_ADDRESS = "noreply@algohub.kr";
 	private final JavaMailSender mailSender;
 	private final TemplateEngine templateEngine;
+	@Value("${spring.profiles.active:dev}")
+	private String activeProfile;
 
 	@Async
 	@Retryable(

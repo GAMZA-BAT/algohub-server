@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -28,6 +29,7 @@ import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValida
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.notification.enums.NotificationCategory;
+import com.gamzabat.algohub.feature.notification.enums.NotificationType;
 import com.gamzabat.algohub.feature.notification.repository.NotificationRepository;
 import com.gamzabat.algohub.feature.notification.service.NotificationService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
@@ -90,7 +92,8 @@ public class ProblemService {
 				problem,
 				null,
 				NotificationCategory.PROBLEM_STARTED,
-				NotificationCategory.PROBLEM_STARTED.getMessage(title)
+				NotificationCategory.PROBLEM_STARTED.getMessage(title),
+				NotificationType.PROBLEM
 			);
 
 		log.info("success to create problem user_id={} , group_id = {}", user.getId(), groupId);
@@ -306,7 +309,8 @@ public class ProblemService {
 				problem,
 				null,
 				NotificationCategory.PROBLEM_STARTED,
-				NotificationCategory.PROBLEM_STARTED.getMessage(problem.getTitle())
+				NotificationCategory.PROBLEM_STARTED.getMessage(problem.getTitle()),
+				NotificationType.PROBLEM
 			);
 		}
 	}
@@ -320,7 +324,8 @@ public class ProblemService {
 				problem,
 				null,
 				NotificationCategory.PROBLEM_DEADLINE_REACHED,
-				NotificationCategory.PROBLEM_DEADLINE_REACHED.getMessage(problem.getTitle())
+				NotificationCategory.PROBLEM_DEADLINE_REACHED.getMessage(problem.getTitle()),
+				NotificationType.PROBLEM
 			);
 		}
 	}
@@ -335,7 +340,7 @@ public class ProblemService {
 			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다."));
 	}
 
-	private JsonNode fetchProblemDetails(String problemId) {
+	public JsonNode fetchProblemDetails(String problemId) {
 		String url = SOLVED_AC_PROBLEM_API_URL + problemId;
 
 		try {
@@ -359,6 +364,10 @@ public class ProblemService {
 				throw new SolvedAcApiErrorException(HttpStatus.BAD_REQUEST.value(), "백준에 유효하지 않은 문제입니다.");
 
 			return root.get(0);
+		} catch (ResourceAccessException e) {
+			log.error("Timeout or connection failed solved.ac API error : " + e.getMessage());
+			throw new SolvedAcApiErrorException(HttpStatus.GATEWAY_TIMEOUT.value(),
+				"solved.ac API 응답이 지연되거나 연결에 실패했습니다. 잠시 후 다시 시도해주세요.");
 		} catch (JsonProcessingException e) {
 			log.error("Json processing error : " + e.getMessage());
 			throw new SolvedAcApiErrorException(HttpStatus.INTERNAL_SERVER_ERROR.value(),
@@ -366,11 +375,11 @@ public class ProblemService {
 		}
 	}
 
-	private int getProblemLevel(JsonNode problemDetails) {
+	public int getProblemLevel(JsonNode problemDetails) {
 		return problemDetails.get("level").asInt();
 	}
 
-	private String getProblemTitle(JsonNode problemDetails) {
+	public String getProblemTitle(JsonNode problemDetails) {
 		return problemDetails.get("titleKo").asText();
 	}
 

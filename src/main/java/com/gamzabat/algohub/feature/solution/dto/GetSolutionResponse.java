@@ -11,6 +11,7 @@ import lombok.experimental.SuperBuilder;
 @Getter
 public class GetSolutionResponse {
 	private final Long solutionId;
+	private final Long problemId;
 	private final String problemTitle;
 	private final Integer problemLevel;
 	private final Integer accuracy;
@@ -32,6 +33,7 @@ public class GetSolutionResponse {
 		Integer totalMemberCount, Long commentCount, Boolean isRead) {
 		return GetSolutionResponse.builder()
 			.solutionId(solution.getId())
+			.problemId(solution.getProblem().getId())
 			.problemTitle(solution.getProblem().getTitle())
 			.problemLevel(solution.getProblem().getLevel())
 			.accuracy(accuracy)

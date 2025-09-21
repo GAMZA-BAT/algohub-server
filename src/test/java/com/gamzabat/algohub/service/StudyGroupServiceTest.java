@@ -20,6 +20,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockMultipartFile;
 
@@ -38,6 +41,7 @@ import com.gamzabat.algohub.feature.group.studygroup.dto.CreateGroupRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.EditGroupVisibilityRequest;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupMemberResponse;
+import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetGroupSettingResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupListsResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupResponse;
@@ -69,6 +73,7 @@ import com.gamzabat.algohub.feature.user.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 class StudyGroupServiceTest {
+	private final Long groupId = 10L;
 	@InjectMocks
 	private StudyGroupService studyGroupService;
 	@Mock
@@ -110,7 +115,6 @@ class StudyGroupServiceTest {
 	private Problem problem1, problem2;
 	private Solution solution1, solution2, solution3;
 	private GroupMember groupMember1, groupMember2, groupMember3;
-	private final Long groupId = 10L;
 	private GroupMember ownerGroupmember;
 	@Captor
 	private ArgumentCaptor<StudyGroup> groupCaptor;
@@ -243,7 +247,7 @@ class StudyGroupServiceTest {
 		assertThat(result.getStudyGroup()).isEqualTo(group);
 		assertThat(result.getUser()).isEqualTo(user2);
 		verify(groupMemberRepository, times(1)).save(any(GroupMember.class));
-		verify(notificationService, times(1)).sendNotificationToMembers(any(), any(), any(), any(), any(), any());
+		verify(notificationService, times(1)).sendNotificationToMembers(any(), any(), any(), any(), any(), any(), any());
 	}
 
 	@Test
@@ -876,6 +880,49 @@ class StudyGroupServiceTest {
 		assertThat(responses.get(1).status()).isEqualTo("inProgress");
 		assertThat(responses.get(2).name()).isEqualTo("done");
 		assertThat(responses.get(2).status()).isEqualTo("done");
+	}
+
+	@Test
+	@DisplayName("그룹 검색")
+	void getStudyGroupSearch() {
+		//given
+		List<StudyGroup> groups = new ArrayList<>(20);
+		for (int i = 0; i < 10; i++) {
+			StudyGroup g = StudyGroup.builder()
+				.name("test" + i)
+				.introduction("ggg" + i)
+				.build();
+			groups.add(g);
+		}
+		for (int i = 0; i < 5; i++) {
+			StudyGroup g = StudyGroup.builder()
+				.name("abc" + i)
+				.introduction("tt" + i)
+				.build();
+			groups.add(g);
+		}
+		for (int i = 0; i < 5; i++) {
+			StudyGroup g = StudyGroup.builder()
+				.name("aaa" + i)
+				.introduction("test" + i)
+				.build();
+			groups.add(g);
+		}
+
+		PageRequest pageable = PageRequest.of(0, 10);
+		List<StudyGroup> filtered = groups.stream()
+			.filter(g -> (g.getName() != null && g.getName().contains("test"))
+				|| (g.getIntroduction() != null && g.getIntroduction().contains("test")))
+			.toList();
+		Page<StudyGroup> stub = new PageImpl<>(filtered, pageable, filtered.size());
+
+		when(studyGroupRepository.findBySearchPattern("test", pageable))
+			.thenReturn(stub);
+		//when
+		Page<GetGroupResponse> result = studyGroupService.getSearchedStudyGroupList("test", pageable);
+		//then
+		assertThat(result.getContent().size()).isEqualTo(15);
+
 	}
 
 }
