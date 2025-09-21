@@ -233,7 +233,7 @@ public class CustomExceptionHandler {
 			.status(HttpStatus.BAD_REQUEST)
 			.body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null));
 	}
-
+  
 	@ExceptionHandler(CannotFoundEdgeCaseException.class)
 	protected ResponseEntity<ErrorResponse> handleCannotFoundEdgeCaseException(
 		CannotFoundEdgeCaseException e) {
@@ -249,4 +249,5 @@ public class CustomExceptionHandler {
 			.status(e.getHttpStatus())
 			.body(new ErrorResponse(e.getHttpStatus().value(), e.getError(), null));
 	}
+  
 }

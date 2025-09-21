@@ -6,7 +6,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.parameters.P;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,6 +26,7 @@ import com.gamzabat.algohub.exception.RequestException;
 import com.gamzabat.algohub.feature.problem.dto.CreateProblemRequest;
 import com.gamzabat.algohub.feature.problem.dto.EditProblemRequest;
 import com.gamzabat.algohub.feature.problem.dto.GetProblemResponse;
+import com.gamzabat.algohub.feature.problem.enums.ProblemListStatus;
 import com.gamzabat.algohub.feature.problem.service.ProblemService;
 import com.gamzabat.algohub.feature.user.domain.User;
 
@@ -59,26 +63,17 @@ public class ProblemController {
 		return ResponseEntity.ok().build();
 	}
 
-	@GetMapping(value = "/groups/{groupId}/problems/in-progress")
-	@Operation(summary = "진행 중인 문제 목록 조회 API", description = "특정 그룹에 대한 문제를 모두 조회하는 API")
-	public ResponseEntity<Page<GetProblemResponse>> getInProgressProblemList(@AuthedUser User user,
+	@GetMapping(value = "/groups/{groupId}/problems")
+	@Operation(summary = "문제 목록 조회 API", description = "특정 그룹에 대한 문제를 부분 조회하는 API")
+	public ResponseEntity<Page<GetProblemResponse>> getProblems(@AuthedUser User user,
 		@PathVariable Long groupId,
-		@RequestParam(name = "unsolved-only") Boolean unsolvedOnly,
-		@RequestParam(defaultValue = "0") int page,
-		@RequestParam(defaultValue = "20") int size) {
-		Pageable pageable = PageRequest.of(page, size, Sort.by(PROBLEM_SORT_BY).descending());
-		Page<GetProblemResponse> response = problemService.getInProgressProblems(user, groupId, unsolvedOnly, pageable);
-		return ResponseEntity.ok().body(response);
-	}
+		@RequestParam ProblemListStatus status,
+		@RequestParam(name = "unsolved-only", required = false) Boolean unsolvedOnly,
+		@PageableDefault(page = 0, size = 20, sort = "endDate", direction = Sort.Direction.DESC)
+		Pageable pageable) {
 
-	@GetMapping(value = "/groups/{groupId}/problems/expired")
-	@Operation(summary = "마감 된 문제 목록 조회 API", description = "특정 그룹에 대한 문제를 모두 조회하는 API")
-	public ResponseEntity<Page<GetProblemResponse>> getExpiredProblemList(@AuthedUser User user,
-		@PathVariable Long groupId,
-		@RequestParam(defaultValue = "0") int page,
-		@RequestParam(defaultValue = "20") int size) {
-		Pageable pageable = PageRequest.of(page, size, Sort.by(PROBLEM_SORT_BY).descending());
-		Page<GetProblemResponse> response = problemService.getExpiredProblems(user, groupId, pageable);
+		Page<GetProblemResponse> response = problemService.getProblems(user, groupId, status, unsolvedOnly, pageable);
+
 		return ResponseEntity.ok().body(response);
 	}
 
@@ -87,23 +82,6 @@ public class ProblemController {
 	public ResponseEntity<GetProblemResponse> getProblem(@AuthedUser User user, @PathVariable Long problemId) {
 		GetProblemResponse response = problemService.getProblem(user, problemId);
 		return ResponseEntity.ok().body(response);
-	}
-
-	@GetMapping("/groups/{groupId}/problems/deadline-reached")
-	@Operation(summary = "마감 기한이 내일까지인 문제들 조회 API")
-	public ResponseEntity<List<GetProblemResponse>> getDeadlineReachedProblemList(@AuthedUser User user,
-		@PathVariable Long groupId) {
-		return ResponseEntity.ok().body(problemService.getDeadlineReachedProblemList(user, groupId));
-	}
-
-	@GetMapping("/groups/{groupId}/problems/queued")
-	@Operation(summary = "시작 예정인 문제들 조회 API")
-	public ResponseEntity<Page<GetProblemResponse>> getQueuedProblemList(@AuthedUser User user,
-		@PathVariable Long groupId,
-		@RequestParam(defaultValue = "0") int page,
-		@RequestParam(defaultValue = "20") int size) {
-		Pageable pageable = PageRequest.of(page, size, Sort.by(PROBLEM_SORT_BY).descending());
-		return ResponseEntity.ok().body(problemService.getQueuedProblems(user, groupId, pageable));
 	}
 
 	@DeleteMapping(value = "/problems/{problemId}")
