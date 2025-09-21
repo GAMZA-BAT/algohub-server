@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -21,6 +22,8 @@ import com.gamzabat.algohub.exception.RequestException;
 import com.gamzabat.algohub.feature.notification.dto.EditNotificationSettingRequest;
 import com.gamzabat.algohub.feature.notification.dto.GetNotificationResponse;
 import com.gamzabat.algohub.feature.notification.dto.GetNotificationSettingResponse;
+import com.gamzabat.algohub.feature.notification.enums.NotificationCategory;
+import com.gamzabat.algohub.feature.notification.enums.NotificationType;
 import com.gamzabat.algohub.feature.notification.service.NotificationService;
 import com.gamzabat.algohub.feature.notification.service.NotificationSettingService;
 import com.gamzabat.algohub.feature.user.domain.User;
@@ -47,8 +50,9 @@ public class NotificationController {
 
 	@GetMapping
 	@Operation(summary = "알림 목록 조회 API")
-	public ResponseEntity<List<GetNotificationResponse>> getNotifications(@AuthedUser User user) {
-		return ResponseEntity.ok().body(notificationService.getNotifications(user));
+	public ResponseEntity<List<GetNotificationResponse>> getNotifications(@AuthedUser User user, @RequestParam(required = false)
+	NotificationType type) {
+		return ResponseEntity.ok().body(notificationService.getNotifications(user, type));
 	}
 
 	@PatchMapping

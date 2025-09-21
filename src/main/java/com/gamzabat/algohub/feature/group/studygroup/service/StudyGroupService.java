@@ -59,6 +59,7 @@ import com.gamzabat.algohub.feature.notice.repository.NoticeReadRepository;
 import com.gamzabat.algohub.feature.notice.repository.NoticeRepository;
 import com.gamzabat.algohub.feature.notification.domain.NotificationSetting;
 import com.gamzabat.algohub.feature.notification.enums.NotificationCategory;
+import com.gamzabat.algohub.feature.notification.enums.NotificationType;
 import com.gamzabat.algohub.feature.notification.repository.NotificationSettingRepository;
 import com.gamzabat.algohub.feature.notification.service.NotificationService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
@@ -619,7 +620,8 @@ public class StudyGroupService {
 			members,
 			null, null,
 			NotificationCategory.NEW_MEMBER_JOINED,
-			NotificationCategory.NEW_MEMBER_JOINED.getMessage(newMember.getUser().getNickname())
+			NotificationCategory.NEW_MEMBER_JOINED.getMessage(newMember.getUser().getNickname()),
+			NotificationType.STUDY_GROUP
 		);
 	}
 

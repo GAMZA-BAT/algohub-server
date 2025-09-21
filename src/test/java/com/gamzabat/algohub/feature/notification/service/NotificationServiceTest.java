@@ -20,6 +20,8 @@ import org.springframework.http.HttpStatus;
 import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.notification.domain.Notification;
+import com.gamzabat.algohub.feature.notification.enums.NotificationCategory;
+import com.gamzabat.algohub.feature.notification.enums.NotificationType;
 import com.gamzabat.algohub.feature.notification.exception.CannotFoundNotificationException;
 import com.gamzabat.algohub.feature.notification.exception.NotificationValidationException;
 import com.gamzabat.algohub.feature.notification.repository.NotificationRepository;
@@ -50,8 +52,9 @@ class NotificationServiceTest {
 			.groupImage("imageUrl")
 			.groupCode("code")
 			.build();
-		notification1 = Notification.builder().isRead(false).studyGroup(group).user(user).message("message1").build();
-		notification2 = Notification.builder().isRead(false).studyGroup(group).user(user).message("message2").build();
+		notification1 = Notification.builder().isRead(false).studyGroup(group).user(user).message("message1").type(
+			NotificationType.STUDY_GROUP).build();
+		notification2 = Notification.builder().isRead(false).studyGroup(group).user(user).message("message2").type(NotificationType.STUDY_GROUP).build();
 
 		Field userId = User.class.getDeclaredField("id");
 		userId.setAccessible(true);

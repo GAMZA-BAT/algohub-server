@@ -30,6 +30,7 @@ import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValida
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.notification.enums.NotificationCategory;
+import com.gamzabat.algohub.feature.notification.enums.NotificationType;
 import com.gamzabat.algohub.feature.notification.repository.NotificationRepository;
 import com.gamzabat.algohub.feature.notification.service.NotificationService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
@@ -91,7 +92,8 @@ public class ProblemService {
 				problem,
 				null,
 				NotificationCategory.PROBLEM_STARTED,
-				NotificationCategory.PROBLEM_STARTED.getMessage(title)
+				NotificationCategory.PROBLEM_STARTED.getMessage(title),
+				NotificationType.PROBLEM
 			);
 
 		log.info("success to create problem user_id={} , group_id = {}", user.getId(), groupId);
@@ -322,7 +324,8 @@ public class ProblemService {
 				problem,
 				null,
 				NotificationCategory.PROBLEM_STARTED,
-				NotificationCategory.PROBLEM_STARTED.getMessage(problem.getTitle())
+				NotificationCategory.PROBLEM_STARTED.getMessage(problem.getTitle()),
+				NotificationType.PROBLEM
 			);
 		}
 	}
@@ -336,7 +339,8 @@ public class ProblemService {
 				problem,
 				null,
 				NotificationCategory.PROBLEM_DEADLINE_REACHED,
-				NotificationCategory.PROBLEM_DEADLINE_REACHED.getMessage(problem.getTitle())
+				NotificationCategory.PROBLEM_DEADLINE_REACHED.getMessage(problem.getTitle()),
+				NotificationType.PROBLEM
 			);
 		}
 	}
