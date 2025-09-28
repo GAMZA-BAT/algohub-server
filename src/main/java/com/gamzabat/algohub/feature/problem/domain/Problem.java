@@ -13,8 +13,10 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,6 +25,12 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @SQLDelete(sql = "UPDATE problem SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@Table(
+	name = "problem",
+	indexes = {
+		@Index(name = "idx_problem_group", columnList = "study_group_id")
+	}
+)
 public class Problem {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

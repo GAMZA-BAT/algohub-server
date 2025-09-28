@@ -12,6 +12,7 @@ import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.solution.domain.Solution;
 import com.gamzabat.algohub.feature.solution.repository.querydsl.CustomSolutionRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
+import com.gamzabat.algohub.feature.user.dto.GetSolutionCommentActivity;
 
 public interface SolutionRepository extends JpaRepository<Solution, Long>, CustomSolutionRepository {
 	@Query("SELECT s FROM Solution s "
@@ -67,4 +68,16 @@ public interface SolutionRepository extends JpaRepository<Solution, Long>, Custo
 		+ "AND s.user = :user "
 		+ "AND s.problem = :problem")
 	List<Solution> findAllByUserAndProblem(User user, Problem problem);
+
+	@Query("""
+	  select distinct new com.gamzabat.algohub.feature.user.dto.GetSolutionCommentActivity(s.id, g.id)
+	  from GroupMember gm
+	  join gm.studyGroup g
+	  join Problem p on p.studyGroup = g
+	  join Solution s on s.problem = p
+	  where gm.user = :user
+		and gm.isVisible = true
+		and exists (select 1 from SolutionComment c where c.solution = s)
+	""")
+	List<GetSolutionCommentActivity> findFeedSolutionsByUserOrdered(User user);
 }

@@ -6,6 +6,7 @@ import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Base64;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import org.springframework.http.HttpEntity;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -35,10 +37,13 @@ import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundUserException;
 import com.gamzabat.algohub.feature.image.service.ImageService;
+import com.gamzabat.algohub.feature.solution.repository.SolutionRepository;
 import com.gamzabat.algohub.feature.user.domain.ResetPassword;
 import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.dto.DeleteUserRequest;
 import com.gamzabat.algohub.feature.user.dto.EditUserPasswordRequest;
+import com.gamzabat.algohub.feature.user.dto.GetSolutionCommentActivity;
+import com.gamzabat.algohub.feature.user.dto.GetSolutionCommentActivityList;
 import com.gamzabat.algohub.feature.user.dto.RegisterBjNickNameRequest;
 import com.gamzabat.algohub.feature.user.dto.RegisterRequest;
 import com.gamzabat.algohub.feature.user.dto.ResetPasswordRequest;
@@ -76,6 +81,8 @@ public class UserService {
 	private final ResetPasswordRepository resetPasswordRepository;
 	private final EmailService emailService;
 	private final DiscordWebhookService webhookService;
+	private final SolutionRepository solutionRepository;
+	private final RestClient.Builder builder;
 
 	@Transactional
 	public void register(RegisterRequest request, MultipartFile profileImage, String token) {
@@ -335,6 +342,13 @@ public class UserService {
 		resetPassword.getUser().editPassword(encodedPassword);
 		resetPassword.makeDone();
 		log.info("success to reset password.");
+	}
+
+	@Transactional
+	public GetSolutionCommentActivityList getSolutionCommentActivity(User user) {
+		List<GetSolutionCommentActivity> solutionCommentActivityList = solutionRepository.findFeedSolutionsByUserOrdered(user);
+		GetSolutionCommentActivityList response = GetSolutionCommentActivityList.builder().solutionCommentActivityList(solutionCommentActivityList).build();
+		return response;
 	}
 
 	public void validateResetPasswordToken(String token) {
