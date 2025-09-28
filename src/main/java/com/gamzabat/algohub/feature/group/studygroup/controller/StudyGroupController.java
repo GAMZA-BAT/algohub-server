@@ -37,6 +37,9 @@ import com.gamzabat.algohub.feature.group.studygroup.dto.GroupCodeResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GroupRoleResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.UpdateBookmarkResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.UpdateGroupMemberRoleRequest;
+import com.gamzabat.algohub.feature.group.studygroup.dto.UpdateJoinRequestStatusRequest;
+import com.gamzabat.algohub.feature.group.studygroup.exception.JoinRequestException;
+import com.gamzabat.algohub.feature.group.studygroup.service.JoinRequestService;
 import com.gamzabat.algohub.feature.group.studygroup.service.StudyGroupService;
 import com.gamzabat.algohub.feature.user.domain.User;
 
@@ -51,6 +54,7 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "그룹 API", description = "스터디 그룹 관련 API")
 public class StudyGroupController {
 	private final StudyGroupService studyGroupService;
+	private final JoinRequestService joinRequestService;
 
 	@PostMapping(value = "/groups", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(summary = "그룹 생성 API")
@@ -208,34 +212,31 @@ public class StudyGroupController {
 		return ResponseEntity.ok().body(responses);
 	}
 
-	@PostMapping(value = "/{groupId}/join-request")
+	@PostMapping(value = "/groups/{groupId}/join-request")
 	@Operation(summary = "그룹 가입 요청 API", description = "스터디 그룹에 가입 요청을 보내는 API")
 	public ResponseEntity<Void> joinRequest(@AuthedUser User user, @PathVariable Long groupId) {
-		studyGroupService.joinRequest(user, groupId);
+		joinRequestService.joinRequest(user, groupId);
 		return ResponseEntity.ok().build();
 	}
 
-	@GetMapping(value = "/{groupId}/join-request")
+	@GetMapping(value = "/groups/{groupId}/join-request")
 	@Operation(summary = "그룹 가입 요청 목록 조회 API", description = "스터디 그룹 가입 요청 목록을 조회하는 API")
 	public ResponseEntity<List<JoinRequest>> getAllJoinRequests(@AuthedUser User user, @PathVariable Long groupId) {
-		List<JoinRequest> response = studyGroupService.getAllJoinRequests(user, groupId);
+		List<JoinRequest> response = joinRequestService.getAllJoinRequests(user, groupId);
 
 		return ResponseEntity.ok().body(response);
 	}
 
-	@PostMapping(value = "/{groupId}/{requestId}/approve")
-	@Operation(summary = "그룹 가입 요청 승인 API", description = "스터디 그룹 가입 요청을 승인하는 API")
-	public ResponseEntity<Void> approveRequest(@AuthedUser User user, @PathVariable Long requestId,
-		@PathVariable Long groupId) {
-		studyGroupService.approveJoinRequest(user, requestId, groupId);
-		return ResponseEntity.ok().build();
-	}
-
-	@PostMapping(value = "/{groupId}/{requestId}/reject")
-	@Operation(summary = "그룹 가입 요청 거절 API", description = "스터디 그룹 가입 요청을 거절하는 API")
-	public ResponseEntity<Void> rejectRequest(@AuthedUser User user, @PathVariable Long requestId,
-		@PathVariable Long groupId) {
-		studyGroupService.rejectJoinRequest(user, requestId, groupId);
+	@PostMapping(value = "/groups/{groupId}/join-request/{requestId}")
+	@Operation(summary = "그룹 가입 요청 승인 / 거절", description = "스터디 그룹 가입 요청을 승인 / 거절하는 API")
+	public ResponseEntity<Void> updateRequest(
+		@AuthedUser User user,
+		@PathVariable Long requestId,
+		@PathVariable Long groupId,
+		@RequestBody @Valid UpdateJoinRequestStatusRequest request, Errors errors) {
+		if (errors.hasErrors())
+			throw new JoinRequestException("가입 요청이 올바르지 않습니다.");
+		joinRequestService.updateJoinRequest(user, requestId, groupId, request);
 		return ResponseEntity.ok().build();
 	}
 

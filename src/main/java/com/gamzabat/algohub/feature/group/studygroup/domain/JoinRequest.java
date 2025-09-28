@@ -12,11 +12,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import lombok.Getter;
-import lombok.Setter;
+import lombok.NoArgsConstructor;
 
 @Entity
-@Setter
 @Getter
+@NoArgsConstructor
 public class JoinRequest {
 	@Id
 	@GeneratedValue
@@ -33,23 +33,18 @@ public class JoinRequest {
 	@Enumerated(EnumType.STRING)
 	private JoinRequestStatus status = JoinRequestStatus.PENDING;
 
-	public void approve() {
-		if (status != JoinRequestStatus.PENDING)
-			return;
-		status = JoinRequestStatus.APPROVE;
+	public JoinRequest(StudyGroup group, User requester) {
+		this.group = group;
+		this.requester = requester;
 	}
 
-	public void reject() {
-		if (status != JoinRequestStatus.PENDING)
+	public void updateStatus(JoinRequestStatus status) {
+		if (status != JoinRequestStatus.PENDING) {
 			return;
-		status = JoinRequestStatus.REJECT;
+		}
+		this.status = status;
 	}
 
-	public void cancel() {
-		if (status != JoinRequestStatus.PENDING)
-			return;
-		status = JoinRequestStatus.CANCEL;
-	}
 }
 
 

@@ -40,6 +40,7 @@ import com.gamzabat.algohub.common.DateFormatUtil;
 import com.gamzabat.algohub.common.jwt.TokenProvider;
 import com.gamzabat.algohub.config.SpringSecurityConfig;
 import com.gamzabat.algohub.enums.GroupStatus;
+import com.gamzabat.algohub.enums.JoinRequestStatus;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.controller.StudyGroupController;
@@ -57,12 +58,14 @@ import com.gamzabat.algohub.feature.group.studygroup.dto.GroupCodeResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GroupRoleResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.UpdateBookmarkResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.UpdateGroupMemberRoleRequest;
+import com.gamzabat.algohub.feature.group.studygroup.dto.UpdateJoinRequestStatusRequest;
 import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
 import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundGroupException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.JoinRequestException;
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
+import com.gamzabat.algohub.feature.group.studygroup.service.JoinRequestService;
 import com.gamzabat.algohub.feature.group.studygroup.service.StudyGroupService;
 import com.gamzabat.algohub.feature.image.service.ImageService;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
@@ -86,6 +89,8 @@ class StudyGroupControllerTest {
 	private ObjectMapper objectMapper;
 	@MockBean
 	private StudyGroupService studyGroupService;
+	@MockBean
+	private JoinRequestService joinRequestService;
 	@MockBean
 	private StudyGroupRepository studyGroupRepository;
 	@MockBean
@@ -879,9 +884,9 @@ class StudyGroupControllerTest {
 	void joinRequestSuccess() throws Exception {
 		//given
 		Long groupId = 10L;
-		willDoNothing().given(studyGroupService).joinRequest(any(User.class), eq(groupId));
+		willDoNothing().given(joinRequestService).joinRequest(any(User.class), eq(groupId));
 
-		mockMvc.perform(post("/api/{groupId}/join-request", groupId)
+		mockMvc.perform(post("/api/groups/{groupId}/join-request", groupId)
 				.header("Authorization", token))
 			.andExpect(status().isOk());
 	}
@@ -891,9 +896,9 @@ class StudyGroupControllerTest {
 	void joinRequest_fail_alreadyRequested() throws Exception {
 		Long groupId = 10L;
 		willThrow(new JoinRequestException("이미 요청한 그룹입니다."))
-			.given(studyGroupService).joinRequest(any(User.class), eq(groupId));
+			.given(joinRequestService).joinRequest(any(User.class), eq(groupId));
 
-		mockMvc.perform(post("/api/{groupId}/join-request", groupId)
+		mockMvc.perform(post("/api/groups/{groupId}/join-request", groupId)
 				.header("Authorization", token))
 			.andExpect(status().isBadRequest());
 	}
@@ -903,10 +908,10 @@ class StudyGroupControllerTest {
 	void getAllJoinRequests_success() throws Exception {
 		Long groupId = 10L;
 		// 직렬화가 비어도 배열 길이만 확인할 수 있게 더미 객체 2개
-		given(studyGroupService.getAllJoinRequests(any(User.class), eq(groupId)))
+		given(joinRequestService.getAllJoinRequests(any(User.class), eq(groupId)))
 			.willReturn(List.of(new JoinRequest(), new JoinRequest()));
 
-		mockMvc.perform(get("/api/{groupId}/join-request", groupId)
+		mockMvc.perform(get("/api/groups/{groupId}/join-request", groupId)
 				.header("Authorization", token))
 			.andExpect(status().isOk())
 			.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
@@ -917,10 +922,10 @@ class StudyGroupControllerTest {
 	@DisplayName("요청 목록 조회 실패 : 권한 없음")
 	void getAllJoinRequests_fail_alreadyRequested() throws Exception {
 		Long groupId = 10L;
-		given(studyGroupService.getAllJoinRequests(any(User.class), eq(groupId)))
+		given(joinRequestService.getAllJoinRequests(any(User.class), eq(groupId)))
 			.willThrow(new JoinRequestException("요청 목록을 조회할 권한이 없습니다."));
 
-		mockMvc.perform(get("/api/{groupId}/join-request", groupId)
+		mockMvc.perform(get("/api/groups/{groupId}/join-request", groupId)
 				.header("Authorization", token))
 			.andExpect(status().isBadRequest());
 	}
@@ -930,11 +935,14 @@ class StudyGroupControllerTest {
 	void approve_success() throws Exception {
 		Long groupId = 10L;
 		Long requestId = 77L;
-		willDoNothing().given(studyGroupService)
-			.approveJoinRequest(any(User.class), eq(requestId), eq(groupId));
+		UpdateJoinRequestStatusRequest request = new UpdateJoinRequestStatusRequest(JoinRequestStatus.APPROVE);
+		willDoNothing().given(joinRequestService)
+			.updateJoinRequest(any(User.class), eq(requestId), eq(groupId), eq(request));
 
-		mockMvc.perform(post("/api/{groupId}/{requestId}/approve", groupId, requestId)
-				.header("Authorization", token))
+		mockMvc.perform(post("/api/groups/{groupId}/join-request/{requestId}", groupId, requestId)
+				.header("Authorization", token)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isOk());
 	}
 
@@ -943,10 +951,11 @@ class StudyGroupControllerTest {
 	void approve_fail_requestNotFound() throws Exception {
 		Long groupId = 10L;
 		Long requestId = 999L;
+		UpdateJoinRequestStatusRequest request = new UpdateJoinRequestStatusRequest(JoinRequestStatus.APPROVE);
 		willThrow(new JoinRequestException("해당 요청이 존재하지 않습니다"))
-			.given(studyGroupService).approveJoinRequest(any(User.class), eq(requestId), eq(groupId));
+			.given(joinRequestService).updateJoinRequest(any(User.class), eq(requestId), eq(groupId), eq(request));
 
-		mockMvc.perform(post("/api/{groupId}/{requestId}/approve", groupId, requestId)
+		mockMvc.perform(post("/api/groups/{groupId}/join-request/{requestId}", groupId, requestId)
 				.header("Authorization", token))
 			.andExpect(status().isBadRequest());
 	}
@@ -956,11 +965,15 @@ class StudyGroupControllerTest {
 	void reject_success() throws Exception {
 		Long groupId = 10L;
 		Long requestId = 77L;
-		willDoNothing().given(studyGroupService)
-			.rejectJoinRequest(any(User.class), eq(requestId), eq(groupId));
+		UpdateJoinRequestStatusRequest request = new UpdateJoinRequestStatusRequest(JoinRequestStatus.REJECT);
 
-		mockMvc.perform(post("/api/{groupId}/{requestId}/reject", groupId, requestId)
-				.header("Authorization", token))
+		willDoNothing().given(joinRequestService)
+			.updateJoinRequest(any(User.class), eq(requestId), eq(groupId), eq(request));
+
+		mockMvc.perform(post("/api/groups/{groupId}/join-request/{requestId}", groupId, requestId)
+				.header("Authorization", token)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isOk());
 	}
 
@@ -969,10 +982,12 @@ class StudyGroupControllerTest {
 	void reject_fail_noPermission() throws Exception {
 		Long groupId = 10L;
 		Long requestId = 77L;
-		willThrow(new JoinRequestException("승인 권한이 없습니다."))
-			.given(studyGroupService).rejectJoinRequest(any(User.class), eq(requestId), eq(groupId));
+		UpdateJoinRequestStatusRequest request = new UpdateJoinRequestStatusRequest(JoinRequestStatus.REJECT);
 
-		mockMvc.perform(post("/api/{groupId}/{requestId}/reject", groupId, requestId)
+		willThrow(new JoinRequestException("승인 권한이 없습니다."))
+			.given(joinRequestService).updateJoinRequest(any(User.class), eq(requestId), eq(groupId), eq(request));
+
+		mockMvc.perform(post("/api/groups/{groupId}/join-request/{requestId}", groupId, requestId)
 				.header("Authorization", token))
 			.andExpect(status().isBadRequest());
 	}
