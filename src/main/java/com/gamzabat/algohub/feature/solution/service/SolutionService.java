@@ -29,6 +29,7 @@ import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValida
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.notification.enums.NotificationCategory;
+import com.gamzabat.algohub.feature.notification.enums.NotificationType;
 import com.gamzabat.algohub.feature.notification.service.NotificationService;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
@@ -36,8 +37,8 @@ import com.gamzabat.algohub.feature.solution.domain.Solution;
 import com.gamzabat.algohub.feature.solution.domain.SolutionComment;
 import com.gamzabat.algohub.feature.solution.dto.CreateSolutionRequest;
 import com.gamzabat.algohub.feature.solution.dto.GetCurrentSolvingStatusResponse;
+import com.gamzabat.algohub.feature.solution.dto.GetSolutionListRequest;
 import com.gamzabat.algohub.feature.solution.dto.GetSolutionResponse;
-import com.gamzabat.algohub.feature.solution.dto.GetSolutionWithGroupIdResponse;
 import com.gamzabat.algohub.feature.solution.dto.GetSolvingStatusPerProblemResponse;
 import com.gamzabat.algohub.feature.solution.enums.ProgressCategory;
 import com.gamzabat.algohub.feature.solution.exception.CannotFoundSolutionException;
@@ -65,8 +66,7 @@ public class SolutionService {
 	private final SolutionCommentRepository solutionCommentRepository;
 
 	@Transactional(readOnly = true)
-	public Page<GetSolutionResponse> getSolutionList(User user, Long problemId, String nickname,
-		String language, String result, Pageable pageable) {
+	public Page<GetSolutionResponse> getSolutionList(User user, Long problemId, GetSolutionListRequest request, Pageable pageable) {
 		Problem problem = problemRepository.findById(problemId)
 			.orElseThrow(() -> new ProblemValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 문제 입니다."));
 		// Gorup Id를 받고 그거로 group에 대한 확인을 해야할듯
@@ -77,7 +77,7 @@ public class SolutionService {
 			throw new GroupMemberValidationException(HttpStatus.FORBIDDEN.value(), "참여하지 않은 그룹 입니다.");
 		}
 
-		Page<Solution> solutions = solutionRepository.findAllFilteredSolutions(problem, nickname, language, result,
+		Page<Solution> solutions = solutionRepository.findAllFilteredSolutions(problem, request.nickname(), request.language(), request.result(),
 			pageable);
 
 		return solutions.map(solution -> this.getGetSolutionResponse(user, solution));
@@ -98,59 +98,27 @@ public class SolutionService {
 		}
 	}
 
-	@Transactional(readOnly = true)
-	public Page<GetSolutionResponse> getMySolutionsInGroupInProgress(User user, Long groupId, Integer problemNumber,
-		String language,
-		String result, Pageable pageable) {
-		StudyGroup group = validateGroupAndMember(user, groupId);
-
-		Page<GetSolutionResponse> inProgressSolutions = solutionRepository.findAllFilteredMySolutionsInGroup(user,
-				group, problemNumber, language, result, ProgressCategory.IN_PROGRESS, pageable)
-			.map(solution -> this.getGetSolutionResponse(user, solution));
-
-		log.info("success to get my in-progress solutions in group {}", groupId);
-		return inProgressSolutions;
-	}
 
 	@Transactional(readOnly = true)
-	public Page<GetSolutionResponse> getMySolutionsInGroupExpired(User user, Long groupId, Integer problemNumber,
-		String language,
-		String result, Pageable pageable) {
-		StudyGroup group = validateGroupAndMember(user, groupId);
+	public Page<GetSolutionResponse> getMySolutionList(User user, Long groupId, Integer problemNumber, String language,
+		String result, ProgressCategory status, Boolean isIncorrect, Pageable pageable) {
+		Page<GetSolutionResponse> solutionList;
+		if (isIncorrect == null)
+			isIncorrect = false;
+		if (groupId != null) {
+			StudyGroup group = validateGroupAndMember(user, groupId);
+			solutionList = solutionRepository.findAllFilteredMySolutionsInGroup(user,group,problemNumber,language,result,status,pageable)
+				.map(solution -> this.getGetSolutionResponse(user, solution));
+		} else if (isIncorrect) {
+			solutionList = solutionRepository.findAllFilteredMySolutionsIsIncorrect(user, problemNumber, language, result, status, pageable)
+				.map(solution -> this.getGetSolutionResponse(user, solution));
+		} else {
+			solutionList = solutionRepository.findAllFilteredMySolutions(user,problemNumber,language,result,status,pageable)
+				.map(solution -> this.getGetSolutionResponse(user, solution));
+		}
 
-		Page<GetSolutionResponse> expiredSolutions = solutionRepository.findAllFilteredMySolutionsInGroup(user, group,
-				problemNumber, language, result, ProgressCategory.EXPIRED, pageable)
-			.map(solution -> this.getGetSolutionResponse(user, solution));
-
-		log.info("success to get my expired solutions in group {}", groupId);
-		return expiredSolutions;
-	}
-
-	@Transactional(readOnly = true)
-	public Page<GetSolutionWithGroupIdResponse> getMySolutionsInProgress(User user, Integer problemNumber,
-		String language,
-		String result,
-		Pageable pageable) {
-		Page<GetSolutionWithGroupIdResponse> inProgressSolutions = solutionRepository.findAllFilteredMySolutions(user,
-				problemNumber,
-				language,
-				result, ProgressCategory.IN_PROGRESS, pageable)
-			.map(solution -> this.getGetSolutionWithGroupIdResponse(user, solution));
-		log.info("success to get my in-progress solutions.");
-		return inProgressSolutions;
-	}
-
-	@Transactional(readOnly = true)
-	public Page<GetSolutionWithGroupIdResponse> getMySolutionsExpired(User user, Integer problemNumber, String language,
-		String result,
-		Pageable pageable) {
-		Page<GetSolutionWithGroupIdResponse> expiredSolutions = solutionRepository.findAllFilteredMySolutions(user,
-				problemNumber,
-				language,
-				result, ProgressCategory.EXPIRED, pageable)
-			.map(solution -> this.getGetSolutionWithGroupIdResponse(user, solution));
-		log.info("success to get my expired solutions.");
-		return expiredSolutions;
+		log.info("success to get my solutions.");
+		return solutionList;
 	}
 
 	@Transactional(readOnly = true)
@@ -256,7 +224,8 @@ public class SolutionService {
 			problem,
 			null,
 			NotificationCategory.NEW_SOLUTION_POSTED,
-			NotificationCategory.NEW_SOLUTION_POSTED.getMessage(solver.getUser().getNickname())
+			NotificationCategory.NEW_SOLUTION_POSTED.getMessage(solver.getUser().getNickname()),
+			NotificationType.STUDY_GROUP
 		);
 	}
 
@@ -265,21 +234,6 @@ public class SolutionService {
 		long hours = totalMinutes / 60;
 		long minutes = totalMinutes % 60;
 		return String.format("%d:%02d", hours, minutes);
-	}
-
-	private GetSolutionWithGroupIdResponse getGetSolutionWithGroupIdResponse(User user, Solution solution) {
-		Integer correctCount = getCorrectCount(solution);
-		Integer submitMemberCount = solutionRepository.countDistinctUsersByProblem(solution.getProblem());
-		Integer totalMemberCount = groupMemberRepository.countMembersByStudyGroup(getGroup(solution)) + 1;
-		Integer accuracy = calculateAccuracy(submitMemberCount, correctCount);
-		long commentCount = commentRepository.countCommentsBySolutionId(solution.getId());
-		boolean isRead = true;
-
-		if (isMySolution(user, solution)) {
-			isRead = isAllCommentsRead(solution);
-		}
-		return GetSolutionWithGroupIdResponse.toDTO(solution, accuracy, submitMemberCount, totalMemberCount,
-			commentCount, isRead);
 	}
 
 	private GetSolutionResponse getGetSolutionResponse(User user, Solution solution) {

@@ -43,8 +43,8 @@ import com.gamzabat.algohub.feature.solution.domain.Solution;
 import com.gamzabat.algohub.feature.solution.domain.SolutionComment;
 import com.gamzabat.algohub.feature.solution.dto.CreateSolutionRequest;
 import com.gamzabat.algohub.feature.solution.dto.GetCurrentSolvingStatusResponse;
+import com.gamzabat.algohub.feature.solution.dto.GetSolutionListRequest;
 import com.gamzabat.algohub.feature.solution.dto.GetSolutionResponse;
-import com.gamzabat.algohub.feature.solution.dto.GetSolutionWithGroupIdResponse;
 import com.gamzabat.algohub.feature.solution.enums.ProgressCategory;
 import com.gamzabat.algohub.feature.solution.exception.CannotFoundSolutionException;
 import com.gamzabat.algohub.feature.solution.repository.SolutionCommentRepository;
@@ -145,7 +145,8 @@ class SolutionServiceTest {
 		Page<Solution> correctPage = new PageImpl<>(list.subList(10, 20), pageable, 10);
 		List<SolutionComment> readComments = new ArrayList<>(commentList.subList(0, 25));
 		List<SolutionComment> unReadComments = new ArrayList<>(commentList.subList(25, 50));
-
+		GetSolutionListRequest requestCompileError = GetSolutionListRequest.builder().result("컴파일 에러").language(null).nickname(null).build();
+		GetSolutionListRequest requestCorrect = GetSolutionListRequest.builder().result("맞았습니다!!").language(null).nickname(null).build();
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(group));
 		when(problemRepository.findById(10L)).thenReturn(Optional.ofNullable(problem));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user, group)).thenReturn(true);
@@ -162,9 +163,9 @@ class SolutionServiceTest {
 				unReadComments.subList(i * 5, i * 5 + 5));
 		}
 		// when
-		Page<GetSolutionResponse> compileErrorResult = solutionService.getSolutionList(user, 10L, null, null, "컴파일 에러",
+		Page<GetSolutionResponse> compileErrorResult = solutionService.getSolutionList(user, 10L, requestCompileError,
 			pageable);
-		Page<GetSolutionResponse> correctResult = solutionService.getSolutionList(user, 10L, null, null, "맞았습니다!!",
+		Page<GetSolutionResponse> correctResult = solutionService.getSolutionList(user, 10L, requestCorrect,
 			pageable);
 		// then
 		// 1) 컴파일 에러 풀이 목록 조회
@@ -227,7 +228,7 @@ class SolutionServiceTest {
 		List<Solution> list = new ArrayList<>();
 		List<SolutionComment> commentList = new ArrayList<>();
 		LocalDateTime fixedDateTime = LocalDateTime.now();
-
+		GetSolutionListRequest request = GetSolutionListRequest.builder().result(null).language("Java").nickname("nickname1").build();
 		setTestSolutionAndCommentList(list, commentList, fixedDateTime);
 
 		Page<Solution> solutionPage = new PageImpl<>(list.subList(10, 15), pageable, 5);
@@ -239,8 +240,7 @@ class SolutionServiceTest {
 			solutionPage);
 
 		// when
-		Page<GetSolutionResponse> result = solutionService.getSolutionList(user2, 10L, "nickname1", "Java", null,
-			pageable);
+		Page<GetSolutionResponse> result = solutionService.getSolutionList(user2, 10L, request, pageable);
 		// then
 		assertThat(result.getContent().size()).isEqualTo(5);
 		assertThat(result.getTotalElements()).isEqualTo(5);
@@ -264,8 +264,9 @@ class SolutionServiceTest {
 		Pageable pageable = PageRequest.of(0, 20);
 		when(problemRepository.findById(10L)).thenReturn(Optional.ofNullable(problem));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.empty());
+		GetSolutionListRequest request = GetSolutionListRequest.builder().result(null).language(null).nickname(null).build();
 		// when, then
-		assertThatThrownBy(() -> solutionService.getSolutionList(user, 10L, null, null, null, pageable))
+		assertThatThrownBy(() -> solutionService.getSolutionList(user, 10L, request, pageable))
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.NOT_FOUND.value())
 			.hasFieldOrPropertyWithValue("error", "존재하지 않는 그룹 입니다.");
@@ -277,8 +278,10 @@ class SolutionServiceTest {
 		// given
 		Pageable pageable = PageRequest.of(0, 20);
 		when(problemRepository.findById(10L)).thenReturn(Optional.empty());
+		GetSolutionListRequest request = GetSolutionListRequest.builder().result(null).language(null).nickname(null).build();
+
 		// when, then
-		assertThatThrownBy(() -> solutionService.getSolutionList(user, 10L, null, null, null, pageable))
+		assertThatThrownBy(() -> solutionService.getSolutionList(user, 10L,request, pageable))
 			.isInstanceOf(ProblemValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.NOT_FOUND.value())
 			.hasFieldOrPropertyWithValue("error", "존재하지 않는 문제 입니다.");
@@ -292,8 +295,10 @@ class SolutionServiceTest {
 		when(problemRepository.findById(10L)).thenReturn(Optional.ofNullable(problem));
 		when(studyGroupRepository.findById(30L)).thenReturn(Optional.ofNullable(group));
 		when(groupMemberRepository.existsByUserAndStudyGroup(user2, group)).thenReturn(false);
+		GetSolutionListRequest request = GetSolutionListRequest.builder().result(null).language(null).nickname(null).build();
+
 		// when, then
-		assertThatThrownBy(() -> solutionService.getSolutionList(user2, 10L, null, null, null, pageable))
+		assertThatThrownBy(() -> solutionService.getSolutionList(user2, 10L, request, pageable))
 			.isInstanceOf(GroupMemberValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "참여하지 않은 그룹 입니다.");
@@ -551,11 +556,11 @@ class SolutionServiceTest {
 
 		// then
 		verify(solutionRepository, times(2)).save(any(Solution.class));
-		verify(notificationService, times(2)).sendNotificationToMembers(any(), any(), any(), any(), any(), any());
+		verify(notificationService, times(2)).sendNotificationToMembers(any(), any(), any(), any(), any(), any(),any());
 	}
 
 	@Test
-	@DisplayName("그룹 내 진행 중인 나의 풀이 전체 조회 성공 : 문제 필터링")
+	@DisplayName("나의 풀이 전체 조회 성공 : 문제 필터링 // 그룹 내 진행 중인 ")
 	void getMySolutionsInGroupInProgress() {
 		// given
 		Pageable pageable = PageRequest.of(0, 10);
@@ -600,9 +605,9 @@ class SolutionServiceTest {
 				comments.subList(i * 10, i * 10 + 10));
 		}
 		// when
-		Page<GetSolutionResponse> responses = solutionService.getMySolutionsInGroupInProgress(user, groupId,
+		Page<GetSolutionResponse> responses = solutionService.getMySolutionList(user, groupId,
 			problemNumber, null,
-			null, pageable);
+			null, ProgressCategory.IN_PROGRESS, false, pageable);
 		// then
 		for (int i = 0; i < 5; i++) {
 			assertThat(responses.getContent().get(i).getNickname()).isEqualTo("nickname1");
@@ -612,7 +617,7 @@ class SolutionServiceTest {
 	}
 
 	@Test
-	@DisplayName("그룹 내 마감된 나의 풀이 전체 조회 성공 : 문제 필터링")
+	@DisplayName("나의 풀이 전체 조회 성공 : 문제 필터링 // 그룹 내 마감된 ")
 	void getMySolutionsInGroupExpired() {
 		// given
 		Pageable pageable = PageRequest.of(0, 10);
@@ -656,9 +661,9 @@ class SolutionServiceTest {
 				comments.subList(i * 10, i * 10 + 10));
 		}
 		// when
-		Page<GetSolutionResponse> responses = solutionService.getMySolutionsInGroupExpired(user, groupId,
+		Page<GetSolutionResponse> responses = solutionService.getMySolutionList(user, groupId,
 			problemNumber, null,
-			null, pageable);
+			null,ProgressCategory.EXPIRED,false, pageable);
 		// then
 		for (int i = 0; i < 5; i++) {
 			assertThat(responses.getContent().get(i).getNickname()).isEqualTo("nickname1");
@@ -669,7 +674,7 @@ class SolutionServiceTest {
 	}
 
 	@Test
-	@DisplayName("진행 중인 나의 풀이 전체 조회 성공")
+	@DisplayName("나의 풀이 전체 조회 성공 // 진행 중인 ")
 	void getMySolutionsInProgress() {
 		// given
 		Pageable pageable = PageRequest.of(0, 10);
@@ -705,21 +710,22 @@ class SolutionServiceTest {
 				comments.subList(i * 10, i * 10 + 10));
 		}
 		// when
-		Page<GetSolutionWithGroupIdResponse> responses = solutionService.getMySolutionsInProgress(user, null, null,
-			null, pageable);
+		Page<GetSolutionResponse> responses = solutionService.getMySolutionList(user, null, null,
+			null,null,ProgressCategory.IN_PROGRESS, false, pageable);
 		// then
 		for (int i = 0; i < 5; i++) {
 			assertThat(responses.getContent().get(i).getNickname()).isEqualTo("nickname1");
 			assertThat(responses.getContent().get(i).getIsRead()).isEqualTo(true);
 			assertThat(responses.getContent().get(i).getGroupId()).isEqualTo(
 				problem.getStudyGroup().getId());
-			assertThat(responses.getContent().getFirst().getProblemId()).isEqualTo(problem1.getId());
+			assertThat(responses.getContent().getFirst().getProblemId()).isEqualTo(problem.getId());
 		}
 	}
 
 	@Test
-	@DisplayName("마감 된 나의 풀이 전체 조회 성공")
+	@DisplayName("나의 풀이 전체 조회 성공// 마감 된")
 	void getMySolutionsExpired() {
+
 		// given
 		Pageable pageable = PageRequest.of(0, 10);
 		List<Solution> expired = new ArrayList<>();
@@ -761,8 +767,8 @@ class SolutionServiceTest {
 				comments.subList(i * 10, i * 10 + 10));
 		}
 		// when
-		Page<GetSolutionWithGroupIdResponse> responses = solutionService.getMySolutionsExpired(user, null, null,
-			null, pageable);
+		Page<GetSolutionResponse> responses = solutionService.getMySolutionList(user, null, null,
+			null, null, ProgressCategory.EXPIRED, false, pageable);
 		// then
 		for (int i = 0; i < 5; i++) {
 			assertThat(responses.getContent().get(i).getNickname()).isEqualTo("nickname1");
