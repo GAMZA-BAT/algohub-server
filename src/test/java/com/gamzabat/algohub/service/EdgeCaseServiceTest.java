@@ -120,7 +120,7 @@ class EdgeCaseServiceTest {
 	void createEdgeCaseSuccess() {
 		//given
 		CreateEdgeCaseRequest request = CreateEdgeCaseRequest.builder()
-			.link("https://www.acmicpc.net/problem/1000")
+			.linkOrProblemNumber("https://www.acmicpc.net/problem/1000")
 			.input("1 2")
 			.output("3")
 			.build();
@@ -156,7 +156,7 @@ class EdgeCaseServiceTest {
 		//given
 		Integer problemNumber = 1001;
 		List<EdgeCase> edgeCaseList = Arrays.asList(edgeCase1, edgeCase2);
-		when(edgeCaseRepository.findAllByProblemNumber(problemNumber))
+		when(edgeCaseRepository.findAllByProblemNumberOrderByCreatedAtDesc(problemNumber))
 			.thenReturn(edgeCaseList);
 
 		//when
@@ -186,7 +186,7 @@ class EdgeCaseServiceTest {
 		// given
 		Integer problemNumber = null;
 		List<EdgeCase> edgeCaseList = Arrays.asList(edgeCase1, edgeCase2, edgeCase3);
-		when(edgeCaseRepository.findAll())
+		when(edgeCaseRepository.findAllByOrderByCreatedAtDesc())
 			.thenReturn(edgeCaseList);
 		// when
 		GetEdgeCaseListResponse response = edgeCaseService.getEdgeCaseList(problemNumber);

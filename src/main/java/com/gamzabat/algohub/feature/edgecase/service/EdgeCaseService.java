@@ -64,9 +64,9 @@ public class EdgeCaseService {
 	public GetEdgeCaseListResponse getEdgeCaseList(Integer problemNumber) {
 		List<EdgeCase> edgeCaseList;
 		if (problemNumber == null)
-			edgeCaseList = edgeCaseRepository.findAll();
+			edgeCaseList = edgeCaseRepository.findAllByOrderByCreatedAtDesc();
 		else
-			edgeCaseList = edgeCaseRepository.findAllByProblemNumber(problemNumber);
+			edgeCaseList = edgeCaseRepository.findAllByProblemNumberOrderByCreatedAtDesc(problemNumber);
 
 		List<GetEdgeCaseResponse> responseList = edgeCaseList.stream()
 			.map(edgeCase -> new GetEdgeCaseResponse(
