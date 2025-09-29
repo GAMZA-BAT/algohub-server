@@ -37,19 +37,26 @@ public class EdgeCaseService {
 
 	public void createEdgeCase(User user, CreateEdgeCaseRequest request) {
 		User author = user;
-		String link = request.link();
+		Boolean isNumber = isNumeric(request.linkOrProblemNumber());
+		String link, number;
+		if (isNumber) {
+			link = BOJ_PROBLEM_FORMAT + request.linkOrProblemNumber();
+			number = request.linkOrProblemNumber();
+		} else {
+			link = request.linkOrProblemNumber();
+			number = getProblemId(link);
+		}
 
-		String number = getProblemId(link);
 		JsonNode apiResult = problemService.fetchProblemDetails(number);
 		int level = problemService.getProblemLevel(apiResult);
 		String title = problemService.getProblemTitle(apiResult);
 
-		saveEdgeCase(author,request,level,title,Integer.parseInt(number));
+		saveEdgeCase(author,request,link,level,title,Integer.parseInt(number));
 	}
 
-	private void saveEdgeCase(User author, CreateEdgeCaseRequest request, int level, String title, int number) {
+	private void saveEdgeCase(User author, CreateEdgeCaseRequest request, String link, int level, String title, int number) {
 		EdgeCase edgeCase = EdgeCase.builder().input(request.input()).level(level).title(title).link(
-			request.link()).output(request.output()).problemNumber(number).author(author).build();
+			link).output(request.output()).problemNumber(number).author(author).build();
 
 		edgeCaseRepository.save(edgeCase);
 	}
@@ -114,5 +121,9 @@ public class EdgeCaseService {
 		if (parts.length < 3 || !parts[2].equals(BOJ_PROBLEM_URL))
 			throw new NotBojLinkException(HttpStatus.BAD_REQUEST.value(), "백준 링크가 아닙니다");
 		return parts[parts.length - 1];
+	}
+
+	private boolean isNumeric(String str) {
+		return str != null && str.matches("\\d+");
 	}
 }

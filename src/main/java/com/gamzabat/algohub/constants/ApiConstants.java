@@ -4,6 +4,7 @@ public final class ApiConstants {
 	public static final String SOLVED_AC_PROBLEM_API_URL = "https://solved.ac/api/v3/problem/lookup?problemIds=";
 	public static final String BOJ_USER_PROFILE_URL = "https://www.acmicpc.net/user/";
 	public static final String BOJ_PROBLEM_URL = "www.acmicpc.net";
+	public static final String BOJ_PROBLEM_FORMAT =  "https://www.acmicpc.net/problem/";
 	public static final String SERVER_HTTPS_ENDPOINT = "https://api.algohub.kr";
 	public static final String RC_SERVER_HTTPS_ENDPOINT = "https://api.rc.algohub.kr";
 
