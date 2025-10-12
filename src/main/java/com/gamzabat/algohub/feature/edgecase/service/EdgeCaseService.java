@@ -47,7 +47,7 @@ public class EdgeCaseService {
 		saveEdgeCase(author,request,level,title,Integer.parseInt(number));
 	}
 
-	private void saveEdgeCase(User author, CreateEdgeCaseRequest request,int level, String title, int number) {
+	private void saveEdgeCase(User author, CreateEdgeCaseRequest request, int level, String title, int number) {
 		EdgeCase edgeCase = EdgeCase.builder().input(request.input()).level(level).title(title).link(
 			request.link()).output(request.output()).problemNumber(number).author(author).build();
 
