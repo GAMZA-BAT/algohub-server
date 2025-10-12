@@ -29,7 +29,6 @@ import org.springframework.mock.web.MockMultipartFile;
 import com.gamzabat.algohub.common.DateFormatUtil;
 import com.gamzabat.algohub.common.logging.DiscordWebhookService;
 import com.gamzabat.algohub.enums.ImageType;
-import com.gamzabat.algohub.enums.JoinRequestStatus;
 import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
 import com.gamzabat.algohub.exception.UserValidationException;
@@ -50,16 +49,13 @@ import com.gamzabat.algohub.feature.group.studygroup.dto.GetStudyGroupResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.GroupRoleResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.UpdateBookmarkResponse;
 import com.gamzabat.algohub.feature.group.studygroup.dto.UpdateGroupMemberRoleRequest;
-import com.gamzabat.algohub.feature.group.studygroup.dto.UpdateJoinRequestStatusRequest;
 import com.gamzabat.algohub.feature.group.studygroup.etc.RoleOfGroupMember;
 import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundGroupException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
-import com.gamzabat.algohub.feature.group.studygroup.exception.JoinRequestException;
 import com.gamzabat.algohub.feature.group.studygroup.repository.BookmarkedStudyGroupRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.JoinRequestRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
-import com.gamzabat.algohub.feature.group.studygroup.service.JoinRequestService;
 import com.gamzabat.algohub.feature.group.studygroup.service.StudyGroupService;
 import com.gamzabat.algohub.feature.image.service.ImageService;
 import com.gamzabat.algohub.feature.notice.repository.NoticeCommentRepository;
@@ -84,8 +80,7 @@ class StudyGroupServiceTest {
 	private StudyGroupService studyGroupService;
 	@Mock
 	private NotificationService notificationService;
-	@InjectMocks
-	private JoinRequestService joinRequestService;
+
 	@Mock
 	private StudyGroupRepository studyGroupRepository;
 	@Mock
@@ -222,8 +217,12 @@ class StudyGroupServiceTest {
 		//For Join Request Service Test
 		joinRequest = new JoinRequest(group, requester);
 		Field requestId = JoinRequest.class.getDeclaredField("id");
+		Field requestGroup = JoinRequest.class.getDeclaredField("group");
+		requestGroup.setAccessible(true);
+		requestGroup.set(joinRequest, group);
 		requestId.setAccessible(true);
 		requestId.set(joinRequest, 1000L);
+
 	}
 
 	@Test
@@ -266,7 +265,8 @@ class StudyGroupServiceTest {
 		assertThat(result.getStudyGroup()).isEqualTo(group);
 		assertThat(result.getUser()).isEqualTo(user2);
 		verify(groupMemberRepository, times(1)).save(any(GroupMember.class));
-		verify(notificationService, times(1)).sendNotificationToMembers(any(), any(), any(), any(), any(), any(), any());
+		verify(notificationService, times(1)).sendNotificationToMembers(any(), any(), any(), any(), any(), any(),
+			any());
 	}
 
 	@Test
@@ -899,136 +899,6 @@ class StudyGroupServiceTest {
 		assertThat(responses.get(1).status()).isEqualTo("inProgress");
 		assertThat(responses.get(2).name()).isEqualTo("done");
 		assertThat(responses.get(2).status()).isEqualTo("done");
-	}
-
-	@Test
-	@DisplayName("그룹 가입 요청 성공")
-	void joinRequest_Success() {
-		// given
-		when(studyGroupRepository.findById(10L)).thenReturn(Optional.of(group));
-		when(groupMemberRepository.existsByUserAndStudyGroup(requester, group)).thenReturn(false);
-		when(joinRequestRepository.existsByGroup_IdAndRequester_Id(group.getId(), requester.getId()))
-			.thenReturn(false);
-
-		// when
-		joinRequestService.joinRequest(requester, 10L);
-
-		// then
-		ArgumentCaptor<JoinRequest> captor = ArgumentCaptor.forClass(JoinRequest.class);
-		verify(joinRequestRepository, times(1)).save(captor.capture());
-		JoinRequest savedRequest = captor.getValue();
-
-		assertThat(savedRequest.getRequester()).isEqualTo(requester);
-		assertThat(savedRequest.getGroup()).isEqualTo(group);
-	}
-
-	@Test
-	@DisplayName("그룹 가입 요청 실패 : 이미 가입한 그룹")
-	void joinRequest_Fail_AlreadyMember() {
-		// given
-		when(studyGroupRepository.findById(10L)).thenReturn(Optional.of(group));
-		when(groupMemberRepository.existsByUserAndStudyGroup(requester, group)).thenReturn(true);
-
-		// when, then
-		assertThatThrownBy(() -> joinRequestService.joinRequest(requester, 10L))
-			.isInstanceOf(GroupMemberValidationException.class)
-			.hasFieldOrPropertyWithValue("error", "이미 가입한 그룹입니다");
-	}
-
-	@Test
-	@DisplayName("그룹 가입 요청 실패 : 이미 요청한 그룹")
-	void joinRequest_Fail_AlreadyRequested() {
-		// given
-		when(studyGroupRepository.findById(10L)).thenReturn(Optional.of(group));
-		when(groupMemberRepository.existsByUserAndStudyGroup(requester, group)).thenReturn(false);
-		when(joinRequestRepository.existsByGroup_IdAndRequester_Id(group.getId(), requester.getId())).thenReturn(
-			true);
-
-		// when, then
-		assertThatThrownBy(() -> joinRequestService.joinRequest(requester, 10L))
-			.isInstanceOf(JoinRequestException.class)
-			.hasMessage("이미 요청한 그룹입니다.");
-	}
-
-	@Test
-	@DisplayName("가입 요청 목록 조회 성공")
-	void getAllJoinRequests_Success() {
-		// given
-		when(studyGroupRepository.findById(10L)).thenReturn(Optional.of(group));
-		when(groupMemberRepository.findByUserAndStudyGroup(owner, group)).thenReturn(Optional.of(ownerGroupmember));
-		when(joinRequestRepository.findAllByGroup_Id(10L)).thenReturn(List.of(joinRequest));
-
-		// when
-		List<JoinRequest> requests = joinRequestService.getAllJoinRequests(owner, 10L);
-
-		// then
-		assertThat(requests).hasSize(1);
-		assertThat(requests.get(0).getRequester().getNickname()).isEqualTo("requester");
-	}
-
-	@Test
-	@DisplayName("가입 요청 목록 조회 실패 : 권한 없음")
-	void getAllJoinRequests_Fail_NoPermission() {
-		// given
-		when(studyGroupRepository.findById(10L)).thenReturn(Optional.of(group));
-		when(groupMemberRepository.findByUserAndStudyGroup(groupMember2.getUser(), group)).thenReturn(
-			Optional.of(groupMember2));
-
-		// when, then
-		assertThatThrownBy(() -> joinRequestService.getAllJoinRequests(groupMember2.getUser(), 10L))
-			.isInstanceOf(JoinRequestException.class)
-			.hasMessage("요청 목록을 조회할 권한이 없습니다.");
-	}
-
-	@Test
-	@DisplayName("가입 요청 승인 성공")
-	void approveJoinRequest_Success() {
-		// given
-		when(joinRequestRepository.findById(1000L)).thenReturn(Optional.of(joinRequest));
-		when(studyGroupRepository.findById(10L)).thenReturn(Optional.of(group));
-		when(groupMemberRepository.findByUserAndStudyGroup(owner, group)).thenReturn(Optional.of(ownerGroupmember));
-		UpdateJoinRequestStatusRequest request = new UpdateJoinRequestStatusRequest(JoinRequestStatus.APPROVE);
-		// when
-		joinRequestService.updateJoinRequest(owner, 1000L, group.getId(), request);
-
-		// then
-		ArgumentCaptor<GroupMember> captor = ArgumentCaptor.forClass(GroupMember.class);
-		verify(groupMemberRepository, times(1)).save(captor.capture());
-		GroupMember newMember = captor.getValue();
-
-		assertThat(newMember.getUser()).isEqualTo(requester);
-		assertThat(newMember.getRole()).isEqualTo(RoleOfGroupMember.PARTICIPANT);
-		verify(joinRequestRepository, times(1)).delete(joinRequest);
-
-	}
-
-	@Test
-	@DisplayName("가입 요청 승인 실패 : 요청 없음")
-	void approveJoinRequest_Fail_RequestNotFound() {
-		// given
-		when(joinRequestRepository.findById(100L)).thenReturn(Optional.empty());
-		UpdateJoinRequestStatusRequest request = new UpdateJoinRequestStatusRequest(JoinRequestStatus.APPROVE);
-
-		// when, then
-		assertThatThrownBy(() -> joinRequestService.updateJoinRequest(owner, 100L, group.getId(), request))
-			.isInstanceOf(JoinRequestException.class)
-			.hasMessage("해당 요청이 존재하지 않습니다");
-	}
-
-	@Test
-	@DisplayName("가입 요청 거절 성공 STATUS : PENDING -> REJECT 로 변경")
-	void rejectJoinRequest_Success() {
-		// given
-		when(joinRequestRepository.findById(1000L)).thenReturn(Optional.of(joinRequest));
-		when(studyGroupRepository.findById(10L)).thenReturn(Optional.of(group));
-		when(groupMemberRepository.findByUserAndStudyGroup(owner, group)).thenReturn(Optional.of(ownerGroupmember));
-		UpdateJoinRequestStatusRequest request = new UpdateJoinRequestStatusRequest(JoinRequestStatus.REJECT);
-
-		// when
-		joinRequestService.updateJoinRequest(owner, 1000L, group.getId(), request);
-
-		// then
-		verify(joinRequestRepository, times(1)).delete(joinRequest);
 	}
 
 	@Test

@@ -611,7 +611,7 @@ public class StudyGroupService {
 		return groupMemberRepository.existsByUserAndStudyGroupAndIsVisible(user, group, true);
 	}
 
-	private void sendNewMemberNotification(StudyGroup studyGroup, GroupMember newMember) {
+	void sendNewMemberNotification(StudyGroup studyGroup, GroupMember newMember) {
 		List<GroupMember> members = groupMemberRepository.findAllByStudyGroup(studyGroup)
 			.stream()
 			.filter(member -> !member.getId().equals(newMember.getId()))

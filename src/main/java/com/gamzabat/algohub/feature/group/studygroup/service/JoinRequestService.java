@@ -10,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.gamzabat.algohub.enums.JoinRequestStatus;
 import com.gamzabat.algohub.exception.StudyGroupValidationException;
+import com.gamzabat.algohub.feature.group.ranking.domain.Ranking;
+import com.gamzabat.algohub.feature.group.ranking.repository.RankingRepository;
 import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.group.studygroup.domain.JoinRequest;
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
@@ -20,8 +22,9 @@ import com.gamzabat.algohub.feature.group.studygroup.exception.JoinRequestExcept
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.JoinRequestRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
+import com.gamzabat.algohub.feature.notification.domain.NotificationSetting;
+import com.gamzabat.algohub.feature.notification.repository.NotificationSettingRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
-import com.gamzabat.algohub.feature.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,8 +35,10 @@ import lombok.extern.slf4j.Slf4j;
 public class JoinRequestService {
 	private final StudyGroupRepository studyGroupRepository;
 	private final GroupMemberRepository groupMemberRepository;
-	private final UserRepository userRepository;
 	private final JoinRequestRepository joinRequestRepository;
+	private final NotificationSettingRepository notificationSettingRepository;
+	private final RankingRepository rankingRepository;
+	private final StudyGroupService studyGroupService;
 
 	@Transactional
 	public void joinRequest(User user, Long groupId) {
@@ -63,10 +68,10 @@ public class JoinRequestService {
 	}
 
 	@Transactional
-	public void updateJoinRequest(User user, Long requestId, Long groupId, UpdateJoinRequestStatusRequest request) {
+	public void updateJoinRequest(User user, Long requestId, UpdateJoinRequestStatusRequest request) {
 		JoinRequest joinRequest = joinRequestRepository.findById(requestId)
 			.orElseThrow(() -> new JoinRequestException("해당 요청이 존재하지 않습니다"));
-		StudyGroup studyGroup = studyGroupRepository.findById(groupId)
+		StudyGroup studyGroup = studyGroupRepository.findById(joinRequest.getGroup().getId())
 			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹입니다."));
 		GroupMember groupMember = groupMemberRepository.findByUserAndStudyGroup(user, studyGroup)
 			.orElseThrow(() -> new GroupMemberValidationException(HttpStatus.NOT_FOUND.value(), "해당 그룹의 멤버가 아닙니다."));
@@ -82,11 +87,25 @@ public class JoinRequestService {
 				.role(RoleOfGroupMember.PARTICIPANT)
 				.build();
 			groupMemberRepository.save(newGroupMember);
+
+			notificationSettingRepository.save(
+				NotificationSetting.builder().member(newGroupMember).build()
+			);
+
+			rankingRepository.save(Ranking.builder()
+				.member(newGroupMember)
+				.currentRank(groupMemberRepository.countByStudyGroup(studyGroup))
+				.solvedCount(0)
+				.rankDiff("-")
+				.build()
+			);
+			studyGroupService.sendNewMemberNotification(studyGroup, newGroupMember);
+
 			joinRequestRepository.delete(joinRequest);
 		} else if (request.status() == JoinRequestStatus.REJECT) {
 			joinRequestRepository.delete(joinRequest);
 		}
-		log.info("success to approve/reject for join request group = {}", groupId);
+		log.info("success to approve/reject for join request group = {}", studyGroup.getId());
 	}
 
 }
