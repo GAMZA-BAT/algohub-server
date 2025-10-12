@@ -1,4 +1,4 @@
-package com.gamzabat.algohub.service;
+package com.gamzabat.algohub.feature.recommendation.service;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -27,7 +27,6 @@ import com.gamzabat.algohub.feature.recommendation.dto.HomeRecommendationsRespon
 import com.gamzabat.algohub.feature.recommendation.repository.GroupDifficultyMonthlyRollingRepository;
 import com.gamzabat.algohub.feature.recommendation.repository.StudyGroupTagRepository;
 import com.gamzabat.algohub.feature.recommendation.repository.UserDifficultyMonthlyRollingRepository;
-import com.gamzabat.algohub.feature.recommendation.service.RecommendationService;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
