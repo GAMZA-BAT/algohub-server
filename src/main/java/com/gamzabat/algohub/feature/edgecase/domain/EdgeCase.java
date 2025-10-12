@@ -45,6 +45,7 @@ public class EdgeCase {
 	@JoinColumn(name = "user_id")
 	private User author;
 
+	private LocalDateTime createdAt;
 	private LocalDateTime deletedAt;
 
 	@Column(nullable = false)

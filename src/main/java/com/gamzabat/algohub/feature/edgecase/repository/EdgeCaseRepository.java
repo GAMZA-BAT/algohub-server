@@ -7,5 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.gamzabat.algohub.feature.edgecase.domain.EdgeCase;
 
 public interface EdgeCaseRepository extends JpaRepository<EdgeCase, Long> {
-	List<EdgeCase> findAllByProblemNumber(Integer number);
+	List<EdgeCase> findAllByProblemNumberOrderByCreatedAtDesc(Integer problemNumber);
+	List<EdgeCase> findAllByOrderByCreatedAtDesc();
 }
