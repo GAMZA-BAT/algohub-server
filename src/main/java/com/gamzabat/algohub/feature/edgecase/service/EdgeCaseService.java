@@ -57,9 +57,9 @@ public class EdgeCaseService {
 	public GetEdgeCaseListResponse getEdgeCaseList(Integer problemNumber) {
 		List<EdgeCase> edgeCaseList;
 		if (problemNumber == null)
-			edgeCaseList = edgeCaseRepository.findAll();
+			edgeCaseList = edgeCaseRepository.findAllByOrderByCreatedAtDesc();
 		else
-			edgeCaseList = edgeCaseRepository.findAllByProblemNumber(problemNumber);
+			edgeCaseList = edgeCaseRepository.findAllByProblemNumberOrderByCreatedAtDesc(problemNumber);
 
 		List<GetEdgeCaseResponse> responseList = edgeCaseList.stream()
 			.map(edgeCase -> new GetEdgeCaseResponse(
@@ -111,8 +111,9 @@ public class EdgeCaseService {
 
 	private String getProblemId(String url) {
 		String[] parts = url.split("/");
-		if (parts.length < 3 || !parts[2].equals(BOJ_PROBLEM_URL))
+		if (parts.length < 3 || !parts[2].equals(BOJ_URL))
 			throw new NotBojLinkException(HttpStatus.BAD_REQUEST.value(), "백준 링크가 아닙니다");
 		return parts[parts.length - 1];
 	}
+
 }
