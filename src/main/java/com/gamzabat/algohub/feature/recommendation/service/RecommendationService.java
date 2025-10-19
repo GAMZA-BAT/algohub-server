@@ -98,7 +98,9 @@ public class RecommendationService {
 			group.getName(),
 			group.getIntroduction(),
 			group.getGroupImage(),
-			tags
+			tags,
+			group.getStartDate(),
+			group.getEndDate()
 		);
 	}
 }
