@@ -3,7 +3,6 @@ package com.gamzabat.algohub.feature.recommendation.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.gamzabat.algohub.common.annotation.AuthedUser;
@@ -26,10 +25,9 @@ public class RecommendationController {
 	@GetMapping("/home/recommendations")
 	@Operation(summary = "홈 추천 스터디 조회 API")
 	public ResponseEntity<HomeRecommendationsResponse> getHomeRecommendations(
-		@AuthedUser User user,
-		@RequestParam(name = "userId", required = false) Long userId
+		@AuthedUser User user
 	) {
-		HomeRecommendationsResponse response = recommendationService.getHomeRecommendations(userId);
+		HomeRecommendationsResponse response = recommendationService.getHomeRecommendations(user.getId());
 		return ResponseEntity.ok().body(response);
 	}
 }
