@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -83,10 +84,12 @@ class RecommendationServiceTest {
 		HomeRecommendationsResponse response = recommendationService.getHomeRecommendations(1L);
 
 		// then
-		assertThat(response.mostActiveThisWeek()).isNotNull();
-		assertThat(response.mostActiveThisWeek().studyGroup().id()).isEqualTo(activeGroup1.getId());
-		assertThat(response.mostActiveThisWeek().studyGroup().name()).isEqualTo(activeGroup1.getName());
-		assertThat(response.mostActiveThisWeek().score()).isEqualTo(0.9);
+		Assertions.assertAll(
+			() -> assertThat(response.mostActiveThisWeek()).isNotNull(),
+			() -> assertThat(response.mostActiveThisWeek().studyGroup().id()).isEqualTo(activeGroup1.getId()),
+			() -> assertThat(response.mostActiveThisWeek().studyGroup().name()).isEqualTo(activeGroup1.getName()),
+			() -> assertThat(response.mostActiveThisWeek().score()).isEqualTo(0.9)
+		);
 	}
 
 	@Test
@@ -114,10 +117,12 @@ class RecommendationServiceTest {
 		HomeRecommendationsResponse response = recommendationService.getHomeRecommendations(1L);
 
 		// then
-		assertThat(response.highJoinRateRecent()).isNotNull();
-		assertThat(response.highJoinRateRecent().studyGroup().id()).isEqualTo(highJoinGroup.getId());
-		assertThat(response.highJoinRateRecent().studyGroup().name()).isEqualTo(highJoinGroup.getName());
-		assertThat(response.highJoinRateRecent().score()).isEqualTo(0.85);
+		Assertions.assertAll(
+			() -> assertThat(response.highJoinRateRecent()).isNotNull(),
+			() -> assertThat(response.highJoinRateRecent().studyGroup().id()).isEqualTo(highJoinGroup.getId()),
+			() -> assertThat(response.highJoinRateRecent().studyGroup().name()).isEqualTo(highJoinGroup.getName()),
+			() -> assertThat(response.highJoinRateRecent().score()).isEqualTo(0.85)
+		);
 	}
 
 	@Test
@@ -156,10 +161,12 @@ class RecommendationServiceTest {
 		HomeRecommendationsResponse response = recommendationService.getHomeRecommendations(userId);
 
 		// then
-		assertThat(response.similarDifficulty()).isNotNull();
-		assertThat(response.similarDifficulty().studyGroup().id()).isEqualTo(similarGroup.getId());
-		assertThat(response.similarDifficulty().studyGroup().name()).isEqualTo(similarGroup.getName());
-		assertThat(response.similarDifficulty().score()).isBetween(0.0, 0.1);  // 0.72 - 0.7 = 0.02 차이
+		Assertions.assertAll(
+			() -> assertThat(response.similarDifficulty()).isNotNull(),
+			() -> assertThat(response.similarDifficulty().studyGroup().id()).isEqualTo(similarGroup.getId()),
+			() -> assertThat(response.similarDifficulty().studyGroup().name()).isEqualTo(similarGroup.getName()),
+			() -> assertThat(response.similarDifficulty().score()).isBetween(0.0, 0.1)  // 0.72 - 0.7 = 0.02 차이
+		);
 	}
 
 	@Test
@@ -176,10 +183,12 @@ class RecommendationServiceTest {
 		HomeRecommendationsResponse response = recommendationService.getHomeRecommendations(1L);
 
 		// then
-		assertThat(response).isNotNull();
-		assertThat(response.mostActiveThisWeek()).isNull();
-		assertThat(response.highJoinRateRecent()).isNull();
-		assertThat(response.similarDifficulty()).isNull();
+		Assertions.assertAll(
+			() -> assertThat(response).isNotNull(),
+			() -> assertThat(response.mostActiveThisWeek()).isNull(),
+			() -> assertThat(response.highJoinRateRecent()).isNull(),
+			() -> assertThat(response.similarDifficulty()).isNull()
+		);
 	}
 
 	// Helper methods
