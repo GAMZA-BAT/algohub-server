@@ -15,6 +15,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -25,7 +26,6 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class StudyGroupTag {
 
 	@Id
@@ -54,4 +54,22 @@ public class StudyGroupTag {
 
 	@Column(name = "computed_at", nullable = false)
 	private LocalDateTime computedAt;
+
+	@Builder
+	public StudyGroupTag(
+		@NotNull StudyGroup studyGroup,
+		@NotNull TagType tagType,
+		@NotNull Double score,
+		@NotNull LocalDateTime firstAchievedAt,
+		@NotNull LocalDateTime windowStart,
+		@NotNull LocalDateTime windowEnd,
+		@NotNull LocalDateTime computedAt) {
+		this.studyGroup = studyGroup;
+		this.tagType = tagType;
+		this.score = score;
+		this.firstAchievedAt = firstAchievedAt;
+		this.windowStart = windowStart;
+		this.windowEnd = windowEnd;
+		this.computedAt = computedAt;
+	}
 }

@@ -13,6 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,7 +24,6 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class GroupJoinMonthlyRolling {
 
 	@Id
@@ -48,4 +48,20 @@ public class GroupJoinMonthlyRolling {
 
 	@Column(name = "join_rate", nullable = false)
 	private Double joinRate;
+
+	@Builder
+	public GroupJoinMonthlyRolling(
+		@NotNull StudyGroup studyGroup,
+		@NotNull LocalDateTime windowStart,
+		@NotNull LocalDateTime windowEnd,
+		@NotNull Integer newMembers,
+		@NotNull Integer membersBeforeWindow,
+		@NotNull Double joinRate) {
+		this.studyGroup = studyGroup;
+		this.windowStart = windowStart;
+		this.windowEnd = windowEnd;
+		this.newMembers = newMembers;
+		this.membersBeforeWindow = membersBeforeWindow;
+		this.joinRate = joinRate;
+	}
 }

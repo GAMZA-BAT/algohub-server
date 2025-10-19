@@ -8,6 +8,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -36,4 +37,16 @@ public class UserDifficultyMonthlyRolling {
 
 	@Column(name = "avg_difficulty", nullable = false)
 	private Double avgDifficulty;
+
+	@Builder
+	public UserDifficultyMonthlyRolling(
+		@NotNull Long userId,
+		@NotNull LocalDateTime windowStart,
+		@NotNull LocalDateTime windowEnd,
+		@NotNull Double avgDifficulty) {
+		this.userId = userId;
+		this.windowStart = windowStart;
+		this.windowEnd = windowEnd;
+		this.avgDifficulty = avgDifficulty;
+	}
 }

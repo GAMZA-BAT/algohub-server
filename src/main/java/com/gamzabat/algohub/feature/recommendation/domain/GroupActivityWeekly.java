@@ -13,6 +13,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,7 +23,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "group_activity_weekly")
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
 public class GroupActivityWeekly {
@@ -48,4 +50,20 @@ public class GroupActivityWeekly {
 
 	@Column(name = "active_score", nullable = false)
 	private Double activeScore;
+
+	@Builder
+	public GroupActivityWeekly(
+		@NotNull StudyGroup studyGroup,
+		@NotNull LocalDateTime weekStart,
+		@NotNull LocalDateTime weekEnd,
+		@NotNull Integer submissions,
+		@NotNull Integer comments,
+		@NotNull Double activeScore) {
+		this.studyGroup = studyGroup;
+		this.weekStart = weekStart;
+		this.weekEnd = weekEnd;
+		this.submissions = submissions;
+		this.comments = comments;
+		this.activeScore = activeScore;
+	}
 }
