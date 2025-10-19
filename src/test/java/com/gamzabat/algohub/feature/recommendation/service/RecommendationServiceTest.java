@@ -27,6 +27,7 @@ import com.gamzabat.algohub.feature.recommendation.dto.HomeRecommendationsRespon
 import com.gamzabat.algohub.feature.recommendation.repository.GroupDifficultyMonthlyRollingRepository;
 import com.gamzabat.algohub.feature.recommendation.repository.StudyGroupTagRepository;
 import com.gamzabat.algohub.feature.recommendation.repository.UserDifficultyMonthlyRollingRepository;
+import com.gamzabat.algohub.feature.user.domain.User;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -124,13 +125,17 @@ class RecommendationServiceTest {
 	void getSimilarDifficulty_Success() {
 		// given
 		Long userId = 1L;
+
+		User testUser = mock(User.class);
+		when(testUser.getId()).thenReturn(userId);
+
 		LocalDateTime now = LocalDateTime.now();
 		LocalDateTime windowStart = now.minusDays(30);
 		LocalDateTime windowEnd = now;
 
 		// 사용자 난이도 설정
 		UserDifficultyMonthlyRolling userRolling = createUserDifficultyMonthlyRolling(
-			userId, windowStart, windowEnd, 0.7);
+			testUser, windowStart, windowEnd, 0.7);
 
 		// 비슷한 난이도의 스터디 그룹 (가장 유사한 그룹)
 		GroupDifficultyMonthlyRolling similarGroupRolling = createGroupDifficultyMonthlyRolling(
@@ -140,7 +145,7 @@ class RecommendationServiceTest {
 		GroupDifficultyMonthlyRolling lessSimilarGroupRolling = createGroupDifficultyMonthlyRolling(
 			createStudyGroup("덜 비슷한 난이도"), windowStart, windowEnd, 0.85);
 
-		when(userDifficultyMonthlyRollingRepository.findTop1ByUserIdOrderByWindowEndDesc(userId))
+		when(userDifficultyMonthlyRollingRepository.findTop1ByUser_IdOrderByWindowEndDesc(userId))
 			.thenReturn(Optional.of(userRolling));
 
 		when(groupDifficultyMonthlyRollingRepository.findTopSimilarByWindow(
@@ -163,7 +168,7 @@ class RecommendationServiceTest {
 		// given
 		when(studyGroupTagRepository.findTop1ByTagTypeOrderByScoreDescFirstAchievedAtAsc(any()))
 			.thenReturn(Optional.empty());
-		when(userDifficultyMonthlyRollingRepository.findTop1ByUserIdOrderByWindowEndDesc(any()))
+		when(userDifficultyMonthlyRollingRepository.findTop1ByUser_IdOrderByWindowEndDesc(any()))
 			.thenReturn(Optional.empty());
 		when(studyGroupRepository.findAll()).thenReturn(List.of());
 
@@ -200,9 +205,9 @@ class RecommendationServiceTest {
 	}
 
 	private UserDifficultyMonthlyRolling createUserDifficultyMonthlyRolling(
-		Long userId, LocalDateTime windowStart, LocalDateTime windowEnd, double avgDifficulty) {
+		User user, LocalDateTime windowStart, LocalDateTime windowEnd, double avgDifficulty) {
 		return UserDifficultyMonthlyRolling.builder()
-			.userId(userId)
+			.user(user)
 			.windowStart(windowStart)
 			.windowEnd(windowEnd)
 			.avgDifficulty(avgDifficulty)
