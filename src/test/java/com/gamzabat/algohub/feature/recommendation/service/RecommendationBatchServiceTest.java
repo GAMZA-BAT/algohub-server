@@ -159,11 +159,15 @@ class RecommendationBatchServiceTest {
 		when(groupMemberRepository.countByStudyGroupAndJoinDateBetween(eq(testGroup), eq(thirtyDaysAgo), any()))
 			.thenReturn(5);
 
-		GroupJoinMonthlyRolling savedJoinInfo = GroupJoinMonthlyRolling.builder()
-			.id(1L)
-			.studyGroup(testGroup)
-			.joinRate(0.25)
-			.build();
+		GroupJoinMonthlyRolling savedJoinInfo = new GroupJoinMonthlyRolling(
+			1L,
+			testGroup,
+			thirtyDaysAgo.atStartOfDay(),
+			today.atStartOfDay().minusNanos(1),
+			5,
+			20,
+			0.25
+		);
 
 		when(groupJoinMonthlyRollingRepository.save(any(GroupJoinMonthlyRolling.class))).thenReturn(savedJoinInfo);
 
