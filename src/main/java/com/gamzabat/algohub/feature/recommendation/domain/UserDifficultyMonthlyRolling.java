@@ -2,11 +2,16 @@ package com.gamzabat.algohub.feature.recommendation.domain;
 
 import java.time.LocalDateTime;
 
+import com.gamzabat.algohub.feature.user.domain.User;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -26,8 +31,9 @@ public class UserDifficultyMonthlyRolling {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(name = "user_id", nullable = false)
-	private Long userId;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "user_id", nullable = false)
+	private User user;
 
 	@Column(name = "window_start", nullable = false)
 	private LocalDateTime windowStart;
@@ -40,11 +46,11 @@ public class UserDifficultyMonthlyRolling {
 
 	@Builder
 	public UserDifficultyMonthlyRolling(
-		@NotNull Long userId,
+		@NotNull User user,
 		@NotNull LocalDateTime windowStart,
 		@NotNull LocalDateTime windowEnd,
 		@NotNull Double avgDifficulty) {
-		this.userId = userId;
+		this.user = user;
 		this.windowStart = windowStart;
 		this.windowEnd = windowEnd;
 		this.avgDifficulty = avgDifficulty;

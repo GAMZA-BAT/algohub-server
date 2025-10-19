@@ -57,7 +57,7 @@ public class RecommendationService {
 			return Optional.empty();
 
 		Optional<UserDifficultyMonthlyRolling> userRollingOpt =
-			userDifficultyMonthlyRollingRepository.findTop1ByUserIdOrderByWindowEndDesc(userId);
+			userDifficultyMonthlyRollingRepository.findTop1ByUser_IdOrderByWindowEndDesc(userId);
 
 		if (userRollingOpt.isEmpty())
 			return Optional.empty();

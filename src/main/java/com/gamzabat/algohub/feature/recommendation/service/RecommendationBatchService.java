@@ -200,7 +200,7 @@ public class RecommendationBatchService {
 				windowEnd);
 
 			userDifficultyMonthlyRollingRepository.save(UserDifficultyMonthlyRolling.builder()
-				.userId(user.getId())
+				.user(user)
 				.windowStart(windowStart)
 				.windowEnd(windowEnd)
 				.avgDifficulty(avgDifficulty)
