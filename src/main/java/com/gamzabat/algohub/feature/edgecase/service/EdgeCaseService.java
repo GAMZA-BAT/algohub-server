@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.gamzabat.algohub.feature.edgecase.domain.EdgeCase;
 import com.gamzabat.algohub.feature.edgecase.domain.EdgeCaseLike;
+import com.gamzabat.algohub.feature.edgecase.domain.EdgeCaseSortType;
 import com.gamzabat.algohub.feature.edgecase.dto.CreateEdgeCaseRequest;
 import com.gamzabat.algohub.feature.edgecase.dto.GetEdgeCaseListResponse;
 import com.gamzabat.algohub.feature.edgecase.dto.GetEdgeCaseResponse;
@@ -44,7 +45,7 @@ public class EdgeCaseService {
 		int level = problemService.getProblemLevel(apiResult);
 		String title = problemService.getProblemTitle(apiResult);
 
-		saveEdgeCase(author,request,level,title,Integer.parseInt(number));
+		saveEdgeCase(author, request, level, title, Integer.parseInt(number));
 	}
 
 	private void saveEdgeCase(User author, CreateEdgeCaseRequest request, int level, String title, int number) {
@@ -54,12 +55,35 @@ public class EdgeCaseService {
 		edgeCaseRepository.save(edgeCase);
 	}
 
-	public GetEdgeCaseListResponse getEdgeCaseList(Integer problemNumber) {
+	public GetEdgeCaseListResponse getEdgeCaseList(Integer problemNumber, EdgeCaseSortType sort) {
 		List<EdgeCase> edgeCaseList;
-		if (problemNumber == null)
-			edgeCaseList = edgeCaseRepository.findAllByOrderByCreatedAtDesc();
-		else
-			edgeCaseList = edgeCaseRepository.findAllByProblemNumberOrderByCreatedAtDesc(problemNumber);
+		if (problemNumber == null) {
+			switch (sort) {
+				case LIKE:
+					edgeCaseList = edgeCaseRepository.findAllByOrderByLikeCountDesc();
+					break;
+				case OLD:
+					edgeCaseList = edgeCaseRepository.findAllByOrderByCreatedAtAsc();
+					break;
+				case RECENT:
+				default:
+					edgeCaseList = edgeCaseRepository.findAllByOrderByCreatedAtDesc();
+					break;
+			}
+		} else {
+			switch (sort) {
+				case LIKE:
+					edgeCaseList = edgeCaseRepository.findAllByProblemNumberOrderByLikeCountDesc(problemNumber);
+					break;
+				case OLD:
+					edgeCaseList = edgeCaseRepository.findAllByProblemNumberOrderByCreatedAtAsc(problemNumber);
+					break;
+				case RECENT:
+				default:
+					edgeCaseList = edgeCaseRepository.findAllByProblemNumberOrderByCreatedAtDesc(problemNumber);
+					break;
+			}
+		}
 
 		List<GetEdgeCaseResponse> responseList = edgeCaseList.stream()
 			.map(edgeCase -> new GetEdgeCaseResponse(
@@ -94,20 +118,20 @@ public class EdgeCaseService {
 		EdgeCase edgeCase = edgeCaseRepository.findById(edgeCaseId)
 			.orElseThrow(() -> new CannotFoundEdgeCaseException("존재하지 않는 반례입니다.", HttpStatus.NOT_FOUND));
 
-		EdgeCaseLike edgeCaseLike = edgeCaseLikeRepository.findByEdgeCaseAndUser(edgeCase,user).orElse(null);
+		EdgeCaseLike edgeCaseLike = edgeCaseLikeRepository.findByEdgeCaseAndUser(edgeCase, user).orElse(null);
 		Boolean isLike = false;
 		if (edgeCaseLike == null) {
 			edgeCaseLike = EdgeCaseLike.builder().user(user).edgeCase(edgeCase).build();
 			edgeCaseLikeRepository.save(edgeCaseLike);
-
+			edgeCase.increaseLikeCount();
 			isLike = true;
 		} else {
 			edgeCaseLikeRepository.delete(edgeCaseLike);
+			edgeCase.decreaseLikeCount();
 		}
 
 		return new TogleEdgeCaseResponse(isLike);
 	}
-
 
 	private String getProblemId(String url) {
 		String[] parts = url.split("/");

@@ -1,7 +1,7 @@
 package com.gamzabat.algohub.feature.edgecase.controller;
 
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -14,14 +14,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.gamzabat.algohub.common.annotation.AuthedUser;
 import com.gamzabat.algohub.exception.RequestException;
-import com.gamzabat.algohub.feature.edgecase.domain.EdgeCaseLike;
+import com.gamzabat.algohub.feature.edgecase.domain.EdgeCaseSortType;
 import com.gamzabat.algohub.feature.edgecase.dto.CreateEdgeCaseRequest;
 import com.gamzabat.algohub.feature.edgecase.dto.GetEdgeCaseListResponse;
 import com.gamzabat.algohub.feature.edgecase.dto.TogleEdgeCaseResponse;
 import com.gamzabat.algohub.feature.edgecase.service.EdgeCaseService;
 import com.gamzabat.algohub.feature.user.domain.User;
 
-import org.springframework.validation.Errors;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -36,7 +35,8 @@ public class EdgeCaseController {
 
 	@PostMapping
 	@Operation(summary = "반례 등록")
-	public ResponseEntity<Void> createEdgeCase(@AuthedUser User user, @RequestBody @Valid CreateEdgeCaseRequest creatEdgeCaseRequest,
+	public ResponseEntity<Void> createEdgeCase(@AuthedUser User user,
+		@RequestBody @Valid CreateEdgeCaseRequest creatEdgeCaseRequest,
 		Errors errors) {
 		if (errors.hasErrors())
 			throw new RequestException("올바르지 않은 요청입니다.", errors);
@@ -48,8 +48,12 @@ public class EdgeCaseController {
 
 	@GetMapping("/list")
 	@Operation(summary = "반례리스트 조회")
-	public ResponseEntity<GetEdgeCaseListResponse> getEdgeCaseList(@AuthedUser User user, @RequestParam(required = false) Integer problemNumber) {
-		GetEdgeCaseListResponse response = edgeCaseService.getEdgeCaseList(problemNumber);
+	public ResponseEntity<GetEdgeCaseListResponse> getEdgeCaseList(
+		@AuthedUser User user,
+		@RequestParam(required = false) Integer problemNumber,
+		@RequestParam(required = false, defaultValue = "RECENT") EdgeCaseSortType sort
+	) {
+		GetEdgeCaseListResponse response = edgeCaseService.getEdgeCaseList(problemNumber, sort);
 
 		return ResponseEntity.ok().body(response);
 	}
