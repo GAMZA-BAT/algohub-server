@@ -22,6 +22,7 @@ import com.gamzabat.algohub.feature.user.domain.User;
 import com.gamzabat.algohub.feature.user.dto.CheckEmailRequest;
 import com.gamzabat.algohub.feature.user.dto.DeleteUserRequest;
 import com.gamzabat.algohub.feature.user.dto.EditUserPasswordRequest;
+import com.gamzabat.algohub.feature.user.dto.GetSolutionCommentActivityList;
 import com.gamzabat.algohub.feature.user.dto.RegisterBjNickNameRequest;
 import com.gamzabat.algohub.feature.user.dto.RegisterRequest;
 import com.gamzabat.algohub.feature.user.dto.ResetPasswordRequest;
@@ -151,6 +152,13 @@ public class UserController {
 		return ResponseEntity.ok().build();
 	}
 
+	@GetMapping(value = "/users/me/feed")
+	@Operation(summary = "내 피드 조회 API")
+	public ResponseEntity<GetSolutionCommentActivityList> getMyFeed(@AuthedUser User user) {
+		GetSolutionCommentActivityList response = userService.getSolutionCommentActivity(user);
+		return ResponseEntity.ok().body(response);
+	}
+
 	@DeleteMapping("/auth/sign-out")
 	@Operation(summary = "로그아웃 API")
 	public ResponseEntity<Void> logout(HttpServletRequest request) {
@@ -216,4 +224,5 @@ public class UserController {
 		userService.validateResetPasswordToken(token);
 		return ResponseEntity.ok().build();
 	}
+
 }

@@ -7,8 +7,10 @@ import com.gamzabat.algohub.feature.user.domain.User;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,6 +19,12 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @DynamicUpdate
+@Table(
+	name = "solution_comment",
+	indexes = {
+		@Index(name = "idx_comment_solution_created", columnList = "solution_id,created_at")
+	}
+)
 public class SolutionComment extends Comment {
 
 	@ManyToOne(fetch = FetchType.LAZY)
