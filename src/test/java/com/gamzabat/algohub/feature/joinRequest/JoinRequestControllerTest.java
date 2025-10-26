@@ -117,7 +117,7 @@ class JoinRequestControllerTest {
 		willDoNothing().given(joinRequestService)
 			.updateJoinRequest(any(User.class), eq(requestId), eq(request));
 
-		mockMvc.perform(post("/api/groups/join-request/{requestId}", requestId)
+		mockMvc.perform(post("/api/join-request/{requestId}", requestId)
 				.header("Authorization", token)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
@@ -133,7 +133,7 @@ class JoinRequestControllerTest {
 		willThrow(new JoinRequestException("해당 요청이 존재하지 않습니다"))
 			.given(joinRequestService).updateJoinRequest(any(User.class), eq(requestId), eq(request));
 
-		mockMvc.perform(post("/api/groups/join-request/{requestId}", requestId)
+		mockMvc.perform(post("/api/join-request/{requestId}", requestId)
 				.header("Authorization", token))
 			.andExpect(status().isBadRequest());
 	}
@@ -147,7 +147,7 @@ class JoinRequestControllerTest {
 		willDoNothing().given(joinRequestService)
 			.updateJoinRequest(any(User.class), eq(requestId), eq(request));
 
-		mockMvc.perform(post("/api/groups/join-request/{requestId}", requestId)
+		mockMvc.perform(post("/api/join-request/{requestId}", requestId)
 				.header("Authorization", token)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
@@ -163,7 +163,7 @@ class JoinRequestControllerTest {
 		willThrow(new JoinRequestException("승인 권한이 없습니다."))
 			.given(joinRequestService).updateJoinRequest(any(User.class), eq(requestId), eq(request));
 
-		mockMvc.perform(post("/api/groups/join-request/{requestId}", requestId)
+		mockMvc.perform(post("/api/join-request/{requestId}", requestId)
 				.header("Authorization", token))
 			.andExpect(status().isBadRequest());
 	}
