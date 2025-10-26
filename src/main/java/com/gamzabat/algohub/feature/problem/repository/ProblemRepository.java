@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
@@ -62,4 +63,8 @@ public interface ProblemRepository extends JpaRepository<Problem, Long>, CustomP
 	@Modifying
 	@Query("update Problem p set p.deletedAt = CURRENT_TIMESTAMP where p.studyGroup = :studyGroup")
 	void deleteAllByStudyGroup(StudyGroup studyGroup);
+
+	@Query("SELECT p FROM Problem p WHERE p.studyGroup = :studyGroup AND p.startDate BETWEEN :start AND :end AND p.deletedAt IS NULL")
+	List<Problem> findAllByStudyGroupAndStartDateBetween(@Param("studyGroup") StudyGroup studyGroup,
+		@Param("start") LocalDate start, @Param("end") LocalDate end);
 }
