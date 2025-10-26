@@ -35,6 +35,7 @@ import com.gamzabat.algohub.exception.UserValidationException;
 import com.gamzabat.algohub.feature.group.ranking.repository.RankingRepository;
 import com.gamzabat.algohub.feature.group.studygroup.domain.BookmarkedStudyGroup;
 import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
+import com.gamzabat.algohub.feature.group.studygroup.domain.JoinRequest;
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.group.studygroup.dto.BookmarkStatus;
 import com.gamzabat.algohub.feature.group.studygroup.dto.CreateGroupRequest;
@@ -53,6 +54,7 @@ import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundGroupE
 import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.repository.BookmarkedStudyGroupRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
+import com.gamzabat.algohub.feature.group.studygroup.repository.JoinRequestRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.group.studygroup.service.StudyGroupService;
 import com.gamzabat.algohub.feature.image.service.ImageService;
@@ -78,6 +80,7 @@ class StudyGroupServiceTest {
 	private StudyGroupService studyGroupService;
 	@Mock
 	private NotificationService notificationService;
+
 	@Mock
 	private StudyGroupRepository studyGroupRepository;
 	@Mock
@@ -109,13 +112,16 @@ class StudyGroupServiceTest {
 	@Mock
 	private ObjectProvider<StudyGroupService> studyGroupServiceObjectProvider;
 	@Mock
+	private JoinRequestRepository joinRequestRepository;
+	@Mock
 	private ImageService imageService;
-	private User user, owner, user2, user3;
+	private User user, owner, user2, user3, requester;
 	private StudyGroup group;
 	private Problem problem1, problem2;
 	private Solution solution1, solution2, solution3;
 	private GroupMember groupMember1, groupMember2, groupMember3;
 	private GroupMember ownerGroupmember;
+	private JoinRequest joinRequest;
 	@Captor
 	private ArgumentCaptor<StudyGroup> groupCaptor;
 	@Captor
@@ -131,6 +137,8 @@ class StudyGroupServiceTest {
 			.role(Role.USER).profileImage("image2").build();
 		user3 = User.builder().email("email3").password("password").nickname("nickname3")
 			.role(Role.USER).profileImage("image3").build();
+		requester = User.builder().email("eamilRequester").password("password").nickname("requester")
+			.role(Role.USER).profileImage("imageForRequester").build();
 
 		group = StudyGroup.builder()
 			.name("name")
@@ -195,6 +203,7 @@ class StudyGroupServiceTest {
 		userField.set(owner, 1L);
 		userField.set(user2, 2L);
 		userField.set(user3, 3L);
+		userField.set(requester, 4L);
 
 		Field groupId = StudyGroup.class.getDeclaredField("id");
 		groupId.setAccessible(true);
@@ -205,6 +214,15 @@ class StudyGroupServiceTest {
 		memberId.set(groupMember1, 100L);
 		memberId.set(groupMember2, 200L);
 		memberId.set(groupMember3, 300L);
+		//For Join Request Service Test
+		joinRequest = new JoinRequest(group, requester);
+		Field requestId = JoinRequest.class.getDeclaredField("id");
+		Field requestGroup = JoinRequest.class.getDeclaredField("group");
+		requestGroup.setAccessible(true);
+		requestGroup.set(joinRequest, group);
+		requestId.setAccessible(true);
+		requestId.set(joinRequest, 1000L);
+
 	}
 
 	@Test
@@ -247,7 +265,8 @@ class StudyGroupServiceTest {
 		assertThat(result.getStudyGroup()).isEqualTo(group);
 		assertThat(result.getUser()).isEqualTo(user2);
 		verify(groupMemberRepository, times(1)).save(any(GroupMember.class));
-		verify(notificationService, times(1)).sendNotificationToMembers(any(), any(), any(), any(), any(), any(), any());
+		verify(notificationService, times(1)).sendNotificationToMembers(any(), any(), any(), any(), any(), any(),
+			any());
 	}
 
 	@Test

@@ -17,6 +17,7 @@ import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundProble
 import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundUserException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.exception.InvalidRoleException;
+import com.gamzabat.algohub.feature.group.studygroup.exception.JoinRequestException;
 import com.gamzabat.algohub.feature.image.exception.AwsS3Exception;
 import com.gamzabat.algohub.feature.notice.exception.NoticeValidationException;
 import com.gamzabat.algohub.feature.notification.exception.CannotFoundNotificationException;
@@ -233,7 +234,7 @@ public class CustomExceptionHandler {
 			.status(HttpStatus.BAD_REQUEST)
 			.body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null));
 	}
-  
+
 	@ExceptionHandler(CannotFoundEdgeCaseException.class)
 	protected ResponseEntity<ErrorResponse> handleCannotFoundEdgeCaseException(
 		CannotFoundEdgeCaseException e) {
@@ -249,5 +250,12 @@ public class CustomExceptionHandler {
 			.status(e.getHttpStatus())
 			.body(new ErrorResponse(e.getHttpStatus().value(), e.getError(), null));
 	}
-  
+
+	@ExceptionHandler(JoinRequestException.class)
+	protected ResponseEntity<ErrorResponse> handleCannotFoundVerificationCodeException(
+		JoinRequestException e) {
+		return ResponseEntity
+			.status(HttpStatus.BAD_REQUEST)
+			.body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null));
+	}
 }
