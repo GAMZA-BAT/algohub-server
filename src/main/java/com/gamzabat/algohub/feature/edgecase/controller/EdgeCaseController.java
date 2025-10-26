@@ -36,12 +36,12 @@ public class EdgeCaseController {
 	@PostMapping
 	@Operation(summary = "반례 등록")
 	public ResponseEntity<Void> createEdgeCase(@AuthedUser User user,
-		@RequestBody @Valid CreateEdgeCaseRequest creatEdgeCaseRequest,
+		@RequestBody @Valid CreateEdgeCaseRequest createEdgeCaseRequest,
 		Errors errors) {
 		if (errors.hasErrors())
 			throw new RequestException("올바르지 않은 요청입니다.", errors);
 
-		edgeCaseService.createEdgeCase(user, creatEdgeCaseRequest);
+		edgeCaseService.createEdgeCase(user, createEdgeCaseRequest);
 
 		return ResponseEntity.ok().build();
 	}
