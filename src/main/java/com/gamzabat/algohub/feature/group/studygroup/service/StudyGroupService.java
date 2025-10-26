@@ -52,6 +52,7 @@ import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundUserEx
 import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.repository.BookmarkedStudyGroupRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
+import com.gamzabat.algohub.feature.group.studygroup.repository.JoinRequestRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
 import com.gamzabat.algohub.feature.image.service.ImageService;
 import com.gamzabat.algohub.feature.notice.repository.NoticeCommentRepository;
@@ -87,6 +88,7 @@ public class StudyGroupService {
 	private final RankingRepository rankingRepository;
 	private final NoticeRepository noticeRepository;
 	private final NoticeCommentRepository noticeCommentRepository;
+	private final JoinRequestRepository joinRequestRepository;
 	private final SolutionCommentRepository solutionCommentRepository;
 	private final NoticeReadRepository noticeReadRepository;
 	private final ObjectProvider<StudyGroupService> studyGroupServiceProvider;
@@ -609,7 +611,7 @@ public class StudyGroupService {
 		return groupMemberRepository.existsByUserAndStudyGroupAndIsVisible(user, group, true);
 	}
 
-	private void sendNewMemberNotification(StudyGroup studyGroup, GroupMember newMember) {
+	void sendNewMemberNotification(StudyGroup studyGroup, GroupMember newMember) {
 		List<GroupMember> members = groupMemberRepository.findAllByStudyGroup(studyGroup)
 			.stream()
 			.filter(member -> !member.getId().equals(newMember.getId()))

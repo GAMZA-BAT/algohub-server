@@ -208,4 +208,5 @@ public class StudyGroupController {
 		Page<GetGroupResponse> responses = studyGroupService.getSearchedStudyGroupList(searchPattern, pageable);
 		return ResponseEntity.ok().body(responses);
 	}
+
 }

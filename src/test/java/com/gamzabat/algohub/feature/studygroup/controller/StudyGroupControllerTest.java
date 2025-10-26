@@ -2,9 +2,13 @@ package com.gamzabat.algohub.feature.studygroup.controller;
 
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.doNothing;
+import static org.mockito.BDDMockito.doThrow;
+import static org.mockito.BDDMockito.times;
+import static org.mockito.BDDMockito.verify;
+import static org.mockito.BDDMockito.when;
 import static org.mockito.Mockito.anyLong;
 import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -55,6 +59,7 @@ import com.gamzabat.algohub.feature.group.studygroup.exception.CannotFoundGroupE
 import com.gamzabat.algohub.feature.group.studygroup.exception.GroupMemberValidationException;
 import com.gamzabat.algohub.feature.group.studygroup.repository.GroupMemberRepository;
 import com.gamzabat.algohub.feature.group.studygroup.repository.StudyGroupRepository;
+import com.gamzabat.algohub.feature.group.studygroup.service.JoinRequestService;
 import com.gamzabat.algohub.feature.group.studygroup.service.StudyGroupService;
 import com.gamzabat.algohub.feature.image.service.ImageService;
 import com.gamzabat.algohub.feature.problem.repository.ProblemRepository;
@@ -78,6 +83,8 @@ class StudyGroupControllerTest {
 	private ObjectMapper objectMapper;
 	@MockBean
 	private StudyGroupService studyGroupService;
+	@MockBean
+	private JoinRequestService joinRequestService;
 	@MockBean
 	private StudyGroupRepository studyGroupRepository;
 	@MockBean
@@ -865,4 +872,5 @@ class StudyGroupControllerTest {
 			.andExpect(jsonPath("$.error").value("참여하지 않은 그룹입니다."));
 		verify(studyGroupService, times(1)).editStudyGroupVisibility(user, groupId, request);
 	}
+
 }
