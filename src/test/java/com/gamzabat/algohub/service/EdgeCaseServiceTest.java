@@ -5,10 +5,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
 import java.lang.reflect.Field;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,6 +27,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gamzabat.algohub.enums.Role;
 import com.gamzabat.algohub.feature.edgecase.domain.EdgeCase;
 import com.gamzabat.algohub.feature.edgecase.domain.EdgeCaseLike;
+import com.gamzabat.algohub.feature.edgecase.domain.EdgeCaseSortType;
 import com.gamzabat.algohub.feature.edgecase.dto.CreateEdgeCaseRequest;
 import com.gamzabat.algohub.feature.edgecase.dto.GetEdgeCaseListResponse;
 import com.gamzabat.algohub.feature.edgecase.dto.GetEdgeCaseResponse;
@@ -105,14 +108,23 @@ class EdgeCaseServiceTest {
 		userId.set(user, 1L);
 		userId.set(user2, 2L);
 
-
 		Field edgeCaseId = EdgeCase.class.getDeclaredField("id");
-		Field edgeCaseLikeCount = EdgeCase.class.getDeclaredField("likeCount");
 		edgeCaseId.setAccessible(true);
 		edgeCaseId.set(edgeCase1, 1L);
 		edgeCaseId.set(edgeCase2, 2L);
 		edgeCaseId.set(edgeCase3, 3L);
 
+		Field edgeCaseLikeCount = EdgeCase.class.getDeclaredField("likeCount");
+		edgeCaseLikeCount.setAccessible(true);
+		edgeCaseLikeCount.set(edgeCase1, 10);
+		edgeCaseLikeCount.set(edgeCase2, 5);
+		edgeCaseLikeCount.set(edgeCase3, 20);
+
+		Field edgeCaseCreatedAt = EdgeCase.class.getDeclaredField("createdAt");
+		edgeCaseCreatedAt.setAccessible(true);
+		edgeCaseCreatedAt.set(edgeCase1, LocalDateTime.now().minusDays(3));
+		edgeCaseCreatedAt.set(edgeCase2, LocalDateTime.now().minusDays(2));
+		edgeCaseCreatedAt.set(edgeCase3, LocalDateTime.now().minusDays(1));
 	}
 
 	@Test
@@ -139,15 +151,18 @@ class EdgeCaseServiceTest {
 		verify(edgeCaseRepository, times(1)).save(edgeCaseCaptor.capture());
 
 		EdgeCase result = edgeCaseCaptor.getValue();
-		assertThat(result.getLink()).isEqualTo("https://www.acmicpc.net/problem/1000");
-		assertThat(result.getProblemNumber()).isEqualTo(1000);
-		assertThat(result.getTitle()).isEqualTo("A+B");
-		assertThat(result.getLevel()).isEqualTo(1);
-		assertThat(result.getInput()).isEqualTo("1 2");
-		assertThat(result.getOutput()).isEqualTo("3");
-		assertThat(result.getLikeCount()).isEqualTo(0);
-		assertThat(result.getAuthor()).isEqualTo(user);
 
+		Assertions.assertAll(
+			() -> assertThat(result.getLink()).isEqualTo("https://www.acmicpc.net/problem/1000"),
+			() -> assertThat(result.getProblemNumber()).isEqualTo(1000),
+			() -> assertThat(result.getTitle()).isEqualTo("A+B"),
+			() -> assertThat(result.getLevel()).isEqualTo(1),
+			() -> assertThat(result.getInput()).isEqualTo("1 2"),
+			() -> assertThat(result.getOutput()).isEqualTo("3"),
+			() -> assertThat(result.getLikeCount()).isEqualTo(0),
+			() -> assertThat(result.getAuthor()).isEqualTo(user),
+			() -> assertThat(result.getCreatedAt()).isNotNull()
+		);
 	}
 
 	@Test
@@ -160,7 +175,7 @@ class EdgeCaseServiceTest {
 			.thenReturn(edgeCaseList);
 
 		//when
-		GetEdgeCaseListResponse response = edgeCaseService.getEdgeCaseList(problemNumber);
+		GetEdgeCaseListResponse response = edgeCaseService.getEdgeCaseList(problemNumber, EdgeCaseSortType.RECENT);
 
 		//then
 		assertEquals(2, response.edgeCaseList().size());
@@ -188,8 +203,9 @@ class EdgeCaseServiceTest {
 		List<EdgeCase> edgeCaseList = Arrays.asList(edgeCase1, edgeCase2, edgeCase3);
 		when(edgeCaseRepository.findAllByOrderByCreatedAtDesc())
 			.thenReturn(edgeCaseList);
+
 		// when
-		GetEdgeCaseListResponse response = edgeCaseService.getEdgeCaseList(problemNumber);
+		GetEdgeCaseListResponse response = edgeCaseService.getEdgeCaseList(problemNumber, EdgeCaseSortType.RECENT);
 
 		// then
 		assertEquals(3, response.edgeCaseList().size());
@@ -214,6 +230,99 @@ class EdgeCaseServiceTest {
 		assertEquals("Turret", thirdResponse.title());
 		assertEquals("0 0 13 40 0 37", thirdResponse.input());
 		assertEquals("2", thirdResponse.output());
+	}
+
+	@Test
+	@DisplayName("반례 리스트 조회 성공 (LIKE) // 문제 번호O")
+	void getEdgeCaseListSuccess_Like_WithProblemNumber() {
+		//given
+		Integer problemNumber = 1001;
+		List<EdgeCase> edgeCaseList = Arrays.asList(edgeCase1, edgeCase2);
+		when(edgeCaseRepository.findAllByProblemNumberOrderByLikeCountDesc(problemNumber))
+			.thenReturn(edgeCaseList);
+
+		//when
+		GetEdgeCaseListResponse response = edgeCaseService.getEdgeCaseList(problemNumber, EdgeCaseSortType.LIKE);
+
+		//then
+		assertThat(response.edgeCaseList()).hasSize(2);
+
+		// 정렬 순서 검증 (ID 1 -> ID 2)
+		Assertions.assertAll(
+			() -> assertThat(response.edgeCaseList().get(0).edgeCaseId()).isEqualTo(edgeCase1.getId().intValue()),
+			() -> assertThat(response.edgeCaseList().get(1).edgeCaseId()).isEqualTo(edgeCase2.getId().intValue())
+		);
+	}
+
+	@Test
+	@DisplayName("반례 리스트 조회 성공 (LIKE) // 모든 리스트")
+	void getEdgeCaseListSuccess_Like_NoProblemNumber() {
+		// given
+		Integer problemNumber = null;
+		// setUp 순서 (전체): 3(20개) -> 1(10개) -> 2(5개)
+		List<EdgeCase> edgeCaseList = Arrays.asList(edgeCase3, edgeCase1, edgeCase2);
+		when(edgeCaseRepository.findAllByOrderByLikeCountDesc())
+			.thenReturn(edgeCaseList);
+
+		// when
+		GetEdgeCaseListResponse response = edgeCaseService.getEdgeCaseList(problemNumber, EdgeCaseSortType.LIKE);
+
+		// then
+		assertThat(response.edgeCaseList()).hasSize(3);
+
+		// 정렬 순서 검증 (ID 3 -> ID 1 -> ID 2)
+		Assertions.assertAll(
+			() -> assertThat(response.edgeCaseList().get(0).edgeCaseId()).isEqualTo(edgeCase3.getId().intValue()),
+			() -> assertThat(response.edgeCaseList().get(1).edgeCaseId()).isEqualTo(edgeCase1.getId().intValue()),
+			() -> assertThat(response.edgeCaseList().get(2).edgeCaseId()).isEqualTo(edgeCase2.getId().intValue())
+		);
+	}
+
+	@Test
+	@DisplayName("반례 리스트 조회 성공 (OLD) // 문제 번호O")
+	void getEdgeCaseListSuccess_Old_WithProblemNumber() {
+		//given
+		Integer problemNumber = 1001;
+		// setUp 순서 (문제 1001번): 1(오래됨) -> 2(최신)
+		List<EdgeCase> edgeCaseList = Arrays.asList(edgeCase1, edgeCase2);
+		when(edgeCaseRepository.findAllByProblemNumberOrderByCreatedAtAsc(problemNumber))
+			.thenReturn(edgeCaseList);
+
+		//when
+		GetEdgeCaseListResponse response = edgeCaseService.getEdgeCaseList(problemNumber, EdgeCaseSortType.OLD);
+
+		//then
+		assertThat(response.edgeCaseList()).hasSize(2);
+
+		// 정렬 순서 검증 (ID 1 -> ID 2)
+		Assertions.assertAll(
+			() -> assertThat(response.edgeCaseList().get(0).edgeCaseId()).isEqualTo(edgeCase1.getId().intValue()),
+			() -> assertThat(response.edgeCaseList().get(1).edgeCaseId()).isEqualTo(edgeCase2.getId().intValue())
+		);
+	}
+
+	@Test
+	@DisplayName("반례 리스트 조회 성공 (OLD) // 모든 리스트")
+	void getEdgeCaseListSuccess_Old_NoProblemNumber() {
+		// given
+		Integer problemNumber = null;
+		// setUp 순서 (전체): 1(오래됨) -> 2 -> 3(최신)
+		List<EdgeCase> edgeCaseList = Arrays.asList(edgeCase1, edgeCase2, edgeCase3);
+		when(edgeCaseRepository.findAllByOrderByCreatedAtAsc())
+			.thenReturn(edgeCaseList);
+
+		// when
+		GetEdgeCaseListResponse response = edgeCaseService.getEdgeCaseList(problemNumber, EdgeCaseSortType.OLD);
+
+		// then
+		assertThat(response.edgeCaseList()).hasSize(3);
+
+		// 정렬 순서 검증 (ID 1 -> ID 2 -> ID 3)
+		Assertions.assertAll(
+			() -> assertThat(response.edgeCaseList().get(0).edgeCaseId()).isEqualTo(edgeCase1.getId().intValue()),
+			() -> assertThat(response.edgeCaseList().get(1).edgeCaseId()).isEqualTo(edgeCase2.getId().intValue()),
+			() -> assertThat(response.edgeCaseList().get(2).edgeCaseId()).isEqualTo(edgeCase3.getId().intValue())
+		);
 	}
 
 	@Test
@@ -261,7 +370,7 @@ class EdgeCaseServiceTest {
 	void addEdgeCase_success_1() {
 		//given
 		when(edgeCaseRepository.findById(2L)).thenReturn(Optional.of(edgeCase2));
-		when(edgeCaseLikeRepository.findByEdgeCaseAndUser(edgeCase2,user2)).thenReturn(Optional.of(edgeCaseLike2));
+		when(edgeCaseLikeRepository.findByEdgeCaseAndUser(edgeCase2, user2)).thenReturn(Optional.of(edgeCaseLike2));
 
 		//when
 		edgeCaseService.togleEdgeCaseLike(user2, 2L);
@@ -275,7 +384,7 @@ class EdgeCaseServiceTest {
 	void addEdgeCase_success_2() {
 		//given
 		when(edgeCaseRepository.findById(2L)).thenReturn(Optional.of(edgeCase2));
-		when(edgeCaseLikeRepository.findByEdgeCaseAndUser(edgeCase2,user2)).thenReturn(Optional.empty());
+		when(edgeCaseLikeRepository.findByEdgeCaseAndUser(edgeCase2, user2)).thenReturn(Optional.empty());
 
 		//when
 		edgeCaseService.togleEdgeCaseLike(user2, 2L);
