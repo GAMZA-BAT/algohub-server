@@ -1,11 +1,13 @@
 package com.gamzabat.algohub.feature.group.studygroup.repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.gamzabat.algohub.feature.group.studygroup.domain.GroupMember;
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
@@ -31,4 +33,13 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> 
 	@Modifying
 	@Query("delete from GroupMember gm where gm.studyGroup = :studyGroup")
 	void deleteAllByStudyGroup(StudyGroup studyGroup);
+
+	@Query("SELECT COUNT(gm) FROM GroupMember gm WHERE gm.studyGroup = :studyGroup AND gm.joinDate BETWEEN :start AND :end")
+	Integer countByStudyGroupAndJoinDateBetween(@Param("studyGroup") StudyGroup studyGroup,
+		@Param("start") LocalDate start, @Param("end") LocalDate end);
+
+	@Query("SELECT COUNT(gm) FROM GroupMember gm WHERE gm.studyGroup = :studyGroup AND gm.joinDate < :date")
+	Integer countByStudyGroupAndJoinDateBefore(@Param("studyGroup") StudyGroup studyGroup,
+		@Param("date") LocalDate date);
+
 }

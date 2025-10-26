@@ -1,5 +1,6 @@
 package com.gamzabat.algohub.feature.solution.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,4 +21,11 @@ public interface SolutionCommentRepository extends JpaRepository<SolutionComment
 	@Modifying
 	@Query("DELETE FROM SolutionComment sc WHERE sc.solution.problem.studyGroup = :studyGroup")
 	void deleteAllByStudyGroup(StudyGroup studyGroup);
+
+	@Query("SELECT COUNT(sc) FROM SolutionComment sc " +
+		"JOIN sc.solution s " +
+		"WHERE s.problem.studyGroup = :studyGroup AND sc.createdAt BETWEEN :start AND :end")
+	Long countByStudyGroupAndCreatedAtBetween(@Param("studyGroup") StudyGroup studyGroup,
+		@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+	
 }

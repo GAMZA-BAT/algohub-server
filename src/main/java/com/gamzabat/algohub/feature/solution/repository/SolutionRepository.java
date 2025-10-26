@@ -1,17 +1,21 @@
 package com.gamzabat.algohub.feature.solution.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.data.repository.query.Param;
 
 import com.gamzabat.algohub.feature.group.studygroup.domain.StudyGroup;
 import com.gamzabat.algohub.feature.problem.domain.Problem;
 import com.gamzabat.algohub.feature.solution.domain.Solution;
 import com.gamzabat.algohub.feature.solution.repository.querydsl.CustomSolutionRepository;
 import com.gamzabat.algohub.feature.user.domain.User;
+import com.gamzabat.algohub.feature.user.dto.GetSolutionCommentActivity;
 import com.gamzabat.algohub.feature.user.dto.GetSolutionCommentActivity;
 
 public interface SolutionRepository extends JpaRepository<Solution, Long>, CustomSolutionRepository {
@@ -69,6 +73,14 @@ public interface SolutionRepository extends JpaRepository<Solution, Long>, Custo
 		+ "AND s.problem = :problem")
 	List<Solution> findAllByUserAndProblem(User user, Problem problem);
 
+	@Query("SELECT COUNT(s) FROM Solution s WHERE s.problem.studyGroup = :studyGroup AND s.solvedDateTime BETWEEN :start AND :end")
+	Long countByStudyGroupAndSolvedDateTimeBetween(@Param("studyGroup") StudyGroup studyGroup,
+		@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+	@Query("SELECT COALESCE(AVG(s.problem.level), 0.0) FROM Solution s WHERE s.user = :user AND s.solvedDateTime BETWEEN :start AND :end AND s.deletedAt IS NULL")
+	Double findAverageProblemLevelForUserInPeriod(@Param("user") User user, @Param("start") LocalDateTime start,
+		@Param("end") LocalDateTime end);
+
 	@Query("""
 	  select distinct new com.gamzabat.algohub.feature.user.dto.GetSolutionCommentActivity(s.id, g.id)
 	  from GroupMember gm
@@ -80,4 +92,6 @@ public interface SolutionRepository extends JpaRepository<Solution, Long>, Custo
 		and exists (select 1 from SolutionComment c where c.solution = s)
 	""")
 	List<GetSolutionCommentActivity> findFeedSolutionsByUserOrdered(User user);
+
 }
+
