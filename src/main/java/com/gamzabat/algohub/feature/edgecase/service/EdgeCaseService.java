@@ -109,7 +109,8 @@ public class EdgeCaseService {
 
 		if (!user.getId().equals(author.getId()))
 			throw new NotAuthorizedUserException("반례를 삭제할 권한이 없습니다.", HttpStatus.FORBIDDEN);
-
+		List<EdgeCaseLike> likes = edgeCaseLikeRepository.findAllByEdgeCase(edgeCase);
+		edgeCaseLikeRepository.deleteAll(likes);
 		edgeCaseRepository.delete(edgeCase);
 	}
 
