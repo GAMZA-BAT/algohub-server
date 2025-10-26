@@ -45,7 +45,7 @@ public class JoinRequestController {
 		return ResponseEntity.ok().body(response);
 	}
 
-	@PostMapping(value = "/groups/join-request/{requestId}")
+	@PostMapping(value = "/join-request/{requestId}")
 	@Operation(summary = "그룹 가입 요청 승인 / 거절", description = "스터디 그룹 가입 요청을 승인 / 거절하는 API")
 	public ResponseEntity<Void> updateRequest(
 		@AuthedUser User user,
