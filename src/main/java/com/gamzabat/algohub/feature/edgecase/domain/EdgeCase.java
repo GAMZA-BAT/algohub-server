@@ -1,8 +1,6 @@
 package com.gamzabat.algohub.feature.edgecase.domain;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.hibernate.annotations.SQLDelete;
 
@@ -16,8 +14,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -40,7 +36,6 @@ public class EdgeCase {
 	@Column(columnDefinition = "TEXT")
 	private String output;
 
-
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id")
 	private User author;
@@ -52,7 +47,8 @@ public class EdgeCase {
 	private int likeCount = 0;
 
 	@Builder
-	public EdgeCase(Integer level, String link, Integer problemNumber, String title, String input, String output, User author) {
+	public EdgeCase(Integer level, String link, Integer problemNumber, String title, String input, String output,
+		User author) {
 		this.level = level;
 		this.link = link;
 		this.problemNumber = problemNumber;
@@ -60,6 +56,16 @@ public class EdgeCase {
 		this.input = input;
 		this.output = output;
 		this.author = author;
+		this.createdAt = LocalDateTime.now();
 	}
 
+	public void increaseLikeCount() {
+		this.likeCount++;
+	}
+
+	public void decreaseLikeCount() {
+		if (this.likeCount > 0) {
+			this.likeCount--;
+		}
+	}
 }
