@@ -4,6 +4,7 @@ import static com.gamzabat.algohub.constants.ApiConstants.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -75,6 +76,10 @@ public class ProblemService {
 		int level = getProblemLevel(apiResult);
 		String title = getProblemTitle(apiResult);
 
+		if (Objects.nonNull(request.startDate())) {
+			checkProblemStartDate(request);
+		}
+
 		Problem problem = problemRepository.save(Problem.builder()
 			.studyGroup(group)
 			.link(request.link())
@@ -115,7 +120,7 @@ public class ProblemService {
 		checkProblemValidation(problem);
 
 		if (request.startDate() != null) {
-			checkProblemStartDate(request, problem);
+			// checkProblemStartDate(request, problem);
 			problem.editProblemStartDate(request.startDate());
 		}
 		if (request.endDate() != null) {
@@ -142,22 +147,23 @@ public class ProblemService {
 				"문제 마감 날짜는 오늘 이전의 날짜로 수정할 수 없습니다.");
 	}
 
-	private void checkProblemStartDate(EditProblemRequest request, Problem problem) {
+	private void checkProblemStartDate(CreateProblemRequest request) {
 		if (request.startDate().isBefore(LocalDate.now()))
 			throw new ProblemValidationException(HttpStatus.BAD_REQUEST.value(),
 				"문제 시작 날짜는 오늘 이전의 날짜로 수정할 수 없습니다.");
-		if (request.startDate().isAfter(problem.getEndDate()))
+		if (request.startDate().isAfter(request.endDate()))
 			throw new ProblemValidationException(HttpStatus.BAD_REQUEST.value(),
 				"문제 시작 날짜는 마감 날짜 이후로 수정할 수 없습니다.");
 	}
 
 	@Transactional(readOnly = true)
-	public Page<GetProblemResponse> getProblems(User user, Long groupId, ProblemListStatus status, Boolean unsolvedOnly, Pageable pageable) {
+	public Page<GetProblemResponse> getProblems(User user, Long groupId, ProblemListStatus status, Boolean unsolvedOnly,
+		Pageable pageable) {
 		Page<GetProblemResponse> response;
 		if (status == ProblemListStatus.IN_PROGRESS) {
-				if (unsolvedOnly == null) {
-					unsolvedOnly = false;
-				}
+			if (unsolvedOnly == null) {
+				unsolvedOnly = false;
+			}
 			response = getInProgressProblems(user, groupId, unsolvedOnly, pageable);
 		} else if (status == ProblemListStatus.EXPIRED) {
 			response = getExpiredProblems(user, groupId, pageable);
