@@ -10,5 +10,6 @@ public record GetEdgeCaseResponse(
 	String title,
 	String input,
 	String output,
-	Integer like) {
+	Integer like,
+	Boolean isLiked) {
 }
