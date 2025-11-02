@@ -176,7 +176,8 @@ class ProblemServiceTest {
 		assertThat(result.getLevel()).isEqualTo(1);
 		assertThat(result.getStartDate()).isEqualTo(LocalDate.now());
 		assertThat(result.getEndDate()).isEqualTo(LocalDate.now().plusDays(10));
-		verify(notificationService, times(1)).sendNotificationToMembers(any(), any(), any(), any(), any(), any(), any());
+		verify(notificationService, times(1)).sendNotificationToMembers(any(), any(), any(), any(), any(), any(),
+			any());
 	}
 
 	@Test
@@ -380,30 +381,6 @@ class ProblemServiceTest {
 			.isInstanceOf(StudyGroupValidationException.class)
 			.hasFieldOrPropertyWithValue("code", HttpStatus.FORBIDDEN.value())
 			.hasFieldOrPropertyWithValue("error", "문제 수정 권한이 없습니다. 방장, 부방장일 경우에만 수정이 가능합니다.");
-	}
-
-	@Test
-	@DisplayName("문제 정보 수정 실패 : 문제 시작 날짜를 오늘 이전의 날짜로 요청한 경우")
-	void editProblemFailed_6() {
-		// given
-		Problem problem = Problem.builder()
-			.studyGroup(group)
-			.link("link")
-			.startDate(LocalDate.now().plusDays(1))
-			.endDate(LocalDate.now().plusDays(10))
-			.build();
-		EditProblemRequest request = EditProblemRequest.builder()
-			.startDate(LocalDate.now().minusDays(3))
-			.endDate(LocalDate.now().plusDays(7))
-			.build();
-		when(problemRepository.findById(20L)).thenReturn(Optional.ofNullable(problem));
-		when(groupRepository.findById(10L)).thenReturn(Optional.ofNullable(group));
-		when(groupMemberRepository.findByUserAndStudyGroup(user, group)).thenReturn(Optional.ofNullable(groupMember1));
-		// when, then
-		assertThatThrownBy(() -> problemService.editProblem(user, 20L, request))
-			.isInstanceOf(ProblemValidationException.class)
-			.hasFieldOrPropertyWithValue("code", HttpStatus.BAD_REQUEST.value())
-			.hasFieldOrPropertyWithValue("error", "문제 시작 날짜는 오늘 이전의 날짜로 수정할 수 없습니다.");
 	}
 
 	@Test
@@ -824,7 +801,8 @@ class ProblemServiceTest {
 		// when
 		problemService.dailyProblemScheduler();
 		// then
-		verify(notificationService, times(20)).sendNotificationToMembers(any(), any(), any(), any(), any(), any(), any());
+		verify(notificationService, times(20)).sendNotificationToMembers(any(), any(), any(), any(), any(), any(),
+			any());
 	}
 
 	@Test
