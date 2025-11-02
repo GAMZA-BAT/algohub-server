@@ -2,7 +2,6 @@ package com.gamzabat.algohub.feature.group.studygroup.service;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -59,12 +58,15 @@ public class JoinRequestService {
 	@Transactional(readOnly = true)
 	public List<JoinRequest> getAllJoinRequests(User user, Long groupId) {
 		StudyGroup studyGroup = studyGroupRepository.findById(groupId)
-			.orElseThrow(() -> new StudyGroupValidationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다."));
-		Optional<GroupMember> groupMember = groupMemberRepository.findByUserAndStudyGroup(user, studyGroup);
-		if (groupMember.isPresent() && RoleOfGroupMember.isParticipant(groupMember.get()) || groupMember.isEmpty()) {
+			.orElseThrow(() -> new StudyGroupValidationException(
+				HttpStatus.NOT_FOUND.value(), "존재하지 않는 그룹 입니다."));
+		final boolean noAuthority = groupMemberRepository.findByUserAndStudyGroup(user, studyGroup)
+			.map(RoleOfGroupMember::isParticipant)
+			.orElse(true);
+		if (noAuthority) {
 			throw new JoinRequestException("요청 목록을 조회할 권한이 없습니다.");
 		}
-		return joinRequestRepository.findAllByGroup_Id(groupId);
+		return joinRequestRepository.findAllByGroupIdWithFetch(groupId);
 	}
 
 	@Transactional
