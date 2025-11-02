@@ -49,6 +49,7 @@ public class EdgeCaseController {
 	@GetMapping("/list")
 	@Operation(summary = "반례리스트 조회")
 	public ResponseEntity<GetEdgeCaseListResponse> getEdgeCaseList(
+		@AuthedUser() User user,
 		@RequestParam(required = false) Integer problemNumber,
 		@RequestParam(required = false, defaultValue = "RECENT") EdgeCaseSortType sort
 	) {

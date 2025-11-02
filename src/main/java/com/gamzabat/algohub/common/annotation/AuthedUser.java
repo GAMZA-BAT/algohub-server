@@ -11,4 +11,5 @@ import io.swagger.v3.oas.annotations.Hidden;
 @Retention(RetentionPolicy.RUNTIME)
 @Hidden
 public @interface AuthedUser {
+	boolean required() default true;
 }
