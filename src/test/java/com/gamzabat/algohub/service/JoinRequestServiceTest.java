@@ -53,7 +53,7 @@ class JoinRequestServiceTest {
 	private NotificationSettingRepository notificationSettingRepository;
 	@Mock
 	private RankingRepository rankingRepository;
-	
+
 	private User user, owner, user2, user3, requester;
 	private StudyGroup group;
 	private Problem problem1, problem2;
@@ -200,7 +200,7 @@ class JoinRequestServiceTest {
 		// given
 		when(studyGroupRepository.findById(10L)).thenReturn(Optional.of(group));
 		when(groupMemberRepository.findByUserAndStudyGroup(owner, group)).thenReturn(Optional.of(ownerGroupmember));
-		when(joinRequestRepository.findAllByGroup_Id(10L)).thenReturn(List.of(joinRequest));
+		when(joinRequestRepository.findAllByGroupIdWithFetch(10L)).thenReturn(List.of(joinRequest));
 
 		// when
 		List<JoinRequest> requests = joinRequestService.getAllJoinRequests(owner, 10L);
