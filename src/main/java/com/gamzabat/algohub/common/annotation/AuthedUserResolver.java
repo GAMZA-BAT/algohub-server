@@ -30,7 +30,7 @@ public class AuthedUserResolver implements HandlerMethodArgumentResolver {
 	public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
 		NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
 		AuthedUser authedUser = parameter.getParameterAnnotation(AuthedUser.class);
-		boolean required = (authedUser == null) || authedUser.required();
+		boolean required = authedUser.required();
 
 		String jwt = webRequest.getHeader("Authorization");
 
