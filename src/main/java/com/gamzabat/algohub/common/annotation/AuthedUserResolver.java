@@ -29,11 +29,19 @@ public class AuthedUserResolver implements HandlerMethodArgumentResolver {
 	@Override
 	public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
 		NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
+		AuthedUser authedUser = parameter.getParameterAnnotation(AuthedUser.class);
+		boolean required = authedUser.required();
+
 		String jwt = webRequest.getHeader("Authorization");
-		if (jwt != null)
-			return userRepository.findByEmail(tokenProvider.getUserEmail(jwt))
-				.orElseThrow(() -> new UserValidationException("없는 사용자 입니다."));
-		else
-			throw new UserValidationException("로그인 되지 않았습니다.");
+
+		if (jwt == null || jwt.isBlank()) {
+			if (required) {
+				throw new UserValidationException("로그인되지 않았습니다.");
+			} else {
+				return null;
+			}
+		}
+		return userRepository.findByEmail(tokenProvider.getUserEmail(jwt))
+			.orElseThrow(() -> new UserValidationException("없는 사용자입니다."));
 	}
 }
