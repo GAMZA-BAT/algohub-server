@@ -7,6 +7,7 @@ import static org.mockito.BDDMockito.*;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -175,7 +176,7 @@ class EdgeCaseServiceTest {
 			.thenReturn(edgeCaseList);
 
 		//when
-		GetEdgeCaseListResponse response = edgeCaseService.getEdgeCaseList(problemNumber, EdgeCaseSortType.RECENT);
+		GetEdgeCaseListResponse response = edgeCaseService.getEdgeCaseList(null,problemNumber, EdgeCaseSortType.RECENT);
 
 		//then
 		assertEquals(2, response.edgeCaseList().size());
@@ -205,7 +206,7 @@ class EdgeCaseServiceTest {
 			.thenReturn(edgeCaseList);
 
 		// when
-		GetEdgeCaseListResponse response = edgeCaseService.getEdgeCaseList(problemNumber, EdgeCaseSortType.RECENT);
+		GetEdgeCaseListResponse response = edgeCaseService.getEdgeCaseList(null, problemNumber, EdgeCaseSortType.RECENT);
 
 		// then
 		assertEquals(3, response.edgeCaseList().size());
@@ -242,7 +243,7 @@ class EdgeCaseServiceTest {
 			.thenReturn(edgeCaseList);
 
 		//when
-		GetEdgeCaseListResponse response = edgeCaseService.getEdgeCaseList(problemNumber, EdgeCaseSortType.LIKE);
+		GetEdgeCaseListResponse response = edgeCaseService.getEdgeCaseList(null, problemNumber, EdgeCaseSortType.LIKE);
 
 		//then
 		assertThat(response.edgeCaseList()).hasSize(2);
@@ -265,7 +266,7 @@ class EdgeCaseServiceTest {
 			.thenReturn(edgeCaseList);
 
 		// when
-		GetEdgeCaseListResponse response = edgeCaseService.getEdgeCaseList(problemNumber, EdgeCaseSortType.LIKE);
+		GetEdgeCaseListResponse response = edgeCaseService.getEdgeCaseList(null,problemNumber, EdgeCaseSortType.LIKE);
 
 		// then
 		assertThat(response.edgeCaseList()).hasSize(3);
@@ -289,7 +290,7 @@ class EdgeCaseServiceTest {
 			.thenReturn(edgeCaseList);
 
 		//when
-		GetEdgeCaseListResponse response = edgeCaseService.getEdgeCaseList(problemNumber, EdgeCaseSortType.OLD);
+		GetEdgeCaseListResponse response = edgeCaseService.getEdgeCaseList(null, problemNumber, EdgeCaseSortType.OLD);
 
 		//then
 		assertThat(response.edgeCaseList()).hasSize(2);
@@ -312,7 +313,7 @@ class EdgeCaseServiceTest {
 			.thenReturn(edgeCaseList);
 
 		// when
-		GetEdgeCaseListResponse response = edgeCaseService.getEdgeCaseList(problemNumber, EdgeCaseSortType.OLD);
+		GetEdgeCaseListResponse response = edgeCaseService.getEdgeCaseList(null, problemNumber, EdgeCaseSortType.OLD);
 
 		// then
 		assertThat(response.edgeCaseList()).hasSize(3);
@@ -323,6 +324,39 @@ class EdgeCaseServiceTest {
 			() -> assertThat(response.edgeCaseList().get(1).edgeCaseId()).isEqualTo(edgeCase2.getId().intValue()),
 			() -> assertThat(response.edgeCaseList().get(2).edgeCaseId()).isEqualTo(edgeCase3.getId().intValue())
 		);
+	}
+
+	@Test
+	@DisplayName("반례 리스트 조회 성공 // user가 있고 edgeCaseList가 비어있지 않은 경우")
+	void getEdgeCaseListSuccess_whenUserExistsAndListNotEmpty() {
+		// given
+		List<EdgeCase> edgeCaseList = List.of(edgeCase1, edgeCase2);
+		when(edgeCaseRepository.findAllByOrderByCreatedAtDesc())
+			.thenReturn(edgeCaseList);
+		when(edgeCaseLikeRepository.findByUserAndEdgeCaseIn(user, edgeCaseList))
+			.thenReturn(Collections.emptyList());
+
+		// when
+		edgeCaseService.getEdgeCaseList(user, null, EdgeCaseSortType.RECENT);
+
+		// then
+		verify(edgeCaseLikeRepository, times(1))
+			.findByUserAndEdgeCaseIn(user, edgeCaseList);
+	}
+
+	@Test
+	@DisplayName("반례 리스트 조회 성공 // user가 있고 edgeCaseList가 비어있는 경우")
+	void getEdgeCaseListSuccess_whenUserExistsAndListEmpty() {
+		// given
+		when(edgeCaseRepository.findAllByOrderByCreatedAtDesc())
+			.thenReturn(Collections.emptyList());
+
+		// when
+		edgeCaseService.getEdgeCaseList(user, null, EdgeCaseSortType.RECENT);
+
+		// then
+		verify(edgeCaseLikeRepository, never())
+			.findByUserAndEdgeCaseIn(any(), any());
 	}
 
 	@Test

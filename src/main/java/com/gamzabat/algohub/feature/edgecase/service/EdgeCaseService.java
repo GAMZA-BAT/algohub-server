@@ -2,7 +2,9 @@ package com.gamzabat.algohub.feature.edgecase.service;
 
 import static com.gamzabat.algohub.constants.ApiConstants.*;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
@@ -55,8 +57,10 @@ public class EdgeCaseService {
 		edgeCaseRepository.save(edgeCase);
 	}
 
-	public GetEdgeCaseListResponse getEdgeCaseList(Integer problemNumber, EdgeCaseSortType sort) {
+	public GetEdgeCaseListResponse getEdgeCaseList(User user, Integer problemNumber, EdgeCaseSortType sort) {
 		List<EdgeCase> edgeCaseList;
+		Set<Long> likedEdgeCaseIds = Collections.emptySet();
+
 		if (problemNumber == null) {
 			switch (sort) {
 				case LIKE:
@@ -85,6 +89,17 @@ public class EdgeCaseService {
 			}
 		}
 
+		if (user != null && !edgeCaseList.isEmpty()) {
+			List<EdgeCaseLike> myLikes =
+				edgeCaseLikeRepository.findByUserAndEdgeCaseIn(user, edgeCaseList);
+
+			likedEdgeCaseIds = myLikes.stream()
+				.map(like -> like.getEdgeCase().getId())
+				.collect(Collectors.toSet());
+		}
+
+		final Set<Long> likedIds = likedEdgeCaseIds;
+
 		List<GetEdgeCaseResponse> responseList = edgeCaseList.stream()
 			.map(edgeCase -> new GetEdgeCaseResponse(
 				edgeCase.getId().intValue(),
@@ -93,7 +108,8 @@ public class EdgeCaseService {
 				edgeCase.getTitle(),
 				edgeCase.getInput(),
 				edgeCase.getOutput(),
-				edgeCase.getLikeCount()
+				edgeCase.getLikeCount(),
+				likedIds.contains(edgeCase.getId())
 			))
 			.collect(Collectors.toList());
 
