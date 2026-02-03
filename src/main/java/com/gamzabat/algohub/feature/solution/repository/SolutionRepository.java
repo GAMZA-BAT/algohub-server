@@ -82,14 +82,21 @@ public interface SolutionRepository extends JpaRepository<Solution, Long>, Custo
 		@Param("end") LocalDateTime end);
 
 	@Query("""
-	  select distinct new com.gamzabat.algohub.feature.user.dto.GetSolutionCommentActivity(s.id, g.id)
+	select distinct new com.gamzabat.algohub.feature.user.dto.GetSolutionCommentActivity(s.id, g.id)
 	  from GroupMember gm
 	  join gm.studyGroup g
 	  join Problem p on p.studyGroup = g
 	  join Solution s on s.problem = p
+	  join SolutionComment c on c.solution = s
 	  where gm.user = :user
 		and gm.isVisible = true
-		and exists (select 1 from SolutionComment c where c.solution = s)
+		and c.createdAt = (
+		  select max(c2.createdAt)
+		  from SolutionComment c2
+		  where c2.solution = s
+		)
+		and c.user <> :user
+	  order by c.createdAt desc
 	""")
 	List<GetSolutionCommentActivity> findFeedSolutionsByUserOrdered(User user);
 
